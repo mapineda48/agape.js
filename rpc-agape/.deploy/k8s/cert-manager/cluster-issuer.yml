@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cert-manager-global
+  namespace: cert-manager
+spec:
+  acme:
+    email: ${CLUSTER_ISSUER_CERT}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: cert-manager-private-key
+    solvers:
+    - http01:
+        ingress:
+          class: nginx

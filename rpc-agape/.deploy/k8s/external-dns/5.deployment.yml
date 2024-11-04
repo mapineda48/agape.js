@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: external-dns
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: external-dns
+  template:
+    metadata:
+      labels:
+        app: external-dns
+    spec:
+      serviceAccountName: external-dns
+      containers:
+      - name: external-dns
+        image: registry.k8s.io/external-dns/external-dns:v0.13.4
+        args:
+        - --source=ingress # service is also possible
+        - --domain-filter=${GODADDY_DOMAIN} # (optional) limit to only example.com domains; change to match the zone created above.
+        - --provider=godaddy
+        - --txt-prefix=agape-app # In case of multiple k8s cluster
+        - --txt-owner-id=agape-app # In case of multiple k8s cluster
+        - --godaddy-api-key=${GODADDY_API_KEY}
+        - --godaddy-api-secret=${GODADDY_API_SECRET}
+        resources:
+            limits:
+              cpu: 200m
+              memory: 150M
+            requests:
+              cpu: 50m
+              memory: 50M

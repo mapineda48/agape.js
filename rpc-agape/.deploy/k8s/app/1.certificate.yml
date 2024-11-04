@@ -1,0 +1,11 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: certificate
+spec:
+  secretName: ${APP_NAME}-tls
+  issuerRef:
+    name: cert-manager-global
+    kind: ClusterIssuer
+  dnsNames:
+  - ${APP_NAME}.${GODADDY_DOMAIN}

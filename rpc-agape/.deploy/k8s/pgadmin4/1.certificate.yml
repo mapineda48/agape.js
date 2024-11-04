@@ -1,0 +1,11 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: certificate
+spec:
+  secretName: pgadmin4-tls
+  issuerRef:
+    name: cert-manager-global
+    kind: ClusterIssuer
+  dnsNames:
+  - pgadmin4.${GODADDY_DOMAIN}

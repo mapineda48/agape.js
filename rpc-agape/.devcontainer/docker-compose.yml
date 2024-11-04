@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  app:
+    container_name: app-agape
+    image: node:20
+    tty: true
+    volumes:
+      - "..:/home/agape"
+    environment:
+      # Testing
+      GIT_EMAIL: "${GIT_EMAIL}"
+      GIT_NAME: "${GIT_NAME}"
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+      NGROK_TOKEN: "${NGROK_TOKEN}"
+
+      # Required
+      NODE_ENV: development
+      DATABASE_URL: "postgresql://postgres:mypassword@db"
+      STORAGE_ENDPOINT: "minio"
+      STORAGE_ACCESKEY: "minio"
+      STORAGE_ACCESSECRET: "minio123"
+      JWT_SECRET: development
+    depends_on:
+      - db
+  db:
+    container_name: db-agape
+    image: "postgres:14"
+    environment:
+      POSTGRES_PASSWORD: "mypassword"
+
+  # https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html
+  pgadmin:
+    image: dpage/pgadmin4:7.4
+    container_name: pgadmin4
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - "PGADMIN_DEFAULT_EMAIL=admin@mapineda48.com"
+      - "PGADMIN_DEFAULT_PASSWORD=admin"
+    volumes:
+      - ./pgadmin4/server.json:/pgadmin4/servers.json
+    depends_on:
+      - db
+
+  minio:
+    image: minio/minio:RELEASE.2023-07-07T07-13-57Z
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server --console-address ":9090" /data
+    ports:
+      - 9000:9000
+      - 9090:9090
+
+
