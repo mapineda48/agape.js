@@ -1,0 +1,17 @@
+{
+    "name": "rpc",
+    "version": "0.0.0",
+    "description": "",
+    "engines": {
+      "node": ">=18.18.1",
+      "pnpm": ">=8.15.4"
+    },
+    "scripts": {
+      "build": "cd packages/backend && npm run build",
+      "backend": "cd packages/backend && npm run start",
+      "frontend": "cd packages/frontend && npm run start"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+  }

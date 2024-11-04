@@ -1,0 +1,1 @@
+export default [["/login", () => import("app/Login.tsx")],["/", () => import("app/index.tsx")],["/store/", () => import("app/store/index.tsx")],["/cms/product", () => import("app/cms/Product.tsx")],["/cms/", () => import("app/cms/index.tsx")]]
