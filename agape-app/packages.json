@@ -1,0 +1,14 @@
+{
+    "name": "agape-app",
+    "version": "0.0.0",
+    "description": "",
+    "engines": {
+      "node": ">=18.18.1",
+      "pnpm": ">=8.15.4"
+    },
+    "scripts": {
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+  }
