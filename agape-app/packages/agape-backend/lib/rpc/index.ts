@@ -1,14 +1,14 @@
+import express from "express";
 import { glob } from "glob";
 import _ from "lodash";
 import rpc, { onErrorMiddleware } from "./call";
-import auth from "../auth/server";
 import path from "path";
 
 const extname = path.extname(__filename);
 const root = path.resolve(__dirname, "../..")
 
-export default async function connectService(secret: string) {
-  const { router, authenticate } = auth(secret);
+export default async function connectService() {
+  const router = express.Router();
 
   const paths = await glob("service/**/*" + extname, { cwd: root });
 
@@ -25,14 +25,8 @@ export default async function connectService(secret: string) {
 
     const serviceModule = toServiceEndpoint(file);
 
-    const isPublic = serviceModule.startsWith("/service/public");
-
     exports.forEach(([exportName, fn]) => {
       const endpoint = path.posix.join(serviceModule, (exportName !== "default" ? exportName : ""));
-
-      if (!isPublic) {
-        router.post(endpoint, authenticate);
-      }
 
       router.post(endpoint, rpc(fn));
     });

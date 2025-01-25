@@ -4,15 +4,15 @@
   "description": "",
   "private": true,
   "scripts": {
-    "start": "nodemon --exec \"ts-node -r ./bin/webpack.js\" bin/index.ts",
+    "start:router": "tsc --watch",
+    "start:rpc": "node -r ts-node/register ./bin/browser.js --watch",
     "cluster": "ts-node bin/cluster.ts",
     "prebuild": "tsc",
     "build": "pnpm browser:build && pnpm portal",
     "postbuild": "node bin/postbuild.js",
     "dist": "run-s prebuild build postbuild",
     "portal": "cd ../agape-web && pnpm build",
-    "browser:build": "node -r ts-node/register ./bin/browser.js",
-    "browser": "node -r ts-node/register ./bin/browser.js --watch"
+    "browser:build": "node -r ts-node/register ./bin/browser.js"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.17.0",

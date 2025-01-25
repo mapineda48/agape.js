@@ -1,5 +1,5 @@
 import express from "express";
-import parseFormData from "../rpc/form/server";
+import parseFormData from "../form/server";
 import Jwt from "./Jwt";
 import webSession, { initSession } from "./session";
 import { Unauthorized } from "../rpc/call/error/app";
@@ -12,7 +12,7 @@ export const path = {
   logout: "/service/auth/logout",
 };
 
-export default function defineAuth(secret: string) {
+export default function defineAuth({ secret, admin }: Options) {
   const router = express.Router();
   const jwt = new Jwt(secret);
 
@@ -27,8 +27,8 @@ export default function defineAuth(secret: string) {
   router.post(path.login, async (req, res) => {
     const [{ username, password }] = (await parseFormData(req)) as Access;
 
-    const isAdmin = username === "admin";
-    const isPassword = password === "admin";
+    const isAdmin = username === admin.username;
+    const isPassword = password === admin.password;
 
     if (!isAdmin || !isPassword) {
       throw new Unauthorized("Acceso denegado");
@@ -73,7 +73,8 @@ export default function defineAuth(secret: string) {
     res.status(200).json(success({ message: "Sesión terminada" }));
   });
 
-  const onApi = async (req: Req, res: Res, next: Next) => {
+  //API AUTH
+  router.post(/^\/service\/(?!public).*$/, async (req, res, next) => {
     const token = getCookie(req.headers.cookie);
 
     if (!token) {
@@ -88,9 +89,9 @@ export default function defineAuth(secret: string) {
     } catch (error) {
       res.status(401).send("Acceso denegado");
     }
-  };
+  })
 
-  const onCms = async (req: Req, res: Res, next: Next) => {
+  router.get("/login", async (req, res, next) => { 
     const token = getCookie(req.headers.cookie);
 
     if (!token) {
@@ -101,12 +102,31 @@ export default function defineAuth(secret: string) {
     try {
       const verified: any = await jwt.verifyToken(token);
       initSession(verified, next);
-    } catch (error) {
-      next();
-    }
-  };
 
-  return { router, authenticate: onApi };
+      res.redirect("/cms")
+    } catch (error) {
+      next()
+    }
+  })
+
+  router.post(/^\/cms.*?$/, async (req, res, next) => {
+    const token = getCookie(req.headers.cookie);
+
+    if (!token) {
+      res.status(401).send("Acceso denegado");
+      return;
+    }
+
+    try {
+      const verified: any = await jwt.verifyToken(token);
+      initSession(verified, next);
+
+    } catch (error) {
+      res.status(401).send("Acceso denegado");
+    }
+  })
+
+  return router;
 }
 
 export function getCookie(header?: string) {
@@ -130,6 +150,10 @@ export const user = webSession;
  */
 type Access = [{ username: string; password: string }];
 
-type Req = express.Request;
-type Res = express.Response;
-type Next = express.NextFunction;
+export interface Options {
+  secret: string;
+  admin: {
+    username: string;
+    password: string
+  }
+}

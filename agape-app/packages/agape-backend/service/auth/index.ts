@@ -1,3 +1,1 @@
-export default function doFoo() {
-    return Promise.resolve("foo");
-}
+export * from "../../lib/auth/server";

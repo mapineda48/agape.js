@@ -42,13 +42,20 @@ if (isChild) {
 
 async function buildBrowser() {
   const paths = await glob("service/**/*.ts");
-
-  return Promise.all(paths.map((ts) => toBrowser(ts)));
+  await Promise.all(paths.map((ts) => toBrowser(ts)));
+  
+  await authRPC();
 }
 
+async function authRPC() {
+  await fs.outputFile(
+    "dist/browser/service/auth/index.js",
+    `export * from "../../../../lib/auth/browser"`
+  );
+}
 
 async function toBrowser(filename) {
-  if (!filename.endsWith(".ts")) {
+  if (!filename.endsWith(".ts") || filename.endsWith(".d.ts")) {
     return;
   }
 
@@ -74,7 +81,10 @@ async function toBrowser(filename) {
   Object.entries(module)
     .filter(([, value]) => typeof value === "function")
     .forEach(([exportName]) => {
-      const endpoint = path.posix.join(serviceModule, (exportName !== "default" ? exportName : ""));
+      const endpoint = path.posix.join(
+        serviceModule,
+        exportName !== "default" ? exportName : ""
+      );
 
       jsData.push(
         exportName !== "default"

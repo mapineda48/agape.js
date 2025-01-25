@@ -1,8 +1,8 @@
 import _ from "lodash";
 import { Request, Response, NextFunction } from "express";
 import { ApiKey, ApiKeyHeader } from "./config";
-import parseFormData from "../form/server";
-import { extractInstances } from "../form/server";
+import parseFormData from "../../form/server";
+import { extractInstances } from "../../form/server";
 import { Model } from "sequelize";
 
 export { onErrorMiddleware } from "./error/server";
