@@ -3,8 +3,11 @@
 import Form from "@/components/form";
 import Input from "@/components/form/Input";
 import { login, user } from "agape-backend/service/auth";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
+  const router = useRouter();
+
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
@@ -12,13 +15,8 @@ export default function Login() {
         <Form
           onSubmit={(payload) => {
             login(payload)
-              .then((foo) => {
-                console.log({ foo, user });
-                alert("login");
-              })
-              .catch(() => {
-                alert("fail ligin");
-              });
+              .then(() => router.replace("/cms"))
+              .catch(console.error);
 
             return Promise.resolve();
           }}

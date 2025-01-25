@@ -43,7 +43,7 @@ if (isChild) {
 async function buildBrowser() {
   const paths = await glob("service/**/*.ts");
   await Promise.all(paths.map((ts) => toBrowser(ts)));
-  
+
   await authRPC();
 }
 
@@ -55,7 +55,7 @@ async function authRPC() {
 }
 
 async function toBrowser(filename) {
-  if (!filename.endsWith(".ts") || filename.endsWith(".d.ts")) {
+  if (!filename.endsWith(".ts") || filename.endsWith(".d.ts") || filename.includes("auth")) {
     return;
   }
 

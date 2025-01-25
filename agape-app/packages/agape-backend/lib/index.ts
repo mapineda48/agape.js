@@ -8,7 +8,7 @@ export default async function app() {
     app.get("/express", (req, res) => res.send("Hello from expressjs"));
 
     app.use(auth({
-        secret: __filename,
+        secret: "__filename",
         admin: {
             username: "admin", password: "admin"
         }

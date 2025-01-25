@@ -2,7 +2,7 @@ import { createNamespace, getNamespace } from "cls-hooked";
 import { NextFunction } from "express";
 
 export function initSession(user: IWebSession, next: NextFunction) {
-  const session = createNamespace("foo")
+  const session = createNamespace(__filename)
   session.run(() => {
     forEachEntrie(user, (key, value) =>
       session.set(key, value)
@@ -14,12 +14,11 @@ export function initSession(user: IWebSession, next: NextFunction) {
 
 const webSession: unknown = new Proxy({}, {
   get(session, key: string) {
-    console.log({ key, value: getNamespace("foo")?.get(key) });
-    return getNamespace("foo")?.get(key);
+    return getNamespace(__filename)?.get(key);
   },
 
   set(session, key: string, value) {
-    getNamespace("foo")?.set(key, value);
+    getNamespace(__filename)?.set(key, value);
     return true;
   },
 });

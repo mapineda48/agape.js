@@ -3,6 +3,7 @@ import parseFormData from "../form/server";
 import Jwt from "./Jwt";
 import webSession, { initSession } from "./session";
 import { Unauthorized } from "../rpc/call/error/app";
+import { AvatarDemoUrl } from "./const";
 
 const AuthTokenCookie = "auth_token";
 
@@ -34,9 +35,9 @@ export default function defineAuth({ secret, admin }: Options) {
       throw new Unauthorized("Acceso denegado");
     }
 
-    const user = { id: -1, username }; // Ejemplo de usuario
+    const user = { id: -1, fullName: username, avatar: "" }; // Ejemplo de usuario
 
-    const token = await jwt.generateToken({ id: user.id });
+    const token = await jwt.generateToken(user);
 
     res.cookie(AuthTokenCookie, token, cookieOptions); // Establecer la cookie
     res.status(200).json(success(user));
@@ -91,7 +92,7 @@ export default function defineAuth({ secret, admin }: Options) {
     }
   })
 
-  router.get("/login", async (req, res, next) => { 
+  router.get("/login", async (req, res, next) => {
     const token = getCookie(req.headers.cookie);
 
     if (!token) {
@@ -109,20 +110,19 @@ export default function defineAuth({ secret, admin }: Options) {
     }
   })
 
-  router.post(/^\/cms.*?$/, async (req, res, next) => {
+  router.get(/^\/cms$/, async (req, res, next) => {
     const token = getCookie(req.headers.cookie);
 
     if (!token) {
-      res.status(401).send("Acceso denegado");
+      res.redirect("/login");
       return;
     }
 
     try {
       const verified: any = await jwt.verifyToken(token);
       initSession(verified, next);
-
     } catch (error) {
-      res.status(401).send("Acceso denegado");
+      res.redirect("/login");
     }
   })
 
