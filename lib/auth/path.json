@@ -1,0 +1,5 @@
+{
+    "login": "/service/auth/login",
+    "isAuthenticated": "/service/auth/isAuthenticated",
+    "logout": "/service/auth/logout"
+}
