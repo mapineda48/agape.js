@@ -9,7 +9,13 @@ const web = next({ dev });
 const log = `> Server listening at http://localhost:${port} as ${dev ? "development" : process.env.NODE_ENV}`;
 
 (async () => {
-    const service = await prepareBackend();
+    const service = await prepareBackend({
+        secret: __filename,
+        admin: {
+            username: "admin", password: "admin"
+        }
+    });
+    
     await web.prepare();
     const www = web.getRequestHandler();
 

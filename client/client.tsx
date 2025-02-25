@@ -1,5 +1,3 @@
-"use client";
-
 import { findBazz } from "@agape/public";
 
 export default function SayHelloMemory() {

@@ -1,20 +1,18 @@
 import express from "express";
-import auth from "./auth/server";
+import log from "morgan";
+import auth, { Options as Auth } from "./auth/server";
 import connectService from "./rpc";
 
-export default async function prepareBackend() {
+export default async function prepareBackend(option: Auth) {
     const backend = express.Router();
+
+    backend.use("/service", log("dev"))
 
     backend.get("/express", (req, res) => {
         res.send("Hello from expressjs");
     });
 
-    backend.use(auth({
-        secret: __filename,
-        admin: {
-            username: "admin", password: "admin"
-        }
-    }));
+    backend.use(auth(option));
 
     backend.use(await connectService());
 

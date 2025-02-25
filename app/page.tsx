@@ -1,14 +1,19 @@
-import SayHelloMemory from "./client";
-import { login } from "@agape/access";
-import { findFoo } from "@agape/public";
+"use client"; // Asegura que el componente sea interactivo
+import { useRouter } from "next/navigation";
 
-export default async function Home() {
-  const message = await findFoo("Fooo");
+export default function HomePage() {
+  const router = useRouter();
+
+  const goToLogin = () => {
+    router.push("/login"); // Navegar a /login
+  };
+
   return (
     <div>
-      {message}
-      <br />
-      <SayHelloMemory />
+      <h1>Bienvenido</h1>
+      <button onClick={goToLogin} className="bg-blue-500 text-white p-2">
+        Ir a Login
+      </button>
     </div>
   );
 }

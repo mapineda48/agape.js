@@ -4,7 +4,6 @@ import Jwt from "./Jwt";
 import webSession, { initSession } from "./session";
 import { Unauthorized } from "../rpc/call/error/app";
 import path from "./path.json"
-import rpc from "../rpc/call";
 
 const AuthTokenCookie = "auth_token";
 

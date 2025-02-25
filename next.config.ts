@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import backend from "./scripts/alias";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -7,6 +8,14 @@ const nextConfig: NextConfig = {
   },
 
   webpack: (config, next) => {
+    
+    config.module.rules.push({
+      test: /\.(js|jsx|ts|tsx)$/, // Aplica a archivos JS y TS
+      include: path.resolve(__dirname, "client"), // Solo afecta archivos en /client/
+      use: path.resolve(__dirname, "scripts/use-client-loader.js"),
+    });
+
+
     if (!next.isServer) {
       return config;
     }
