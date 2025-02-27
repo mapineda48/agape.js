@@ -1,5 +1,5 @@
 {
-  "include": ["./agape/**/*.ts", "./server.ts"],
+  "include": ["./agape/**/*.ts","./lib/**/*.ts","./models/**/*.ts", "./server.ts"],
   "exclude": ["node_modules"],
 
   "compilerOptions": {

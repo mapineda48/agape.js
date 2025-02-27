@@ -1,14 +1,5 @@
-import LoginForm from "@client/login/Form";
-import LogOut from "@client/login/Logout";
+import { LoginForm } from "@client/login";
 
 export default function HomePage() {
-  return (
-    <div>
-      <h1>Bienvenido</h1>
-      <LoginForm>
-        
-      </LoginForm>
-      <LogOut />
-    </div>
-  );
+  return <LoginForm />;
 }

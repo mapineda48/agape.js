@@ -1,5 +1,12 @@
+import db from "../models";
+
 export async function sayHelloWorld(message: string) {
-    return Promise.resolve(`Hello from server ${message}`);
+    await db.inventory.category.create({
+        fullName: message,
+        isEnabled: true
+    })
+
+    return Promise.resolve(message);
 }
 
 export async function findFoo(message: string) {
