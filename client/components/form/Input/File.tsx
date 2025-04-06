@@ -2,9 +2,9 @@ import { JSX } from "react";
 import { useInput } from "..";
 
 export default function InputFile(props: Props) {
-  const { name, ...core } = props;
+  const { path, ...core } = props;
 
-  const [, setState] = useInput<unknown>(name, core.multiple ? [] : null);
+  const [, setState] = useInput<unknown>(path, core.multiple ? [] : null);
 
   return (
     <InputFiles
@@ -41,7 +41,7 @@ export function InputFiles(props: Core) {
 }
 
 interface Props extends Core {
-  name: string;
+  path: string;
 }
 
 interface Core

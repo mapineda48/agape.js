@@ -1,339 +1,232 @@
-import { useEmitter } from "@client/components/EventEmitter";
-import lodash from "lodash";
 import {
   createContext,
+  FormEvent,
   JSX,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
+import _ from "lodash";
+import { useEmitter } from "../EventEmitter";
 
-const Context = createContext<unknown>(null);
-const ContextArray = createContext<{
-  key: string;
-  item: string;
-  index: number;
-} | null>(null);
+const Context = {
+  Form: createContext(null as any as IForm<any>),
+  Path: createContext(""),
+};
 
-export default function Form(props: Props) {
-  const { initState: state, merge, onSubmit, thenEvent, ...core } = props;
-
+export default function FormProvider({ state = {}, onSubmit, ...core }: Props) {
   const emitter = useEmitter();
-  const ref = useRef({});
+  const ref = useRef(state);
 
-  const form = useMemo(() => {
-    const EVENT_MERGE_STATE = Symbol("FORM_EVENT_MERGE_STATE");
-    const EVENT_SET_STATE = Symbol("FORM_EVENT_SET_STATE");
-    const EVENT_THEN = Symbol("FORM_EVENT_THEN");
-    const EVENT_CATCH = Symbol("FORM_EVENT_CATCH");
-    const EVENT_LOADING = Symbol("FORM_EVENT_LOADING");
+  const form: any = useMemo(() => {
+    const MERGE = Symbol("Merge");
 
-    const init = (key: string, value: unknown) => {
-      if (!lodash.has(ref.current, key)) {
-        lodash.set(ref.current, key, value);
+    return {
+      set(...args: unknown[]) {
+        const [arg0, arg1] = args;
 
-        return value;
-      }
+        const path = typeof arg0 === "string" ? arg0 : "";
+        const value = args.length === 1 ? arg0 : arg1;
 
-      const current = lodash.get(ref.current, key);
-
-      if (current === undefined && value !== undefined) {
-        lodash.set(ref.current, key, value);
-
-        return value;
-      }
-
-      return current;
-    };
-
-    const get = (key: string) => lodash.get(ref.current, key);
-
-    const set = (state: {}) => {
-      ref.current = lodash.cloneDeep(state);
-      emitter.emit(EVENT_SET_STATE);
-    };
-
-    const merge = (state: {}) => {
-      lodash.merge(ref.current, state);
-      emitter.emit(EVENT_MERGE_STATE, state);
-    };
-
-    const onSet = (set: (state: any) => void) => {
-      return emitter.on(EVENT_SET_STATE, () => set(lodash.clone(ref.current)));
-    };
-
-    const onSetKey = (key: string, initValue: unknown, set: SetKey) => {
-      return emitter.on(EVENT_SET_STATE, () => {
-        if (!lodash.has(ref.current, key)) {
-          lodash.set(ref.current, key, initValue);
-          set(initValue as any);
-
+        if (!path) {
+          ref.current = structuredClone(value) as object;
+          emitter.emit(MERGE, value);
           return;
         }
 
-        const value = lodash.get(ref.current, key);
+        _.set(ref.current, path, _.cloneDeep(value));
+        return value;
+      },
 
-        set(lodash.clone(value));
-      });
-    };
+      get(path: string, defaults: unknown) {
+        if (!path) {
+          return structuredClone(ref.current);
+        }
 
-    const onMergeKey = (key: string, set: SetKey) => {
-      return emitter.on(EVENT_MERGE_STATE, () => {
-        if (!lodash.has(ref.current, key)) return;
+        return structuredClone(_.get(ref.current, path, defaults));
+      },
 
-        const value = lodash.get(ref.current, key);
+      merge(...args: unknown[]) {
+        if (args.length === 1) {
+          return emitter.emit(MERGE, args[0]);
+        }
 
-        set(lodash.clone(value));
-      });
-    };
+        const [path, cb]: [string, any] = args as any;
 
-    const setInput = (key: string, setstate: SetKey) => {
-      return (state: unknown) =>
-        setstate((current) => {
-          try {
-            const next = typeof state === "function" ? state(current) : state;
-
-            lodash.set(ref.current, key, next);
-
-            return lodash.clone(next);
-          } catch (error) {
-            console.log(error);
-            return current;
+        return emitter.on(MERGE, (payload: any) => {
+          if (!path) {
+            return cb(structuredClone(payload));
           }
+
+          if (!_.has(payload, path)) {
+            return;
+          }
+
+          cb(structuredClone(_.get(payload, path)));
         });
+      },
     };
-
-    const then = (payload: unknown) => emitter.emit(EVENT_THEN, payload);
-    const catch$ = (payload: unknown) => emitter.emit(EVENT_CATCH, payload);
-    const loading = (state: boolean) => emitter.emit(EVENT_LOADING, state);
-
-    const onThen = (cb: (payload: unknown) => void) =>
-      emitter.on(EVENT_THEN, cb);
-    const onCatch = (cb: (payload: unknown) => void) =>
-      emitter.on(EVENT_CATCH, cb);
-    const onLoading = (cb: (payload: boolean) => void) =>
-      emitter.on(EVENT_CATCH, cb);
-
-    const getArray = (key = "") => {
-      if (!key) {
-        return Array.isArray(ref.current) ? lodash.cloneDeep(ref.current) : [];
-      }
-
-      return get(key) || [];
-    };
-
-    const setArray = (arr: unknown[], key = "") => {
-      if (!key) {
-        set(arr);
-      } else {
-        merge(arr);
-      }
-    };
-
-    return {
-      get,
-      set,
-      init,
-      merge,
-      setInput,
-      onSet,
-      onSetKey,
-      onMergeKey,
-
-      getArray,
-      setArray,
-
-      then,
-      catch: catch$,
-      loading,
-      onThen,
-      onCatch,
-      onLoading,
-    };
-  }, [emitter]);
-
-  useMemo(() => {
-    if (!state) return;
-
-    if (ref.current === state) return;
-
-    form.set(state);
-  }, [form, state]);
+  }, []);
 
   return (
-    <Context.Provider value={form}>
+    <Context.Form value={form}>
       <form
         {...core}
         onSubmit={(e) => {
           e.preventDefault();
-          e.stopPropagation();
 
-          form.loading(true);
+          if (!onSubmit) {
+            return;
+          }
 
-          onSubmit(lodash.cloneDeep(ref.current), form)
-            .then((res) => {
-              if (merge) {
-                form.merge(res);
-              }
+          const state = _.cloneDeep(ref.current);
 
-              if (thenEvent) {
-                emitter.emit(thenEvent, res);
-              }
-
-              form.then(res);
-            })
-            .catch((err) => {
-              console.log({
-                thenEvent,
-              });
-
-              console.error(err);
-            })
-            .finally(() => {
-              form.loading(false);
-            });
+          onSubmit(state);
         }}
       />
-    </Context.Provider>
+    </Context.Form>
   );
 }
 
-export function useInput<T>(key: string, initValue: T) {
-  const form = useContext(Context) as IForm<{}>;
-  const arr = useContext(ContextArray);
+export function useForm<S = object>() {
+  const form = useContext(Context.Form);
 
-  const _key = arr == null ? key : arr.item + "." + key;
-
-  const [state, setState] = useState<T>(() => form.init(_key, initValue));
-
-  useEffect(
-    () => form.onSetKey(_key, initValue, setState),
-    [form, initValue, _key]
-  );
-  useEffect(() => form.onMergeKey(_key, setState), [form, _key]);
-
-  const setInput = useMemo(() => form.setInput(_key, setState), [form, _key]);
-
-  return [state, setInput] as const;
+  return form as IForm<S>;
 }
 
-export function useForm<S = {}>() {
-  return useContext(Context) as IForm<S>;
+export function Path(props: {
+  base: string;
+  children: JSX.Element | JSX.Element[];
+}) {
+  const base = useContext(Context.Path);
+  const path = useMemo(() => joinPath(base, props.base), [base, props.base]);
+
+  return <Context.Path value={path}>{props.children}</Context.Path>;
 }
 
-export function useInputArray<T extends unknown[] = unknown[]>(
-  key: string = ""
-) {
-  const form = useContext(Context) as IForm<any>;
+const DefaultArray: any = [];
 
-  const [state, setState] = useState<any>([]);
+export function useInputArray<T extends unknown[]>(path = "") {
+  const base = useContext(Context.Path);
+  const arrayPath = useMemo(() => joinPath(base, path), [base, path]);
 
-  useEffect(() => {
-    console.log(key);
+  const [state, forceUpdate] = useReducer((x) => x + 1, 0);
+  const form = useForm();
 
-    setState((form.getArray(key) || []) as any);
-  }, [key]);
+  console.log({ state: form.get(arrayPath, DefaultArray), arrayPath, base });
 
-  useEffect(() => {
-    if (!key) {
-      return form.onSet(setState);
-    }
-
-    return form.onMergeKey(key, (state) => {
-      setState(state as unknown[]);
+  useMemo(() => {
+    form.merge(arrayPath, () => {
+      forceUpdate();
     });
-  }, [form]);
+  }, []);
 
-  const add = useCallback(
-    (el: T[number] | T) => {
-      console.log({ el, key });
+  return useMemo(() => {
+    const uuid = crypto.randomUUID();
 
-      if (Array.isArray(el)) {
-        form.setArray(el, key);
-      } else {
-        form.setArray([el, ...form.getArray(key)], key);
-      }
+    return {
+      map(
+        cb: (payload: T[number], index: number, path: string) => JSX.Element
+      ) {
+        return form
+          .get(arrayPath, DefaultArray)
+          .map((payload: any, index: any) => {
+            const indexPath = joinPath(arrayPath, `[${index}]`);
+
+            return (
+              <Context.Path key={uuid + index} value={indexPath}>
+                {cb(payload, index, indexPath)}
+              </Context.Path>
+            );
+          });
+      },
+
+      set(state: T) {
+        form.set(arrayPath, state);
+      },
+
+      addItem(...items: T) {
+        const current = form.get(arrayPath, DefaultArray);
+
+        form.set(arrayPath, [
+          ...items.map((item) => structuredClone(item)),
+          ...current,
+        ]);
+
+        forceUpdate();
+      },
+      removeItem(...index: number[]) {
+        const current = form.get(arrayPath, DefaultArray);
+
+        _.pullAt(current, index);
+
+        form.set(arrayPath, current);
+
+        forceUpdate();
+      },
+
+      get length() {
+        return form.get(arrayPath, DefaultArray).length as number;
+      },
+
+      forceUpdate,
+    } as const;
+  }, [state, form, arrayPath]);
+}
+
+export function useInput<T>(path: string, defaultValue: T) {
+  const base = useContext(Context.Path);
+  const _path = useMemo(() => joinPath(base, path), [base, path]);
+
+  const form: any = useForm();
+
+  const [state, setState] = useState<T>(() => form.get(_path, defaultValue));
+
+  const setInput = useCallback(
+    (value: any) => {
+      setState((current) => {
+        const state = typeof value === "function" ? value(current) : value;
+        form.set(_path, state);
+        return state;
+      });
     },
-    [form, key]
+    [form, _path]
   );
 
-  const remove = useCallback((index: number) => {
-    setState((current: any) => {
-      const state = [...current];
+  useEffect(() => form.merge(_path, setInput), [form, _path]);
 
-      state.splice(index, 1);
+  return [state, setInput, _path] as const;
+}
 
-      return state;
-    });
+function joinPath(base: string, path: string) {
+  if (!base) {
+    return path;
+  }
 
-    setTimeout(() => {
-      const state = form.getArray(key);
-
-      state.splice(index, 1);
-
-      form.setArray(state, key);
-    }, 0);
-  }, [form, key]);
-
-  console.log(state);
-
-  const map = (
-    cb: (data: T[number], index: number, key: string) => JSX.Element
-  ) =>
-    state.map((data: any, index: any) => {
-      return (
-        <ContextArray.Provider
-          key={index}
-          value={{ key, index, item: `${key}[${index}]` }}
-        >
-          {cb(data, index, `${key}[${index}]`)}
-        </ContextArray.Provider>
-      );
-    });
-
-  return {
-    add,
-    remove,
-    map,
-    get length() {
-      return state.length;
-    },
-  };
+  return base + (path.startsWith("[") ? path : "." + path);
 }
 
 /**
  * Types
  */
 
-export interface Props<T extends {} = {}> extends Core {
-  initState?: T;
-  merge?: boolean;
-  onSubmit: (...args: any[]) => Promise<any>;
-
-  thenEvent?: string | Symbol;
+export interface Props<T extends object = object> extends Core {
+  state?: T;
+  onSubmit?: (state: T) => unknown;
 }
 
-type Core = Omit<JSX.IntrinsicElements["form"], "action">;
+type Core = Omit<JSX.IntrinsicElements["form"], "action" | "onSubmit">;
 
 export interface IForm<S> {
-  set: (state: S) => void;
-  merge: (state: Partial<S>) => void;
-  get: <T = unknown>(key: string) => T;
-  init: <T = unknown>(key: string, value: T) => T;
-  onSetKey: <T>(key: string, value: T, set: (value: T) => void) => () => void;
-  onMergeKey: <T>(key: string, set: (value: T) => void) => () => void;
-  setInput: <T>(key: string, set: (state: T) => void) => (state: T) => void;
-  onSet: (set: (value: S) => void) => () => void;
-
-  getArray: (key?: string) => unknown[];
-  setArray: (state: unknown[], key?: string) => void;
-
-  onThen: (cb: (payload: unknown) => void) => void;
-  onCatch: (cb: (payload: unknown) => void) => void;
-  onLoading: (cb: (state: boolean) => void) => void;
+  set(value: S): void;
+  set<T>(path: string, value: T): void;
+  get<T>(path: string, defaults: T): T;
+  merge(source: Partial<S>): void;
+  merge<T>(path: string, cb: (payload: T) => void): void;
+  addItem(path: string, ...values: unknown[]): void;
+  removeItem(path: string, ...index: number[]): void;
 }
-
-type SetKey = (cb: (state?: unknown) => void) => void;

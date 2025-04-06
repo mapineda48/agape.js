@@ -19,7 +19,7 @@ export default function SelectBoolean(props: Props) {
 }
 
 interface Props extends Core {
-  name: string;
+  path: string;
 }
 
 type Core = Omit<

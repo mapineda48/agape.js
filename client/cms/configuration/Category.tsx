@@ -5,7 +5,7 @@
 // import { findAll, createCategory } from "@agape/inventory/category";
 // import { useEmitter } from "@client/components/EventEmitter";
 
-import { useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { NextPage } from "next";
 import clsx from "clsx";
 import {
@@ -20,24 +20,30 @@ import {
   upsert,
 } from "@agape/inventory/category";
 import { useEmitter } from "@client/components/EventEmitter";
-import Form, { useInputArray } from "@client/components/form";
+import Form, { Path, useInputArray } from "@client/components/form";
 import Input from "@client/components/form/Input";
 import Checkbox from "@client/components/form/CheckBox";
 
+const state: Category[] = [];
+
 const ContegoryConfiguration: NextPage = () => {
-  const emitter = useEmitter();
+  const { setCategories, failInsertUpdateCategories } = useEmitter();
   return (
     <Form
-      initState={[]}
+      state={state}
       className="bg-teal-50 min-h-screen py-8"
-      onSubmit={async (state) => {
+      onSubmit={async (state: any) => {
         state.forEach((category: any) => {
           if (category.id === 0) {
             delete category.id;
           }
         });
 
-        emitter.InitCategories(await insertUpdate(state));
+        console.log(state);
+
+        insertUpdate(state)
+          .then(setCategories)
+          .catch(failInsertUpdateCategories);
       }}
     >
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
@@ -59,7 +65,7 @@ const ContegoryConfiguration: NextPage = () => {
           <Categories />
 
           {/* Panel Derecho: Subcategorías de la categoría seleccionada */}
-          <SubCategories />
+          <FCategory />
         </div>
       </div>
     </Form>
@@ -68,12 +74,14 @@ const ContegoryConfiguration: NextPage = () => {
 
 export function Categories() {
   const emitter = useEmitter();
-  const items = useInputArray<Category[]>();
+  const categories = useInputArray<Category[]>();
 
   useEffect(() => {
-    findAll().then(emitter.InitCategories).catch(console.error);
+    findAll().then(emitter.setCategories).catch(emitter.failLoadCategories);
 
-    return emitter.OnInitCategories(items.add);
+    return emitter.setCategories((payload: Category[]) =>
+      categories.set(payload)
+    );
   }, []);
 
   // Estado para saber qué categoría está seleccionada
@@ -89,9 +97,9 @@ export function Categories() {
           onClick={(e) => {
             e.stopPropagation();
 
-            items.add({
+            categories.addItem({
               id: 0,
-              fullName: "Categoria " + (items.length + 1),
+              fullName: "Categoria " + (categories.length + 1),
               isEnabled: false,
               subcategories: [],
             });
@@ -101,23 +109,23 @@ export function Categories() {
         </button>
       </div>
 
-      {items.map((cat, index, key) => (
+      {categories.map((cat, index, path) => (
         <div
           key={index}
           className={clsx(
-            "flex items-center p-2 rounded mb-2 cursor-pointer hover:bg-teal-200",
+            "flex items-center p-2 rounded mb-2 hover:bg-teal-200",
             index === current && "bg-teal-200"
           )}
           onClick={(e) => {
             e.stopPropagation();
 
             setIndex(index);
-            emitter.SetSubcategories({ key, subcategories: cat.subcategories });
+            emitter.setCategory(path);
           }}
         >
           {/* Checkbox isEnabled */}
           <Checkbox
-            name={`isEnabled`}
+            path={`isEnabled`}
             checked={cat.isEnabled}
             className="mr-2"
           />
@@ -125,18 +133,20 @@ export function Categories() {
           {/* Input para editar fullName de la categoría */}
           <Input.Text
             required
-            name="fullName"
-            className="bg-transparent border-none focus:outline-none w-full text-teal-900"
+            path="fullName"
+            className={clsx(
+              "bg-transparent border-none focus:outline-none w-full text-teal-900",
+              index !== current && "cursor-pointer"
+            )}
           />
 
-          {/* Ícono para remover la categoría cuando cat.id === 0 */}
           {!cat.id && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
 
-                items.remove(index);
+                categories.removeItem(index);
               }}
               className="ml-2 p-1 hover:bg-red-100 rounded"
             >
@@ -149,79 +159,117 @@ export function Categories() {
   );
 }
 
-function SubCategories() {
+function FCategory() {
   const emitter = useEmitter();
-  const [category, setCategory] = useState<string>("subcategories");
 
-  useEffect(
-    () =>
-      emitter.OnSetSubcategories(({ key, subcategories }: any) => {
-        console.log(key);
-        setCategory(key + ".subcategories");
-      }),
-    []
-  );
+  const [category, setCategory] = useState<string>("");
 
-  console.log({ category });
-  const subcategories = useInputArray<
-    {
-      id: number;
-      fullName: string;
-      isEnabled: boolean;
-    }[]
-  >(category);
+  useEffect(() => emitter.setCategory(setCategory), []);
 
-  // Estado para saber qué categoría está seleccionada
+  console.log(category);
 
   return (
-    <div className="md:w-2/3 bg-teal-50 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-teal-800">Subcategorías</h2>
-        <button
-          type="button"
-          className="p-1 rounded hover:bg-teal-200 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
+    <Path base={category}>
+      <div className="md:w-2/3 bg-teal-50 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-teal-800">Subcategorías</h2>
+          <button
+            type="button"
+            className="p-1 rounded hover:bg-teal-200 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
 
-            subcategories.add({
-              id: 0,
-              fullName: "SubCategoria " + (subcategories.length + 1),
-              isEnabled: false,
-            });
-          }}
-        >
-          <PlusIcon className="w-6 h-6 text-teal-600" />
-        </button>
+              emitter.addSubcategories();
+            }}
+          >
+            <PlusIcon className="w-6 h-6 text-teal-600" />
+          </button>
+        </div>
+
+        {!category ? (
+          // Si no hay categoría seleccionada, un mensaje
+          <p className="text-gray-500">
+            Selecciona una categoría para ver sus subcategorías
+          </p>
+        ) : (
+          <SubCategories />
+        )}
       </div>
-
-      {category === null ? (
-        // Si no hay categoría seleccionada, un mensaje
-        <p className="text-gray-500">
-          Selecciona una categoría para ver sus subcategorías
-        </p>
-      ) : (
-        // Mostrar subcategorías de la categoría seleccionada
-        subcategories.map((sub, index, key) => (
-          <div key={sub.id} className="flex items-center mb-2">
-            {/* Checkbox isEnabled */}
-            <input
-              type="checkbox"
-              checked={sub.isEnabled}
-              onChange={() => setCategory(key)}
-              className="mr-2"
-            />
-            {/* Input para editar fullName de la subcategoría */}
-            <input
-              type="text"
-              value={sub.fullName}
-              onChange={(e) => {}}
-              className="bg-transparent border-b border-teal-200 focus:outline-none focus:border-teal-400 w-full text-teal-900"
-            />
-          </div>
-        ))
-      )}
-    </div>
+    </Path>
   );
 }
 
+function SubCategories() {
+  const emitter = useEmitter();
+
+  const subcategories = useInputArray<ISubCategories[]>("subcategories");
+
+  const [current, setIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    return emitter.addSubcategories(() => {
+      subcategories.addItem({
+        fullName: "SubCategoria " + (subcategories.length + 1),
+        isEnabled: false,
+      });
+    });
+  }, [subcategories]);
+
+  if (!subcategories.length) {
+    return (
+      <p className="text-gray-500">
+        Sin subcategorías
+      </p>
+    );
+  }
+
+  return subcategories.map((payload, index) => {
+    return (
+      <div
+        key={index}
+        className={clsx(
+          "flex items-center mb-2 p-2 hover:bg-teal-100",
+          index === current && "bg-teal-100"
+        )}
+        onClick={() => {
+          setIndex(index);
+        }}
+      >
+        <Checkbox path="isEnabled" className="mr-2" />
+        <Input.Text
+          path="fullName"
+          placeholder={payload.fullName}
+          className={clsx(
+            "bg-transparent border-teal-200 focus:outline-none focus:border-teal-400 w-full text-teal-900",
+            index !== current && "cursor-pointer"
+          )}
+        />
+        {!payload.id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+
+              subcategories.removeItem(index);
+            }}
+            className="ml-2 p-1 hover:bg-red-100 rounded"
+          >
+            <TrashIcon className="w-5 h-5 text-red-500" />
+          </button>
+        )}
+      </div>
+    );
+  });
+}
+
 export default ContegoryConfiguration;
+
+/**
+ * Types
+ */
+
+interface ISubCategories {
+  id?: number;
+  fullName: string;
+  isEnabled: boolean;
+}

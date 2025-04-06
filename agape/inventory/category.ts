@@ -1,5 +1,4 @@
 import db from "../../models";
-import { ICategory } from "../../models/inventory/category";
 import { ISubcategory } from "../../models/inventory/subcategory";
 
 export async function findAll() {
@@ -12,7 +11,9 @@ export async function findAll() {
                 attributes: ["id", "fullName", "isEnabled"],
             }
         ],
-        order: [["id", "DESC"]]
+        order: [
+            ["id", "DESC"], 
+            [{ model: db.inventory.subcategory, as: "subcategories" }, "id", "DESC"]]
     });
 
     return records as Category[]
@@ -28,6 +29,10 @@ export async function upsert({ subcategories, ...category }: Category) {
 
 
         await record.save()
+    }
+
+    if (!subcategories) {
+        return;
     }
 
     await Promise.all(subcategories.map(async ({ fullName, isEnabled, id }) => {

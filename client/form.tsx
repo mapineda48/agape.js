@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import Form, { Path, useArray, useForm } from "./components/form.v2";
-import Input from "./components/form.v2/Input";
+import Form, { Path, useInputArray, useForm } from "./components/form";
+import Input from "./components/form/Input";
 
 export default function TestForm() {
   return (
@@ -26,7 +26,7 @@ export default function TestForm() {
 }
 
 function TestArray() {
-  const values = useArray<{ value: string }[]>("values");
+  const values = useInputArray<{ value: string }[]>("values");
 
   return (
     <div>

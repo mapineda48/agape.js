@@ -32,7 +32,7 @@ export function LoginForm() {
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
         <Form
-          onSubmit={(obj) => {
+          onSubmit={(obj: any) => {
             loading();
 
             return login(obj.username, obj.password)
@@ -48,7 +48,7 @@ export function LoginForm() {
             </label>
             <Input.Text
               id="username"
-              name="username"
+              path="username"
               required
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
               placeholder="username"
@@ -62,7 +62,7 @@ export function LoginForm() {
             <Input.Text
               password
               id="password"
-              name="password"
+              path="password"
               required
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
               placeholder="********"

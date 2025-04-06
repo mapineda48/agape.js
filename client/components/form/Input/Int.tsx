@@ -2,9 +2,9 @@ import { JSX } from "react";
 import { useInput } from "..";
 
 export default function InputInt(props: Props) {
-  const { name, ...core } = props;
+  const { path, ...core } = props;
 
-  const [state, setState] = useInput(name, 0);
+  const [state, setState] = useInput(path, 0);
 
   return (
     <input
@@ -17,7 +17,7 @@ export default function InputInt(props: Props) {
 }
 
 interface Props extends Core {
-  name: string;
+  path: string;
 }
 
 type Core = Omit<

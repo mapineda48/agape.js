@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Debug server.ts con ts-node y nodemon",
+        "runtimeExecutable": "nodemon",
+        "runtimeArgs": [
+          "--exec",
+          "ts-node -r ./scripts/browser.js -r module-alias/register",
+          "server.ts",
+          "--watch",
+          "server.ts",
+          "--watch",
+          "agape",
+          "--watch",
+          "lib"
+        ],
+        "restart": true,
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      }
+    ]
+  }
+  

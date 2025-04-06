@@ -2,9 +2,9 @@ import { JSX } from "react";
 import { useInput } from "..";
 
 export default function InputText(props: Props) {
-  const { name, password, email, ...core } = props;
+  const { path, password, email, value = "", ...core } = props;
 
-  const [state, setState] = useInput(name, "");
+  const [state, setState] = useInput(path, value);
 
   return (
     <input
@@ -17,9 +17,10 @@ export default function InputText(props: Props) {
 }
 
 interface Props extends Core {
-  name: string;
+  path: string;
   password?: boolean;
   email?: boolean;
+  value?: string;
 }
 
 type Core = Omit<

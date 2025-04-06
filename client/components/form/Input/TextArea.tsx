@@ -2,9 +2,9 @@ import { JSX } from "react";
 import { useInput } from "..";
 
 export default function InputTextArea(props: Props) {
-  const { name, ...core } = props;
+  const { path, ...core } = props;
 
-  const [state, setState] = useInput(name, "");
+  const [state, setState] = useInput(path, "");
 
   return (
     <textarea
@@ -16,7 +16,7 @@ export default function InputTextArea(props: Props) {
 }
 
 interface Props extends Core {
-  name: string;
+  path: string;
 }
 
 type Core = Omit<

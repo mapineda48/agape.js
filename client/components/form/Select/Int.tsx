@@ -24,7 +24,7 @@ export default function SelectInt(props: Props) {
 }
 
 interface Props extends Core {
-  name: string;
+  path: string;
   onChange?: (value: number) => void;
 }
 

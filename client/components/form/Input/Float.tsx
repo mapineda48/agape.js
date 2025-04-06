@@ -2,22 +2,24 @@ import { JSX } from "react";
 import { useInput } from "..";
 
 export default function InputFloat(props: Props) {
-  const { name, ...core } = props;
+  const { path, ...core } = props;
 
-  const [state, setState] = useInput(name, 0);
+  const [state, setState] = useInput(path, 0);
 
   return (
     <input
       {...core}
       type="number"
       value={isNaN(state) ? "" : state}
-      onChange={({ currentTarget }) => setState(parseFloat(currentTarget.value) ?? 0)}
+      onChange={({ currentTarget }) =>
+        setState(parseFloat(currentTarget.value) ?? 0)
+      }
     />
   );
 }
 
 interface Props extends Core {
-  name: string;
+  path: string;
 }
 
 type Core = Omit<
