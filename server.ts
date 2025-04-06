@@ -18,8 +18,10 @@ const web = next({ dev });
 const log = `> Server listening at http://localhost:${PORT} as ${dev ? "development" : NODE_ENV}`;
 
 (async () => {
+    console.log("connect db");
     await models.Init(DATABASEURI, dev);
 
+    console.log("connect service");
     const service = await prepareBackend({
         secret: AGAPE_SECRET,
         admin: {

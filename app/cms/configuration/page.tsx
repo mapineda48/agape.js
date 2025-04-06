@@ -1,3 +1,3 @@
-import ComingSoon from "../ComingSoon";
+import { ConfigurationCMS } from "@client/cms/configuration";
 
-export default ComingSoon;
+export default ConfigurationCMS;

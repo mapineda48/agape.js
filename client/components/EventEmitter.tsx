@@ -2,45 +2,30 @@ import mitt from "mitt";
 import lodash from "lodash";
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 
-const Context = createContext<Emitter>((null as unknown) as Emitter);
+const Context = createContext<Emitter>(null as unknown as Emitter);
 
 export default function EventEmitter(props: { children: React.ReactNode }) {
   const emitter = useMemo(mitt, []);
 
-  useEffect(() => () => emitter.all.clear(), [emitter]);
+  useEffect(() => {
+    return () => emitter.all.clear();
+  }, [emitter]);
 
   return <Context.Provider value={emitter}>{props.children}</Context.Provider>;
 }
 
 export function useEmitter(): EmitterProxy {
   const emitter = useContext(Context);
-  const hook = useRef<LocalEvent>({});
-
-  useEffect(() => {
-    const event = hook.current;
-    return () => Object.values(event).forEach((e) => emitter.off(e));
-  }, [emitter]);
 
   return useMemo(() => {
-    const onHook = (handler: HookEvent) => {
-      const events = Object.entries(handler).map(([event, fn]) => {
-        return [
-          hook.current[event] ?? (hook.current[event] = Symbol()),
-          fn,
-        ] as const;
-      });
-
-      events.forEach(([e, fn]) => emitter.on(e, fn));
-    };
-
     const on = (event: string, cb: () => void) => {
       emitter.on(event, cb);
 
       return () => emitter.off(event, cb);
     };
 
-    const emit = (event: string, payload: unknown) => {
-      emitter.emit(event, lodash.cloneDeep(payload));
+    const emit$ = (e: string, payload: unknown) => {
+      emitter.emit(e, lodash.cloneDeep(payload));
     };
 
     return new Proxy(
@@ -48,17 +33,22 @@ export function useEmitter(): EmitterProxy {
       {
         get(_, event: string) {
           switch (event) {
+            case "emit":
+              return emit$;
             case "on":
               return on;
-            case "emit":
-              return emit;
-            case "hook":
-              return onHook;
-            default:
-              return (payload: unknown) => {
-                emitter.emit(hook.current[event] ?? event, payload);
-              };
           }
+
+          return (payload: any) => {
+            if (typeof payload !== "function") {
+              emitter.emit(event, payload);
+              return;
+            }
+
+            emitter.on(event, payload);
+
+            return () => emitter.off(event, payload);         
+          };
         },
       }
     );
@@ -68,10 +58,6 @@ export function useEmitter(): EmitterProxy {
 /**
  * Types
  */
-
-type LocalEvent = {
-  [x: string]: symbol;
-};
 
 type EmitterProxy = {
   readonly [K: string]: (...args: unknown[]) => void;
