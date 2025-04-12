@@ -2,9 +2,9 @@ import { JSX } from "react";
 import { useInput } from "..";
 
 export default function SelectInt(props: Props) {
-  const { name, onChange, ...core } = props;
+  const { path, onChange, ...core } = props;
 
-  const [state, setState] = useInput(name, 0);
+  const [state, setState] = useInput(path, 0);
 
   return (
     <select

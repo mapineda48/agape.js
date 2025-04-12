@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin4-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin4-deployment
+  template:
+    metadata:
+      labels:
+        app: pgadmin4-deployment
+    spec:
+      containers:
+        - name: pgadmin4-deployment
+          image: dpage/pgadmin4:7.4
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "admin@mapineda48.com"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: "admin"
+          ports:
+            - containerPort: 80

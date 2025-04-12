@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP_NAME}-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: ${APP_NAME}-deployment
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}-deployment
+    spec:
+      containers:
+        - name: ${APP_NAME}-deployment
+          image: mapineda48/agape-app-sena:latest
+          imagePullPolicy: Always
+          env:
+            - name: AGAPE_POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: agape-secret
+                  key: postgres-uri
+            - name: AGAPE_STORAGE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: agape-secret
+                  key: storage-uri
+            - name: AGAPE_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: agape-secret
+                  key: jwt-key
+          ports:
+            - containerPort: 5000

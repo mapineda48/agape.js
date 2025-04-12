@@ -54,9 +54,6 @@ function deepDiff(obj1: object, obj2: object): object {
 //   */
   
 
-
-import _ from "lodash";
-
 function deepDiff2(obj1: any, obj2: any): any {
   if (_.isArray(obj1) && _.isArray(obj2)) {
     const diffs: any[] = [];
@@ -72,7 +69,7 @@ function deepDiff2(obj1: any, obj2: any): any {
         // Nuevo
         diffs.push(item2);
       } else {
-        const diff = deepDiff(item1, item2);
+        const diff:any = deepDiff(item1, item2);
         if (!_.isEmpty(diff)) {
           if (!diff.id) diff.id = item2.id; // mantener id si cambió algo
           diffs.push(diff);
@@ -91,7 +88,7 @@ function deepDiff2(obj1: any, obj2: any): any {
   }
 
   if (_.isObject(obj2)) {
-    return _.transform(obj2, (result, value, key) => {
+    return _.transform(obj2, (result:any, value, key) => {
       const val1 = obj1?.[key];
       if (_.isObject(value) && _.isObject(val1)) {
         const diff = deepDiff(val1, value);

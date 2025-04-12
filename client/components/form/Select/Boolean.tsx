@@ -2,9 +2,9 @@ import { JSX } from "react";
 import { useInput } from "..";
 
 export default function SelectBoolean(props: Props) {
-  const { name, ...core } = props;
+  const { path, ...core } = props;
 
-  const [state, setState] = useInput(name, false);
+  const [state, setState] = useInput(path, false);
 
   return (
     <select

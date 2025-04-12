@@ -1,10 +1,10 @@
+
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { login, logout } from "@agape/access";
-import { sayHelloWorld } from "@agape/public";
-import Form, { Props } from "@client/components/form";
+import Form, { useForm } from "@client/components/form";
 import Input from "@client/components/form/Input";
-import Head from "next/head";
+import { useEmitter } from "@client/components/EventEmitter";
 
 export function Logout() {
   const router = useRouter();
@@ -22,25 +22,46 @@ export function Logout() {
   );
 }
 
-export function LoginForm() {
+export function IniciarSesion() {
+  const emitter = useEmitter();
   const [state, setState] = useState(false);
-  const loading = useCallback(() => setState((state) => !state), []);
   const router = useRouter();
+  const form = useForm();
 
+  useEffect(() => emitter.setLoading(setState), []);
+
+  useEffect(() => {
+    if (state) {
+      return;
+    }
+
+    return form.submit((state: any) => {
+      emitter.setLoading(true);
+
+      login(state.username, state.password)
+        .then(() => router.replace("/cms"))
+        .catch(console.error)
+        .finally(() => emitter.setLoading(false));
+    });
+  }, [state, form]);
+
+  return (
+    <button
+      disabled={state}
+      type="submit"
+      className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
+    >
+      Iniciar Sesión
+    </button>
+  );
+}
+
+export function LoginForm() {
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
-        <Form
-          onSubmit={(obj: any) => {
-            loading();
-
-            return login(obj.username, obj.password)
-              .then(() => router.replace("/cms"))
-              .catch(console.error)
-              .finally(loading);
-          }}
-        >
+        <Form>
           {/* Campo de Correo Electrónico */}
           <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="email">
@@ -69,13 +90,7 @@ export function LoginForm() {
             />
           </div>
           {/* Botón de Envío */}
-          <button
-            disabled={state}
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
-          >
-            Iniciar Sesión
-          </button>
+          <IniciarSesion />
           {/* Enlace de Registro */}
           <p className="mt-4 text-center text-gray-600">
             ¿No tienes una cuenta?
