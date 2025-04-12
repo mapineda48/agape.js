@@ -9,15 +9,24 @@ import {
   useRef,
   useState,
 } from "react";
-import _ from "lodash";
+import _, { PropertyPath } from "lodash";
 import { useEmitter } from "../EventEmitter";
+import yieldToUI from "../util/yieldToUI";
+
+const DefaultArray: any = [];
 
 const Context = {
-  Form: createContext(null as any as IForm<any>),
-  Path: createContext(""),
+  Form: createContext({} as IForm<any>),
+  Path: createContext<PropertyPath[]>([]),
 };
 
-export default function FormProvider({ state = {}, onSubmit, ...core }: Props) {
+/**
+ * Proveedor de formulario controlado.
+ * 
+ * Este componente encapsula la lógica de gestión del estado del formulario,
+ * control de inputs y eventos `merge` y `submit` mediante un EventEmitter.
+ */
+export default function FormProvider({ state = {}, ...core }: Props) {
   const emitter = useEmitter();
   const ref = useRef(state);
 
@@ -29,53 +38,74 @@ export default function FormProvider({ state = {}, onSubmit, ...core }: Props) {
       set(...args: unknown[]) {
         const [arg0, arg1] = args;
 
-        const path = typeof arg0 === "string" ? arg0 : "";
-        const value = args.length === 1 ? arg0 : arg1;
+        if (Array.isArray(arg0) && args.length !== 1) {
+          _.set(ref.current, arg0, structuredClone(arg1));
 
-        if (!path) {
-          ref.current = structuredClone(value) as object;
-          emitter.emit(MERGE, value);
-          return;
+          return arg1;
         }
 
-        _.set(ref.current, path, _.cloneDeep(value));
-        return value;
+        ref.current = structuredClone(arg0) as object;
+        emitter.emit(MERGE, arg0);
       },
 
-      get(path: string, defaults: unknown) {
-        if (!path) {
+      get(...args: unknown[]) {
+        if (!args.length) {
           return structuredClone(ref.current);
         }
 
-        return structuredClone(_.get(ref.current, path, defaults));
+        const [arg0, arg1] = args;
+
+        if (Array.isArray(arg0)) {
+          return structuredClone(_.get(ref.current, arg0, arg1));
+        }
+
+        throw new Error("Unkown get params");
+      },
+
+      async async(...args: unknown[]) {
+        await yieldToUI();
+
+        return this.get(...args);
       },
 
       merge(...args: unknown[]) {
+        const [arg0, arg1] = args as any;
+
         if (args.length === 1) {
-          return emitter.emit(MERGE, args[0]);
+          return typeof arg0 === "function"
+            ? emitter.on(MERGE, arg0)
+            : emitter.emit(MERGE, args[0]);
         }
 
-        const [path, cb]: [string, any] = args as any;
+        if (!Array.isArray(arg0)) {
+          throw new Error("Invalid paths");
+        }
 
-        return emitter.on(MERGE, (payload: any) => {
-          if (!path) {
-            return cb(structuredClone(payload));
-          }
+        if (!(typeof arg1 === "function")) {
+          throw new Error("Invalid merge handlers");
+        }
 
-          if (!_.has(payload, path)) {
+        return emitter.on(MERGE, (payload: unknown) => {
+          if (!_.has(payload, arg0)) {
             return;
           }
 
-          cb(structuredClone(_.get(payload, path)));
+          const state = structuredClone(_.get(payload, arg0));
+
+          arg1(state);
         });
       },
 
-      submit(cb: any) {
+      submit(cb: unknown) {
         if (typeof cb === "undefined") {
-          emitter.emit(SUBMIT, ref.current);
+          return emitter.emit(SUBMIT, ref.current);
         }
 
-        return emitter.on(SUBMIT, cb);
+        if (typeof cb === "function") {
+          return emitter.on(SUBMIT, cb);
+        }
+
+        throw new Error("Unknown submit action");
       },
     };
   }, []);
@@ -86,136 +116,160 @@ export default function FormProvider({ state = {}, onSubmit, ...core }: Props) {
         {...core}
         onSubmit={(e) => {
           e.preventDefault();
-
-          if (!onSubmit) {
-            return form.submit();
-          }
-
-          const state = _.cloneDeep(ref.current);
-
-          onSubmit(state);
+          form.submit();
         }}
       />
     </Context.Form>
   );
 }
 
+/**
+ * Hook para acceder al formulario.
+ */
 export function useForm<S = object>() {
   const form = useContext(Context.Form);
 
   return form as IForm<S>;
 }
 
-export function Path(props: {
-  base: string;
-  children: JSX.Element | JSX.Element[];
-}) {
-  const base = useContext(Context.Path);
-  const path = useMemo(() => joinPath(base, props.base), [base, props.base]);
+/**
+ * Hook para combinar rutas actuales del contexto con una nueva.
+ */
+export function usePaths(path?: PropertyPath | PropertyPath[]) {
+  const context = useContext(Context.Path);
 
-  return <Context.Path value={path}>{props.children}</Context.Path>;
+  return useMemo(() => {
+    if (path === undefined) {
+      return [...context];
+    }
+
+    if (Array.isArray(path)) {
+      return [...context, ...path];
+    }
+
+    return [...context, path];
+  }, [path, context]);
 }
 
-const DefaultArray: any = [];
+/**
+ * Componente proveedor de contexto de ruta de formulario.
+ */
+export function Path(props: PropsPath) {
+  const paths = usePaths(props.value);
 
-export function useInputArray<T extends unknown[]>(path = "") {
-  const base = useContext(Context.Path);
-  const arrayPath = useMemo(() => joinPath(base, path), [base, path]);
+  return <Context.Path value={paths}>{props.children}</Context.Path>;
+}
+
+/**
+ * Hook para manejar arreglos como inputs.
+ */
+export function useInputArray<T extends unknown[]>(
+  path?: PropertyPath
+): IInputArray<T> {
+  const paths = usePaths(path);
 
   const [state, forceUpdate] = useReducer((x) => x + 1, 0);
   const form = useForm();
 
-  console.log({ state: form.get(arrayPath, DefaultArray), arrayPath, base });
+  useEffect(() => {
+    if (!path) {
+      return form.merge(() => forceUpdate());
+    }
 
-  useMemo(() => {
-    form.merge(arrayPath, () => {
-      forceUpdate();
-    });
-  }, []);
+    return form.merge(paths, () => forceUpdate());
+  }, [form, path, paths]);
 
   return useMemo(() => {
     const uuid = crypto.randomUUID();
 
     return {
-      map(
-        cb: (payload: T[number], index: number, path: string) => JSX.Element
-      ) {
-        return form
-          .get(arrayPath, DefaultArray)
-          .map((payload: any, index: any) => {
-            const indexPath = joinPath(arrayPath, `[${index}]`);
+      set(state: T) {
+        if (!path) {
+          form.set(state);
+          return;
+        }
 
-            return (
-              <Context.Path key={uuid + index} value={indexPath}>
-                {cb(payload, index, indexPath)}
-              </Context.Path>
-            );
-          });
+        form.set(paths, state);
       },
 
-      set(state: T) {
-        form.set(arrayPath, state);
+      get() {
+        if (!path) {
+          return (form.get() ?? []) as any[];
+        }
+
+        return form.get(paths, []);
+      },
+
+      map(
+        cb: (
+          payload: T[number],
+          index: number,
+          paths: PropertyPath[]
+        ) => JSX.Element
+      ) {
+        return this.get().map((payload: any, index: number) => {
+          return (
+            <Path key={uuid + index} value={path ? [path, index] : index}>
+              {cb(payload, index, [...paths, index])}
+            </Path>
+          );
+        });
       },
 
       addItem(...items: T) {
-        const current = form.get(arrayPath, DefaultArray);
+        const current = this.get();
 
-        form.set(arrayPath, [
-          ...items.map((item) => structuredClone(item)),
-          ...current,
-        ]);
+        this.set([...structuredClone(items), ...current] as T);
 
         forceUpdate();
       },
+
       removeItem(...index: number[]) {
-        const current = form.get(arrayPath, DefaultArray);
+        const current = form.get(paths, DefaultArray);
 
         _.pullAt(current, index);
 
-        form.set(arrayPath, current);
+        this.set(current);
 
         forceUpdate();
       },
 
       get length() {
-        return form.get(arrayPath, DefaultArray).length as number;
+        return this.get().length;
       },
 
       forceUpdate,
-    } as const;
-  }, [state, form, arrayPath]);
+    } as IInputArray<T>;
+  }, [state, form, path, paths]);
 }
 
-export function useInput<T>(path: string, defaultValue: T) {
-  const base = useContext(Context.Path);
-  const _path = useMemo(() => joinPath(base, path), [base, path]);
-
+/**
+ * Hook para inputs individuales con valor y setter reactivo.
+ */
+export function useInput<T>(path: PropertyPath, defaultValue: T) {
+  const paths = usePaths(path);
   const form: any = useForm();
+  const [state, setState] = useState<T>(() => {
+    const state = form.get(paths, defaultValue);
+    form.set(paths, state);
 
-  const [state, setState] = useState<T>(() => form.get(_path, defaultValue));
+    return state;
+  });
 
   const setInput = useCallback(
     (value: any) => {
       setState((current) => {
         const state = typeof value === "function" ? value(current) : value;
-        form.set(_path, state);
+        form.set(paths, state);
         return state;
       });
     },
-    [form, _path]
+    [form, paths]
   );
 
-  useEffect(() => form.merge(_path, setInput), [form, _path]);
+  useEffect(() => form.merge(paths, setInput), [form, paths]);
 
-  return [state, setInput, _path] as const;
-}
-
-function joinPath(base: string, path: string) {
-  if (!base) {
-    return path;
-  }
-
-  return base + (path.startsWith("[") ? path : "." + path);
+  return [state, setInput, paths] as const;
 }
 
 /**
@@ -224,15 +278,42 @@ function joinPath(base: string, path: string) {
 
 export interface Props<T extends object = object> extends Core {
   state?: T;
-  onSubmit?: (state: T) => unknown;
 }
 
 type Core = Omit<JSX.IntrinsicElements["form"], "action" | "onSubmit">;
 
 export interface IForm<S> {
   set(value: S): void;
-  set<T>(path: string, value: T): void;
-  get<T>(path: string, defaults: T): T;
+  set<T>(paths: PropertyPath[], value: T): void;
+  get(): S;
+  get<T>(paths: PropertyPath[], defaults: T): T;
+  async(): Promise<S>;
+  async<T>(paths: PropertyPath[], defaults: T): Promise<T>;
   merge(source: Partial<S>): void;
-  merge<T>(path: string, cb: (payload: T) => void): void;
+  merge<T>(path: PropertyPath[], cb: (payload: T) => void): void;
+  merge(cb: (payload: S) => void): void;
+  submit(cb: (state: S) => unknown): void;
+  submit(): void;
+}
+
+export interface IInputArray<T extends unknown[]> {
+  readonly map: (
+    cb: (
+      payload: T[number],
+      index: number,
+      paths: PropertyPath[]
+    ) => JSX.Element
+  ) => JSX.Element[];
+
+  readonly get: () => T;
+  readonly set: (state: T) => void;
+  readonly addItem: (...items: T) => void;
+  readonly removeItem: (...index: number[]) => void;
+  readonly length: number;
+  readonly forceUpdate: () => void;
+}
+
+interface PropsPath {
+  value: PropertyPath | PropertyPath[];
+  children: JSX.Element | JSX.Element[];
 }

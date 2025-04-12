@@ -20,9 +20,9 @@ import {
   upsert,
 } from "@agape/inventory/category";
 import { useEmitter } from "@client/components/EventEmitter";
-import Form, { Path, useForm, useInputArray } from "@client/components/form.v3";
-import Input from "@client/components/form.v3/Input";
-import Checkbox from "@client/components/form.v3/CheckBox";
+import Form, { Path, useForm, useInputArray } from "@client/components/form";
+import Input from "@client/components/form/Input";
+import Checkbox from "@client/components/form/CheckBox";
 
 const state: Category[] = [];
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Form, { Path, useInputArray, useForm } from "./components/form.v3";
-import Input from "./components/form.v3/Input";
+import Form, { Path, useInputArray, useForm } from "./components/form";
+import Input from "./components/form/Input";
 import yieldToUI from "./components/util/yieldToUI";
 
 export default function TestForm() {
