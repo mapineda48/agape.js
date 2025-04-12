@@ -1,6 +1,5 @@
 import {
   createContext,
-  FormEvent,
   JSX,
   useCallback,
   useContext,
@@ -24,6 +23,7 @@ export default function FormProvider({ state = {}, onSubmit, ...core }: Props) {
 
   const form: any = useMemo(() => {
     const MERGE = Symbol("Merge");
+    const SUBMIT = Symbol("Submit");
 
     return {
       set(...args: unknown[]) {
@@ -69,6 +69,14 @@ export default function FormProvider({ state = {}, onSubmit, ...core }: Props) {
           cb(structuredClone(_.get(payload, path)));
         });
       },
+
+      submit(cb: any) {
+        if (typeof cb === "undefined") {
+          emitter.emit(SUBMIT, ref.current);
+        }
+
+        return emitter.on(SUBMIT, cb);
+      },
     };
   }, []);
 
@@ -80,7 +88,7 @@ export default function FormProvider({ state = {}, onSubmit, ...core }: Props) {
           e.preventDefault();
 
           if (!onSubmit) {
-            return;
+            return form.submit();
           }
 
           const state = _.cloneDeep(ref.current);
@@ -227,6 +235,4 @@ export interface IForm<S> {
   get<T>(path: string, defaults: T): T;
   merge(source: Partial<S>): void;
   merge<T>(path: string, cb: (payload: T) => void): void;
-  addItem(path: string, ...values: unknown[]): void;
-  removeItem(path: string, ...index: number[]): void;
 }

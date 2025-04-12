@@ -67,7 +67,7 @@ export function useEmitter(): EmitterProxy {
      * @param {unknown} payload - Datos asociados al evento.
      */
     const emit$ = (event: string, payload: unknown) => {
-      emitter.emit(event, lodash.cloneDeep(payload));
+      emitter.emit(event, structuredClone(payload));
     };
 
     // Se utiliza un Proxy para manejar dinámicamente las llamadas a métodos de emisión o suscripción.
@@ -86,11 +86,11 @@ export function useEmitter(): EmitterProxy {
           // De lo contrario, se emite el evento con el payload proporcionado.
           return (payload: any) => {
             if (typeof payload !== "function") {
-              emitter.emit(event, payload);
+              emit$(event, payload);
               return;
             }
-            emitter.on(event, payload);
-            return () => emitter.off(event, payload);
+
+            return on(event, payload);
           };
         },
       }

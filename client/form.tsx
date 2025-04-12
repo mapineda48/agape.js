@@ -1,20 +1,17 @@
-import { useEffect } from "react";
-import Form, { Path, useInputArray, useForm } from "./components/form";
-import Input from "./components/form/Input";
+import { useEffect, useState } from "react";
+import Form, { Path, useInputArray, useForm } from "./components/form.v3";
+import Input from "./components/form.v3/Input";
+import yieldToUI from "./components/util/yieldToUI";
 
 export default function TestForm() {
   return (
-    <Form
-      onSubmit={(payload) => {
-        console.log(payload);
-      }}
-    >
+    <Form>
       <Input.Text path="username" placeholder="username" />
       <Input.Text path="password" password placeholder="password" />
-      <Path base="user">
+      <Path value="user">
         <Input.Text path="fullname" placeholder="fullname" />
         <Input.Int path="age" placeholder="age" />
-        <Path base="user">
+        <Path value="user">
           <Input.Text path="fullname" placeholder="fullname" />
           <Input.Int path="age" placeholder="age" />
         </Path>
@@ -62,6 +59,7 @@ function TestArray() {
 }
 
 function Submit() {
+  const [disabled, setLoading] = useState(false);
   const form = useForm<Payload>();
 
   useEffect(() => {
@@ -71,9 +69,22 @@ function Submit() {
         age: 31,
       },
     });
-  }, []);
+  }, [form]);
 
-  return <input type="submit" value="Enviar" />;
+  useEffect(() => {
+    if (disabled) {
+      return;
+    }
+
+    return form.submit(async (state) => {
+      setLoading(true);
+      await yieldToUI(5000);
+      console.log(state);
+      setLoading(false);
+    });
+  }, [disabled]);
+
+  return <input disabled={disabled} type="submit" value={disabled ? "Cargando..." : "Enviar"} />;
 }
 
 interface Payload {

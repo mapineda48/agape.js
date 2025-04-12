@@ -20,41 +20,18 @@ import {
   upsert,
 } from "@agape/inventory/category";
 import { useEmitter } from "@client/components/EventEmitter";
-import Form, { Path, useInputArray } from "@client/components/form";
-import Input from "@client/components/form/Input";
-import Checkbox from "@client/components/form/CheckBox";
+import Form, { Path, useForm, useInputArray } from "@client/components/form.v3";
+import Input from "@client/components/form.v3/Input";
+import Checkbox from "@client/components/form.v3/CheckBox";
 
 const state: Category[] = [];
 
 const ContegoryConfiguration: NextPage = () => {
-  const { setCategories, failInsertUpdateCategories } = useEmitter();
   return (
-    <Form
-      state={state}
-      className="bg-teal-50 min-h-screen py-8"
-      onSubmit={async (state: any) => {
-        state.forEach((category: any) => {
-          if (category.id === 0) {
-            delete category.id;
-          }
-        });
-
-        console.log(state);
-
-        insertUpdate(state)
-          .then(setCategories)
-          .catch(failInsertUpdateCategories);
-      }}
-    >
+    <Form state={state} className="bg-teal-50 min-h-screen py-8">
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
         {/* Botón Guardar en la esquina superior derecha */}
-        <button
-          type="submit"
-          className="absolute top-6 right-6 flex items-center bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-500 transition-colors"
-        >
-          <CheckCircleIcon className="w-5 h-5 mr-2" />
-          Guardar
-        </button>
+        <InsertUpdate />
 
         <h1 className="text-2xl font-bold mb-6 text-teal-700">
           Administrar Categorías
@@ -72,6 +49,30 @@ const ContegoryConfiguration: NextPage = () => {
   );
 };
 
+function InsertUpdate() {
+  const emitter = useEmitter();
+
+  const form: any = useForm();
+
+  useEffect(() => {
+    return form.submit((state: Category[]) => {
+      insertUpdate(state)
+        .then(emitter.setCategories)
+        .catch(emitter.failInsertUpdateCategories);
+    });
+  }, [emitter]);
+
+  return (
+    <button
+      type="submit"
+      className="absolute top-6 right-6 flex items-center bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-500 transition-colors"
+    >
+      <CheckCircleIcon className="w-5 h-5 mr-2" />
+      Guardar
+    </button>
+  );
+}
+
 export function Categories() {
   const emitter = useEmitter();
   const categories = useInputArray<Category[]>();
@@ -79,10 +80,11 @@ export function Categories() {
   useEffect(() => {
     findAll().then(emitter.setCategories).catch(emitter.failLoadCategories);
 
-    return emitter.setCategories((payload: Category[]) =>
-      categories.set(payload)
-    );
-  }, []);
+    return emitter.setCategories((payload: Category[]) => {
+      categories.set(payload);
+      setIndex(null);
+    });
+  }, [emitter]);
 
   // Estado para saber qué categoría está seleccionada
   const [current, setIndex] = useState<number | null>(null);
@@ -98,18 +100,17 @@ export function Categories() {
             e.stopPropagation();
 
             categories.addItem({
-              id: 0,
               fullName: "Categoria " + (categories.length + 1),
               isEnabled: false,
               subcategories: [],
-            });
+            } as any);
           }}
         >
           <PlusIcon className="w-6 h-6 text-teal-600" />
         </button>
       </div>
 
-      {categories.map((cat, index, path) => (
+      {categories.map((cat, index, paths) => (
         <div
           key={index}
           className={clsx(
@@ -120,7 +121,7 @@ export function Categories() {
             e.stopPropagation();
 
             setIndex(index);
-            emitter.setCategory(path);
+            emitter.setCategory(paths);
           }}
         >
           {/* Checkbox isEnabled */}
@@ -162,14 +163,12 @@ export function Categories() {
 function FCategory() {
   const emitter = useEmitter();
 
-  const [category, setCategory] = useState<string>("");
+  const [category, setCategory] = useState<string[]>([]);
 
-  useEffect(() => emitter.setCategory(setCategory), []);
-
-  console.log(category);
+  useEffect(() => emitter.setCategory(setCategory), []);  
 
   return (
-    <Path base={category}>
+    <Path value={category}>
       <div className="md:w-2/3 bg-teal-50 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-teal-800">Subcategorías</h2>
@@ -185,15 +184,7 @@ function FCategory() {
             <PlusIcon className="w-6 h-6 text-teal-600" />
           </button>
         </div>
-
-        {!category ? (
-          // Si no hay categoría seleccionada, un mensaje
-          <p className="text-gray-500">
-            Selecciona una categoría para ver sus subcategorías
-          </p>
-        ) : (
-          <SubCategories />
-        )}
+        <SubCategories />
       </div>
     </Path>
   );
@@ -216,14 +207,10 @@ function SubCategories() {
   }, [subcategories]);
 
   if (!subcategories.length) {
-    return (
-      <p className="text-gray-500">
-        Sin subcategorías
-      </p>
-    );
+    return <p className="text-gray-500">Sin subcategorías</p>;
   }
 
-  return subcategories.map((payload, index) => {
+  return subcategories.map((payload, index, paths) => {
     return (
       <div
         key={index}
@@ -238,6 +225,7 @@ function SubCategories() {
         <Checkbox path="isEnabled" className="mr-2" />
         <Input.Text
           path="fullName"
+          required
           placeholder={payload.fullName}
           className={clsx(
             "bg-transparent border-teal-200 focus:outline-none focus:border-teal-400 w-full text-teal-900",
