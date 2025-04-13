@@ -1,11 +1,4 @@
-// import Form, { IForm } from "@client/components/form";
-// import Checkbox from "@client/components/form/CheckBox";
-// import Input from "@client/components/form/Input";
-// import { useCallback, useEffect, useState } from "react";
-// import { findAll, createCategory } from "@agape/inventory/category";
-// import { useEmitter } from "@client/components/EventEmitter";
-
-import { JSX, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { NextPage } from "next";
 import clsx from "clsx";
 import {
@@ -13,12 +6,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import {
-  findAll,
-  insertUpdate,
-  Category,
-  upsert,
-} from "@agape/inventory/category";
+import { findAll, insertUpdate, Category } from "@agape/inventory/category";
 import { useEmitter } from "@client/components/EventEmitter";
 import Form, { Path, useForm, useInputArray } from "@client/components/form";
 import Input from "@client/components/form/Input";
@@ -28,12 +16,10 @@ const state: Category[] = [];
 
 const ContegoryConfiguration: NextPage = () => {
   return (
-    <Form state={state} className="bg-teal-50 min-h-screen py-8">
-      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
-        {/* Botón Guardar en la esquina superior derecha */}
+    <Form state={state}>
+      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-md p-6 relative">
         <InsertUpdate />
-
-        <h1 className="text-2xl font-bold mb-6 text-teal-700">
+        <h1 className="text-2xl font-bold mb-6 text-primary">
           Administrar Categorías
         </h1>
 
@@ -65,7 +51,7 @@ function InsertUpdate() {
   return (
     <button
       type="submit"
-      className="absolute top-6 right-6 flex items-center bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-500 transition-colors"
+      className="absolute top-6 right-6 flex items-center bg-success text-white px-4 py-2 rounded hover:bg-success/80 transition-colors"
     >
       <CheckCircleIcon className="w-5 h-5 mr-2" />
       Guardar
@@ -90,12 +76,12 @@ export function Categories() {
   const [current, setIndex] = useState<number | null>(null);
 
   return (
-    <div className="md:w-1/3 bg-teal-100 rounded-lg p-4">
+    <div className="md:w-1/3 bg-muted rounded-lg p-4 border border-secondary/20">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-teal-800">Categorías</h2>
+        <h2 className="text-lg font-semibold text-primary">Categorías</h2>
         <button
           type="button"
-          className="p-1 rounded hover:bg-teal-200 transition-colors"
+          className="p-1 rounded hover:bg-accent/10 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
 
@@ -106,7 +92,7 @@ export function Categories() {
             } as any);
           }}
         >
-          <PlusIcon className="w-6 h-6 text-teal-600" />
+          <PlusIcon className="w-6 h-6 text-accent" />
         </button>
       </div>
 
@@ -114,8 +100,8 @@ export function Categories() {
         <div
           key={index}
           className={clsx(
-            "flex items-center p-2 rounded mb-2 hover:bg-teal-200",
-            index === current && "bg-teal-200"
+            "flex items-center p-2 rounded mb-2 hover:bg-accent/10",
+            index === current && "bg-accent/10"
           )}
           onClick={(e) => {
             e.stopPropagation();
@@ -136,7 +122,7 @@ export function Categories() {
             required
             path="fullName"
             className={clsx(
-              "bg-transparent border-none focus:outline-none w-full text-teal-900",
+              "bg-transparent border-none focus:outline-none w-full text-dark",
               index !== current && "cursor-pointer"
             )}
           />
@@ -165,23 +151,23 @@ function FCategory() {
 
   const [category, setCategory] = useState<string[]>([]);
 
-  useEffect(() => emitter.setCategory(setCategory), []);  
+  useEffect(() => emitter.setCategory(setCategory), []);
 
   return (
     <Path value={category}>
-      <div className="md:w-2/3 bg-teal-50 rounded-lg p-4">
+      <div className="md:w-2/3 bg-muted rounded-lg p-4 border border-secondary/20">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-teal-800">Subcategorías</h2>
+          <h2 className="text-lg font-semibold text-primary">Subcategorías</h2>
           <button
             type="button"
-            className="p-1 rounded hover:bg-teal-200 transition-colors"
+            className="p-1 rounded hover:bg-accent/10 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
 
               emitter.addSubcategories();
             }}
           >
-            <PlusIcon className="w-6 h-6 text-teal-600" />
+            <PlusIcon className="w-6 h-6 text-accent" />
           </button>
         </div>
         <SubCategories />
@@ -215,8 +201,8 @@ function SubCategories() {
       <div
         key={index}
         className={clsx(
-          "flex items-center mb-2 p-2 hover:bg-teal-100",
-          index === current && "bg-teal-100"
+          "flex items-center mb-2 p-2 hover:bg-accent/5 rounded",
+          index === current && "bg-accent/10"
         )}
         onClick={() => {
           setIndex(index);
@@ -228,7 +214,7 @@ function SubCategories() {
           required
           placeholder={payload.fullName}
           className={clsx(
-            "bg-transparent border-teal-200 focus:outline-none focus:border-teal-400 w-full text-teal-900",
+            "bg-transparent border border-secondary/20 focus:outline-none focus:border-accent rounded w-full text-dark px-2 py-1",
             index !== current && "cursor-pointer"
           )}
         />

@@ -1,6 +1,8 @@
 import { FaceSmileIcon } from '@heroicons/react/24/outline';
 import { user } from '@agape/access';
 
+console.log(user);
+
 const WelcomeUser = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
