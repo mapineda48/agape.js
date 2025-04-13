@@ -1,5 +1,7 @@
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useEffect } from "react";
+import clsx from "clsx";
 import CategoryConfiguration from "./Category";
+import { useEmitter } from "@client/components/EventEmitter";
 
 interface CollapsibleItemProps {
   title: string;
@@ -7,17 +9,52 @@ interface CollapsibleItemProps {
 }
 
 const CollapsibleItem = ({ title, children }: CollapsibleItemProps) => {
+  const [state, setState] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const emitter = useEmitter();
+
+  useEffect(() => {
+    return emitter.closeCollapsibleItem(() => setIsOpen(false));
+  }, []);
 
   return (
-    <div className="border rounded mb-4">
+    <div className="border rounded mb-4 overflow-hidden">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        type="button"
+        onClick={() => {
+          emitter.closeCollapsibleItem();
+          setIsOpen(!isOpen);
+
+          if (!isOpen) {
+            setState(true);
+          }
+        }}
         className="w-full text-left px-4 py-2 bg-gray-200 hover:bg-gray-300 focus:outline-none"
       >
-        <span className="font-bold">{title}</span>
+        <div className="flex justify-between items-center">
+          <span className="font-bold">{title}</span>
+          <span
+            className={clsx(
+              "transform transition-transform duration-300",
+              isOpen ? "rotate-180" : "rotate-0"
+            )}
+          >
+            ▼
+          </span>
+        </div>
       </button>
-      {isOpen && <div className="px-4 py-2">{children}</div>}
+
+      <div
+        className={clsx(
+          "transition-all duration-500 overflow-hidden",
+          isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        )}
+        onTransitionEnd={() => {
+          setState(isOpen);
+        }}
+      >
+        <div className="px-4 py-2">{state && children}</div>
+      </div>
     </div>
   );
 };

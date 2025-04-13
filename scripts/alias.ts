@@ -1,7 +1,5 @@
 import * as glob from 'glob';
 import path from 'node:path';
-import fs from "fs-extra";
-
 
 const res = Object.fromEntries(
     glob.sync("**/*.ts", { cwd: path.resolve("agape") })
