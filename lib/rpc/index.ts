@@ -65,7 +65,7 @@ export function findModulePath() {
 export function toUrlService(filename: string) {
     const moduleUrl = toPosixPath(filename).replace(extname, "").replace("/index", "").replace("index", "");
 
-    return path.posix.join(servicePath, moduleUrl);
+    return path.posix.join("/", moduleUrl);
 }
 
 /**

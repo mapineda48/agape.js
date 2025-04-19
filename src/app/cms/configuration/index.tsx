@@ -1,4 +1,4 @@
-import sayHello from "virtual:agape";
+import sayHello from "@agape/bar";
 
 sayHello("Carlos Pineda").then(console.log).catch(console.error);
 

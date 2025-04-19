@@ -1,5 +1,5 @@
 import AgapeLanding from "./AgapeLanding";
-import sayhello from "virtual:agape";
+import sayhello from "@agape";
 
 export const onInit = async () => {
     const message = await sayhello("Miguel Pineda");

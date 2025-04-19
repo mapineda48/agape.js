@@ -53,6 +53,8 @@ export class Router {
     public listen(cb: (page: JSX.Element) => void) {
         const unlisten = this.history.listen(({ location: { pathname, state } }) => {
             const page = this.routes[pathname];
+
+            // show not found page
             if (!page?.Component) {
                 cb(createElement(NoFoundPage));
                 return;
@@ -111,13 +113,13 @@ export class Router {
                 .then((props) => {
                     this.loading = false;
                     // Navigate again with the props from onInit
-                    this.navigateTo(pathname, { state: props, replace: opt.replace });
+                    this.navigateTo(pathname, { ...opt, state: props });
                 })
                 .catch((err) => {
                     this.loading = false;
                     console.error("onInit error:", err);
                     // Proceed with empty state on failure
-                    this.navigateTo(pathname, { state: {}, replace: opt.replace });
+                    this.navigateTo(pathname, { ...opt, state: {} });
                 });
             return;
         }
@@ -125,11 +127,11 @@ export class Router {
         this.updateHistory(pathname, opt);
     }
 
-    private updateHistory(pathname: string, opt: INavigateTo) {
-        if (opt.replace) {
-            this.history.replace(pathname, opt.state);
+    private updateHistory(pathname: string, { state, replace }: INavigateTo) {
+        if (replace) {
+            this.history.replace(pathname, state);
         } else {
-            this.history.push(pathname, opt.state);
+            this.history.push(pathname, state);
         }
     }
 
@@ -175,10 +177,8 @@ export const router = new Router();
 export default function Routes() {
     const [state, setState] = useState<null | JSX.Element>(null);
 
-    useEffect(() => {
-        // Start listening for route changes
-        return router.listen(setState);
-    }, []);
+    // Start listening for route changes
+    useEffect(() => router.listen(setState), []);
 
     // Render the current page, or null until first route executes
     return state;

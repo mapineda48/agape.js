@@ -22,7 +22,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "virtual:agape": ["./svc"]
+      "@agape/*": ["./svc/*"],
+      "@agape": ["./svc"]
     }
   },
   "include": ["src"]

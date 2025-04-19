@@ -5,12 +5,13 @@ import { glob } from "glob";
 import { Plugin, ViteDevServer } from "vite";
 import { execSync } from "node:child_process";
 
-const namespace = "agape";
 const __filename = fileURLToPath(import.meta.url);
 const service = path.resolve("svc");
 const extname = path.extname(__filename);
 
-const virtualModuleId = "virtual:" + namespace;
+const virtualModule = "@agape";
+const axios = `${virtualModule}/axios`;
+
 
 /**
  * Convierte una ruta en formato Windows o POSIX a formato POSIX.
@@ -32,22 +33,16 @@ function toPosixPath(inputPath: string): string {
   }
 }
 
-export function toUrlService(filename: string) {
+export function toUrl(filename: string, root = virtualModule) {
   const moduleUrl = toPosixPath(filename).replace(extname, "").replace("/index", "").replace("index", "");
 
-  return path.posix.join("svc", moduleUrl);
-}
-
-export function toUrlService2(filename: string) {
-  const moduleUrl = toPosixPath(filename).replace(extname, "").replace("/index", "").replace("index", "");
-
-  return path.posix.join(namespace, moduleUrl);
+  return path.posix.join(root, moduleUrl);
 }
 
 function initAgapePlugin(): Plugin {
   const virtualModuleMap: { [url: string]: string } = JSON.parse(execSync(`tsx ${__filename} --sync-load`).toString());
 
-  virtualModuleMap["\0" + "virtual:" + `${namespace}/axios`] = fs.readFileSync(path.resolve("lib/rpc/index.browser.js"), "utf8");
+  virtualModuleMap["\0" + axios] = fs.readFileSync(path.resolve("lib/rpc/index.browser.js"), "utf8");
 
   function makeApi(file: string, viteServer: ViteDevServer) {
     // 2️⃣ Obtén la ruta relativa de `file` respecto a `root`
@@ -57,8 +52,8 @@ function initAgapePlugin(): Plugin {
       return;
     }
 
-    const moduleUrl = toUrlService(relativePath);
-    const resolvedId = "\0" + "virtual:" + moduleUrl;
+    const moduleUrl = toUrl(relativePath);
+    const resolvedId = "\0" + moduleUrl;
 
     if (!virtualModuleMap[resolvedId]) {
       virtualModuleMap[resolvedId] = `export default null;`;
@@ -66,30 +61,13 @@ function initAgapePlugin(): Plugin {
 
     import(pathToFileURL(file).href + "?" + Date.now())
       .then(module => {
-        const jsData = [`import makeRcp from 'virtual:${namespace}/axios'`];
-
-        Object.entries(module)
-          .filter(([, value]) => typeof value === "function")
-          .forEach(([exportName]) => {
-            const endpoint = path.posix.join(
-              moduleUrl,
-              exportName !== "default" ? exportName : ""
-            );
-
-            jsData.push(
-              exportName !== "default"
-                ? `export const ${exportName} = makeRcp("${endpoint}");`
-                : `export default makeRcp("${endpoint}");`
-            );
-          });
-
-        virtualModuleMap[resolvedId] = jsData.join("\n");
-
         const mod = viteServer.moduleGraph.getModuleById(resolvedId);
 
         if (!mod) {
           return
         }
+
+        virtualModuleMap[resolvedId] = addJsData(module, relativePath);
 
         // Invalida el módulo para que se vuelva a cargar con el nuevo contenido
         viteServer.moduleGraph.invalidateModule(mod);
@@ -99,8 +77,8 @@ function initAgapePlugin(): Plugin {
           type: 'update',
           updates: [
             {
-              acceptedPath: "virtual:" + moduleUrl,
-              path: "virtual:" + moduleUrl,
+              acceptedPath: moduleUrl,
+              path: moduleUrl,
               timestamp: Date.now(),
               type: 'js-update',
             },
@@ -111,7 +89,7 @@ function initAgapePlugin(): Plugin {
   }
 
   return {
-    name: `virtual-${namespace}-plugin`,
+    name: 'virtual-agape-plugin',
     enforce: 'pre', // importante para que entre antes de Rollup
     apply: () => true, // aplica en dev y build
 
@@ -123,7 +101,7 @@ function initAgapePlugin(): Plugin {
     },
 
     resolveId(id) {
-      if (id.startsWith(virtualModuleId)) {
+      if (id.startsWith(virtualModule)) {
         const resolved = "\0" + id;
         return resolved;
       }
@@ -155,27 +133,11 @@ if (process.argv.includes("--sync-load")) {
 
         const relativePath = path.relative(service, file);
 
-        const moduleUrl = toUrlService(relativePath);
-        const resolvedId = "\0" + "virtual:" + toUrlService2(relativePath);
+        const resolvedId = "\0" + toUrl(relativePath);
 
         const module = await import(pathToFileURL(file).href + "?" + Date.now());
-        const jsData = [`import makeRcp from 'virtual:${namespace}/axios'`];
 
-        Object.entries(module)
-          .filter(([, value_1]) => typeof value_1 === "function")
-          .forEach(([exportName]) => {
-            const endpoint = path.posix.join(
-              moduleUrl,
-              exportName !== "default" ? exportName : ""
-            );
-
-            jsData.push(
-              exportName !== "default"
-                ? `export const ${exportName} = makeRcp("${endpoint}");`
-                : `export default makeRcp("${endpoint}");`
-            );
-          });
-        entries.push([resolvedId, jsData.join("\n")]);
+        entries.push([resolvedId, addJsData(module, relativePath)]);
       }
     } catch (error) {
       throw error;
@@ -190,3 +152,26 @@ if (process.argv.includes("--sync-load")) {
 }
 
 export default initAgapePlugin;
+
+function addJsData(module: any, relativePath: string) {
+
+  const publicUrl = toUrl(relativePath, "/");
+  const jsData = [`import makeRcp from '${axios}'`];
+
+  Object.entries(module)
+    .filter(([, value]) => typeof value === "function")
+    .forEach(([exportName]) => {
+
+      if (exportName === "default") {
+        jsData.push(`export default makeRcp("${publicUrl}");`);
+
+        return;
+      }
+
+      const exportUrl = path.posix.join(publicUrl, exportName);
+
+      jsData.push(`export const ${exportName} = makeRcp("${exportUrl}");`);
+    });
+
+  return jsData.join("\n")
+}
