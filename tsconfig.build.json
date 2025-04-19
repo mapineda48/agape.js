@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    /* Genera JS para Node 16+ */
+    "target": "ES2022",
+    /* Mantén import/export en la salida */
+    "module": "ESNext",
+    "moduleResolution": "node",
+
+    "outDir": "dist",
+    /* Comprobaciones estrictas de TS */
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    /* Más rápido al compilar */
+    "skipLibCheck": true,
+    /* Importaciones case‑sensitive consistentes */
+    "forceConsistentCasingInFileNames": true,
+    /* Para debug con sourcemaps */
+    "sourceMap": false,
+    /* Soporte import JSON */
+    "resolveJsonModule": true,
+    /* Que incluya tipos de Node */
+    "types": ["node"],
+
+    "verbatimModuleSyntax": true, // <- mantiene los imports sin tocarlos
+    "rewriteRelativeImportExtensions": true
+  },
+
+  "include": [
+    "bin/**/*.ts", "svc/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

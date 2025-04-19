@@ -1,0 +1,27 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "ts-node": {
+    "esm": true,
+    "skipIgnore": true,
+    "typeCheck": true,
+    "compilerOptions": {
+      
+      "target": "ES2020",
+      "module": "ESNext", // 👈 Cambiar a ESM
+      "moduleResolution": "Node",
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      "strict": true,
+      "skipLibCheck": true,
+      "allowSyntheticDefaultImports": true,
+      "forceConsistentCasingInFileNames": true,
+      "isolatedModules": true,
+      "noEmit": true, // 👈 No compiles, úsalo con ts-node
+      "allowJs": true,   
+    }
+  }
+}

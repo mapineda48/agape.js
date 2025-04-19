@@ -1,0 +1,15 @@
+import { Fragment, StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './history'
+
+/**
+ * https://github.com/facebook/react/issues/24502
+ */
+const AppMode = process.env.NODE_ENV === "development" ? Fragment : StrictMode;
+
+createRoot(document.getElementById('root')!).render(
+  <AppMode>
+    <App />
+  </AppMode>,
+)
