@@ -3,17 +3,6 @@ import path from "node:path";
 import { glob } from "glob";
 import { name, version, type, dependencies } from "../package.json";
 
-
-fs.outputJSONSync("dist/package.json", {
-    name,
-    version,
-    type,
-    dependencies,
-    scripts: {
-        start: "node bin/index.js"
-    }
-}, { spaces: 2 })
-
 /**
  * He creado un script scripts/fix-import-extensions.js que:
 
@@ -97,3 +86,18 @@ files.forEach((file) => {
     fs.writeFileSync(file, code, "utf8");
 });
 console.log(`✔️  Fixed import extensions in ${files.length} files.`);
+
+
+/**
+ * Crear Packages JSON de produccion con la configuracion minima
+ */
+
+fs.outputJSONSync("dist/package.json", {
+    name,
+    version,
+    type,
+    dependencies,
+    scripts: {
+        start: "node bin/index.js"
+    }
+}, { spaces: 2 })

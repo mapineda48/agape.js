@@ -1,5 +1,6 @@
 import { createBrowserHistory } from "history";
 import { createElement, JSX, useEffect, useState } from "react";
+import NoFoundPage from "./NotFound";
 
 /**
  * Router class to manage dynamic page loading, navigation,
@@ -21,9 +22,6 @@ export class Router {
     constructor() {
         // Load all page modules into the routes map
         this.initRoutes();
-
-        // Navigate to the current browser location on startup
-        this.navigateTo(this.history.location.pathname, { replace: true });
     }
 
     /**
@@ -53,10 +51,10 @@ export class Router {
      * @param cb - Callback receiving the rendered page element
      */
     public listen(cb: (page: JSX.Element) => void) {
-        return this.history.listen(({ location: { pathname, state } }) => {
+        const unlisten = this.history.listen(({ location: { pathname, state } }) => {
             const page = this.routes[pathname];
             if (!page?.Component) {
-                // No component loaded yet; skip rendering
+                cb(createElement(NoFoundPage));
                 return;
             }
 
@@ -66,6 +64,11 @@ export class Router {
             // Create and pass the React element
             cb(createElement(page.Component, props));
         });
+
+        // Navigate to the current browser location on startup
+        this.navigateTo(this.history.location.pathname, { replace: true });
+
+        return unlisten;
     }
 
     /**
@@ -78,8 +81,11 @@ export class Router {
         if (this.loading) return;
 
         const page = this.routes[pathname];
+
+        // show not found page
         if (!page) {
-            throw new Error(`Page not found: ${pathname}`);
+            this.updateHistory(pathname, opt);
+            return;
         }
 
         // If the component isn't loaded yet, load it first
@@ -116,7 +122,10 @@ export class Router {
             return;
         }
 
-        // Finally, update browser history
+        this.updateHistory(pathname, opt);
+    }
+
+    private updateHistory(pathname: string, opt: INavigateTo) {
         if (opt.replace) {
             this.history.replace(pathname, opt.state);
         } else {
@@ -168,8 +177,7 @@ export default function Routes() {
 
     useEffect(() => {
         // Start listening for route changes
-        const unlisten = router.listen(setState);
-        return unlisten;
+        return router.listen(setState);
     }, []);
 
     // Render the current page, or null until first route executes
