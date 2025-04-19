@@ -1,4 +1,4 @@
-import { navigateTo } from "./history";
+import { router } from "./Router";
 
 
 export default function AgapeLanding(props: { message: string }) {
@@ -8,7 +8,7 @@ export default function AgapeLanding(props: { message: string }) {
       {props.message ?? "Sin mensaje"}{" "}
       <button
         onClick={() => {
-          navigateTo("/cms");
+          router.navigateTo("/cms");
         }}
       >
         go to cms
