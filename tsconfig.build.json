@@ -27,7 +27,7 @@
   },
 
   "include": [
-    "bin/**/*.ts", "svc/**/*.ts"
+    "bin/index.ts", "svc/**/*.ts"
   ],
   "exclude": [
     "node_modules",

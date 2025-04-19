@@ -1,7 +1,7 @@
 import { Fragment, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './history'
+import './assets/index.css'
+import App from './app/Route'
 
 /**
  * https://github.com/facebook/react/issues/24502

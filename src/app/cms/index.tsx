@@ -1,4 +1,4 @@
-import history from "../../history";
+import { navigateTo } from "../history";
 
 export default function AgapeLanding() {
   return (
@@ -6,7 +6,7 @@ export default function AgapeLanding() {
       Welcome to CMS!!!{" "}
       <button
         onClick={() => {
-          history.push("/");
+          navigateTo("/");
         }}
       >
         go to cms

@@ -1,15 +1,14 @@
-import { useState } from "react";
-import history from "../history";
-import sayhello from "virtual:agape";
+import { navigateTo } from "./history";
+
 
 export default function AgapeLanding(props: { message: string }) {
   console.log(props);
   return (
     <div>
-      {props.message}
+      {props.message ?? "Sin mensaje"}{" "}
       <button
         onClick={() => {
-          history.push("/cms");
+          navigateTo("/cms");
         }}
       >
         go to cms
@@ -17,4 +16,3 @@ export default function AgapeLanding(props: { message: string }) {
     </div>
   );
 }
-
