@@ -3,17 +3,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execSync } from "node:child_process";
 import fs from "fs-extra";
 import { Plugin, ViteDevServer } from "vite";
-import { toUrl, toPublicUrl, findService, toRelativePathService } from "../lib/rpc";
+import { toUrl, toPublicUrl, findService, toRelativePathService } from "../lib/rpc/middleware";
 
 const namespace = "@agape";
-const axios = `${namespace}/axios`;
-
+const libs = ["form-data", "rpc", "access"];
 const syncService = `tsx ${fileURLToPath(import.meta.url)} --sync-load`;
 
-function initAgapePlugin(): Plugin {
-  const virtualModuleMap: { [url: string]: string } = JSON.parse(execSync(syncService).toString());
-
-  virtualModuleMap[toVirtualModule(axios)] = fs.readFileSync(path.resolve("lib/rpc/index.browser.js"), "utf8");
+export default function initAgapePlugin(): Plugin {
+  const virtualModuleMap = initRpc();
 
   function makeApi(file: string, viteServer: ViteDevServer) {
     // 2️⃣ Obtén la ruta relativa de `file` respecto a `root`
@@ -105,12 +102,23 @@ if (process.argv.includes("--sync-load")) {
     })
 }
 
-export default initAgapePlugin;
+function initRpc() {
+  const virtualModule: IVirtualModule = JSON.parse(execSync(syncService).toString());
+
+  for (const lib of libs) {
+    const filename = path.resolve("lib", lib, "browser.js");
+    const moduleUrl = toUrl(namespace, lib);
+
+    virtualModule[toVirtualModule(moduleUrl)] = fs.readFileSync(filename, "utf8");
+  }
+
+  return virtualModule;
+}
 
 function addJsData(module: any, relativePath: string) {
 
   const publicUrl = toPublicUrl(relativePath);
-  const jsData = [`import makeRcp from '${axios}'`];
+  const jsData = [`import makeRcp from '${namespace}/rpc'`];
 
   Object.entries(module)
     .filter(([, value]) => typeof value === "function")
@@ -133,3 +141,8 @@ function addJsData(module: any, relativePath: string) {
 export function toVirtualModule(moduleUrl: string) {
   return "\0" + moduleUrl
 }
+
+/**
+ * Types
+ */
+type IVirtualModule = { [url: string]: string }

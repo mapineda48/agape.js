@@ -1,6 +1,7 @@
 import { Action, createBrowserHistory } from "history";
 import { createElement, JSX, useEffect, useState } from "react";
 import NoFoundPage from "./NotFound";
+import { isAuthenticated, session } from "@agape/access";
 
 /**
  * Router class to manage dynamic page loading, navigation,
@@ -9,6 +10,10 @@ import NoFoundPage from "./NotFound";
 export class Router {
     // History instance from the history library for navigation control
     private history = createBrowserHistory();
+
+    get pathname() {
+        return this.history.location.pathname;
+    }
 
     // Map of route paths to their corresponding lazy-loaded pages
     private routes: IRoute = {};
@@ -52,7 +57,7 @@ export class Router {
      */
     public listen(cb: (page: JSX.Element) => void) {
         const unlisten = this.history.listen(({ location: { pathname, state }, action }) => {
-            const { Component } = this.routes[pathname];
+            const { Component } = this.routes[pathname] ?? {};
 
             if (Component) {
                 // Use navigation state as component props, if provided
@@ -79,20 +84,48 @@ export class Router {
         return unlisten;
     }
 
+    private isAuthenticated(pathname: string, opt: INavigateTo) {
+        console.log(session);
+        if ((!pathname.startsWith("/cms") && pathname !== "/login") || opt.isAuthenticated) {
+            return;
+        }
+
+        if (session === null) {
+            this.loading = true;
+
+            isAuthenticated()
+                .finally(() => {
+                    this.loading = false;
+                    this.navigateTo(pathname, opt);
+                });
+        } else {
+
+            this.navigateTo((session.id ? pathname.startsWith("/cms") ? pathname : "/cms" : "/login"), { ...opt, isAuthenticated: true })
+        }
+
+
+        return true;
+    }
+
     /**
      * Navigate to a given pathname. Handles lazy loading of modules,
      * optional onInit logic, and pushes or replaces history entries.
      * @param pathname - URL path to navigate to
-     * @param opt - Options for replace and initial state
+     * @param options - Options for replace and initial state
      */
-    public navigateTo(pathname: string, opt: INavigateTo = {}) {
+    public navigateTo(pathname: string, options: INavigateTo = {}) {
+        console.log({ pathname, loading: this.loading, session })
         if (this.loading) return;
+
+        if (this.isAuthenticated(pathname, options)) {
+            return;
+        }
 
         const page = this.routes[pathname];
 
         // show not found page
         if (!page) {
-            this.updateHistory(pathname, opt);
+            this.updateHistory(pathname, options);
             return;
         }
 
@@ -103,7 +136,7 @@ export class Router {
                 .then(() => {
                     this.loading = false;
                     // Retry navigation after module loads
-                    this.navigateTo(pathname, opt);
+                    this.navigateTo(pathname, options);
                 })
                 .catch((err) => {
                     this.loading = false;
@@ -113,24 +146,24 @@ export class Router {
         }
 
         // If an onInit hook is provided and no state passed, run it
-        if (page.onInit && !opt.state) {
+        if (page.onInit && !options.state) {
             this.loading = true;
             page.onInit()
                 .then((props) => {
                     this.loading = false;
                     // Navigate again with the props from onInit
-                    this.navigateTo(pathname, { ...opt, state: props });
+                    this.navigateTo(pathname, { ...options, state: props });
                 })
                 .catch((err) => {
                     this.loading = false;
                     console.error("onInit error:", err);
                     // Proceed with empty state on failure
-                    this.navigateTo(pathname, { ...opt, state: {} });
+                    this.navigateTo(pathname, { ...options, state: {} });
                 });
             return;
         }
 
-        this.updateHistory(pathname, opt);
+        this.updateHistory(pathname, options);
     }
 
     private updateHistory(pathname: string, { state, replace }: INavigateTo) {
@@ -151,7 +184,7 @@ export class Router {
             const module: any = await loader();
 
             // Save component and onInit for future navigations
-            wrapper.Component = module.default;
+            wrapper.Component = module.default ?? NoFoundPage;
             wrapper.onInit = module.onInit;
         };
         return wrapper as IPage;
@@ -202,6 +235,7 @@ interface IPage {
 interface INavigateTo {
     replace?: boolean;
     state?: Record<string, unknown>;
+    isAuthenticated?: boolean
 }
 
 type IRoute = Record<string, IPage>;

@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { session } from "@agape/access";
 import AvaterDemo from "../../app/cms/AvaterDemo";
-import LogOut from "../../app/cms/LogOut";
+import { LogOut } from "@/app/login";
 import Link from "@/components/ui/link";
 import { router } from "@/app/Router";
 
@@ -23,7 +23,7 @@ const STYLE_SELECT =
 const STYLE_UNSELECT =
   "flex items-center py-2 px-6 hover:bg-accent hover:bg-opacity-20 text-white transition-colors duration-200";
 
-const Sidebar = () => {
+export default function SidebarCms() {
   return (
     <aside className="w-64 bg-primary text-white flex flex-col h-screen sticky top-0 z-10">
       {/* HEADER */}
@@ -110,6 +110,4 @@ const Sidebar = () => {
       </div>
     </aside>
   );
-};
-
-export default Sidebar;
+}

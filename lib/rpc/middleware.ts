@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import express from "express";
 import { glob } from "glob";
+import { parseFormData } from "../form-data/middleware";
 
 export const service = path.resolve("svc");
 
@@ -45,15 +46,10 @@ function toRpc(route: express.Router): (svc: MatchService) => Promise<void> {
 function prepareRpc(fn: Function): express.RequestHandler {
     return (req, res, next) => {
         try {
-            const result = fn.call(null, ...req.body);
-
-            if (result instanceof Promise) {
-                result
-                    .then(payload => {
-                        res.json(payload);
-                    })
-                    .catch(err => next(err));
-            }
+            parseFormData(req)
+                .then(args => fn.call(null, args))
+                .then((payload) => res.json(payload))
+                .catch((err: unknown) => next(err));
         } catch (error) {
             console.error(error);
             next(error);
@@ -66,7 +62,7 @@ export function toRelativePathService(file: string) {
 }
 
 export function findService() {
-    return glob.sync("**/*" + extname, { cwd: service }).map((relativePath) => ({ file: path.join(service, relativePath), relativePath }))
+    return glob.sync("**/*" + extname, { cwd: service, ignore: ["**/*.d.ts"] }).map((relativePath) => ({ file: path.join(service, relativePath), relativePath }))
 }
 
 /**

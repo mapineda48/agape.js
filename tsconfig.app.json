@@ -21,9 +21,11 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
     "paths": {
       "@agape/*": ["./svc/*"],
-      "@agape": ["./svc"]
+      "@agape": ["./svc"],
+      "@/*": ["src/*"]
     }
   },
   "include": ["src"]
