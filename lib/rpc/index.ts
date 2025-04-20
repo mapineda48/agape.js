@@ -1,10 +1,9 @@
-import express from "express";
-import { glob } from "glob";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import express from "express";
+import { glob } from "glob";
 
-export const servicePath = "svc";
-export const service = path.resolve(servicePath);
+export const service = path.resolve("svc");
 
 const __filename = fileURLToPath(import.meta.url);
 const extname = path.extname(__filename);
@@ -12,19 +11,24 @@ const extname = path.extname(__filename);
 export default async function findServices() {
     const route = express.Router();
 
-    const chunks = findModulePath();
+    const chunks = findService();
 
-    await Promise.all(chunks.map(async chunk => {
-        const file = path.join(service, chunk);
+    await Promise.all(chunks.map(toRpc(route)))
+
+    return Promise.resolve(route);
+}
+
+function toRpc(route: express.Router): (svc: MatchService) => Promise<void> {
+    return async ({ file, relativePath }) => {
         const module = await import(pathToFileURL(file).href);
 
-        const moduleUrl = toUrlService(chunk);
+        const moduleUrl = toPublicUrl(relativePath);
 
         Object
             .entries(module)
             .forEach(([exportName, fn]) => {
                 if (typeof fn !== "function") {
-                    return
+                    return;
                 }
 
                 const endpoint = path.posix.join(
@@ -33,39 +37,36 @@ export default async function findServices() {
                     exportName !== "default" ? exportName : ""
                 );
 
-                console.log(endpoint);
-
-                route.post(endpoint, (req, res, next) => {
-                    console.log(endpoint);
-                    try {
-                        const result = fn.call(null, ...req.body);
-
-                        if (result instanceof Promise) {
-                            result
-                                .then(payload => {
-                                    res.json(payload)
-                                })
-                                .catch(err => next(err))
-                        }
-                    } catch (error) {
-                        console.error(error)
-                        next(error)
-                    }
-                })
+                route.post(endpoint, prepareRpc(fn));
             });
-    }))
-
-    return Promise.resolve(route);
+    };
 }
 
-export function findModulePath() {
-    return glob.sync("**/*" + extname, { cwd: service })
+function prepareRpc(fn: Function): express.RequestHandler {
+    return (req, res, next) => {
+        try {
+            const result = fn.call(null, ...req.body);
+
+            if (result instanceof Promise) {
+                result
+                    .then(payload => {
+                        res.json(payload);
+                    })
+                    .catch(err => next(err));
+            }
+        } catch (error) {
+            console.error(error);
+            next(error);
+        }
+    };
 }
 
-export function toUrlService(filename: string) {
-    const moduleUrl = toPosixPath(filename).replace(extname, "").replace("/index", "").replace("index", "");
+export function toRelativePathService(file: string) {
+    return path.relative(service, file);
+}
 
-    return path.posix.join("/", moduleUrl);
+export function findService() {
+    return glob.sync("**/*" + extname, { cwd: service }).map((relativePath) => ({ file: path.join(service, relativePath), relativePath }))
 }
 
 /**
@@ -87,3 +88,18 @@ function toPosixPath(inputPath: string): string {
         return inputPath;
     }
 }
+
+export function toUrl(root: string, filename: string, ...chunks: string[]) {
+    const moduleUrl = toPosixPath(filename).replace(extname, "").replace("/index", "").replace("index", "");
+
+    return path.posix.join(root, moduleUrl, ...chunks);
+}
+
+export function toPublicUrl(filename: string, ...chunks: string[]) {
+    return toUrl("/", filename, ...chunks);
+}
+
+/**
+ * Types
+ */
+type MatchService = ReturnType<typeof findService>[number];

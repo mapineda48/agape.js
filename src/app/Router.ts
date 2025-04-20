@@ -1,4 +1,4 @@
-import { createBrowserHistory } from "history";
+import { Action, createBrowserHistory } from "history";
 import { createElement, JSX, useEffect, useState } from "react";
 import NoFoundPage from "./NotFound";
 
@@ -51,20 +51,26 @@ export class Router {
      * @param cb - Callback receiving the rendered page element
      */
     public listen(cb: (page: JSX.Element) => void) {
-        const unlisten = this.history.listen(({ location: { pathname, state } }) => {
-            const page = this.routes[pathname];
+        const unlisten = this.history.listen(({ location: { pathname, state }, action }) => {
+            const { Component } = this.routes[pathname];
 
-            // show not found page
-            if (!page?.Component) {
-                cb(createElement(NoFoundPage));
-                return;
+            if (Component) {
+                // Use navigation state as component props, if provided
+                const props = (state as Record<string, unknown>) ?? {};
+
+                // Create and pass the React element
+                cb(createElement(Component, props));
+                return
             }
 
-            // Use navigation state as component props, if provided
-            const props = (state as Record<string, unknown>) ?? {};
+            if (action === Action.Pop) {
+                router.navigateTo(pathname);
+                return
+            }
 
-            // Create and pass the React element
-            cb(createElement(page.Component, props));
+            // show not found page
+            cb(createElement(NoFoundPage));
+            return;
         });
 
         // Navigate to the current browser location on startup
