@@ -1,7 +1,9 @@
-import express, { Request, Response } from "express";
-import { parseFormData } from "../form-data/middleware";
+import express from "express";
 import Jwt from "./Jwt";
 import webSession, { initSession } from "./session";
+import { parseArgs } from "../rpc/parseArgs";
+import { toResponse } from "#utils/form-data";
+
 
 const AuthTokenCookie = "auth_token";
 
@@ -20,7 +22,7 @@ export default function defineAuth({ secret, admin, sameSite }: Options) {
 
     router.post("/access/login", async (req, res, next) => {
         try {
-            const [username, password] = await parseFormData<Access>(req);
+            const [username, password] = await parseArgs<Access>(req);
 
             const isAdmin = username === admin.username;
             const isPassword = password === admin.password;
@@ -36,7 +38,9 @@ export default function defineAuth({ secret, admin, sameSite }: Options) {
 
             console.log(token);
             res.cookie(AuthTokenCookie, token, cookieOptions); // Establecer la cookie
-            res.status(200).json(success(user));
+
+
+            res.status(200).json(toResponse({ payload: user }));
         } catch (error) {
             next(error);
         }
@@ -62,7 +66,7 @@ export default function defineAuth({ secret, admin, sameSite }: Options) {
             res.clearCookie(AuthTokenCookie);
             res.cookie(AuthTokenCookie, token, cookieOptions); // Establecer la cookie
 
-            res.json(success(payload));
+            res.json(toResponse({ payload }));
         } catch (error) {
             console.error(error);
             res.clearCookie(AuthTokenCookie);
@@ -73,7 +77,7 @@ export default function defineAuth({ secret, admin, sameSite }: Options) {
 
     router.post("/access/logout", async (req, res) => {
         res.clearCookie(AuthTokenCookie);
-        res.status(200).json(success({ message: "Sesión terminada" }));
+        res.status(200).json(toResponse({ payload: "Sesión terminada" }));
     });
 
     //API AUTH
@@ -139,10 +143,6 @@ export function getCookie(header?: string) {
     const [, token] = header.match(/auth_token=([^;]+)/) ?? [];
 
     return token;
-}
-
-function success(payload: unknown) {
-    return [payload, []];
 }
 
 export const user = webSession;

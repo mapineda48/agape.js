@@ -2,11 +2,11 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execSync } from "node:child_process";
 import fs from "fs-extra";
-import { Plugin, ViteDevServer } from "vite";
+import type { Plugin, ViteDevServer } from "vite";
 import { toUrl, toPublicUrl, findService, toRelativePathService } from "../lib/rpc/middleware";
 
 const namespace = "@agape";
-const libs = ["form-data", "rpc", "access"];
+const libs = ["rpc", "access"];
 const syncService = `tsx ${fileURLToPath(import.meta.url)} --sync-load`;
 
 export default function initAgapePlugin(): Plugin {
@@ -69,11 +69,19 @@ export default function initAgapePlugin(): Plugin {
       if (id.startsWith(namespace)) {
         return toVirtualModule(id);
       }
+
+      if (id.startsWith('#utils/')) {
+        return id  // lo tratamos como “resuelto”
+      }
     },
 
     load(id) {
       if (virtualModuleMap[id]) {
         return virtualModuleMap[id];
+      }
+
+      if (id.startsWith('#utils/')) {
+        return 'export {}' // código vacío, nada falla
       }
     },
 

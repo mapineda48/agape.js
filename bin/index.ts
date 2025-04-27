@@ -1,9 +1,9 @@
 import path from "node:path";
 import express from "express";
 import logger from "morgan";
+import compression from 'compression';
 import auth from "../lib/access/middleware";
 import findServices from "../lib/rpc/middleware"
-
 
 /**
  * Enviroment variables
@@ -62,6 +62,9 @@ app.use(auth({
 }));
 
 app.use(await findServices());
+
+
+app.use(compression());
 
 // Serve JavaScript/CSS/images with long cache (1 year)
 app.use(

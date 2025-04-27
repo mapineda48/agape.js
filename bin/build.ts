@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import path from "node:path";
 import { glob } from "glob";
-import { name, version, type, dependencies } from "../package.json";
+import { name, version, type, dependencies, imports } from "../package.json";
 
 /**
  * He creado un script scripts/fix-import-extensions.js que:
@@ -99,5 +99,8 @@ fs.outputJSONSync("dist/package.json", {
     dependencies,
     scripts: {
         start: "node bin/index.js"
-    }
+    },
+    imports: Object.fromEntries(
+        Object.entries(imports).map(([key, path]) => [key, path.replace(".ts", ".js")])
+    )
 }, { spaces: 2 })

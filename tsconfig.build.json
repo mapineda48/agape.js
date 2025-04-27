@@ -23,14 +23,22 @@
     "types": ["node"],
 
     "verbatimModuleSyntax": true, // <- mantiene los imports sin tocarlos
-    "rewriteRelativeImportExtensions": true
-  },
+    "rewriteRelativeImportExtensions": true,
 
+    "baseUrl": ".",
+    "paths": {
+      "#utils/*": ["./src/utils/*"],
+      "#lib/*": ["./lib/*"],
+      "#session": ["./lib/access/session.ts"],
+      "@/*": ["./*"]
+    },
+  },
   "include": [
-    "bin/index.ts", "svc/**/*.ts"
+    "bin/index.ts", "svc", "lib"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src"
   ]
 }

@@ -2,7 +2,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import express from "express";
 import { glob } from "glob";
-import { parseFormData } from "../form-data/middleware";
+import { parseArgs } from "./parseArgs";
+import { toResponse } from "#utils/form-data";
 
 export const service = path.resolve("svc");
 
@@ -44,12 +45,12 @@ function toRpc(route: express.Router): (svc: MatchService) => Promise<void> {
 }
 
 function prepareRpc(fn: Function): express.RequestHandler {
-    return (req, res, next) => {
+    return async (req, res, next) => {
         try {
-            parseFormData(req)
-                .then(args => fn.call(null, args))
-                .then((payload) => res.json(payload))
-                .catch((err: unknown) => next(err));
+            const args = await parseArgs(req);
+            const payload = await fn.call(null, args);
+
+            res.json(toResponse(payload));
         } catch (error) {
             console.error(error);
             next(error);
