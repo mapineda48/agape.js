@@ -12,7 +12,7 @@ import {
 } from "react";
 import _, { PropertyPath } from "lodash";
 import { useEmitter } from "@/components/event-emiter";
-import yieldToUI from "@/utils/yieldToUI";
+import yieldToUI from "#lib/utils/yieldToUI";
 
 const DefaultArray: any = [];
 

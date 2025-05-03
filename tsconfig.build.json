@@ -27,18 +27,19 @@
 
     "baseUrl": ".",
     "paths": {
-      "#utils/*": ["./src/utils/*"],
+      "#utils/*": ["lib/utils/*"],
+      "#models/*": ["models/*"],
       "#lib/*": ["./lib/*"],
       "#session": ["./lib/access/session.ts"],
       "@/*": ["./*"]
     },
   },
   "include": [
-    "bin/index.ts", "svc", "lib"
+    "bin/index.ts", "svc", "lib", "models"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "src"
+    "web"
   ]
 }

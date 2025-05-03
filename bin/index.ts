@@ -9,7 +9,7 @@ import findServices from "../lib/rpc/middleware"
  * Enviroment variables
  */
 const {
-    NODE_ENV = "development",
+    NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
     PORT = "3000",
     DATABASEURI = "postgresql://postgres:mypassword@localhost",
     AGAPE_SECRET = import.meta.filename,
@@ -17,21 +17,23 @@ const {
     AGAPE_PASSWORD = "admin"
 } = process.env;
 
-const dev = NODE_ENV === "development";
+const production = NODE_ENV === "production";
+const test = NODE_ENV === "test";
+const development = NODE_ENV === "development";
 
 /**
  * Vite Build
  * SPA React application
  */
-const buildPath = path.resolve('build');
-const spaEntry = path.resolve("build/index.html");
+const buildPath = path.resolve('www');
+const spaEntry = path.resolve("www/index.html");
 
 
 const app = express();
 
 // Aplicamos configuracines que unicamente esta disponibles durante el desarrollo, as dependecias externas se importan con
 // dinamic import ya que no estaran instalaran en produccion;
-if (dev) {
+if (development) {
     const { default: cors } = await import("cors");
 
     const corsOptions = {
@@ -50,7 +52,7 @@ if (dev) {
 }
 
 
-app.use(logger(dev ? "dev" : "common"));
+app.use(logger(development ? "dev" : "common"));
 
 app.use(auth({
     sameSite: true,
@@ -85,5 +87,5 @@ app.get(/.*/, (_req, res) => {
     res.sendFile(spaEntry);
 })
 
-app.listen(3000, () => console.log("Backend Server: running at port 3000"))
+app.listen(parseInt(PORT), () => console.log(`Backend Server: running at port ${PORT} Env: ${NODE_ENV}`))
 

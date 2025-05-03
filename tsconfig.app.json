@@ -21,12 +21,13 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": "src",
+    "baseUrl": "web",
     "paths": {
       "@agape/*": ["../svc/*"],
       "@/*": ["./*"],
+      "@utils/*": ["../lib/utils/*"],
     }
   },
-  "include": ["src"],
+  "include": ["web", "lib/utils"],
   "exclude": ["lib", "svc", "bin"]
 }

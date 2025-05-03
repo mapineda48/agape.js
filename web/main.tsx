@@ -4,6 +4,7 @@ import "./assets/index.css";
 import App from "./app/Router";
 import EventEmitter from "./components/event-emiter";
 
+
 /**
  * https://github.com/facebook/react/issues/24502
  */
