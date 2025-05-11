@@ -1,42 +1,72 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "#lib/access/password";
 import accessUser from "#models/access/user";
 import person from "#models/person";
 import employee, { employeeRole } from "#models/staff/employee";
 import role from "#models/staff/role";
 import { db } from ".";
+import logger from "#lib/log/logger";
 
 const CODE_SUPER_USER_ROLE = "SP";
 
-export default async function verifyAdminUser(username: string, password: string) {
+export async function verifyRootUser(username: string, password: string) {
     if (!username || !password) {
         return
     }
 
-    const current = await findAccessByRoleCode(CODE_SUPER_USER_ROLE);
+    // Attempt non-blocking advisory lock
+    const lockResult = await db.execute(
+        sql`SELECT pg_try_advisory_lock(123456789111) AS acquired;`
+    );
+    const acquired = lockResult.rows[0].acquired as boolean;
 
-    if (!current) {
-        await InsertAdminUser(username, password);
+    if (!acquired) {
+        logger.log("[root-user] Omita sincronización por concurrencia");
         return;
     }
 
-    const isPassword = await verifyPassword(password, current.password);
+    try {
+        logger.log("[root-user] Iniciando sincronización del usuario administrador");
 
-    if (current.username === username && isPassword) {
-        return;
+        const current = await findAccessByRoleCode(CODE_SUPER_USER_ROLE);
+
+        if (!current) {
+            await InsertAdminUser(username, password);
+            return;
+        }
+
+        const isPassword = await verifyPassword(password, current.password);
+
+        if (current.username === username && isPassword) {
+            logger.log("[root-user] Usuario administrador ya se encuentra sincronizado");
+
+            return;
+        }
+
+        const auth: IUpdate = {};
+
+        if (current.username !== username) {
+            auth.username = username;
+        }
+
+        if (!isPassword) {
+            auth.password = await hashPassword(password);
+        }
+
+        await db.update(accessUser).set(auth).where(eq(accessUser.id, current.id));
+
+        logger.log("[root-user] Usuario administrador ha sido sincronizado");
     }
-
-    const auth: IUpdate = {};
-
-    if (current.username !== username) {
-        auth.username = username;
+    catch (error) {
+        logger.error(
+            "[root-user] No fue posible sincronizar el usuario administrador", error
+        );
     }
-
-    if (!isPassword) {
-        auth.password = await hashPassword(password);
+    finally {
+        await db.execute(
+            sql`SELECT pg_advisory_unlock(123456789111);`
+        );
     }
-
-    await db.update(accessUser).set(auth).where(eq(accessUser.id, current.id));
 }
 
 async function findAccessByRoleCode(code: string) {

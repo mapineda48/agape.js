@@ -2,8 +2,6 @@ import path from "node:path";
 import express from "express";
 import morgan from "morgan";
 import compression from 'compression';
-import auth from "../lib/access/middleware";
-import findServices from "../lib/rpc/middleware";
 import initDatabase from "#lib/db";
 import logger from "#logger";
 
@@ -29,7 +27,7 @@ const isDevelopment = NODE_ENV === "development";
  */
 await initDatabase(DATABASE_URI, `${AGAPE_TENANT}_${NODE_ENV}`, isDevelopment);
 
-await import("#lib/db/admin").then(mod => mod.default(AGAPE_ADMIN, AGAPE_PASSWORD));
+await import("#lib/db/admin").then(({ verifyRootUser }) => verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD));
 
 /**
  * Vite build / SPA React application
@@ -60,17 +58,13 @@ if (isDevelopment) {
 // HTTP request logging
 app.use(morgan(isDevelopment ? "dev" : "common"));
 
+
+// Es importante realizar el dinamic import dado que es necesario que la base de datos este sincronizada con el ORM para el correcto funcionamiento
+const { default: auth } = await import("#lib/access/middleware");
+const { default: findServices } = await import("#lib/rpc/middleware")
+
 // Authentication middleware
-app.use(
-  auth({
-    sameSite: true,
-    secret: AGAPE_SECRET,
-    admin: {
-      username: AGAPE_ADMIN,
-      password: AGAPE_PASSWORD,
-    },
-  })
-);
+app.use(auth(AGAPE_SECRET));
 
 // RPC services middleware
 app.use(await findServices());

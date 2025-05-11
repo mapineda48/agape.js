@@ -8,7 +8,7 @@ import { findUser } from "#svc/staff/access";
 
 const AuthTokenCookie = "auth_token";
 
-export default function defineAuth({ secret }: Options) {
+export default function defineAuth(secret: string) {
     const router = express.Router();
     const jwt = new Jwt(secret);
 
