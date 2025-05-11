@@ -18,7 +18,6 @@ export default function defineAuth({ secret }: Options) {
         priority: "high",
         sameSite: true,
         secure: true,
-
     };
 
     router.post("/access/login", async (req, res, next) => {
