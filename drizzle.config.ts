@@ -3,8 +3,9 @@ import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
   out: './lib/db/migrations',
 
-  schema: './models',
+  schema: ['./models/**/*.ts'],
 
+  schemaFilter: ["agape_app_demo_development"],
 
   dialect: 'postgresql',
   dbCredentials: {

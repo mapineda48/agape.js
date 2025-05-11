@@ -3,11 +3,12 @@ import Jwt from "./Jwt";
 import webSession, { initSession } from "./session";
 import { parseArgs } from "../rpc/parseArgs";
 import { toResponse } from "#lib/utils/form-data";
+import { findUser } from "#svc/staff/access";
 
 
 const AuthTokenCookie = "auth_token";
 
-export default function defineAuth({ secret, admin, sameSite }: Options) {
+export default function defineAuth({ secret }: Options) {
     const router = express.Router();
     const jwt = new Jwt(secret);
 
@@ -24,19 +25,15 @@ export default function defineAuth({ secret, admin, sameSite }: Options) {
         try {
             const [username, password] = await parseArgs<Access>(req);
 
-            const isAdmin = username === admin.username;
-            const isPassword = password === admin.password;
+            const user = await findUser(username, password);
 
-            if (!isAdmin || !isPassword) {
+            if (!user) {
                 res.status(401).json("Falló Autenticación");
                 return;
             }
 
-            const user = { id: -1, fullName: username, avatar: "" }; // Ejemplo de usuario
-
             const token = await jwt.generateToken(user);
 
-            console.log(token);
             res.cookie(AuthTokenCookie, token, cookieOptions); // Establecer la cookie
 
 
@@ -45,9 +42,7 @@ export default function defineAuth({ secret, admin, sameSite }: Options) {
             next(error);
         }
     });
-    console.log("ïsaut");
     router.post("/access/isAuthenticated", async (req, res, next) => {
-        console.log("ïsaut");
         try {
             const refreshToken = getCookie(req.headers.cookie);
 
@@ -153,10 +148,5 @@ export const user = webSession;
 type Access = [username: string, password: string];
 
 export interface Options {
-    sameSite: boolean;
     secret: string;
-    admin: {
-        username: string;
-        password: string
-    }
 }

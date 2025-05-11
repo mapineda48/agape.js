@@ -1,24 +1,31 @@
 {
-  "name": "vite-agape-app",
+  "name": "agape_app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "lint": "eslint .",
     "preview": "vite preview",
     "watch": "tsx watch --tsconfig ./tsconfig.build.json",
     "prebuild": "rimraf dist && tsc -b && vite build && rimraf dist/www/tsconfig.build.tsbuildinfo",
     "build": "tsx bin/build.ts",
-    "postbuild": "rimraf dist/tsconfig.build.tsbuildinfo"
+    "postbuild": "rimraf dist/tsconfig.build.tsbuildinfo",
+    "generate": "pnpm drizzle-kit generate",
+    "drizzle-kit-push": "nodemon",
+    "backend": "tsx watch --tsconfig ./tsconfig.build.json bin/index.ts",
+    "frontend": "vite"
   },
   "imports": {
-    "#utils/*": "./src/utils/*.ts",
+    "#utils/*": "./lib/utils/*.ts",
     "#lib/*": "./lib/*.ts",
+    "#svc/*": "./svc/*.ts",
     "#models/*": "./models/*.ts",
-    "#session": "./lib/access/session.ts"
+    "#session": "./lib/access/session.ts",
+    "#logger": "./lib/log/logger.ts"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "chalk": "^5.4.1",
     "cls-hooked": "^4.2.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
@@ -40,6 +47,7 @@
     "@eslint/js": "^9.21.0",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.3",
+    "@types/bcrypt": "^5.0.2",
     "@types/cls-hooked": "^4.3.9",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
@@ -79,5 +87,6 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.2.0"
-  }
+  },
+  "drizzle": "development"
 }

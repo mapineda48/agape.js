@@ -7,7 +7,7 @@ import { toUrl, toPublicUrl, findService, toRelativePathService } from "../lib/r
 
 const namespace = "@agape";
 const libs = ["rpc", "access"];
-const syncService = `tsx ${fileURLToPath(import.meta.url)} --sync-load`;
+const syncService = `tsx --tsconfig tsconfig.build.json ${fileURLToPath(import.meta.url)} --sync-load`;
 
 export default function initAgapePlugin(): Plugin {
   const virtualModuleMap = initRpc();

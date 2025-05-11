@@ -30,16 +30,11 @@
       "#utils/*": ["lib/utils/*"],
       "#models/*": ["models/*"],
       "#lib/*": ["./lib/*"],
+      "#svc/*": ["svc/*"],
       "#session": ["./lib/access/session.ts"],
-      "@/*": ["./*"]
-    },
+      "#logger": ["./lib/log/logger.ts"],
+    }
   },
-  "include": [
-    "bin/index.ts", "svc", "lib", "models"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "web"
-  ]
+  "include": ["bin/index.ts", "bin/cluster.ts", "svc", "lib", "models"],
+  "exclude": ["node_modules", "dist", "web"]
 }

@@ -39,7 +39,7 @@ export default webSession as IWebSession;
 export interface IWebSession {
   id: number;
   fullName: string;
-  avatarUrl: string
+  avatarUrl: string | null
 }
 
 export type IUserSession = Omit<IWebSession, "setUser">;

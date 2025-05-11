@@ -18,7 +18,7 @@ export default class Jwt {
 
         if (token) return res(token);
 
-        throw new Error("unknown error");
+        rej(new Error("unknown error"));
       });
     });
   }

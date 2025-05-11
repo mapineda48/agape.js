@@ -3,6 +3,7 @@ import path from "node:path";
 import { glob } from "glob";
 import { name, version, type, dependencies, imports } from "../package.json";
 
+
 /**
  * He creado un script scripts/fix-import-extensions.js que:
 
@@ -14,79 +15,121 @@ import { name, version, type, dependencies, imports } from "../package.json";
  */
 
 
-// Extensions Node ESM will accept (in order)
+// Extensiones que Node ESM acepta (en orden de preferencia)
 const exts = [".js", ".cjs", ".mjs"];
 
-/**
- * Resolve a relative import specifier to include its proper extension.
- * Returns the new specifier (e.g. './foo.js' or './bar/index.js'), or null if not a relative path or not found.
- */
-function resolveImport(spec: string, basedir: string) {
-    if (!spec.startsWith(".") && !spec.startsWith("/")) return null;
+// Para simplificar, calculamos el root de dist
+const distRoot = path.resolve("dist");
 
-    const fullPath = path.resolve(basedir, spec);
-    // Try as file
-    for (const ext of exts) {
-        if (fs.existsSync(fullPath + ext)) {
-            return spec + ext;
+/**
+ * Intenta resolver un specifier:
+ * 1) Si es relativo o absoluto, como antes
+ * 2) Si coincide con un alias de package.json → lo mapea y aplica mismas comprobaciones
+ */
+function resolveImport(spec, basedir) {
+    if (spec === ".") {
+        const base = path.resolve(basedir, spec);
+
+        for (const ext of exts) {
+            const idx = path.join(base, "index" + ext);
+            if (fs.existsSync(idx)) return "./index" + ext;
         }
+
+        return null;
     }
-    // Try as directory with index
-    for (const ext of exts) {
-        const idx = path.join(fullPath, "index" + ext);
-        if (fs.existsSync(idx)) {
-            return path.posix.join(spec, "index" + ext);
+
+    // 1) Rutas relativas / absolutas
+    if (spec.startsWith(".") || spec.startsWith("/")) {
+        const base = path.resolve(basedir, spec);
+        for (const ext of exts) {
+            if (fs.existsSync(base + ext)) return spec + ext;
         }
+        for (const ext of exts) {
+            const idx = path.join(base, "index" + ext);
+            if (fs.existsSync(idx)) return path.posix.join(spec, "index" + ext);
+        }
+        return null;
     }
+
+    // 2) Alias (package.json → imports)
+    for (const [aliasPattern, targetPattern] of Object.entries(imports)) {
+        // => Alias con wildcard "#utils/*": "./lib/utils/*.ts"
+        if (aliasPattern.endsWith("/*") && targetPattern.endsWith("/*.ts")) {
+            const aliasPrefix = aliasPattern.replace("/*", "");      // "#utils"
+            const targetPrefix = targetPattern.replace("/*.ts", ""); // "./lib/utils"
+            if (spec === aliasPrefix || spec.startsWith(aliasPrefix + "/")) {
+                // Suffix puede ser "" o "/foo/bar"
+                const suffix = spec.slice(aliasPrefix.length);
+                // Ruta sin extensión: "./lib/utils" + "/foo/bar"
+                const relPath = path.join(targetPrefix, suffix);
+                // Comprobamos ficheros en dist/
+                for (const ext of exts) {
+                    const full = path.resolve(distRoot, relPath + ext);
+                    if (fs.existsSync(full)) return spec + ext;
+                }
+                // Comprobamos posibles index
+                for (const ext of exts) {
+                    const idx = path.resolve(distRoot, relPath, "index" + ext);
+                    if (fs.existsSync(idx)) return spec + "/index" + ext;
+                }
+            }
+        }
+        // => Alias estático (sin wildcard) "#session": "./lib/access/session.ts"
+        // if (!aliasPattern.includes("*") && spec === aliasPattern) {
+        //   const withoutExt = targetPattern.replace(/\.(t|j)s$/, ""); // "./lib/access/session"
+        //   for (const ext of exts) {
+        //     const full = path.resolve(distRoot, withoutExt + ext);
+        //     if (fs.existsSync(full)) return spec + ext;
+        //   }
+        // }
+    }
+
+    // Nada
     return null;
 }
 
-// Patterns for different import syntaxes
+// Expresiones para detectar imports/exports dinámicos
 const importFromRe = /(import\s+[^'"\n]+?\s+from\s+)['"]([^'"]+)['"]/g;
 const exportFromRe = /(export\s+[^'"\n]+?\s+from\s+)['"]([^'"]+)['"]/g;
 const dynamicImportRe = /(import\()\s*['"]([^'"]+)['"](\s*\))/g;
 
-// Walk and process all .js files in distDir
+// Recorremos todos los .js en dist/
 const files = glob
-    .sync("**/*.js", { cwd: path.resolve("dist") })
-    .map((file) => path.resolve("dist", file));
+    .sync("**/*.js", { cwd: distRoot, ignore: ["www/**/*.js"] })
+    .map(f => path.join(distRoot, f));
 
-files.forEach((file) => {
+files.forEach(file => {
     let code = fs.readFileSync(file, "utf8");
     const dir = path.dirname(file);
 
-    // import ... from '...';
-    code = code.replace(importFromRe, (match, p1, spec) => {
-        const resolved = resolveImport(spec, dir);
-        if (resolved) {
-            const newSpec = resolved.replace(/\\/g, "/");
-            return `${p1}'${newSpec}'`;
-        }
-        return match;
+    // import ... from '...'
+    code = code.replace(importFromRe, (all, p1, spec) => {
+        const r = resolveImport(spec, dir);
+        return r ? `${p1}'${r.replace(/\\/g, "/")}'` : all;
     });
-    // export ... from '...';
-    code = code.replace(exportFromRe, (match, p1, spec) => {
-        const resolved = resolveImport(spec, dir);
-        if (resolved) {
-            const newSpec = resolved.replace(/\\/g, "/");
-            return `${p1}'${newSpec}'`;
-        }
-        return match;
+    // export ... from '...'
+    code = code.replace(exportFromRe, (all, p1, spec) => {
+        const r = resolveImport(spec, dir);
+        return r ? `${p1}'${r.replace(/\\/g, "/")}'` : all;
     });
-    // dynamic import('...')
-    code = code.replace(dynamicImportRe, (match, p1, spec, p3) => {
-        const resolved = resolveImport(spec, dir);
-        if (resolved) {
-            const newSpec = resolved.replace(/\\/g, "/");
-            return `${p1}'${newSpec}'${p3}`;
-        }
-        return match;
+    // import('...')
+    code = code.replace(dynamicImportRe, (all, p1, spec, p3) => {
+        const r = resolveImport(spec, dir);
+        return r ? `${p1}'${r.replace(/\\/g, "/")}'${p3}` : all;
     });
 
     fs.writeFileSync(file, code, "utf8");
 });
+
+
 console.log(`✔️  Fixed import extensions in ${files.length} files.`);
 
+
+/**
+ * Migrations
+ */
+
+await fs.copy("lib/db/migrations", "dist/lib/db/migrations")
 
 /**
  * Crear Packages JSON de produccion con la configuracion minima
@@ -98,9 +141,9 @@ fs.outputJSONSync("dist/package.json", {
     type,
     dependencies,
     scripts: {
-        start: "node bin/index.js"
+        start: "node bin/cluster.js"
     },
     imports: Object.fromEntries(
-        Object.entries(imports).map(([key, path]) => [key, path.replace(".ts", ".js")])
+        Object.entries(imports).map(([key, path]) => [key, path.replace("*.ts", "*").replace(".ts", ".js")])
     )
 }, { spaces: 2 })
