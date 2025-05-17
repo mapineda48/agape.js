@@ -1,3 +1,9 @@
+import Sidebar from "./Layout";
+
 export default function CMs() {
-  return <div>Hello worlds</div>;
+  return (
+    <Sidebar>
+      <div>Hello worldsss</div>
+    </Sidebar>
+  );
 }

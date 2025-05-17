@@ -11,12 +11,13 @@ export default function SelectInt(props: Props) {
       {...core}
       value={state}
       onChange={({ currentTarget }) => {
+        const index = currentTarget.selectedIndex;
         const value = parseInt(currentTarget.value) ?? 0;
 
         setState(value);
 
         if (onChange) {
-          onChange(value);
+          onChange(value, index);
         }
       }}
     />
@@ -25,7 +26,8 @@ export default function SelectInt(props: Props) {
 
 interface Props extends Core {
   path: string;
-  onChange?: (value: number) => void;
+  default?: boolean;
+  onChange?: (value: number, index: number) => void;
 }
 
 type Core = Omit<

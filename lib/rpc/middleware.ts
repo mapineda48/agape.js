@@ -48,9 +48,9 @@ function prepareRpc(fn: Function): express.RequestHandler {
     return async (req, res, next) => {
         try {
             const args = await parseArgs(req);
-            const payload = await fn.call(null, args);
+            const payload = await fn.call(null, ...args);
 
-            res.json(toResponse(payload));
+            res.json(toResponse({ payload }));
         } catch (error) {
             console.error(error);
             next(error);

@@ -7,7 +7,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "watch": "tsx watch --tsconfig ./tsconfig.build.json",
-    "prebuild": "rimraf dist && tsc -b && vite build && rimraf dist/www/tsconfig.build.tsbuildinfo",
+    "prebuild": "rimraf dist && drizzle-kit generate && tsc -p ./tsconfig.build.json && vite build && rimraf dist/www/tsconfig.build.tsbuildinfo",
     "build": "tsx bin/build.ts",
     "postbuild": "rimraf dist/tsconfig.build.tsbuildinfo",
     "generate": "pnpm drizzle-kit generate",
@@ -24,6 +24,7 @@
     "#logger": "./lib/log/logger.ts"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.27.0",
     "bcrypt": "^5.1.1",
     "chalk": "^5.4.1",
     "cls-hooked": "^4.2.2",

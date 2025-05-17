@@ -10,7 +10,7 @@ const employee = schema.table("staff_employee", {
     hireDate: timestamp("hire_date", { withTimezone: true }).defaultNow().notNull(),
     isActive: boolean("is_active").default(true).notNull(),
     metadata: jsonb("metadata"),
-    avatarUrl: varchar("avatar_url", { length: 255 }),
+    avatarUrl: varchar("avatar_url", { length: 255 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
         .defaultNow()
         .notNull(),

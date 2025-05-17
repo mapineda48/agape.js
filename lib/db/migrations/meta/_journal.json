@@ -15,6 +15,20 @@
       "when": 1746994266349,
       "tag": "0001_hot_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1747501430219,
+      "tag": "0002_kind_winter_soldier",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1747520200704,
+      "tag": "0003_dashing_wendigo",
+      "breakpoints": true
     }
   ]
 }

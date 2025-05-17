@@ -104,7 +104,8 @@ async function InsertAdminUser(username: string, password: string) {
     const [employeeRecord] = await db.insert(employee).values({
         personId: personRecord.id,
         hireDate: new Date(),
-        isActive: true
+        isActive: true,
+        avatarUrl: "/admin.jpg"
     }).returning();
 
     await db.insert(employeeRole).values({

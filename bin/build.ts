@@ -129,7 +129,12 @@ console.log(`✔️  Fixed import extensions in ${files.length} files.`);
  * Migrations
  */
 
-await fs.copy("lib/db/migrations", "dist/lib/db/migrations")
+await fs.copy("lib/db/migrations", "dist/lib/db/migrations");
+
+/**
+ * Migrations
+ */
+//await glob("public/**").then(maths => Promise.all(maths.map(file => fs.copy(path.resolve(file), path.resolve("dist/www", file.replace("public", "."))))))
 
 /**
  * Crear Packages JSON de produccion con la configuracion minima

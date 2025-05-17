@@ -1,4 +1,4 @@
-import { text, jsonb, timestamp, pgSchema, integer } from 'drizzle-orm/pg-core';
+import { text, jsonb, timestamp, pgSchema } from 'drizzle-orm/pg-core';
 import config from '#lib/db/orm';
 
 export const schema = pgSchema(config.schema);

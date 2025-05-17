@@ -43,7 +43,7 @@ export default defineConfig({
   server: {
     watch: {
       ignored: [
-        "**/lib/**/*", ""
+        "**/lib/**/*",
       ]
     }
   },

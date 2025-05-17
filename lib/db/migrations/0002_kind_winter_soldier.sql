@@ -1,0 +1,1 @@
+ALTER TABLE "agape_app_demo_development"."staff_employee" ALTER COLUMN "avatar_url" SET NOT NULL;

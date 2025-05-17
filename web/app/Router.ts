@@ -154,9 +154,9 @@ export class Router {
                     // Navigate again with the props from onInit
                     this.navigateTo(pathname, { ...options, state: props });
                 })
-                .catch((err) => {
+                .catch((error) => {
                     this.loading = false;
-                    console.error("onInit error:", err);
+                    console.error("onInit error:", error);
                     // Proceed with empty state on failure
                     this.navigateTo(pathname, { ...options, state: {} });
                 });

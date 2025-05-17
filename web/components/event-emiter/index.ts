@@ -1,3 +1,4 @@
+import _ from "lodash";
 import mitt from "mitt";
 import { createContext, useContext, useEffect, useMemo, ReactNode, createElement, JSX, useState } from "react";
 
@@ -65,7 +66,7 @@ export function useEmitter(): EmitterProxy {
          * @param {unknown} payload - Datos asociados al evento.
          */
         const emit$ = (event: string, payload: unknown) => {
-            emitter.emit(event, structuredClone(payload));
+            emitter.emit(event, _.cloneDeep(payload));
         };
 
         // Se utiliza un Proxy para manejar dinámicamente las llamadas a métodos de emisión o suscripción.

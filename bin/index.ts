@@ -4,18 +4,20 @@ import morgan from "morgan";
 import compression from 'compression';
 import initDatabase from "#lib/db";
 import logger from "#logger";
+import { BlobStorage } from "#lib/storage";
 
 /**
  * Environment variables
  */
 const {
-  NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
   PORT = "3000",
-  DATABASE_URI = "postgresql://postgres:mypassword@localhost",
   AGAPE_TENANT = "demo",
   AGAPE_SECRET = import.meta.filename,
   AGAPE_ADMIN = "admin",
-  AGAPE_PASSWORD = "admin"
+  AGAPE_PASSWORD = "admin",
+  NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
+  DATABASE_URI = "postgresql://postgres:mypassword@localhost",
+  AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true"
 } = process.env;
 
 const isProduction = NODE_ENV === "production";
@@ -28,6 +30,12 @@ const isDevelopment = NODE_ENV === "development";
 await initDatabase(DATABASE_URI, `${AGAPE_TENANT}_${NODE_ENV}`, isDevelopment);
 
 await import("#lib/db/admin").then(({ verifyRootUser }) => verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD));
+
+
+/**
+ * Storage
+ */
+await BlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT);
 
 /**
  * Vite build / SPA React application

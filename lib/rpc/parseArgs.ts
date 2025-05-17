@@ -28,7 +28,7 @@ export function parseArgs<T extends unknown[] = unknown[]>(req: Request) {
             JSON.parse(decimals).forEach(([paths, decimal]: any) => setPaths(args, paths, new Decimal(decimal)));
 
             // File Type
-            Object.entries(files).forEach(([paths, [file]]: any) => file && setPaths(args, paths, new File(file)));
+            Object.entries(files).forEach(([paths, [file]]: any) => file && setPaths(args, decodeURIComponent(paths), new File(file)));
 
             res(args as T)
         });

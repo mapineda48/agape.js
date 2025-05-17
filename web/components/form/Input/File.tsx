@@ -1,40 +1,29 @@
 import { JSX } from "react";
 import { useInput } from "..";
 
-export default function InputFile(props: Props) {
-  const { path, ...core } = props;
+export default function InputText(props: Props) {
+  const { path, multiple, ...core } = props;
 
-  const [, setState] = useInput<unknown>(path, core.multiple ? [] : null);
+  const [, setState] = useInput(path, multiple ? [] : null);
 
-  return (
-    <InputFiles
-      {...core}
-      onChange={(files) => {
-        if (core.multiple) {
-          return setState(files);
-        }
-
-        const [file = null] = files;
-
-        setState(file);
-      }}
-    />
-  );
-}
-
-export function InputFiles(props: Core) {
-  const { onChange, ...core } = props;
   return (
     <input
       {...core}
       type="file"
+      multiple={multiple}
       onChange={({ currentTarget }) => {
-        const files = currentTarget.files
-          ? Array.from(currentTarget.files)
-          : [];
+        const filesArray = Array.from(currentTarget.files ?? []);
 
-        currentTarget.value = "";
-        onChange(files);
+        if (!filesArray.length) {
+          return;
+        }
+
+        if (!multiple) {
+          setState(filesArray[0]);
+          return;
+        }
+
+        setState((currents: File[]) => [...currents, filesArray]);
       }}
     />
   );
@@ -44,10 +33,7 @@ interface Props extends Core {
   path: string;
 }
 
-interface Core
-  extends Omit<
-    JSX.IntrinsicElements["input"],
-    "value" | "name" | "onChange" | "type"
-  > {
-  onChange: (files: File[]) => void;
-}
+type Core = Omit<
+  JSX.IntrinsicElements["input"],
+  "value" | "name" | "onChange" | "type"
+>;
