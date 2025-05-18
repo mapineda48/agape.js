@@ -1,0 +1,40 @@
+# Node.js - Ignore node_modules at the root
+node_modules/
+
+# Build
+dist/
+
+# Logs
+logs
+*.log
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Directories used by pnpm
+.pnpm
+.pnpm-store
+
+# Ignore Dockerfile and .dockerignore
+Dockerfile
+.dockerignore
+
+# Version control
+.git
+.gitignore
+.svn
+.hg
+.cvsignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor files
+.idea
+.vscode
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+

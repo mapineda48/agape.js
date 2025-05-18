@@ -1,13 +1,14 @@
 import { ReadStream } from "fs";
 import { PassThrough } from "stream";
-import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
+import { BlobServiceClient, type BlockBlobClient, ContainerClient } from "@azure/storage-blob";
 
 export class BlobStorage {
-    private static hostname: string;
-    private static publicContainer: string;
+    private static production: boolean;
     private static containerClient: ContainerClient;
 
-    static async connect(connectionString: string, containerName: string) {
+    static async connect(connectionString: string, containerName: string, production: boolean) {
+        this.production = production;
+
         const serviceClient = BlobServiceClient.fromConnectionString(connectionString);
 
         this.containerClient = serviceClient.getContainerClient(containerName);
@@ -16,10 +17,7 @@ export class BlobStorage {
             access: "container",
         });
 
-        this.publicContainer = containerName;
-
         const [, hostname] = connectionString.match(/BlobEndpoint=(https?:\/\/[^;]+)/) ?? [];
-        this.hostname = hostname;
 
         return hostname;
     }
@@ -44,8 +42,19 @@ export class BlobStorage {
         await blockBlobClient.uploadData(Buffer.from(buffer), {
             blobHTTPHeaders: { blobContentType: file.type },
         });
-        const url = blockBlobClient.url;
+
+        const url = BlobStorage.parsePublicUrl(blockBlobClient);
+
         return url;
+    }
+
+    private static parsePublicUrl(blockBlobClient: BlockBlobClient) {
+        if (this.production || !blockBlobClient.url.startsWith("http://azurite:10000")) {
+            return blockBlobClient.url;
+        }
+
+        // Para facilitar el despliegue en entornos de test con azurite
+        return blockBlobClient.url.replace(/^https?:\/\/[^/]+/, 'http://127.0.0.1:10000')
     }
 }
 

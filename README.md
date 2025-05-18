@@ -52,3 +52,74 @@ export default tseslint.config({
   },
 })
 ```
+
+# Entorno de Prueba Local – Agape App
+
+Este repositorio provee un **entorno de prueba local** con PostgreSQL, PgAdmin, Azurite, Redis y tu aplicación (`agape-app`).
+
+```yml
+version: "3.8"
+
+services:
+  db:
+    image: postgres:14
+    container_name: db-agape-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "mypassword"
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite-dev
+    restart: unless-stopped
+    command: >
+      azurite-blob
+      --blobHost 0.0.0.0
+      --blobPort 10000
+      --location /data
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue (opcional)
+      - "10002:10002"  # Table (opcional)
+    volumes:
+      - azurite-data:/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  agape-app:
+    image: agape-app:latest
+    container_name: agape-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URI: "postgresql://postgres:mypassword@db"
+      AZURE_CONNECTION_STRING: >
+        DefaultEndpointsProtocol=http;
+        AccountName=devstoreaccount1;
+        AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/
+        K1SZFPTOtr/KBHBeksoGMGw==;
+        BlobEndpoint=http://azurite:10000/devstoreaccount1;
+        QueueEndpoint=http://azurite:10001/devstoreaccount1;
+        TableEndpoint=http://azurite:10002/devstoreaccount1;
+    depends_on:
+      - db
+      - azurite
+      - redis
+
+volumes:
+  db-data:
+  azurite-data:
+  redis-data:
+```

@@ -35,7 +35,7 @@ await import("#lib/db/admin").then(({ verifyRootUser }) => verifyRootUser(AGAPE_
 /**
  * Storage
  */
-await BlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT);
+await BlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT, isProduction);
 
 /**
  * Vite build / SPA React application
