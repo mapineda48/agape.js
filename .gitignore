@@ -23,4 +23,56 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+
+# Terraform
+
+# Carpetas y archivos de estado de Terraform
 .terraform/
+.terraform.lock.hcl
+
+# Archivos de estado (pueden contener secretos)
+*.tfstate
+*.tfstate.*
+
+# Archivos de planos de ejecución
+*.tfplan
+
+# Archivos de salida sensibles
+crash.log
+
+# Archivos de override o backup
+*.tfvars
+*.tfvars.json
+*.backup
+*.bak
+*.old
+
+# Archivos de logs
+*.log
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDEs
+.vscode/
+.idea/
+*.swp
+
+# Binarios y ejecutables
+*.exe
+*.dll
+*.so
+*.dylib
+*.zip
+*.tar.gz
+*.7z
+
+# Terraform provider downloads (a veces se descomprimen accidentalmente)
+terraform-provider-*
+
+# Archivos que accidentalmente agregaste al repo
+# Los puedes agregar específicamente aquí también:
+# ejemplo:
+# terraform-provider-azurerm_v3.100.0_x5.exe
