@@ -1,0 +1,8 @@
+provider: godaddy
+extraArgs:
+  - --godaddy-api-key=$(GODADDY_API_KEY)
+  - --godaddy-api-secret=$(GODADDY_API_SECRET)
+
+envFrom:
+  - secretRef:
+      name: agape-secrets
