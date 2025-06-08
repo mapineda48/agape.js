@@ -10,7 +10,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
@@ -19,16 +19,15 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-
     "baseUrl": "web",
     "paths": {
       "@agape/*": ["../svc/*"],
       "@/*": ["./*"],
-      "@utils/*": ["../lib/utils/*"]
+      "@utils/*": ["../lib/utils/*"],
     }
   },
   "include": ["web", "lib/utils"],
+  "exclude": ["lib", "svc", "bin"]
 }

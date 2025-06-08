@@ -22,14 +22,14 @@
     /* Que incluya tipos de Node */
     "types": ["node"],
 
-    "verbatimModuleSyntax": true, //
+    "verbatimModuleSyntax": true, // <- mantiene los imports sin tocarlos
     "rewriteRelativeImportExtensions": true,
 
     "baseUrl": ".",
     "paths": {
       "#utils/*": ["lib/utils/*"],
       "#models/*": ["models/*"],
-      "#lib/*": ["lib/*"],
+      "#lib/*": ["./lib/*"],
       "#svc/*": ["svc/*"],
       "#session": ["./lib/access/session.ts"],
       "#logger": ["./lib/log/logger.ts"],
