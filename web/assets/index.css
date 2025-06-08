@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* https://tailwindcss.com/docs/theme#default-theme-variable-reference */
+@theme {
+    /* Colores Ágape migrados */
+    --color-primary:   #1E40AF;  /* Azul Profundo */
+    --color-secondary: #3B82F6;  /* Azul Brillante */
+    --color-accent:    #0EA5E9;  /* Celeste Vibrante */
+    --color-muted:     #F3F4F6;  /* Fondo Suave */
+    --color-dark:      #111827;  /* Texto Oscuro */
+    --color-light:     #F9FAFB;  /* Fondo General */
+    --color-danger:    #EF4444;  /* Errores */
+    --color-warning:   #F59E0B;  /* Advertencias */
+    --color-success:   #10B981;  /* Confirmaciones */
+  }
+
+/* Si quieres utilities extra o animaciones: */
+@layer utilities {
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-6px) rotate(2deg);
+    }
+  }
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+}

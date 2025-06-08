@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:14
+    container_name: db-agape-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "mypassword"
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:7.4
+    container_name: pgadmin4-dev
+    restart: always
+    environment:
+      - "PGADMIN_DEFAULT_EMAIL=admin@mapineda48.com"
+      - "PGADMIN_DEFAULT_PASSWORD=admin"
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite-dev
+    restart: unless-stopped
+    command: >
+      azurite-blob
+      --blobHost 0.0.0.0
+      --blobPort 10000
+      --location /data
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue (opcional)
+      - "10002:10002"  # Table (opcional)
+    volumes:
+      - azurite-data:/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  db-data:
+  azurite-data:
+  redis-data:

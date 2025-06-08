@@ -1,0 +1,1 @@
+export default { schema: "agape_app_demo_development" };
