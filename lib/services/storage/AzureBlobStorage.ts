@@ -1,5 +1,6 @@
+import path from "node:path";
 import { ReadStream } from "fs";
-import { PassThrough } from "stream";
+import Stream, { PassThrough } from "stream";
 import { BlobServiceClient, type BlockBlobClient, ContainerClient } from "@azure/storage-blob";
 
 export default class AzureBlobStorage {
@@ -22,26 +23,14 @@ export default class AzureBlobStorage {
         return hostname;
     }
 
-    static async uploadPublic(
-        stream: ContentFile,
-        filename: string,
-        mimeType: string = "application/octet-stream"
-    ): Promise<string> {
-        const blockBlobClient = this.containerClient.getBlockBlobClient(filename);
+    static async uploadFile(dir: string, file: File): Promise<string> {
+        const stream: Stream.Readable = file.stream() as any; // Lo hago de esta manera para simular la API del navegador y que sea amigable con el tipado... pendiente de como mejorarlo
 
-        await blockBlobClient.uploadStream(stream as any, undefined, undefined, {
-            blobHTTPHeaders: { blobContentType: mimeType },
-        });
-        const url = blockBlobClient.url;
-        return url;
-    }
+        const blockBlobClient = this.containerClient.getBlockBlobClient(path.posix.join(dir, file.name));
 
-    static async uploadFile(file: File, filename: string): Promise<string> {
-        const buffer = await file.arrayBuffer();
-        const blockBlobClient = this.containerClient.getBlockBlobClient(filename);
-        await blockBlobClient.uploadData(Buffer.from(buffer), {
+        await blockBlobClient.uploadStream(stream, undefined, undefined, {
             blobHTTPHeaders: { blobContentType: file.type },
-        });
+        })
 
         const url = AzureBlobStorage.parsePublicUrl(blockBlobClient);
 

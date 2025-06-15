@@ -129,6 +129,7 @@ function InsertUpdate() {
     return form.submit((state: any) => {
       upsertProduct(state)
         .then((record) => {
+          console.log({record});
           form.set(record);
         })
         .catch(console.error);

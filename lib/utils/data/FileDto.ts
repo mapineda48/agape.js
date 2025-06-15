@@ -30,6 +30,11 @@ export const extensionCodecFile = {
     type: EXT_FILE,
 
     encode: (value: unknown) => {
+        // 1) Si es un File del navegador → representamos un nil
+        if (typeof File !== "undefined" && value instanceof File) {
+            return new Uint8Array(0);
+        }
+
         if (value instanceof FileInMemory) {
             const encoder = new TextEncoder()
             const nombre = encoder.encode(value.name)
@@ -57,6 +62,11 @@ export const extensionCodecFile = {
     },
 
     decode: (buffer: Uint8Array) => {
+        // 1) Si recibimos un buffer vacío → era un File del browser
+        if (buffer.byteLength === 0) {
+            return null;
+        }
+
         const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength)
         const decoder = new TextDecoder()
 

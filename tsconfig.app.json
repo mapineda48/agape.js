@@ -28,6 +28,6 @@
       "@utils/*": ["../lib/utils/*"],
     }
   },
-  "include": ["web", "lib/utils"],
+  "include": ["web", "lib/utils", "lib/rpc"],
   "exclude": ["lib", "svc", "bin"]
 }

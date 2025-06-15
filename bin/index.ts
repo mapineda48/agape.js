@@ -72,7 +72,7 @@ if (isDevelopment) {
 
 // Es importante realizar el dinamic import dado que es necesario que la base de datos este sincronizada con el ORM para el correcto funcionamiento
 const { default: auth } = await import("#lib/access/middleware");
-const { default: findServices } = await import("#lib/utils/rpc/middleware")
+const { default: findServices } = await import("#lib/rpc/middleware")
 
 // RPC services middleware
 app.use(await findServices());

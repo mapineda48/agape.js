@@ -1,7 +1,7 @@
 import * as msgpack from "@msgpack/msgpack";
 import { extensionCodecDecimal } from "../data/Decimal";
 import { extensionCodecDateTime } from "../data/DateTime";
-import { extensionCodecFile } from "../data/FileInMemory";
+import { extensionCodecFile } from "../data/FileDto";
 
 const extensionCodec = new msgpack.ExtensionCodec();
 
@@ -16,3 +16,4 @@ export function encode(value: unknown) {
 export function decode(buffer: ArrayLike<number> | ArrayBufferView | ArrayBufferLike) {
     return msgpack.decode(buffer, { extensionCodec })
 }
+

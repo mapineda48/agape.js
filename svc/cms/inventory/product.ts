@@ -15,6 +15,8 @@ export async function upsertProduct(
 ): Promise<Product> {
     const { id, images, ...rest } = data;
 
+    console.log(id, images, rest);
+
     // Upsert principal
     const [record] = await db
         .insert(product)
@@ -40,7 +42,7 @@ export async function upsertProduct(
             return Promise.resolve(file);
         }
 
-        return BlobStorage.uploadFile(file, `inventory/product/${record.id}/${file.name}`);
+        return BlobStorage.uploadFile(`inventory/product/${record.id}`, file);
     }));
 
     await db.update(product).set({ images: imgs }).where(eq(product.id, record.id));

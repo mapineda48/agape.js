@@ -23,7 +23,7 @@ export default function InputText(props: Props) {
           return;
         }
 
-        setState((currents: File[]) => [...currents, filesArray]);
+        setState((currents: File[]) => [...currents, ...filesArray]);
       }}
     />
   );

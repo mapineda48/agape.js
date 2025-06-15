@@ -14,6 +14,7 @@ export default defineConfig({
       // ej. @ apunta a src
       '@': path.resolve('web'),
       '@utils': path.resolve('lib/utils'),
+      '@rpc/client': path.resolve("lib/rpc/browser.ts")
     },
   },
   build: {

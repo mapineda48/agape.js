@@ -3,10 +3,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execSync } from "node:child_process";
 import fs from "fs-extra";
 import type { Plugin, ViteDevServer } from "vite";
-import { toUrl, toPublicUrl, findService, toRelativePathService } from "../lib/utils/rpc/services";
+import { toUrl, toPublicUrl, findService, toRelativePathService } from "../lib/rpc/services";
 
 const namespace = "@agape";
-const libs = ["rpc", "access"];
 const syncService = `tsx --tsconfig tsconfig.build.json ${fileURLToPath(import.meta.url)} --sync-load`;
 
 export default function initAgapePlugin(): Plugin {
@@ -121,7 +120,7 @@ function initRpc() {
 function addJsData(module: any, relativePath: string) {
 
     const publicUrl = toPublicUrl(relativePath);
-    const jsData = ['import makeRcp from "@utils/rpc/client";'];
+    const jsData = ['import makeRcp from "@rpc/client";'];
 
     Object.entries(module)
         .filter(([, value]) => typeof value === "function")
