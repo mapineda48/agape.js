@@ -2,7 +2,7 @@ name: Build and publish docker msgpack-vite-agape-app
 on:
   push:
     branches:
-      - mspack-vite-agape-app
+      branches: [ "mspack-vite-agape-app" ]
 jobs:
   build:
     runs-on: ubuntu-latest 
