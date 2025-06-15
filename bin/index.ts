@@ -7,7 +7,7 @@ import initDatabase from "#lib/db";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
 
 /**
- * Environment variable
+ * Environment variables
  */
 const {
     PORT = "3000",
