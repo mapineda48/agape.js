@@ -38,7 +38,8 @@ resource "azurerm_public_ip" "pip" {
   name                = "pip-docker"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"     # ✅ Obligatorio para SKU Standard
+  sku                 = "Standard"   # ✅ Si usas Standard, esto debe estar
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
@@ -69,5 +70,5 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
 
-  # custom_data = base64encode(file("cloud-init.yaml"))
+  custom_data = base64encode(file("cloud-init.yaml"))
 }
