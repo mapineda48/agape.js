@@ -1,8 +1,8 @@
-name: Build and publish docker vite-agape-app
+name: Build and publish docker msgpack-vite-agape-app
 on:
   push:
     branches:
-      - vite-agape-app
+      - mspack-vite-agape-app
 jobs:
   build:
     runs-on: ubuntu-latest 
