@@ -3,7 +3,9 @@ name: Build and publish docker msgpack-vite-agape-app
 on:
   push:
     branches:
-      - mspack-vite-agape-app  # ✅ corregido, no se usa "branches:" dentro de "branches:"
+      - mspack-vite-agape-app  # ✅ Unicamente crea la imagen en esta rama
+    paths-ignore:
+      - '.deploy/**'  # 👈 ignora cualquier cambio dentro de la carpeta .deploy
 
 jobs:
   build:
