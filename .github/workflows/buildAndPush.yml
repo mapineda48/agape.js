@@ -5,7 +5,7 @@ on:
     branches:
       - mspack-vite-agape-app  # ✅ Unicamente crea la imagen en esta rama
     paths-ignore:
-      - '.deploy/**'  # 👈 ignora cualquier cambio dentro de la carpeta .deploy
+      - '.azure/**'  # 👈 ignora cualquier cambio dentro de la carpeta .deploy
 
 jobs:
   build:
