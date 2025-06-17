@@ -18,8 +18,17 @@ resource "azurerm_storage_account" "agape_app_storage" {
 }
 
 # Contenedor de blobs
-resource "azurerm_storage_container" "agape_app" {
-  name                  = "agape_app"
-  storage_account_name = azurerm_storage_account.agape_app_storage.name
+resource "azurerm_storage_container" "agape_app_storage_tfstate" {
+  name                  = "tfstate"
+  storage_account_id    = azurerm_storage_account.agape_app_storage.id
   container_access_type = "private"
+}
+
+resource "azurerm_managed_disk" "persistent_data_disk" {
+  name                 = "agape-app-data-disk"
+  location             = azurerm_resource_group.agape_app_rg.location
+  resource_group_name  = azurerm_resource_group.agape_app_rg.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = 32
 }
