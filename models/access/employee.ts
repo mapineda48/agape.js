@@ -6,7 +6,7 @@ import employee from "#models/staff/employee";
 export const accessUser = schema.table("access_employee", {
     id: serial("id").primaryKey(),
     employeeId: integer("employee_id").notNull().references(() => employee.id),
-    username: varchar("username", { length: 50 }).notNull().unique(),
+    username: varchar("username", { length: 64 }).notNull().unique(),
     password: text("password_hash").notNull(),
     isActive: boolean("is_active").default(true).notNull(),
     isLocked: boolean("is_locked").default(false).notNull(),
