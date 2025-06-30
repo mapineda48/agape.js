@@ -50,11 +50,6 @@ var storageHost = await AzureBlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_
 
 const app = express();
 
-// Middleware para leer buffer crudo
-app.use(express.raw({ type: 'application/msgpack', limit: "5mb" }));
-
-app.use(morgan(development ? "dev" : "common"));
-
 // Development-only middleware
 if (development) {
     const { default: cors } = await import("cors");
@@ -74,6 +69,7 @@ if (development) {
 }
 
 if (production) {
+    console.log("production settings...");
     app.use(
         helmet({
             contentSecurityPolicy: {
@@ -90,6 +86,10 @@ if (production) {
     );
 }
 
+// Middleware para leer buffer crudo
+app.use(express.raw({ type: 'application/msgpack', limit: "5mb" }));
+
+app.use(morgan(development ? "dev" : "common"));
 
 // Es importante realizar el dinamic import dado que es necesario que la base de datos este sincronizada con el ORM para el correcto funcionamiento
 const { default: auth } = await import("#lib/access/middleware");
