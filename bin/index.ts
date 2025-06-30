@@ -73,22 +73,22 @@ if (development) {
     });
 }
 
-// if (production) {
-//     app.use(
-//         helmet({
-//             contentSecurityPolicy: {
-//                 useDefaults: true,
-//                 directives: {
-//                     "img-src": [
-//                         ...helmet.contentSecurityPolicy.getDefaultDirectives()['img-src'], // Conserva las directivas por defecto de 'img-src'
-//                         "blob:",
-//                         storageHost, // Agrega tu fuente personalizada
-//                     ],
-//                 },
-//             },
-//         })
-//     );
-// }
+if (production) {
+    app.use(
+        helmet({
+            contentSecurityPolicy: {
+                useDefaults: true,
+                directives: {
+                    "img-src": [
+                        ...helmet.contentSecurityPolicy.getDefaultDirectives()['img-src'], // Conserva las directivas por defecto de 'img-src'
+                        "blob:",
+                        storageHost, // Agrega tu fuente personalizada
+                    ],
+                },
+            },
+        })
+    );
+}
 
 
 // Es importante realizar el dinamic import dado que es necesario que la base de datos este sincronizada con el ORM para el correcto funcionamiento
