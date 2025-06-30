@@ -71,7 +71,7 @@ if (development) {
 if (production) {
     console.log("production settings...");
     app.set('trust proxy', 1);
-    
+
     app.use(
         helmet({
             contentSecurityPolicy: {
@@ -86,6 +86,14 @@ if (production) {
             },
         })
     );
+
+    app.use((req, res, next) => {
+        res.setHeader(
+            "Permissions-Policy",
+            "geolocation=(self), camera=(self), microphone=(self), fullscreen=(self)"
+        );
+        next();
+    });
 }
 
 // Middleware para leer buffer crudo
