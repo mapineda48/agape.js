@@ -5,7 +5,9 @@ import webSession, { initSession } from "./session";
 import { findUser } from "#svc/staff/access";
 import sendMsgPack from "#lib/utils/mspack/sendMsgPack";
 import { decode } from "#lib/utils/mspack";
+import { AgapeError } from "#utils/error";
 
+const failLogin = new AgapeError("Falló Autenticación");
 
 const AuthTokenCookie = "auth_token";
 
@@ -28,7 +30,7 @@ export default function defineAuth(secret: string) {
             const user = await findUser(username, password);
 
             if (!user) {
-                sendMsgPack(res, "Falló Autenticación", 401);
+                sendMsgPack(res, failLogin, 401);
                 return;
             }
 
@@ -65,7 +67,7 @@ export default function defineAuth(secret: string) {
             console.error(error);
             res.clearCookie(AuthTokenCookie);
 
-            sendMsgPack(res, "Falló Autenticación", 401);
+            sendMsgPack(res, failLogin, 401);
         }
     });
 
@@ -80,7 +82,7 @@ export default function defineAuth(secret: string) {
         const token = getCookie(req.headers.cookie);
 
         if (!token) {
-            sendMsgPack(res, "Falló Autenticación", 401);
+            sendMsgPack(res, failLogin, 401);
             return;
         }
 
@@ -89,7 +91,7 @@ export default function defineAuth(secret: string) {
             initSession(verified, next);
 
         } catch (error) {
-            sendMsgPack(res, "Falló Autenticación", 401);
+            sendMsgPack(res, failLogin, 401);
         }
     })
 
