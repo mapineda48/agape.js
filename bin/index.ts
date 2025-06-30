@@ -70,6 +70,8 @@ if (development) {
 
 if (production) {
     console.log("production settings...");
+    app.set('trust proxy', 1);
+    
     app.use(
         helmet({
             contentSecurityPolicy: {
