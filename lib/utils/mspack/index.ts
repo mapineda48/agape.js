@@ -2,7 +2,7 @@ import * as msgpack from "@msgpack/msgpack";
 import { extensionCodecDecimal } from "../data/Decimal";
 import { extensionCodecDateTime } from "../data/DateTime";
 import { extensionCodecFile } from "../data/FileDto";
-import { extensionCodecError } from "#utils/error";
+import { extensionCodecError } from "../error";
 
 const extensionCodec = new msgpack.ExtensionCodec();
 
