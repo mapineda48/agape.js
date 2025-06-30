@@ -1,0 +1,1 @@
+ALTER TABLE "agape_app_demo_development"."access_employee" ALTER COLUMN "username" SET DATA TYPE varchar(64);

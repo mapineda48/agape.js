@@ -4,11 +4,11 @@ import Stream, { PassThrough } from "stream";
 import { BlobServiceClient, type BlockBlobClient, ContainerClient } from "@azure/storage-blob";
 
 export default class AzureBlobStorage {
-    private static production: boolean;
+    private static hostCdn: string;
     private static containerClient: ContainerClient;
 
-    static async connect(connectionString: string, containerName: string, production: boolean) {
-        this.production = production;
+    static async connect(connectionString: string, containerName: string, hostCdn: string) {
+        this.hostCdn = hostCdn;
 
         const serviceClient = BlobServiceClient.fromConnectionString(connectionString);
 
@@ -20,7 +20,7 @@ export default class AzureBlobStorage {
 
         const [, hostname] = connectionString.match(/BlobEndpoint=(https?:\/\/[^;]+)/) ?? [];
 
-        return hostname;
+        return hostCdn ? hostCdn : hostname;
     }
 
     static async uploadFile(dir: string, file: File): Promise<string> {
@@ -38,12 +38,11 @@ export default class AzureBlobStorage {
     }
 
     private static parsePublicUrl(blockBlobClient: BlockBlobClient) {
-        if (this.production || !blockBlobClient.url.startsWith("http://azurite:10000")) {
+        if (!this.hostCdn) {
             return blockBlobClient.url;
         }
 
-        // Para facilitar el despliegue en entornos de test con azurite
-        return blockBlobClient.url.replace(/^https?:\/\/[^/]+/, 'http://127.0.0.1:10000')
+        return blockBlobClient.url.replace(/^https?:\/\/[^/]+/, this.hostCdn)
     }
 }
 

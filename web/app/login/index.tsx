@@ -4,14 +4,21 @@ import Form, { useForm } from "@/components/form";
 import Input from "@/components/form/Input";
 import { useEvent } from "@/components/event-emiter";
 import { router } from "../Router";
+import { useNotificacion } from "@/components/ui/notification";
 
 export function LogOut() {
+  const notify = useNotificacion();
+
   return (
     <button
       onClick={() => {
         logout()
           .then(() => router.navigateTo("/login", { replace: true }))
-          .catch(console.error);
+          .catch((error) => {
+            notify({
+              payload: error,
+            });
+          })
       }}
     >
       Salir
@@ -22,6 +29,7 @@ export function LogOut() {
 export function IniciarSesion() {
   const [loading, setLoading] = useEvent(false);
   const form = useForm();
+  const notify = useNotificacion();
 
 
   useEffect(() => {
@@ -34,14 +42,19 @@ export function IniciarSesion() {
 
       login(state.username, state.password)
         .then(() => router.navigateTo("/cms", { replace: true }))
-        .catch(console.error)
+        .catch((error) => {
+          notify({
+            payload: error,
+          });
+        })
         .finally(() => setLoading(false));
     });
   }, [loading, setLoading]);
 
   return (
     <button
-      
+      disabled={loading}
+      style={loading ? { cursor: "progress" } : undefined}
       type="submit"
       className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
     >

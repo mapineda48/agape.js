@@ -1,4 +1,5 @@
 import express from "express";
+import helmet from "helmet";
 import morgan from "morgan";
 import path from "node:path";
 import compression from "compression";
@@ -10,26 +11,29 @@ import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
  * Environment variables
  */
 const {
+    NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
     PORT = "3000",
+
     AGAPE_TENANT = "demo",
     AGAPE_SECRET = import.meta.filename,
     AGAPE_ADMIN = "admin",
     AGAPE_PASSWORD = "admin",
-    NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
+    AGAPE_CDN_HOST = "http://127.0.0.1:10000",
+
     DATABASE_URI = "postgresql://postgres:mypassword@localhost",
     AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true"
 } = process.env;
 
-const isProduction = NODE_ENV === "production";
-const isTest = NODE_ENV === "test";
-const isDevelopment = NODE_ENV === "development";
+const production = NODE_ENV === "production";
+const test = NODE_ENV === "test";
+const development = NODE_ENV === "development";
 
 
 /**
  * Database connection
  * Es importante realizar la sincronizacion de la base de datos con el antes de cualquier logica que dependa de los modelos del ORM para el funcionamiento de multitenat
  */
-await initDatabase(DATABASE_URI, `${AGAPE_TENANT}_${NODE_ENV}`, isDevelopment);
+await initDatabase(DATABASE_URI, `${AGAPE_TENANT}_${NODE_ENV}`, development);
 
 
 /**
@@ -41,7 +45,7 @@ await import("#lib/db/admin").then(({ verifyRootUser }) => verifyRootUser(AGAPE_
 /**
  * Storage
  */
-await AzureBlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT, isProduction);
+var storageHost = await AzureBlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT, AGAPE_CDN_HOST);
 
 
 const app = express();
@@ -49,10 +53,10 @@ const app = express();
 // Middleware para leer buffer crudo
 app.use(express.raw({ type: 'application/msgpack', limit: "5mb" }));
 
-app.use(morgan(isDevelopment ? "dev" : "common"));
+app.use(morgan(development ? "dev" : "common"));
 
 // Development-only middleware
-if (isDevelopment) {
+if (development) {
     const { default: cors } = await import("cors");
 
     const corsOptions = {
@@ -68,6 +72,23 @@ if (isDevelopment) {
         res.send("express");
     });
 }
+
+// if (production) {
+//     app.use(
+//         helmet({
+//             contentSecurityPolicy: {
+//                 useDefaults: true,
+//                 directives: {
+//                     "img-src": [
+//                         ...helmet.contentSecurityPolicy.getDefaultDirectives()['img-src'], // Conserva las directivas por defecto de 'img-src'
+//                         "blob:",
+//                         storageHost, // Agrega tu fuente personalizada
+//                     ],
+//                 },
+//             },
+//         })
+//     );
+// }
 
 
 // Es importante realizar el dinamic import dado que es necesario que la base de datos este sincronizada con el ORM para el correcto funcionamiento

@@ -1,6 +1,5 @@
 import ReactDOM from "react-dom";
 import React, { Fragment, JSX, useCallback, useContext, useEffect } from "react";
-import lodash from "lodash";
 
 const Context = React.createContext<PushToPortal>(() => {});
 
@@ -9,14 +8,13 @@ const Context = React.createContext<PushToPortal>(() => {});
  * it's because this way I can nested zindex and allow push
  * a function component with a callback
  */
-export function withPortalToRoot(Element: any) {
+export function withPortalToRoot<P>(Element: React.ComponentType<P>) {
   return function useShow() {
     const pushToBody = useContext(Context);
 
     return useCallback(
-      function pushModal(payload: any = {}) {
-        const props = lodash.cloneDeep(payload);
-        pushToBody((portal) => <Element {...props} {...portal} />);
+      function pushModal(props: Omit<P, keyof PropsPortal>) {
+        pushToBody((portal) => <Element {...props as any} {...portal} />);
       },
       [pushToBody]
     );
@@ -44,6 +42,8 @@ export function PortalFactory(props: PortalFactoryProps) {
 
   const [state, setState] = React.useState<State>([]);
 
+  console.log(state);
+  
   useEffect(
     () => setPush((el) => setState((state) => [...state, el])),
     [setPush]
@@ -52,6 +52,8 @@ export function PortalFactory(props: PortalFactoryProps) {
   if (!state.length) {
     return null;
   }
+
+
 
   if (state.length === 1) {
     const [Item] = state;
@@ -118,11 +120,11 @@ export function generateUUID() {
  */
 type State = FunctionComponent[];
 
-export type FunctionComponent<T extends Props = Props> = (
+export type FunctionComponent<T extends PropsPortal = PropsPortal> = (
   props: T
 ) => JSX.Element;
 
-export interface Props {
+export interface PropsPortal {
   style: React.CSSProperties;
   remove: () => void;
 }

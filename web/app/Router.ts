@@ -85,7 +85,6 @@ export class Router {
     }
 
     private isAuthenticated(pathname: string, opt: INavigateTo) {
-        console.log(session);
         if ((!pathname.startsWith("/cms") && pathname !== "/login") || opt.isAuthenticated) {
             return;
         }
@@ -94,6 +93,7 @@ export class Router {
             this.loading = true;
 
             isAuthenticated()
+                .catch(()=>{/** Ignore error */})
                 .finally(() => {
                     this.loading = false;
                     this.navigateTo(pathname, opt);
@@ -114,7 +114,6 @@ export class Router {
      * @param options - Options for replace and initial state
      */
     public navigateTo(pathname: string, options: INavigateTo = {}) {
-        console.log({ pathname, loading: this.loading, session })
         if (this.loading) return;
 
         if (this.isAuthenticated(pathname, options)) {

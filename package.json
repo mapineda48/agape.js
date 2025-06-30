@@ -72,6 +72,7 @@
     "formidable": "^3.5.4",
     "fs-extra": "^11.3.0",
     "glob": "^11.0.2",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "ms": "^2.1.3",
