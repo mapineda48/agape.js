@@ -1,3 +1,6 @@
+// Express-based backend entry point for Agape application
+// This file sets up the Express server, middleware, environment, storage, and database for production-ready deployment
+
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -7,9 +10,7 @@ import logger from "#lib/log/logger";
 import initDatabase from "#lib/db";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
 
-/**
- * Environment variables
- */
+// Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
     NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
     PORT = "3000",
@@ -24,124 +25,98 @@ const {
     AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true"
 } = process.env;
 
-const production = NODE_ENV === "production";
-const test = NODE_ENV === "test";
-const development = NODE_ENV === "development";
+const isProduction = NODE_ENV === "production";
+const isTest = NODE_ENV === "test";
+const isDevelopment = NODE_ENV === "development";
 
+// Initialize DB connection and models (required before importing model-dependent logic like auth)
+await initDatabase(DATABASE_URI, `${AGAPE_TENANT}_${NODE_ENV}`, isDevelopment);
 
-/**
- * Database connection
- * Es importante realizar la sincronizacion de la base de datos con el antes de cualquier logica que dependa de los modelos del ORM para el funcionamiento de multitenat
- */
-await initDatabase(DATABASE_URI, `${AGAPE_TENANT}_${NODE_ENV}`, development);
-
-
-/**
- * Sincronizamos el usuario administrador
- */
+// Ensure admin/root user exists for management access
 await import("#lib/db/admin").then(({ verifyRootUser }) => verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD));
 
-
-/**
- * Storage
- */
-var storageHost = await AzureBlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT, AGAPE_CDN_HOST);
-
+// Initialize storage backend (e.g., Azure Blob or development emulator)
+const blobStorageHost = await AzureBlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT, AGAPE_CDN_HOST);
 
 const app = express();
 
-// Development-only middleware
-if (development) {
+// Development-only settings (e.g., CORS for Vite dev server)
+if (isDevelopment) {
     const { default: cors } = await import("cors");
 
-    const corsOptions = {
-        origin: 'http://localhost:5173',
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true,
-    };
+    app.use(cors({
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true
+    }));
 
-    app.use(cors(corsOptions));
-
-    app.get("/express", (_req, res) => {
-        res.send("express");
-    });
+    // Simple test endpoint to verify Express is running
+    app.get("/express", (req, res) => { res.send("express") });
 }
 
-if (production) {
-    console.log("production settings...");
-    app.set('trust proxy', 1);
+// Production-specific security hardening
+if (isProduction) {
+    // Allow Express to trust headers from Nginx or reverse proxies
+    app.set("trust proxy", 1);
 
-    app.use(
-        helmet({
-            contentSecurityPolicy: {
-                useDefaults: true,
-                directives: {
-                    "img-src": [
-                        ...helmet.contentSecurityPolicy.getDefaultDirectives()['img-src'], // Conserva las directivas por defecto de 'img-src'
-                        "blob:",
-                        storageHost, // Agrega tu fuente personalizada
-                    ],
-                },
-            },
-        })
-    );
+    // Enable Helmet with secure Content Security Policy (CSP)
+    app.use(helmet({
+        contentSecurityPolicy: {
+            useDefaults: true,
+            directives: {
+                "img-src": [
+                    ...helmet.contentSecurityPolicy.getDefaultDirectives()["img-src"],
+                    "blob:",
+                    blobStorageHost
+                ]
+            }
+        }
+    }));
 
-    app.use((req, res, next) => {
-        res.setHeader(
-            "Permissions-Policy",
-            "geolocation=(self), camera=(self), microphone=(self), fullscreen=(self)"
-        );
+    // Enable Permissions-Policy for restricting sensitive browser APIs
+    app.use((_req, res, next) => {
+        res.setHeader("Permissions-Policy", "geolocation=(self), camera=(self), microphone=(self), fullscreen=(self)");
         next();
     });
 }
 
-// Middleware para leer buffer crudo
-app.use(express.raw({ type: 'application/msgpack', limit: "5mb" }));
+// Support for raw MsgPack content
+app.use(express.raw({ type: "application/msgpack", limit: "5mb" }));
 
-app.use(morgan(development ? "dev" : "common"));
+// HTTP request logging
+app.use(morgan(isDevelopment ? "dev" : "common"));
 
-// Es importante realizar el dinamic import dado que es necesario que la base de datos este sincronizada con el ORM para el correcto funcionamiento
-const { default: auth } = await import("#lib/access/middleware");
-const { default: findServices } = await import("#lib/rpc/middleware")
+// Dynamic imports of auth and RPC middleware (must happen after DB is ready)
+const { default: authMiddleware } = await import("#lib/access/middleware");
+const { default: serviceRouter } = await import("#lib/rpc/middleware");
 
-// RPC services middleware
-app.use(await findServices());
+// Inject dynamic service handlers (auto-routed RPC)
+app.use(await serviceRouter());
 
-app.use(auth(AGAPE_SECRET));
+// Authenticate requests using Agape middleware (based on AGAPE_SECRET)
+app.use(authMiddleware(AGAPE_SECRET));
 
+// Path to frontend Vite build output
+const frontendRoot = path.resolve("web");
+const indexHtml = path.resolve("web/index.html");
 
-
-/**
- * Vite build / SPA React application
- */
-const buildPath = path.resolve('web');
-const spaEntry = path.resolve("web/index.html");
-
-
-// Response compression
+// Enable GZIP compression for all responses
 app.use(compression());
 
-// Static asset serving with long cache
-app.use(
-    express.static(buildPath, {
-        maxAge: '1y',
-        etag: false,
-        lastModified: false,
-    })
-);
+// Serve static frontend assets with long cache headers
+app.use(express.static(frontendRoot, {
+    maxAge: "1y",
+    etag: false,
+    lastModified: false
+}));
 
-// SPA fallback
+// Fallback to SPA entrypoint (for client-side routing)
 app.get(/.*/, (_req, res) => {
-    res.sendFile(spaEntry);
+    res.sendFile(indexHtml);
 });
 
-
-/**
- * Listen server app
- */
+// Start the server
 app.listen(parseInt(PORT), () => {
-    logger.log(
-        `[server] Backend Server: running at port ${PORT} | Env: ${NODE_ENV}`
-    );
+    logger.log(`[server] Backend Server running at port ${PORT} | Env: ${NODE_ENV}`);
 });

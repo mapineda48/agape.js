@@ -12,10 +12,16 @@ import { session } from "@agape/access";
 import { LogOut } from "@/app/login";
 import { router } from "../Router";
 import Link from "@/components/ui/link";
+import { factoryBreakpointValue } from "@/hook/useBreakpointValue";
 // 
 type LayoutProps = {
   children: React.ReactNode;
 };
+
+const useBreakpointValue = factoryBreakpointValue({
+  xs: true, // Teléfonos pequeños
+  sm: true, // Teléfonos medianos
+});
 
 // Rutas del CMS
 const CMS_PATH = "/cms";
@@ -31,7 +37,7 @@ const STYLE_UNSELECT =
   "flex items-center py-2 px-4 hover:bg-accent hover:bg-opacity-20 text-white transition-colors duration-200";
 
 export default function Layout({ children }: LayoutProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useBreakpointValue(false);
   const pathname = router.pathname;
 
   const navItems = [
@@ -43,17 +49,16 @@ export default function Layout({ children }: LayoutProps) {
   ];
 
   return (
-    <div className="flex h-screen">
+    <div className="relative h-screen overflow-hidden">
       {/* SIDEBAR */}
       <nav
-        className={`flex flex-col bg-primary text-white h-full relative transition-[width] duration-300 ${
-          collapsed ? "w-16" : "w-64"
-        }`}
+        className={`absolute top-0 left-0 h-full bg-primary text-white transition-all duration-300 z-50 ${collapsed ? "w-14" : "w-64"
+          }`}
       >
         {/* Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-4 bg-primary p-1 rounded-full border border-secondary"
+          className="absolute -right-3 top-4 bg-primary p-1 rounded-full border border-secondary z-50"
         >
           {collapsed ? (
             <MenuIcon className="w-6 h-6" />
@@ -63,7 +68,7 @@ export default function Layout({ children }: LayoutProps) {
         </button>
 
         {/* HEADER */}
-        {<div className="p-6 text-2xl font-bold">{!collapsed && "AgapeApp"}</div>}
+        <div className="p-6 text-2xl font-bold">{!collapsed && "AgapeApp"}</div>
 
         {/* NAV ITEMS */}
         <ul className="flex-1 overflow-y-auto mt-4 space-y-1">
@@ -106,9 +111,10 @@ export default function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-auto bg-gray-50 p-6">
+      <main className="relative z-10 h-full overflow-auto bg-gray-50 p-1 md:p-6 pl-16">
         {children}
       </main>
+
     </div>
   );
 }

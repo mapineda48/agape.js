@@ -24,13 +24,15 @@ export default function makeClientRpc(pathname: string) {
 
         });
 
-        if (res.status === 200) {
-            const buffer = await res.arrayBuffer();
+        const buffer = await res.arrayBuffer();
 
-            return decode(buffer);
+        const payload = decode(buffer);
+
+        if (res.status === 200) {
+            return payload;
         }
 
-        throw new Error("Unknow Error");
+        throw payload;
     }
 }
 
