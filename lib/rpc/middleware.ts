@@ -39,7 +39,7 @@ async function toRpc(route: express.Router, { file, relativePath }: MatchService
                 sendMsgPack(res, payload);
             } catch (error) {
                 console.error(error);
-                next(error);
+                sendMsgPack(res, error, 400)
             }
         })
     }

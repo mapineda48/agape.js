@@ -24,13 +24,16 @@ export default class AzureBlobStorage {
     }
 
     static async uploadFile(dir: string, file: File): Promise<string> {
-        const stream: Stream.Readable = file.stream() as any; // Lo hago de esta manera para simular la API del navegador y que sea amigable con el tipado... pendiente de como mejorarlo
+        const stream: Stream.Readable = file.stream() as any;
 
         const blockBlobClient = this.containerClient.getBlockBlobClient(path.posix.join(dir, file.name));
 
         await blockBlobClient.uploadStream(stream, undefined, undefined, {
-            blobHTTPHeaders: { blobContentType: file.type },
-        })
+            blobHTTPHeaders: { 
+                blobContentType: file.type,
+                blobCacheControl: "public, max-age=31536000" // 1 año en segundos
+            },
+        });
 
         const url = AzureBlobStorage.parsePublicUrl(blockBlobClient);
 

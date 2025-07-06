@@ -1,21 +1,27 @@
-import { useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Layout from "../Layout";
-import { getProducts, type GetProduct } from "@agape/cms/inventory/product";
-import { useEvent } from "@/components/event-emiter";
+import { getProducts, GetProductsParams, type GetProduct } from "@agape/cms/inventory/product";
+import { useEmitter, useEvent } from "@/components/event-emiter";
 import insertUpdateProduct from "./Producto";
+
+const PAGE_SIZE = 10; // Define a constant for page size
 
 export default function Inventory() {
   const show = insertUpdateProduct();
 
   const [products, setProducts] = useEvent<GetProduct[]>([]);
-  const [page, setPage] = useEvent<number>(1);
+  const [totalItems, setTotalItems] = useEvent<number>(0);
 
   useEffect(() => {
     getProducts({
+      pageIndex: 0,
+      pageSize: PAGE_SIZE,
       includeTotalCount: true,
     })
       .then((response) => {
+        console.log(response);
         setProducts(response.products);
+        setTotalItems(response.totalCount || 0);
       })
       .catch(console.error);
   }, []);
@@ -137,78 +143,77 @@ export default function Inventory() {
                   </table>
                 </div>
               </div>
-              <div className="flex items-center justify-center p-4">
-                <a href="#" className="flex size-10 items-center justify-center">
-                  <div
-                    className="text-[#101518]"
-                    data-icon="CaretLeft"
-                    data-size="18px"
-                    data-weight="regular"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18px"
-                      height="18px"
-                      fill="currentColor"
-                      viewBox="0 0 256 256"
-                    >
-                      <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z" />
-                    </svg>
-                  </div>
-                </a>
-                <a
-                  className="text-sm font-bold leading-normal tracking-[0.015em] flex size-10 items-center justify-center text-[#101518] rounded-full bg-[#eaedf1]"
-                  href="#"
-                >
-                  1
-                </a>
-                <a
-                  className="text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full"
-                  href="#"
-                >
-                  2
-                </a>
-                <a
-                  className="text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full"
-                  href="#"
-                >
-                  3
-                </a>
-                <a
-                  className="text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full"
-                  href="#"
-                >
-                  4
-                </a>
-                <a
-                  className="text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full"
-                  href="#"
-                >
-                  5
-                </a>
-                <a href="#" className="flex size-10 items-center justify-center">
-                  <div
-                    className="text-[#101518]"
-                    data-icon="CaretRight"
-                    data-size="18px"
-                    data-weight="regular"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18px"
-                      height="18px"
-                      fill="currentColor"
-                      viewBox="0 0 256 256"
-                    >
-                      <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
-                    </svg>
-                  </div>
-                </a>
-              </div>
+              <Pagination totalItems={totalItems} />
             </div>
           </div>
         </div>
       </div>
     </Layout>
   );
+}
+
+export function Pagination(props: { totalItems: number }) {
+  const [chunk, setChunk] = useEvent<number>(0);
+
+  const Pages = useMemo(() => {
+
+    let currentIndex = chunk * 5;
+
+    const Elements: React.ReactElement[] = [];
+
+    while (Elements.length < 5 && currentIndex < (props.totalItems / PAGE_SIZE)) {
+      Elements.push(
+        <a
+          key={currentIndex}
+          className={`text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full ${currentIndex === 0 ? "bg-[#eaedf1]" : ""}`}
+          href="#"
+        >
+          {currentIndex + 1}
+        </a>
+      );
+      currentIndex++;
+    }
+
+    return Elements;
+  }, [chunk, props.totalItems]);
+
+  return <div className="flex items-center justify-center p-4">
+    <a href="#" className="flex size-10 items-center justify-center">
+      <div
+        className="text-[#101518]"
+        data-icon="CaretLeft"
+        data-size="18px"
+        data-weight="regular"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18px"
+          height="18px"
+          fill="currentColor"
+          viewBox="0 0 256 256"
+        >
+          <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z" />
+        </svg>
+      </div>
+    </a>
+    {Pages}
+    <a href="#" className="flex size-10 items-center justify-center">
+      <div
+        className="text-[#101518]"
+        data-icon="CaretRight"
+        data-size="18px"
+        data-weight="regular"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18px"
+          height="18px"
+          fill="currentColor"
+          viewBox="0 0 256 256"
+        >
+          <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
+        </svg>
+      </div>
+    </a>
+  </div>
 }

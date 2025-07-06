@@ -9,7 +9,7 @@ export interface GetProductsParams {
     isActive?: boolean;
     categoryId?: number;
     includeTotalCount?: boolean; // más claro que "count"
-    page?: number;
+    pageIndex?: number;
     pageSize?: number;
 }
 
@@ -33,7 +33,7 @@ export async function getProducts(params: GetProductsParams): Promise<GetProduct
         isActive,
         categoryId,
         includeTotalCount = false,
-        page = 1,
+        pageIndex = 0,
         pageSize = 10,
     } = params;
 
@@ -53,10 +53,6 @@ export async function getProducts(params: GetProductsParams): Promise<GetProduct
 
     const whereClause = conditions.length ? and(...conditions) : undefined;
 
-    if (page < 1 || pageSize < 1) {
-        throw new Error("Page and pageSize must be greater than 0.");
-    }
-
     const products = await db
         .select({
             id: product.id,
@@ -70,7 +66,7 @@ export async function getProducts(params: GetProductsParams): Promise<GetProduct
         .innerJoin(category, eq(product.categoryId, category.id))
         .where(whereClause)
         .limit(pageSize)
-        .offset((page - 1) * pageSize);
+        .offset(pageIndex * pageSize);
 
     let totalCount: number | undefined;
 

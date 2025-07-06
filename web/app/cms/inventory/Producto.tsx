@@ -8,6 +8,7 @@ import Checkbox from "@/components/form/CheckBox";
 import { upsertProduct, type Product } from "@agape/cms/inventory/product";
 import InputImages from "./Images";
 import { PropsPortal, withPortalToRoot } from "@/components/Portals";
+import { useNotificacion } from "@/components/ui/notification";
 
 export function Inventory() {
   return (
@@ -52,7 +53,7 @@ export function Inventory() {
       <div className="flex items-center">
         <Checkbox
           checked
-          path="isEnabled"
+          path="isActive"
           className="h-4 w-4 text-blue-600"
         />
         <label htmlFor="enabled" className="ml-2 block text-sm text-gray-700">
@@ -119,6 +120,7 @@ export function Inventory() {
 }
 
 function InsertUpdate() {
+  const notify = useNotificacion();
   const emitter = useEmitter();
 
   const form = useForm<Product>();
@@ -129,8 +131,16 @@ function InsertUpdate() {
         .then((record) => {
           console.log({ record });
           form.set(record);
+          notify({
+            payload: "Producto creado/actualizado correctamente.",
+            type: "success",
+          });
         })
-        .catch(console.error);
+        .catch((error) => {
+          notify({
+            payload: error,
+          });
+        });
     });
   }, [emitter]);
 
