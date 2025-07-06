@@ -9,7 +9,7 @@ export const product = schema.table("inventory_product", {
     fullName: varchar("full_name", { length: 80 }).notNull(),
     slogan: varchar("slogan", { length: 80 }).notNull(),
     description: varchar("description", { length: 500 }),
-    isEnabled: boolean("is_enabled").notNull(),
+    isActive: boolean("is_active").notNull(),
     rating: smallint("rating").notNull(),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
     categoryId: integer("category_id")

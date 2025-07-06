@@ -1,7 +1,94 @@
 import { db } from "#lib/db";
 import { product, type NewProduct, type Product } from "#models/inventory/product";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
-import { eq } from "drizzle-orm";
+import { and, count, eq, like } from "drizzle-orm";
+import { category } from "#models/inventory/category";
+
+export interface GetProductsParams {
+    fullName?: string;
+    isActive?: boolean;
+    categoryId?: number;
+    includeTotalCount?: boolean; // más claro que "count"
+    page?: number;
+    pageSize?: number;
+}
+
+export interface GetProduct {
+    id: number;
+    fullName: string;
+    isActive: boolean;
+    price: string; // o number, según tu modelo
+    category: string; // o el tipo adecuado según tu modelo
+    inventory: number
+}
+
+interface GetProductsResult {
+    products: GetProduct[];
+    totalCount?: number; // solo presente si includeTotalCount === true
+}
+
+export async function getProducts(params: GetProductsParams): Promise<GetProductsResult> {
+    const {
+        fullName,
+        isActive,
+        categoryId,
+        includeTotalCount = false,
+        page = 1,
+        pageSize = 10,
+    } = params;
+
+    const conditions = [];
+
+    if (fullName) {
+        conditions.push(like(product.fullName, `%${fullName}%`));
+    }
+
+    if (isActive !== undefined) {
+        conditions.push(eq(product.isActive, isActive));
+    }
+
+    if (categoryId !== undefined) {
+        conditions.push(eq(product.categoryId, categoryId));
+    }
+
+    const whereClause = conditions.length ? and(...conditions) : undefined;
+
+    if (page < 1 || pageSize < 1) {
+        throw new Error("Page and pageSize must be greater than 0.");
+    }
+
+    const products = await db
+        .select({
+            id: product.id,
+            fullName: product.fullName,
+            isActive: product.isActive,
+            price: product.price,
+            category: category.fullName,
+            inventory: product.id, // Asegúrate de que este campo exista en tu modelo
+        })
+        .from(product)
+        .innerJoin(category, eq(product.categoryId, category.id))
+        .where(whereClause)
+        .limit(pageSize)
+        .offset((page - 1) * pageSize);
+
+    let totalCount: number | undefined;
+
+    if (includeTotalCount) {
+        const [records] = await db
+            .select({ count: count() })
+            .from(product)
+            .where(whereClause)
+            .execute();
+
+        totalCount = Number(records.count);
+    }
+
+    return {
+        products,
+        totalCount,
+    };
+}
 
 
 /**
@@ -59,3 +146,6 @@ function areArraysEqual(a: string[], b: (string | File)[]) {
 }
 
 export type { Product, NewProduct }
+
+
+

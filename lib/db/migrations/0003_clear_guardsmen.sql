@@ -1,0 +1,1 @@
+ALTER TABLE "agape_app_demo_development"."inventory_product" RENAME COLUMN "is_enabled" TO "is_active";

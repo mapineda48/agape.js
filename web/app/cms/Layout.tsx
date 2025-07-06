@@ -21,6 +21,8 @@ type LayoutProps = {
 const useBreakpointValue = factoryBreakpointValue({
   xs: true, // Teléfonos pequeños
   sm: true, // Teléfonos medianos
+  md: true, // Tablets
+  lg: true, // Pantallas pequeñas
 });
 
 // Rutas del CMS

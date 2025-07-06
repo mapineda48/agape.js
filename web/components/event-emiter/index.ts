@@ -97,23 +97,39 @@ export function useEmitter(): EmitterProxy {
     }, [emitter]);
 }
 
-export const useEvent: typeof useState = ((initialState: unknown, event?: string) => {
-    const [state, setState] = useState(initialState);
+/**
+ * Hook personalizado para manejar estado sincronizado mediante eventos.
+ * 
+ * Permite compartir y actualizar estado entre componentes usando el emisor de eventos.
+ * 
+ * @param initialState Estado inicial.
+ * @param event Nombre del evento opcional. Si no se provee, se genera uno único.
+ * @returns [state, setState] Estado actual y función para actualizarlo (emitir evento).
+ */
+export function useEvent<T = unknown>(
+    initialState: T | ((state?: T) => T),
+    event?: string | symbol
+): [T, (state: T) => void] {
+    const [state, setState] = useState<T>(initialState);
     const emitter = useEmitter();
 
-    const [unlisten, dispatchEvent] = useMemo(() => {
-        const dispatchEvent = event ?? Symbol();
+    // Memoiza el identificador del evento para que sea estable.
+    const eventKey = useMemo(() => event ?? Symbol(), [event]);
 
-        return [emitter.on(dispatchEvent, setState), (state: unknown) => emitter.emit(dispatchEvent, state)]
+    useEffect(() => {
+        // Suscribe a cambios del evento y actualiza el estado.
+        const off = emitter.on(eventKey as string, setState);
+        return off;
+    }, [emitter, eventKey]);
 
-    }, [emitter, event]);
+    // Función para emitir el evento y actualizar el estado en otros componentes.
+    const emitState = useMemo(
+        () => (nextState: T) => emitter.emit(eventKey as string, nextState),
+        [emitter, eventKey]
+    );
 
-    useEffect(() => unlisten, [unlisten]);
-
-    const res: any = [state, dispatchEvent];
-
-    return res
-}) as any;
+    return [state, emitState];
+}
 
 /**
  * Tipos utilizados en el módulo.
