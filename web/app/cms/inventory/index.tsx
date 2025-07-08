@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import Layout from "../Layout";
-import { getProducts, GetProductsParams, type GetProduct } from "@agape/cms/inventory/product";
-import { useEmitter, useEvent } from "@/components/event-emiter";
+import getProducts, { type GetProduct } from "@agape/cms/inventory/getProducts";
+import { useEvent } from "@/components/event-emiter";
 import insertUpdateProduct from "./Producto";
 
 const PAGE_SIZE = 10; // Define a constant for page size
