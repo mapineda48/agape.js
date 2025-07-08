@@ -92,7 +92,7 @@ export interface GetProduct {
     inventory: number
 }
 
-interface GetProductsResult {
+export interface GetProductsResult {
     products: GetProduct[];
     totalCount?: number; // solo presente si includeTotalCount === true
 }

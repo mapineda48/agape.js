@@ -1,31 +1,24 @@
 import React, { useEffect, useMemo } from "react";
 import Layout from "../Layout";
-import getProducts, { type GetProduct } from "@agape/cms/inventory/getProducts";
+import getProducts, { type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
 import { useEvent } from "@/components/event-emiter";
 import insertUpdateProduct from "./Producto";
 
 const PAGE_SIZE = 10; // Define a constant for page size
 
-export default function Inventory() {
+export async function onInit() {
+  return getProducts({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+    includeTotalCount: true,
+  })
+}
+
+export default function Inventory(props: GetProductsResult) {
   const show = insertUpdateProduct();
 
-  const [products, setProducts] = useEvent<GetProduct[]>([]);
-  const [totalItems, setTotalItems] = useEvent<number>(0);
-
-  useEffect(() => {
-    getProducts({
-      pageIndex: 0,
-      pageSize: PAGE_SIZE,
-      includeTotalCount: true,
-    })
-      .then((response) => {
-        console.log(response);
-        setProducts(response.products);
-        setTotalItems(response.totalCount || 0);
-      })
-      .catch(console.error);
-  }, []);
-
+  const [products, setProducts] = useEvent<GetProduct[]>(props.products || []);
+  const [totalItems, setTotalItems] = useEvent<number>(props.totalCount || 0);
 
   return (
     <Layout>
