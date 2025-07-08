@@ -41,12 +41,10 @@ export function IniciarSesion() {
       setLoading(true);
 
       login(state.username, state.password)
-        .then(() => router.navigateTo("/cms", { replace: true }))
-        .catch((error) => {
-          notify({
+        .then(() => setTimeout(() => router.navigateTo("/cms", { replace: true }), 0))
+        .catch((error) => notify({
             payload: error,
-          });
-        })
+          }))
         .finally(() => setLoading(false));
     });
   }, [loading, setLoading]);
