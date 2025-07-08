@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo } from "react";
 import Layout from "../Layout";
-import getProducts, { type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
+import getProducts, { GetProductsParams, type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
 import { useEvent } from "@/components/event-emiter";
 import insertUpdateProduct from "./Producto";
+import { useNotificacion } from "@/components/ui/notification";
 
 const PAGE_SIZE = 10; // Define a constant for page size
 
@@ -15,10 +16,44 @@ export async function onInit() {
 }
 
 export default function Inventory(props: GetProductsResult) {
+  const notify = useNotificacion();
   const show = insertUpdateProduct();
 
-  const [products, setProducts] = useEvent<GetProduct[]>(props.products || []);
-  const [totalItems, setTotalItems] = useEvent<number>(props.totalCount || 0);
+  const [{ filters, totalCount, products, fetch }, setState] = useEvent<IState>(() => {
+    return {
+      filters: {},
+      fetch: false,
+      products: props.products,
+      totalCount: props.totalCount || 0,
+    };
+  });
+
+  useEffect(() => {
+    if (!fetch) {
+      return;
+    }
+
+    console.log("Fetching products with filters:", filters);
+
+    getProducts(filters)
+      .then((response) => {
+        setState({
+          fetch: false,
+          filters: {
+            ...filters,
+            includeTotalCount: false, // Reset includeTotalCount to false after fetching
+          },
+          products: response.products,
+          totalCount: response.totalCount ?? totalCount,
+        });
+      })
+      .catch(error => {
+        notify({
+          payload: error,
+        })
+      });
+
+  }, [fetch, filters, notify, setState, totalCount]);
 
   return (
     <Layout>
@@ -64,14 +99,15 @@ export default function Inventory(props: GetProductsResult) {
                       defaultValue=""
                       onChange={(e) => {
                         const value = e.target.value;
-                        getProducts({
-                          fullName: value,
-                          includeTotalCount: true,
-                        })
-                          .then((response) => {
-                            setProducts(response.products);
-                          })
-                          .catch(console.error);
+                        setState({
+                          products, totalCount,
+                          fetch: true,
+                          filters: {
+                            fullName: value,
+                            pageIndex: 0, // Reset to first page on filter change
+                            includeTotalCount: true,
+                          }
+                        });
                       }}
                     />
                   </div>
@@ -136,7 +172,21 @@ export default function Inventory(props: GetProductsResult) {
                   </table>
                 </div>
               </div>
-              <Pagination totalItems={totalItems} />
+              <Pagination totalItems={totalCount} pageIndex={filters?.pageIndex ?? 0} onChange={(pageIndex) => {
+                if (fetch) {
+                  return;
+                }
+
+                setState({
+                  products,
+                  totalCount,
+                  fetch: true,
+                  filters: {
+                    ...filters,
+                    pageIndex: pageIndex,
+                  }
+                });
+              }} />
             </div>
           </div>
         </div>
@@ -145,30 +195,29 @@ export default function Inventory(props: GetProductsResult) {
   );
 }
 
-export function Pagination(props: { totalItems: number }) {
+export function Pagination(props: { totalItems: number, pageIndex: number, onChange: (pageIndex: number) => void }) {
   const [chunk, setChunk] = useEvent<number>(0);
 
-  const Pages = useMemo(() => {
+  const Elements: React.ReactElement[] = [];
+  const totalPages = Math.ceil(props.totalItems / PAGE_SIZE);
+  const startIndex = chunk * 5;
+  const endIndex = Math.min(startIndex + 5, totalPages);
 
-    let currentIndex = chunk * 5;
-
-    const Elements: React.ReactElement[] = [];
-
-    while (Elements.length < 5 && currentIndex < (props.totalItems / PAGE_SIZE)) {
-      Elements.push(
-        <a
-          key={currentIndex}
-          className={`text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full ${currentIndex === 0 ? "bg-[#eaedf1]" : ""}`}
-          href="#"
-        >
-          {currentIndex + 1}
-        </a>
-      );
-      currentIndex++;
-    }
-
-    return Elements;
-  }, [chunk, props.totalItems]);
+  for (let i = startIndex; i < endIndex; i++) {
+    Elements.push(
+      <a
+        key={i}
+        className={`text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full ${i === props.pageIndex ? "bg-[#eaedf1]" : ""}`}
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          props.onChange(i);
+        }}
+      >
+        {i + 1}
+      </a>
+    );
+  }
 
   return <div className="flex items-center justify-center p-4">
     <a href="#" className="flex size-10 items-center justify-center">
@@ -189,7 +238,7 @@ export function Pagination(props: { totalItems: number }) {
         </svg>
       </div>
     </a>
-    {Pages}
+    {Elements}
     <a href="#" className="flex size-10 items-center justify-center">
       <div
         className="text-[#101518]"
@@ -209,4 +258,15 @@ export function Pagination(props: { totalItems: number }) {
       </div>
     </a>
   </div>
+}
+
+
+/**
+ * Types
+ */
+interface IState {
+  fetch: boolean;
+  filters: GetProductsParams;
+  products: GetProduct[];
+  totalCount: number;
 }
