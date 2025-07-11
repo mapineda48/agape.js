@@ -9,6 +9,7 @@ import compression from "compression";
 import logger from "#lib/log/logger";
 import initDatabase from "#lib/db";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
+import CacheMananger from "#lib/services/cache/CacheManager";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
@@ -22,7 +23,8 @@ const {
     AGAPE_CDN_HOST = "http://127.0.0.1:10000",
 
     DATABASE_URI = "postgresql://postgres:mypassword@localhost",
-    AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true"
+    AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true",
+    CACHE_URL = "redis://localhost:6379"
 } = process.env;
 
 const isProduction = NODE_ENV === "production";
@@ -37,6 +39,8 @@ await import("#lib/db/admin").then(({ verifyRootUser }) => verifyRootUser(AGAPE_
 
 // Initialize storage backend (e.g., Azure Blob or development emulator)
 const blobStorageHost = await AzureBlobStorage.connect(AZURE_CONNECTION_STRING, AGAPE_TENANT, AGAPE_CDN_HOST);
+
+await CacheMananger.init(CACHE_URL);
 
 const app = express();
 

@@ -2,6 +2,7 @@ import { db } from "#lib/db";
 import { desc, eq } from "drizzle-orm";
 import { category } from "#models/inventory/category";
 import { subcategory } from "#models/inventory/subcategory";
+import CacheMananger from "#lib/services/cache/CacheManager";
 
 type CategoryWithSubs = {
     id: number;
@@ -14,7 +15,7 @@ type CategoryWithSubs = {
     }[];
 };
 
-export async function findAll(): Promise<CategoryWithSubs[]> {
+export const findAll = CacheMananger.cacheRpc("findAllCategory", async () => {
     // 1) select + leftJoin
     const rows = await db
         .select({
@@ -51,8 +52,8 @@ export async function findAll(): Promise<CategoryWithSubs[]> {
         }
     }
 
-    return Array.from(map.values());
-}
+    return Array.from(map.values()) as CategoryWithSubs[];
+})
 
 export async function upsert({ id, subcategories, ...payload }: Category) {
     // 1) Upsert de la categoría
@@ -104,7 +105,7 @@ export async function upsert({ id, subcategories, ...payload }: Category) {
 
 export async function insertUpdate(categories: Category[]) {
     await Promise.all(categories.map(upsert));
-
+    await CacheMananger.remove("findAllCategory");
     return findAll()
 }
 
