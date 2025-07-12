@@ -1,6 +1,6 @@
 import { db } from "#lib/db";
 import { product } from "#models/inventory/product";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, like, sql } from "drizzle-orm";
 import { category } from "#models/inventory/category";
 
 export default async function getProducts(params: GetProductsParams): Promise<GetProductsResult> {
@@ -18,7 +18,7 @@ export default async function getProducts(params: GetProductsParams): Promise<Ge
     if (fullName) {
         // Usamos ILIKE directamente en SQL para insensibilidad a mayúsculas/minúsculas
         conditions.push(
-            sql`unaccent(${product.fullName}) ILIKE unaccent(${`%${fullName}%`})`
+            sql`${product.fullName} ILIKE ${`%${fullName}%`}`
         );
     }
 
