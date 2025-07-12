@@ -1,6 +1,6 @@
 import type { Extension } from 'msgpackr';
 
-const EXT_FILE = 45
+const EXT_FILE = 44
 
 export const extensionCodecError: Extension = {
     Class: Error,

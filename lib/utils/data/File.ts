@@ -1,4 +1,3 @@
-// src/data/FileDto.ts
 import type { Extension } from 'msgpackr';
 
 // Código de extensión para FileInMemory

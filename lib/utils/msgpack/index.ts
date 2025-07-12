@@ -2,7 +2,7 @@
 import { pack, unpack, addExtension } from 'msgpackr';
 import { extensionCodecDecimal } from '../data/Decimal';
 import { extensionCodecDateTime } from '../data/DateTime';
-import { extensionCodecFileInMemory, extensionCodecFileBrowser } from '../data/FileDto';
+import { extensionCodecFileInMemory, extensionCodecFileBrowser } from '../data/File';
 import { extensionCodecError } from '../error';
 
 // 1) Registramos *globalmente* todas las extensiones
