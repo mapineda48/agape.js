@@ -24,7 +24,7 @@ export default function makeClientRpc(pathname: string) {
 
         });
 
-        const buffer = await res.arrayBuffer();
+        const buffer = await res.arrayBuffer() as Buffer;
 
         const payload = decode(buffer);
 
