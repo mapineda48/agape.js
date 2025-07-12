@@ -92,7 +92,6 @@ export default function middlewareParseClientData(req: Request, res: Response, n
                 obj[path] = file;
             }
 
-            console.log({ payload });
             req.body = payload;
             res.status(202);
             next();

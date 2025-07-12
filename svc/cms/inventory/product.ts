@@ -3,6 +3,11 @@ import { product, type NewProduct, type Product } from "#models/inventory/produc
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { eq } from "drizzle-orm";
 
+export async function getProduct(id: number) {
+    const [match] = await db.select().from(product).where(eq(product.id, id));
+
+    return match;
+}
 
 /**
  * Inserta o actualiza un producto junto con sus imágenes (JSONB).

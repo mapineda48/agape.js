@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo } from "react";
 import Layout from "../Layout";
 import getProducts, { GetProductsParams, type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
+import { getProduct } from "@agape/cms/inventory/product";
 import { useEvent } from "@/components/event-emiter";
-import insertUpdateProduct from "./Producto";
+import insertUpdateProduct from "./product";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "lodash";
+import { Pagination } from "./Pagination";
 
 const PAGE_SIZE = 10; // Define a constant for page size
 
@@ -82,9 +84,7 @@ export default function Inventory(props: GetProductsResult) {
                 <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">
                   Products
                 </p>
-                <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 bg-[#eaedf1] text-[#101518] text-sm font-medium leading-normal" onClick={() => {
-                  show({});
-                }}>
+                <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 bg-[#eaedf1] text-[#101518] text-sm font-medium leading-normal" onClick={() => show({})}>
                   <span className="truncate">Add Product</span>
                 </button>
               </div>
@@ -166,7 +166,12 @@ export default function Inventory(props: GetProductsResult) {
                           <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c748a] text-sm font-normal leading-normal">
                             {product.category}
                           </td>
-                          <td className="h-[72px] px-4 py-2 w-60 text-[#5c748a] text-sm font-bold leading-normal tracking-[0.015em] cursor-pointer">
+                          <td className="h-[72px] px-4 py-2 w-60 text-[#5c748a] text-sm font-bold leading-normal tracking-[0.015em] cursor-pointer" onClick={() => {
+                            getProduct(product.id).then(record => {
+                              console.log({ product, record });
+                              show({ product: record });
+                            }).catch((error) => notify({ payload: error }))
+                          }}>
                             Edit
                           </td>
                         </tr>
@@ -196,71 +201,6 @@ export default function Inventory(props: GetProductsResult) {
       </div>
     </Layout>
   );
-}
-
-export function Pagination(props: { totalItems: number, pageIndex: number, onChange: (pageIndex: number) => void }) {
-  const [chunk, setChunk] = useEvent<number>(0);
-
-  const Elements: React.ReactElement[] = [];
-  const totalPages = Math.ceil(props.totalItems / PAGE_SIZE);
-  const startIndex = chunk * 5;
-  const endIndex = Math.min(startIndex + 5, totalPages);
-
-  for (let i = startIndex; i < endIndex; i++) {
-    Elements.push(
-      <a
-        key={i}
-        className={`text-sm font-normal leading-normal flex size-10 items-center justify-center text-[#101518] rounded-full ${i === props.pageIndex ? "bg-[#eaedf1]" : ""}`}
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          props.onChange(i);
-        }}
-      >
-        {i + 1}
-      </a>
-    );
-  }
-
-  return <div className="flex items-center justify-center p-4">
-    <a href="#" className="flex size-10 items-center justify-center">
-      <div
-        className="text-[#101518]"
-        data-icon="CaretLeft"
-        data-size="18px"
-        data-weight="regular"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18px"
-          height="18px"
-          fill="currentColor"
-          viewBox="0 0 256 256"
-        >
-          <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z" />
-        </svg>
-      </div>
-    </a>
-    {Elements}
-    <a href="#" className="flex size-10 items-center justify-center">
-      <div
-        className="text-[#101518]"
-        data-icon="CaretRight"
-        data-size="18px"
-        data-weight="regular"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18px"
-          height="18px"
-          fill="currentColor"
-          viewBox="0 0 256 256"
-        >
-          <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
-        </svg>
-      </div>
-    </a>
-  </div>
 }
 
 
