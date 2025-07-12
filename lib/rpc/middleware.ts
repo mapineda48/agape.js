@@ -2,7 +2,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import express from "express";
 import { findService, type MatchService, toPublicUrl } from "./services";
-import sendMsgPack from "../utils/mspack/sendMsgPack";
+import sendMsgPack from "../utils/msgpack/sendMsgPack";
 import parseBody from "./middleware-decode";
 
 export default async function findServices() {

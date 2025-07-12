@@ -1,5 +1,6 @@
 import { createClient, RESP_TYPES } from "redis";
-import { encode } from "#utils/mspack";
+import { encode } from "#utils/msgpack";
+import logger from "#lib/log/logger";
 
 
 const commandOptionsRpc = {
@@ -14,6 +15,7 @@ export default class CacheMananger {
         this.redisClient = createClient({ url });
 
         await this.redisClient.connect();
+        logger.log("Success connect with server cache")
     }
 
     public static async remove(key: string) {
@@ -25,6 +27,7 @@ export default class CacheMananger {
             const buffer: any = await this.redisClient.withCommandOptions(commandOptionsRpc).get(key)
 
             if (buffer) {
+                logger.warning("using cache rpc value")
                 return new CacheRpc(buffer) as T;
             }
 

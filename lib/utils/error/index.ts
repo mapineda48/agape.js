@@ -1,18 +1,16 @@
-export class AgapeError extends Error {}
+import type { Extension } from 'msgpackr';
 
 const EXT_FILE = 45
 
-export const extensionCodecError = {
+export const extensionCodecError: Extension = {
+    Class: Error,
     type: EXT_FILE,
 
-    encode: (value: unknown) => {
-        if (value instanceof AgapeError) {
-            return new TextEncoder().encode(value.message);
-        }
-        return null;
+    pack: (error: Error) => {
+        return new TextEncoder().encode(error.message)
     },
 
-    decode: (buffer: Uint8Array) => {
-        return new AgapeError(new TextDecoder().decode(buffer));
+    unpack: (buffer: Uint8Array) => {
+        return new Error(new TextDecoder().decode(buffer));
     },
 }

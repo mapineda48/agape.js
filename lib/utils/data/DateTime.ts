@@ -1,65 +1,66 @@
+// src/data/DateTime.ts
 import {
-    addHours,
-    addDays,
-    isBefore,
-    isAfter,
-    differenceInHours,
-    differenceInMinutes,
-} from "date-fns";
+  addHours as dfAddHours,
+  addDays as dfAddDays,
+  isBefore as dfIsBefore,
+  isAfter as dfIsAfter,
+  differenceInHours as dfDifferenceInHours,
+  differenceInMinutes as dfDifferenceInMinutes
+} from 'date-fns';
+import type { Extension } from 'msgpackr';
 
+/**
+ * Clase que extiende Date con helpers de date-fns.
+ */
 export default class DateTime extends Date {
-    // Agregar horas
-    addHours(hours: number): DateTime {
-        return new DateTime(addHours(this, hours));
-    }
+  addHours(hours: number): DateTime {
+    return new DateTime(dfAddHours(this, hours));
+  }
 
-    // Agregar días
-    addDays(days: number): DateTime {
-        return new DateTime(addDays(this, days));
-    }
+  addDays(days: number): DateTime {
+    return new DateTime(dfAddDays(this, days));
+  }
 
-    // Comparaciones
-    isBefore(date: Date | DateTime): boolean {
-        return isBefore(this, date);
-    }
+  isBefore(date: Date | DateTime): boolean {
+    return dfIsBefore(this, date);
+  }
 
-    isAfter(date: Date | DateTime): boolean {
-        return isAfter(this, date);
-    }
+  isAfter(date: Date | DateTime): boolean {
+    return dfIsAfter(this, date);
+  }
 
-    // Diferencias
-    diffInHours(date: Date | DateTime): number {
-        return differenceInHours(this, date);
-    }
+  diffInHours(date: Date | DateTime): number {
+    return dfDifferenceInHours(this, date);
+  }
 
-    diffInMinutes(date: Date | DateTime): number {
-        return differenceInMinutes(this, date);
-    }
+  diffInMinutes(date: Date | DateTime): number {
+    return dfDifferenceInMinutes(this, date);
+  }
 
-    // Clon
-    clone(): DateTime {
-        return new DateTime(this);
-    }
+  clone(): DateTime {
+    return new DateTime(this);
+  }
 }
 
-export const EXT_DATETIME = 43;
+export const EXT_DATETIME = 40;
 
-export const extensionCodecDateTime = {
-    type: EXT_DATETIME,
-
-    encode: (input: unknown) => {
-        if (input instanceof DateTime) {
-            const epochMs = input.getTime(); // getTime() → número
-            const buffer = new ArrayBuffer(8);
-            new DataView(buffer).setFloat64(0, epochMs, false); // big-endian
-            return new Uint8Array(buffer);
-        }
-        return null;
-    },
-
-    decode: (buffer: Uint8Array) => {
-        const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-        const epochMs = view.getFloat64(0, false); // big-endian
-        return new DateTime(epochMs);
-    },
+/**
+ * Definición de extensión para msgpackr:
+ * - pack: serializa el epoch en un Uint8Array (big-endian).
+ * - unpack: reconstruye DateTime desde ese buffer.
+ */
+export const extensionCodecDateTime: Extension = {
+  Class: DateTime,
+  type: EXT_DATETIME,
+  pack: (instance: DateTime): Uint8Array => {
+    const epochMs = instance.getTime();
+    const buffer = new ArrayBuffer(8);
+    new DataView(buffer).setFloat64(0, epochMs, false); // big-endian
+    return new Uint8Array(buffer);
+  },
+  unpack: (buf: Uint8Array): DateTime => {
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const epochMs = view.getFloat64(0, false); // big-endian
+    return new DateTime(epochMs);
+  }
 };

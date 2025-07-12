@@ -1,85 +1,106 @@
-const EXT_FILE = 44
+// src/data/FileDto.ts
+import type { Extension } from 'msgpackr';
 
+// Código de extensión para FileInMemory
+export const EXT_FILE_IN_MEMORY = 42;
+
+/**
+ * Clase que almacena un archivo en memoria con nombre, tipo y datos.
+ */
 export default class FileInMemory {
-    /** @type {string} */
-    name: string
-    /** @type {string} */
-    type: string
-    /** @type {Uint8Array} */
-    data: Uint8Array
+    name: string;
+    type: string;
+    data: Uint8Array;
 
     constructor(name: string, type: string, content: Uint8Array) {
-        this.name = name
-        this.type = type
-        this.data = content // Uint8Array
+        this.name = name;
+        this.type = type;
+        this.data = content;
     }
 
-    static async fromFile(file: File) {
-        const buffer = await file.arrayBuffer()
-
-        return new FileInMemory(file.name, file.type, new Uint8Array(buffer))
+    /**
+     * Crea una instancia desde un File del navegador
+     */
+    static async fromFile(file: File): Promise<FileInMemory> {
+        const buffer = await file.arrayBuffer();
+        return new FileInMemory(file.name, file.type, new Uint8Array(buffer));
     }
 
-    toBuffer() {
-        // Solo Node.js
-        return Buffer.from(this.data)
+    /**
+     * Convierte a Buffer (Node.js)
+     */
+    toBuffer(): Buffer {
+        return Buffer.from(this.data);
     }
 }
 
-export const extensionCodecFile = {
-    type: EXT_FILE,
+/**
+ * Definición de extensión para FileInMemory:
+ * - pack: serializa name, type y data en un Uint8Array
+ * - unpack: reconstruye FileInMemory desde el buffer
+ *
+ * msgpackr usará esta extensión únicamente para instancias de FileInMemory,
+ * gracias a la propiedad Class.
+ */
+export const extensionCodecFileInMemory: Extension = {
+    Class: FileInMemory,
+    type: EXT_FILE_IN_MEMORY,
 
-    encode: (value: unknown) => {
-        // 1) Si es un File del navegador → representamos un nil
-        if (typeof File !== "undefined" && value instanceof File) {
-            return new Uint8Array(0);
-        }
+    pack(instance: FileInMemory): Uint8Array {
+        const encoder = new TextEncoder();
+        const nameBytes = encoder.encode(instance.name);
+        const typeBytes = encoder.encode(instance.type);
 
-        if (value instanceof FileInMemory) {
-            const encoder = new TextEncoder()
-            const nombre = encoder.encode(value.name)
-            const tipo = encoder.encode(value.type)
+        const nameLen = nameBytes.length;
+        const typeLen = typeBytes.length;
+        const contentLen = instance.data.length;
 
-            const nombreLen = nombre.length
-            const tipoLen = tipo.length
-            const contenidoLen = value.data.length
+        const totalLen = 4 + nameLen + 4 + typeLen + contentLen;
+        const buffer = new Uint8Array(totalLen);
+        const view = new DataView(buffer.buffer);
 
-            const totalLen = 4 + nombreLen + 4 + tipoLen + contenidoLen
-            const buffer = new Uint8Array(totalLen)
-            const view = new DataView(buffer.buffer)
+        view.setUint32(0, nameLen);
+        buffer.set(nameBytes, 4);
 
-            view.setUint32(0, nombreLen)
-            buffer.set(nombre, 4)
+        view.setUint32(4 + nameLen, typeLen);
+        buffer.set(typeBytes, 8 + nameLen);
 
-            view.setUint32(4 + nombreLen, tipoLen)
-            buffer.set(tipo, 8 + nombreLen)
+        buffer.set(instance.data, 8 + nameLen + typeLen);
 
-            buffer.set(value.data, 8 + nombreLen + tipoLen)
+        return buffer;
+    },
 
-            return buffer
-        }
+    unpack(buf: Uint8Array): FileInMemory {
+        const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+        const decoder = new TextDecoder();
+
+        const nameLen = view.getUint32(0);
+        const name = decoder.decode(buf.slice(4, 4 + nameLen));
+
+        const typeLen = view.getUint32(4 + nameLen);
+        const type = decoder.decode(buf.slice(8 + nameLen, 8 + nameLen + typeLen));
+
+        const data = buf.slice(8 + nameLen + typeLen);
+
+        return new FileInMemory(name, type, data);
+    }
+};
+
+
+/**
+ * Browser file
+ * Esta extension se usa tanto en el navegador como el servidor, en caso de estar en el servidor se moquea File class;
+ */
+export const EXT_FILE_BROWSER = 43;
+
+export const extensionCodecFileBrowser: Extension = {
+    Class: File ?? class File { },
+    type: EXT_FILE_BROWSER,
+    pack() {
+        return new Uint8Array(0);
+    },
+
+    unpack(buf: Uint8Array) {
         return null;
-    },
-
-    decode: (buffer: Uint8Array) => {
-        // 1) Si recibimos un buffer vacío → era un File del browser
-        if (buffer.byteLength === 0) {
-            return null;
-        }
-
-        const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength)
-        const decoder = new TextDecoder()
-
-        const nombreLen = view.getUint32(0)
-        const nombreBytes = buffer.slice(4, 4 + nombreLen)
-        const nombre = decoder.decode(nombreBytes)
-
-        const tipoLen = view.getUint32(4 + nombreLen)
-        const tipoBytes = buffer.slice(8 + nombreLen, 8 + nombreLen + tipoLen)
-        const tipo = decoder.decode(tipoBytes)
-
-        const contenido = buffer.slice(8 + nombreLen + tipoLen)
-
-        return new FileInMemory(nombre, tipo, contenido)
-    },
+    }
 }

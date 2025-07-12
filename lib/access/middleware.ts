@@ -3,11 +3,10 @@ import express from "express";
 import Jwt from "./Jwt";
 import webSession, { initSession } from "./session";
 import { findUser } from "#svc/staff/access";
-import sendMsgPack from "#lib/utils/mspack/sendMsgPack";
-import { decode } from "#lib/utils/mspack";
-import { AgapeError } from "#utils/error";
+import sendMsgPack from "#utils/msgpack/sendMsgPack";
+import { decode } from "#utils/msgpack";
 
-const failLogin = new AgapeError("Falló Autenticación");
+const failLogin = new Error("Falló Autenticación");
 
 const AuthTokenCookie = "auth_token";
 

@@ -1,8 +1,8 @@
 import os from "node:os";
 import { IncomingForm } from "formidable";
 import type { NextFunction, Request, Response } from "express";
-import { decode } from "../utils/mspack";
-import sendMsgPack from "#utils/mspack/sendMsgPack";
+import { decode } from "../utils/msgpack";
+import sendMsgPack from "#utils/msgpack/sendMsgPack";
 import path from "node:path";
 import fs from "fs-extra";
 import logger from "#lib/log/logger";
