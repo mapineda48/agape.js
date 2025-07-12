@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useEmitter } from "@/components/event-emiter";
 import FormProvider, { useForm } from "@/components/form";
 import Input from "@/components/form/Input";
@@ -121,38 +121,71 @@ export function Inventory(props: { product?: Product }) {
 }
 
 function InsertUpdate() {
-    const notify = useNotificacion();
-    const emitter = useEmitter();
+  const notify = useNotificacion();
+  const emitter = useEmitter();
+  const form = useForm<Product>();
 
-    const form = useForm<Product>();
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        return form.submit((state: any) => {
-            upsertProduct(state)
-                .then((record) => {
-                    console.log({ record });
-                    form.set(record);
-                    notify({
-                        payload: "Producto creado/actualizado correctamente.",
-                        type: "success",
-                    });
-                })
-                .catch((error) => {
-                    notify({
-                        payload: error,
-                    });
-                });
+  useEffect(() => {
+    return form.submit((state: any) => {
+      setLoading(true);
+      upsertProduct(state)
+        .then((record) => {
+          form.set(record);
+          notify({
+            payload: "Producto creado/actualizado correctamente.",
+            type: "success",
+          });
+        })
+        .catch((error) => {
+          notify({
+            payload: error,
+          });
+        })
+        .finally(() => {
+          setLoading(false);
         });
-    }, [emitter]);
+    });
+  }, [emitter]);
 
-    return (
-        <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        >
-            Crear Producto
-        </button>
-    );
+  return (
+    <button
+      type="submit"
+      disabled={loading}
+      className={`w-full py-2 px-4 text-white rounded transition ${
+        loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+      }`}
+    >
+      {loading ? (
+        <span className="flex justify-center items-center space-x-2">
+          <svg
+            className="animate-spin h-5 w-5 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16 8 8 0 01-8-8z"
+            />
+          </svg>
+          <span>Cargando...</span>
+        </span>
+      ) : (
+        "Crear/Actualizar"
+      )}
+    </button>
+  );
 }
 
 export function InventoryModal(props: PropsModal) {
