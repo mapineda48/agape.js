@@ -4,6 +4,7 @@ import getProducts, { GetProductsParams, type GetProduct, type GetProductsResult
 import { useEvent } from "@/components/event-emiter";
 import insertUpdateProduct from "./Producto";
 import { useNotificacion } from "@/components/ui/notification";
+import { debounce } from "lodash";
 
 const PAGE_SIZE = 10; // Define a constant for page size
 
@@ -27,6 +28,19 @@ export default function Inventory(props: GetProductsResult) {
       totalCount: props.totalCount || 0,
     };
   });
+
+  const debouncedSearch = useMemo(() => debounce((value: string) => {
+    setState({
+      products,
+      totalCount,
+      fetch: true,
+      filters: {
+        fullName: value,
+        pageIndex: 0,
+        includeTotalCount: true,
+      }
+    });
+  }, 300), [setState]);
 
   useEffect(() => {
     if (!fetch) {
@@ -97,18 +111,7 @@ export default function Inventory(props: GetProductsResult) {
                       placeholder="Search products"
                       className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#101518] focus:outline-0 focus:ring-0 border-none bg-[#eaedf1] focus:border-none h-full placeholder:text-[#5c748a] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal"
                       defaultValue=""
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setState({
-                          products, totalCount,
-                          fetch: true,
-                          filters: {
-                            fullName: value,
-                            pageIndex: 0, // Reset to first page on filter change
-                            includeTotalCount: true,
-                          }
-                        });
-                      }}
+                      onChange={(e) => debouncedSearch(e.target.value)}
                     />
                   </div>
                 </label>
