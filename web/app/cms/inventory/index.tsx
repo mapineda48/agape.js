@@ -49,8 +49,6 @@ export default function Inventory(props: GetProductsResult) {
       return;
     }
 
-    console.log("Fetching products with filters:", filters);
-
     getProducts(filters)
       .then((response) => {
         setState({
@@ -168,7 +166,6 @@ export default function Inventory(props: GetProductsResult) {
                           </td>
                           <td className="h-[72px] px-4 py-2 w-60 text-[#5c748a] text-sm font-bold leading-normal tracking-[0.015em] cursor-pointer" onClick={() => {
                             getProduct(product.id).then(record => {
-                              console.log({ product, record });
                               show({ product: record });
                             }).catch((error) => notify({ payload: error }))
                           }}>
