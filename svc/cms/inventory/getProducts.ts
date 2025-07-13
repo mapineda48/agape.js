@@ -45,6 +45,7 @@ export default async function getProducts(params: GetProductsParams): Promise<Ge
         .from(product)
         .innerJoin(category, eq(product.categoryId, category.id))
         .where(whereClause)
+        .orderBy(product.id)
         .limit(pageSize)
         .offset(pageIndex * pageSize);
 

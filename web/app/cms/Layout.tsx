@@ -13,6 +13,8 @@ import { LogOut } from "@/app/login";
 import { router } from "../Router";
 import Link from "@/components/ui/link";
 import { factoryBreakpointValue } from "@/hook/useBreakpointValue";
+import clsx from "clsx";
+
 // 
 type LayoutProps = {
   children: React.ReactNode;
@@ -54,13 +56,13 @@ export default function Layout({ children }: LayoutProps) {
     <div className="relative h-screen overflow-hidden">
       {/* SIDEBAR */}
       <nav
-        className={`absolute top-0 left-0 h-full bg-primary text-white transition-all duration-300 z-50 ${collapsed ? "w-14" : "w-64"
+        className={`absolute top-0 left-0 h-full bg-primary text-white transition-all duration-300 z-50 ${collapsed ? "w-0 sm:w-14" : "w-64"
           }`}
       >
         {/* Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-4 bg-primary p-1 rounded-full border border-secondary z-50"
+          className={`absolute top-4 bg-primary p-1 rounded-full border border-secondary z-50 ${collapsed ? "-right-10 sm:-right-3" : "-right-3"}`}
         >
           {collapsed ? (
             <MenuIcon className="w-6 h-6" />
@@ -113,7 +115,7 @@ export default function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* MAIN CONTENT */}
-      <main className="relative z-10 h-full overflow-auto bg-gray-50 p-1 md:p-6 pl-16">
+      <main className="relative z-10 h-full overflow-auto bg-gray-50 p-1 md:p-6 sm:pl-16">
         {children}
       </main>
 

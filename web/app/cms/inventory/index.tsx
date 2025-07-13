@@ -78,7 +78,7 @@ export default function Inventory(props: GetProductsResult) {
         style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
       >
         <div className="layout-container flex h-full grow flex-col sticky top-0">
-          <div className="px-40 flex flex-1 justify-center py-5">
+          <div className="sm:px-40 flex flex-1 justify-center py-5">
             <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
               <div className="flex flex-wrap justify-between gap-3 p-4">
                 <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">
@@ -117,7 +117,7 @@ export default function Inventory(props: GetProductsResult) {
                 </label>
               </div>
               <div className="px-4 py-3 @container">
-                <div className="flex overflow-hidden rounded-xl border border-[#d4dce2] bg-gray-50">
+                <div className="flex overflow-x-auto rounded-xl border border-[#d4dce2] bg-gray-50">
                   <table className="flex-1">
                     <thead>
                       <tr className="bg-gray-50">
