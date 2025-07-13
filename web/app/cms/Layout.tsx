@@ -62,7 +62,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={`absolute top-4 bg-primary p-1 rounded-full border border-secondary z-50 ${collapsed ? "-right-10 sm:-right-3" : "-right-3"}`}
+          className={`absolute top-4 bg-primary p-1 rounded-full border border-secondary z-50 transition-all ${collapsed ? "-right-10 sm:-right-3" : "-right-3"}`}
         >
           {collapsed ? (
             <MenuIcon className="w-6 h-6" />

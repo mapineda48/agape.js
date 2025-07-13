@@ -31,7 +31,7 @@ export default function Inventory(props: GetProductsResult) {
     };
   });
 
-  const debouncedSearch = useMemo(() => debounce((value: string) => {
+  const debouncedSearch = debounce((value: string) => {
     setState({
       products,
       totalCount,
@@ -42,7 +42,7 @@ export default function Inventory(props: GetProductsResult) {
         includeTotalCount: true,
       }
     });
-  }, 300), [setState]);
+  }, 300);
 
   useEffect(() => {
     if (!fetch) {
