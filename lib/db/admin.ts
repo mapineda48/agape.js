@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "#lib/access/password";
 import accessUser from "#models/access/employee";
-import person from "#models/person";
+import person from "#models/core/person";
 import employee, { employeeRole } from "#models/staff/employee";
 import role from "#models/staff/role";
 import { db } from ".";

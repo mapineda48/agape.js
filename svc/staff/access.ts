@@ -3,7 +3,7 @@ import { db } from "#lib/db";
 import accessUser from "#models/access/employee";
 import { verifyPassword } from "#lib/access/password";
 import employee from "#models/staff/employee";
-import person from "#models/person";
+import person from "#models/core/person";
 import type { IWebSession } from "#lib/access/session";
 
 export async function findUser(username: string, password: string): Promise<IWebSession | null> {

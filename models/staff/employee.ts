@@ -1,7 +1,7 @@
 import { serial, integer, timestamp, boolean, primaryKey, jsonb, varchar } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { schema } from "#models/agape";
-import person from "#models/person";
+import person from "#models/core/person";
 import role from "./role";
 
 const employee = schema.table("staff_employee", {

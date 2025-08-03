@@ -23,3 +23,5 @@ export const product = schema.table("inventory_product", {
 
 export type Product = InferSelectModel<typeof product>;
 export type NewProduct = InferInsertModel<typeof product>;
+
+export default product;

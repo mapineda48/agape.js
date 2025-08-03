@@ -1,54 +1,86 @@
-# React + TypeScript + Vite
+# AgapeApp
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Pendiente hacer la introduccion
 
-Currently, two official plugins are available:
+# Tecnologias
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Este proyecto utiliza las siguientes tecnologías principales:
 
-## Expanding the ESLint configuration
+- **Node.js:** Plataforma para el backend y ejecución de servicios.
+- **Express.js:** Framework para la creación de APIs y servicios HTTP.
+- **React:** Biblioteca para construir interfaces de usuario en el frontend.
+- **Vite:** Herramienta de desarrollo y bundler para el frontend, con integración de módulos virtuales y HMR.
+- **Docker Compose:** Orquestador de contenedores para desplegar la aplicación y servicios externos.
+- **Base de datos:** Se utiliza **PostgreSQL** como sistema de gestión de base de datos relacional, desplegado como servicio externo mediante Docker Compose.
+- **Almacenamiento:** El proyecto puede integrar almacenamiento externo (por ejemplo, volúmenes de Docker o servicios de almacenamiento en la nube como Azure Blob Storage).
+- **RPC y Serialización:** La comunicación entre frontend y backend se realiza mediante una implementación interna de RPC basada en módulos virtuales y serialización eficiente con **msgpackr**.
+- **ORM:** Se utiliza **Drizzle ORM** para la gestión y migración de datos.
+- **Servicios externos:** El proyecto puede integrar otros servicios como sistemas de mensajería, autenticación, etc., gestionados vía Docker Compose.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Dependencias clave
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **Backend:**
+  - Vite
+  - Heroicons, Lucide React, Framer Motion
+
+  - msgpackr (serialización eficiente para RPC)
+  - Implementación interna de módulos virtuales para RPC
+
+- **Utilidades:**
+  - Lodash, Date-fns, Decimal.js, Chalk, Formidable, Fs-extra, Glob
+
+- **Desarrollo:**
+
+# Integracion entre el backend y el frontend atraves de RPC con modulos virtuales mediante Vite
+
+El core del proyecto está diseñado para facilitar la creación y exposición de servicios RPC de manera automática y eficiente. Su funcionamiento se basa en los siguientes principios:
+
+
+- **Generación de módulos virtuales:** Por cada servicio detectado, el plugin genera un módulo virtual que expone funciones RPC accesibles desde el frontend. Esto permite consumir los endpoints de los servicios de forma sencilla y segura.
+
+
+- **Recarga en caliente (HMR):** Cuando se modifica un archivo de servicio, el sistema actualiza automáticamente el módulo virtual correspondiente y notifica al frontend, permitiendo un desarrollo ágil y sin reinicios manuales.
+- **Acceso desde el frontend:** Los módulos virtuales generados pueden ser importados directamente en el código del frontend usando el namespace especial (`@agape/servicio`). Cada función exportada corresponde a un endpoint RPC.
+
+# Convenciones de Modelos y Servicios
+
+Para mantener la escalabilidad y organización del proyecto, es fundamental definir primero los modelos de datos en la carpeta `models/`. Los modelos representan las tablas de la base de datos y deben agruparse por namespaces (por ejemplo, `models/cms/client.ts`, `models/inventory/product.ts`) para facilitar la gestión y futuras migraciones.
+\n**Recomendación importante:** Los nombres de las columnas en las tablas de la base de datos deben estar siempre en inglés para mantener la consistencia y facilitar la integración con herramientas y librerías externas.
+
+Esta estructura permite que las migraciones sean más sencillas y que el código sea más mantenible, evitando que los modelos queden en la raíz y promoviendo una organización clara por dominio o funcionalidad.
+
+El flujo recomendado para agregar nuevas funcionalidades es:
+
+1. Crear o actualizar el modelo correspondiente en `models/`.
+2. Realizar la migración de la base de datos si es necesario.
+3. Agregar el servicio RPC en la carpeta `svc/`, siguiendo la convención de administración bajo `svc/cms/` para funcionalidades protegidas.
+4. Consumir el servicio desde el frontend mediante importación directa.
+
+Ejemplo:
+
+1. Definir el modelo en `models/cms/client.ts`.
+2. Crear la migración para la tabla de clientes.
+3. Agregar el servicio en `svc/cms/client.ts` exportando la función `registerClient`.
+4. Importar y consumir el endpoint en el frontend desde `@agape/cms/client`.
+**Ejemplo de estructura de servicio:**
+
+```typescript
+// svc/clientRegisterService.ts
+export function registerClient(data) {
+    // lógica de registro
+}
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Ejemplo de consumo en el frontend:**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```typescript
+import { registerClient } from '@agape/clientRegisterService';
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+registerClient({ nombre: 'Juan' });
 ```
+
+Este enfoque permite escalar el proyecto fácilmente, agregando nuevos servicios simplemente creando archivos en la carpeta `svc` y exportando funciones.
+
+# Pruebas
+
+Para el despliegue en un ambiente de pruebas se recomienda hacerlo mediante de docker compose con la imagen disponble en docker hub
