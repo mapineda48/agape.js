@@ -1,9 +1,9 @@
-import Sidebar from "./Layout";
+import Layout from "./Layout";
 
 export default function CMs() {
   return (
-    <Sidebar>
+    <Layout>
       <div>Hello worldsss</div>
-    </Sidebar>
+    </Layout>
   );
 }

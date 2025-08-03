@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   HomeIcon,
   ChartBarIcon,
   UsersIcon,
+  UserCircleIcon,
   CubeIcon,
   CogIcon,
   ChevronDoubleRightIcon as MenuIcon,
@@ -31,6 +32,8 @@ const CMS_REPORT_PATH = "/cms/report";
 const CMS_USER_PATH = "/cms/user";
 const CMS_INVENTORY_PATH = "/cms/inventory";
 const CMS_CONFIGURATION_PATH = "/cms/configuration";
+const CMS_CLIENT_PATH = "/cms/crm";
+
 
 export default function Layout({ children }: LayoutProps) {
   const [collapsed, setCollapsed] = useBreakpointValue(false);
@@ -39,7 +42,8 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { to: CMS_PATH, icon: HomeIcon, label: "Inicio" },
     { to: CMS_REPORT_PATH, icon: ChartBarIcon, label: "Reportes" },
-    { to: CMS_USER_PATH, icon: UsersIcon, label: "Usuarios" },
+    { to: CMS_USER_PATH, icon: UserCircleIcon, label: "Colaboradores" },
+    { to: CMS_CLIENT_PATH, icon: UsersIcon, label: "Clientes" },
     { to: CMS_INVENTORY_PATH, icon: CubeIcon, label: "Inventario" },
     { to: CMS_CONFIGURATION_PATH, icon: CogIcon, label: "Configuración" },
   ];
@@ -79,6 +83,7 @@ export default function Layout({ children }: LayoutProps) {
               <li key={to}>
                 <Link
                   to={to}
+                  title={label}
                   className={clsx(
                     "flex items-center py-2 px-4 text-white transition-colors duration-200 hover:bg-accent hover:bg-opacity-20",
                     {
@@ -117,7 +122,7 @@ export default function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* MAIN CONTENT */}
-      <main className="relative z-10 h-full overflow-auto bg-gray-50 p-1 md:p-6 sm:pl-16">
+      <main className="relative z-10 h-full overflow-auto bg-gray-50 p-1 sm:pl-16 xl:pl-66">
         {children}
       </main>
     </div>

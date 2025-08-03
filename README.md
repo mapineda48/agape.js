@@ -2,6 +2,10 @@
 
 Pendiente hacer la introduccion
 
+# Arquitectura
+
+Esta aplicacion fue pensada desde un inicio como un monilito, adicional a ello toda la logica de iu es un SPA, por lo que solamente encontrara un unico , desde de generada la build todo corre en un unico servidor, facilitando su despliegue, ademas al ser una aplicacion nodejs debera facilitar el escalado tanto horizantal como vertical, no encontrara ningun controlador de tipo API y la comunicacion cliente servidor sera con rpc con msgpack
+
 # Tecnologias
 
 Este proyecto utiliza las siguientes tecnologías principales:
@@ -52,6 +56,14 @@ Esta estructura permite que las migraciones sean más sencillas y que el código
 ## Importante sobre Servicios y DTOs
 
 **Los servicios RPC nunca deben exponer directamente los modelos del backend.** Siempre se deben utilizar clases DTO (Data Transfer Object) para la comunicación entre frontend y backend. Las funciones de los servicios deben retornar objetos DTO o recibirlos como parámetros. Para valores primitivos, pueden usarse directamente si no es necesario un DTO. Esto garantiza el desacoplamiento entre la lógica interna y la interfaz pública, mejorando la seguridad y mantenibilidad.
+
+# Importante sobre la carpeta `web`
+
+En la carpeta `web` **únicamente** debe existir código compatible con el navegador. No se deben agregar importaciones de paquetes que no sean soportados por el navegador (por ejemplo, módulos nativos de Node.js o dependencias del backend). Tampoco se deben incluir datos sensibles ni lógicas propias del backend en esta carpeta.
+
+La integración y comunicación entre el frontend (`web`) y el backend se realiza exclusivamente a través de la carpeta `svc` utilizando el plugin RPC. Esto garantiza que el frontend solo consuma servicios expuestos de forma segura y compatible mediante módulos virtuales generados por Vite.
+
+# Nueva funcionalidad
 
 El flujo recomendado para agregar nuevas funcionalidades es:
 
