@@ -6,13 +6,13 @@
   "scripts": {
     "lint": "eslint .",
     "preview": "vite preview",
-    "watch": "tsx watch --tsconfig ./tsconfig.build.json",
-    "prebuild": "rimraf dist && drizzle-kit generate && tsc -p ./tsconfig.build.json && vite build && rimraf dist/www/tsconfig.build.tsbuildinfo",
+    "watch": "tsx watch --tsconfig ./tsconfig.backend.json",
+    "prebuild": "rimraf dist && drizzle-kit generate && tsc -p ./tsconfig.backend.json && vite build && rimraf dist/www/tsconfig.build.tsbuildinfo",
     "build": "tsx bin/build.ts",
     "postbuild": "rimraf dist/tsconfig.build.tsbuildinfo",
     "generate": "pnpm drizzle-kit generate",
     "drizzle-kit-push": "nodemon",
-    "backend": "tsx watch --tsconfig ./tsconfig.build.json bin/index.ts",
+    "backend": "tsx watch --tsconfig ./tsconfig.backend.json bin/index.ts",
     "frontend": "vite"
   },
   "devDependencies": {

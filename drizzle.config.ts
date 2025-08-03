@@ -12,6 +12,4 @@ export default defineConfig({
     url: "postgresql://postgres:mypassword@localhost",
     
   },
-
-
 });
