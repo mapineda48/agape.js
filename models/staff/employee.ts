@@ -4,16 +4,29 @@ import { schema } from "#models/agape";
 import person from "#models/core/person";
 import role from "./role";
 
+
+/**
+ * Modelo de empleado (Employee)
+ * Representa un empleado dentro del staff de la organización.
+ */
 const employee = schema.table("staff_employee", {
+    /** Identificador único del empleado */
     id: serial("id").primaryKey(),
+    /** Identificador de la persona asociada al empleado */
     personId: integer("person_id").notNull().references(() => person.id).unique(),
+    /** Fecha de contratación */
     hireDate: timestamp("hire_date", { withTimezone: true }).defaultNow().notNull(),
+    /** Indica si el empleado está activo */
     isActive: boolean("is_active").default(true).notNull(),
+    /** Metadatos adicionales del empleado */
     metadata: jsonb("metadata"),
+    /** URL del avatar del empleado */
     avatarUrl: varchar("avatar_url", { length: 255 }).notNull(),
+    /** Fecha de creación del registro */
     createdAt: timestamp("created_at", { withTimezone: true })
         .defaultNow()
         .notNull(),
+    /** Fecha de última actualización del registro */
     updatedAt: timestamp("updated_at", { withTimezone: true })
         .defaultNow()
         .$onUpdate(() => new Date()),

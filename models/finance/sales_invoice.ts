@@ -1,15 +1,22 @@
-// Factura de venta (Sales Invoice)
-// Relacionada con pedido (order)
 import { serial, integer, date, numeric } from "drizzle-orm/pg-core";
 import { schema } from "#models/agape";
 import order from "#models/crm/order";
 
+/**
+ * Modelo de factura de venta (Sales Invoice)
+ * Representa una factura emitida por una orden de cliente.
+ */
 const sales_invoice = schema.table("finance_sales_invoice", {
+  /** Identificador único de la factura */
   id: serial("id").primaryKey(),
+  /** Identificador de la orden relacionada */
   orderId: integer("order_id").notNull().references(() => order.id),
-  issueDate: date("issue_date").defaultNow().notNull(), // fecha de emisión de la factura
-  dueDate: date("due_date"), // fecha de vencimiento de la factura
-  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(), // monto total de la factura
+  /** Fecha de emisión de la factura */
+  issueDate: date("issue_date").defaultNow().notNull(),
+  /** Fecha de vencimiento de la factura */
+  dueDate: date("due_date"),
+  /** Monto total de la factura */
+  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
 });
 
 export default sales_invoice;
