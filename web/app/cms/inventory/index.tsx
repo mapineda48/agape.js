@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import Layout from "../Layout";
 import getProducts, { GetProductsParams, type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
 import { getProduct } from "@agape/cms/inventory/product";

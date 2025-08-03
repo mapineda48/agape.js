@@ -5,7 +5,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import { findAll, insertUpdate, type Category } from "@agape/cms/configuration/category";
+import { findAll, insertUpdate, type Category } from "@agape/cms/inventory/configuration/category";
 import { useEmitter } from "@/components/event-emiter";
 import Form, { Path, useForm, useInputArray } from "@/components/form";
 import Input from "@/components/form/Input";
