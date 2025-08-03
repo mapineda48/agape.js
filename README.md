@@ -49,6 +49,10 @@ Para mantener la escalabilidad y organización del proyecto, es fundamental defi
 
 Esta estructura permite que las migraciones sean más sencillas y que el código sea más mantenible, evitando que los modelos queden en la raíz y promoviendo una organización clara por dominio o funcionalidad.
 
+## Importante sobre Servicios y DTOs
+
+**Los servicios RPC nunca deben exponer directamente los modelos del backend.** Siempre se deben utilizar clases DTO (Data Transfer Object) para la comunicación entre frontend y backend. Las funciones de los servicios deben retornar objetos DTO o recibirlos como parámetros. Para valores primitivos, pueden usarse directamente si no es necesario un DTO. Esto garantiza el desacoplamiento entre la lógica interna y la interfaz pública, mejorando la seguridad y mantenibilidad.
+
 El flujo recomendado para agregar nuevas funcionalidades es:
 
 1. Crear o actualizar el modelo correspondiente en `models/`.
