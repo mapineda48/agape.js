@@ -11,8 +11,6 @@ export function Pagination(props: {
 }) {
   const [chunk, setChunk] = useEvent<number>(0);
 
-  console.log(props.totalItems);
-
   const totalPages = Math.ceil(props.totalItems / PAGE_SIZE);
   const totalChunks = Math.ceil(totalPages / SIZE_PAGE_CHUNK);
   const startIndex = chunk * SIZE_PAGE_CHUNK;

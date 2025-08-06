@@ -191,7 +191,7 @@ function InsertUpdate() {
 export function InventoryModal(props: PropsModal) {
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-black/60 via-gray-900/40 to-blue-900/30 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl p-0 w-full max-w-2xl w-[95vw] sm:w-full max-h-[95vh] overflow-y-auto border border-gray-200 relative m-2 sm:m-0">
+            <div className="bg-white rounded-xl shadow-2xl p-0 w-full max-w-2xl sm:w-full max-h-[95vh] overflow-y-auto border border-gray-200 relative m-2 sm:m-0">
                 {/* Header */}
                 <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-t-xl flex items-center justify-between mb-0 border-b px-4 sm:px-6 py-3 sm:py-4 shadow-sm">
                     <h2 className="text-lg sm:text-2xl font-bold text-blue-800 tracking-tight">Agregar Producto</h2>
