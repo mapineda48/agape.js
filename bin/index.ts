@@ -102,7 +102,7 @@ app.use(await serviceRouter());
 app.use(authMiddleware(AGAPE_SECRET));
 
 // Path to frontend Vite build output
-const frontendRoot = path.resolve("web");
+const frontendRoot = path.resolve("web/www");
 const indexHtml = path.resolve("web/index.html");
 
 // Enable GZIP compression for all responses

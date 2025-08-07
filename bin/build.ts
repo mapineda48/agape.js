@@ -143,6 +143,8 @@ const entries = maps.map(r => ({
 
 const tasks = entries.map(({ src, dest }) => fs.move(src, dest));
 
+tasks.push(fs.move("dist/web/www/index.html", "dist/web/index.html"))
+
 await Promise.all(tasks);
 
 /**

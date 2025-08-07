@@ -14,6 +14,7 @@ function hashOf(facadeModuleId: string) {
   return crypto.createHash('sha256').update(rel).digest('hex').slice(0, 8)
 }
 
+let index = 0;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -29,7 +30,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: path.resolve("dist/web"),
+    outDir: path.resolve("dist/web/www"),
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
@@ -50,8 +51,11 @@ export default defineConfig({
 
             return `assets/js/${h}.[hash].js`
           }
+
+          index += 1
+          
           // los chunks sin moduleId (p.e. bundling interno)
-          return `assets/js/[name].[hash].js`
+          return `assets/js/[name]-${index}.[hash].js`
         },
 
         // Para assets (CSS, imágenes, fuentes…)
