@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: db-agape-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "mypassword"
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    # pgAdmin 4 va por la rama 9.x; 'latest' te da lo más reciente estable
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin4-dev
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@mapineda48.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - "8080:80"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: azurite-dev
+    restart: unless-stopped
+    command: >
+      azurite-blob
+      --blobHost 0.0.0.0
+      --blobPort 10000
+      --location /data
+      --disableTelemetry
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue (opcional)
+      - "10002:10002"  # Table (opcional)
+
+  redis:
+    # Redis 8 ya es GA; si prefieres estabilidad con menor riesgo de breaking changes, usa 7-alpine
+    image: redis:8-alpine
+    container_name: redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server --appendonly yes --save ""
