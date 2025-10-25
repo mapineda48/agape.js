@@ -1,6 +1,7 @@
 import path from "node:path";
-import { cwd, svc, toPublicUrl } from "./path";
 import { pathToFileURL } from "node:url";
+import fs from "fs-extra";
+import { cwd, svc, toPublicUrl } from "./path";
 
 const namespace = "@agape";
 
@@ -15,7 +16,7 @@ for await (const src of svc) {
 
     const resolvedId = "\0" + path.posix.join(namespace, moduleUrl);
 
-    const js = ['import makeRcp from "@/lib/rpc";'];
+    const js = ['import makeRcp from "@/app/rpc";'];
 
     for (const [exportName, fn] of Object.entries(module)) {
         if (typeof fn !== "function") {
@@ -36,5 +37,7 @@ for await (const src of svc) {
 
     virtualModule[resolvedId] = js.join("\n");
 }
+
+virtualModule["\0" + "@agape/access"] = fs.readFileSync("lib/access/browser.js", "utf8");
 
 console.log(JSON.stringify(virtualModule));

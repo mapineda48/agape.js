@@ -2,9 +2,10 @@ import { useState } from 'react'
 import reactLogo from '../assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import { sayHello } from "@agape/grettings";
+import { sayFozz } from "@agape/public";
+import { router } from './router';
 
-sayHello("Miguel Pineda").then(res => console.log(res)).catch(error => console.error(error))
+sayFozz("foo").then(res => console.log(res));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -23,6 +24,9 @@ function App() {
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
+        </button>
+        <button onClick={() => router.navigateTo("/cms")}>
+          Cms
         </button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR

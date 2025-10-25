@@ -1,9 +1,12 @@
-import { execSync } from "node:child_process";
-import type { Plugin } from "vite";
+import { promisify } from "node:util";
+import { exec } from "node:child_process";
+import type { Plugin, ViteDevServer } from "vite";
+
+const execAsync = promisify(exec);
 
 const namespace = "@agape";
 
-const json = execSync('tsx --tsconfig tsconfig.app.json lib/rpc/virtual-module.ts');
+const { stdout: json } = await execAsync('tsx --tsconfig tsconfig.app.json lib/rpc/virtual-module.ts');
 
 const virtualModule: { [endpoint: string]: string } = JSON.parse(json.toString());
 
@@ -11,14 +14,6 @@ const vitePluginRpc: Plugin = {
     name: 'virtual-agape-plugin',
     enforce: 'pre', // Ejecuta antes que otros plugins (como Rollup)
     apply: () => true, // Aplica en modo desarrollo y build
-
-    /**
-     * Hook para configurar el servidor de desarrollo.
-     * Genera los módulos virtuales para cada servicio detectado.
-     */
-    // configureServer(server) {
-    //     findService().map(({ file }) => makeApi(virtualModuleMap, file, server))
-    // },
 
     /**
      * Hook para resolver IDs de módulos.
@@ -40,15 +35,6 @@ const vitePluginRpc: Plugin = {
             return virtualModule[id];
         }
     },
-
-    /**
-     * Hook para recarga en caliente (HMR).
-     * Si un archivo de servicio cambia, regenera el módulo virtual y lo invalida.
-     */
-    // handleHotUpdate({ file, server }) {
-    //     console.log(file);
-    //     //   makeApi(virtualModuleMap, file, server);
-    // }
 };
 
 export default vitePluginRpc;

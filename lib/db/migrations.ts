@@ -10,10 +10,10 @@ import { glob } from "node:fs/promises";
 const lockKey: bigint = 123456789n;
 
 export default async function applyMigrations(pg: Pool, dev: boolean, attempt = 0) {
-    // if (dev) {
-    //     logger.log("[database] Modo desarrollo: omitiendo migraciones - Recuerde usar el comando 'pnpm drizzle-kit push'");
-    //     return;
-    // }
+    if (dev) {
+        logger.log("[database] Modo desarrollo: omitiendo migraciones - Recuerde usar el comando 'pnpm drizzle-kit push'");
+        return;
+    }
 
     const { migrations, migrationSqlMap } = await loadMigrations();
 

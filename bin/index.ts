@@ -3,8 +3,10 @@ import express from "express";
 import compression from "compression";
 import helmet from "helmet";
 import morgan from "morgan";
-import rpc from "#lib/rpc/middleware";
 import initDatabase from "#lib/db";
+import auth from "#lib/access/middleware";
+import rpc from "#lib/rpc/middleware";
+import { verifyRootUser } from "#lib/db/root";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
@@ -28,6 +30,8 @@ const isDevelopment = NODE_ENV === "development";
 
 // Initialize DB connection and models (required before importing model-dependent logic like auth)
 await initDatabase(DATABASE_URI, isDevelopment);
+
+await verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD);
 
 const app = express();
 
@@ -75,7 +79,12 @@ if (isDevelopment) {
 
     // Simple test endpoint to verify Express is running
     app.get("/express", (req, res) => { res.send("express") });
-} else {
+}
+
+app.use(auth(AGAPE_SECRET));
+app.use(rpc);
+
+if (!isDevelopment) {
     // Path to frontend Vite build output
     const frontendRoot = path.resolve("web/www");
     const indexHtml = path.resolve("web/index.html");
@@ -95,8 +104,6 @@ if (isDevelopment) {
         res.sendFile(indexHtml);
     });
 }
-
-app.use(rpc);
 
 app.listen(3000, () => {
     console.log(`listeng at port 3000`)
