@@ -1,0 +1,72 @@
+version: "3.9"
+
+networks:
+  mapineda48-net:
+    name: mapineda48-net
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.9
+    container_name: mapineda48-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      TRUST_DOWNSTREAM_PROXY: "false"
+    volumes:
+      # Certificados persistentes en Storage
+      - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs
+      - /mnt/deploy/vm/agape.js/docker/vhost.d:/etc/nginx/vhost.d
+      - /mnt/deploy/vm/agape.js/docker/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - mapineda48-net
+    restart: unless-stopped
+
+  nginx-proxy-acme:
+    image: nginxproxy/acme-companion:2.6
+    container_name: mapineda48-acme
+    environment:
+      DEFAULT_EMAIL: ${AGAPE_DEFAULT_EMAIL_ACME}
+      ACME_CA_URI: https://acme-v02.api.letsencrypt.org/directory
+      NGINX_PROXY_CONTAINER: mapineda48-proxy
+    volumes:
+      # IMPORTANTE: mismo volumen de certs y en RW
+      - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs:rw
+      - /mnt/deploy/vm/agape.js/docker/vhost.d:/etc/nginx/vhost.d
+      - /mnt/deploy/vm/agape.js/docker/html:/usr/share/nginx/html
+      # Estado de acme.sh persistente en Storage
+      - /mnt/deploy/vm/agape.js/docker/acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - mapineda48-net
+    depends_on:
+      - nginx-proxy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: mapineda48-redis
+    networks:
+      - mapineda48-net
+    restart: unless-stopped
+
+  agape-app:
+    image: mapineda48/agape.js:develop
+    container_name: agape-app
+    ports:
+      - "3000:3000"
+    environment:
+      VIRTUAL_HOST: ${AGAPE_FQDN}
+      LETSENCRYPT_HOST: ${AGAPE_FQDN}
+      LETSENCRYPT_EMAIL: ${AGAPE_DEFAULT_EMAIL_ACME}
+      DATABASE_URI: ${NEON_DATABASE_URI}
+      AZURE_CONNECTION_STRING: ${STORAGE_CONNECTION_STRING}
+      NODE_ENV: production
+    depends_on:
+      - nginx-proxy
+      - nginx-proxy-acme
+      - redis
+    networks:
+      - mapineda48-net
+    restart: unless-stopped

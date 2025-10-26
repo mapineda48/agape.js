@@ -1,0 +1,106 @@
+name: Terraform Mapineda48 VM Cron Jobs
+
+on:
+  # schedule:
+  #    - cron: '0 12 * * *'   # 7:00 AM Colombia (apply) - 12:00 UTC
+  #    - cron: '0 0 * * *'    # 7:00 PM Colombia (destroy) - 00:00 UTC
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action to perform (apply/destroy/auto)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - apply
+          - destroy
+
+jobs:
+  terraform:
+    # Solo corre cuando se dispara manualmente
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./github/actions/deploy  
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Export ARM_* variables for Terraform
+        run: |
+          echo "ARM_CLIENT_ID=${{ secrets.AZURE_SP_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_SP_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SP_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ secrets.AZURE_SP_TENANT_ID }}" >> $GITHUB_ENV
+
+      - name: Write backend.hcl from secrets
+        run: |
+          cat > cloud-init/.env <<EOF
+          # General
+          AGAPE_DEFAULT_EMAIL_ACME="${{ secrets.AGAPE_DEFAULT_EMAIL_ACME }}"
+          AGAPE_FQDN="${{ secrets.AGAPE_FQDN }}"
+
+          # Azure Blob Storage
+
+          STORAGE_ACCOUNT_NAME="${{ secrets.STORAGE_ACCOUNT_NAME }}"
+          STORAGE_ACCOUNT_KEY="${{ secrets.STORAGE_ACCOUNT_KEY }}"
+          STORAGE_CONNECTION_STRING="${{ secrets.STORAGE_CONNECTION_STRING }}"
+
+          # Neon Postgresql
+          NEON_DATABASE_URI="${{ secrets.NEON_DATABASE_URI }}"
+
+          # Variables ARM_ para Terraform y Azure CLI
+          AZURE_SP_CLIENT_ID="${{ secrets.AZURE_SP_CLIENT_ID }}"
+          AZURE_SP_CLIENT_SECRET="${{ secrets.AZURE_SP_CLIENT_SECRET }}"
+          AZURE_SP_SUBSCRIPTION_ID="${{ secrets.AZURE_SP_SUBSCRIPTION_ID }}"
+          AZURE_SP_TENANT_ID="${{ secrets.AZURE_SP_TENANT_ID }}"
+          EOF
+
+      - name: Write backend.hcl from secrets
+        run: |
+          cat > backend.hcl <<EOF
+          resource_group_name  = "${{ secrets.STORAGE_RESOURCE_GROUP_NAME }}"
+          storage_account_name = "${{ secrets.STORAGE_ACCOUNT_NAME }}"
+          container_name       = "${{ secrets.STORAGE_CONTAINER_DEPLOY }}"
+          key                  = "tfstate-agape-js-develop.json"
+          EOF
+
+      - name: Terraform Init
+        run: terraform init -backend-config=backend.hcl
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply or Destroy
+        run: |
+          ACTION="${{ github.event.inputs.action }}"
+          echo "Input action: $ACTION"
+
+          if [[ "$ACTION" == "apply" ]]; then
+            echo "🚀 Forcing apply..."
+            terraform apply -auto-approve
+          elif [[ "$ACTION" == "destroy" ]]; then
+            echo "💥 Forcing destroy..."
+            terraform destroy -auto-approve
+          else
+            HOUR=$(TZ="America/Bogota" date +"%H")
+            echo "Auto mode. Colombia time is $HOUR"
+
+            if [[ "$HOUR" == "07" ]]; then
+              echo "✅ 7 AM Colombia → Applying infrastructure..."
+              terraform apply -auto-approve
+            elif (( 10#$HOUR >= 19 )); then
+              echo "❌ 7 PM Colombia → Destroying infrastructure..."
+              terraform destroy -auto-approve
+            else
+              echo "⏭️ Skipping – not the right time (auto mode)"
+            fi
+          fi

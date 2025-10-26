@@ -1,0 +1,22 @@
+version: 2
+logging:
+  type: syslog
+  level: LOG_INFO
+
+components:
+  - libfuse
+  - azstorage
+
+azstorage:
+  type: block
+  account-name: ${STORAGE_ACCOUNT_NAME}
+  account-key: ${STORAGE_ACCOUNT_KEY}
+  container: deploy
+
+libfuse:
+  mount-path: /mnt/deploy
+  allow-other: true
+  mount-options:
+    - uid=1000
+    - gid=999
+    - umask=002

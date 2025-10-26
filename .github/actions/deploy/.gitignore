@@ -1,0 +1,32 @@
+# Archivos de estado locales
+*.tfstate
+*.tfstate.*
+
+# Archivos de respaldo de Terraform
+*.backup
+
+# Directorio de Terraform
+.terraform/
+
+# Override local
+terraform.tfvars
+terraform.tfvars.json
+
+# Planes de ejecución
+*.tfplan
+
+# Archivos de log o debug
+crash.log
+*.log
+
+# Configs de CLI
+.terraform.lock.hcl
+backend.hcl
+notes.txt
+
+
+# Archivos de salida o temporales
+*.out
+
+cloud-init/cloud-init.rendered.yaml
+cloud-init/.env
