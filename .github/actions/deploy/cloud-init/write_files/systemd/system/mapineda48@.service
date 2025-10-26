@@ -10,7 +10,7 @@ StandardOutput=socket
 StandardError=journal
 
 # Ejecuta el handler Bash
-ExecStart=/usr/local/bin/mapineda48-handler.sh
+ExecStart=/etc/agape.js/socket.sh
 
 # Seguridad adicional (opcional)
 NoNewPrivileges=true
