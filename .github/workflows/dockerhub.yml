@@ -5,7 +5,7 @@ on:
     branches:
       - develop  # ✅ Unicamente crea la imagen en esta rama
     paths-ignore:
-      - '.azure/**'  # 👈 ignora cualquier cambio dentro de la carpeta .deploy
+      - '.github/**'  # 👈 ignora cualquier cambio dentro de la carpeta .deploy
 
 jobs:
   build:
