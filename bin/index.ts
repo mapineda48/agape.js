@@ -7,7 +7,7 @@ import initDatabase from "#lib/db";
 import auth from "#lib/access/middleware";
 import rpc from "#lib/rpc/middleware";
 import { verifyRootUser } from "#lib/db/root";
-import useHook from "#lib/hook/middleware";
+import bridge from "#lib/bridge/middleware";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
@@ -36,7 +36,7 @@ await verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD);
 
 const app = express();
 
-app.use(useHook(AGAPE_HOOK));
+app.use(bridge(AGAPE_HOOK));
 
 // HTTP request logging
 app.use(morgan(isDevelopment ? "dev" : "common"));
