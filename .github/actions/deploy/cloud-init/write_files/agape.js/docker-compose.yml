@@ -27,7 +27,7 @@ services:
     image: nginxproxy/acme-companion:2.6
     container_name: mapineda48-acme
     environment:
-      DEFAULT_EMAIL: ${AGAPE_DEFAULT_EMAIL_ACME}
+      DEFAULT_EMAIL: ${AGAPE_EMAIL_ACME}
       ACME_CA_URI: https://acme-v02.api.letsencrypt.org/directory
       NGINX_PROXY_CONTAINER: mapineda48-proxy
     volumes:
@@ -59,10 +59,16 @@ services:
     environment:
       VIRTUAL_HOST: ${AGAPE_FQDN}
       LETSENCRYPT_HOST: ${AGAPE_FQDN}
-      LETSENCRYPT_EMAIL: ${AGAPE_DEFAULT_EMAIL_ACME}
+      LETSENCRYPT_EMAIL: ${AGAPE_EMAIL_ACME}
       DATABASE_URI: ${NEON_DATABASE_URI}
       AZURE_CONNECTION_STRING: ${STORAGE_CONNECTION_STRING}
+      AGAPE_ADMIN: ${AGAPE_ADMIN}
+      AGAPE_PASSWORD: ${AGAPE_PASSWORD}
+      AGAPE_SECRET: ${AGAPE_SECRET}
+      AGAPE_HOOK: ${AGAPE_HOOK}
       NODE_ENV: production
+    volumes:
+      - /run/mapineda48.sock:/run/mapineda48.sock
     depends_on:
       - nginx-proxy
       - nginx-proxy-acme

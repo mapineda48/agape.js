@@ -49,8 +49,12 @@ jobs:
         run: |
           cat > cloud-init/.env <<EOF
           # General
-          AGAPE_DEFAULT_EMAIL_ACME="${{ secrets.AGAPE_DEFAULT_EMAIL_ACME }}"
           AGAPE_FQDN="${{ secrets.AGAPE_FQDN }}"
+          AGAPE_EMAIL_ACME="${{ secrets.AGAPE_EMAIL_ACME }}"
+          AGAPE_ADMIN="${{ secrets.AGAPE_ADMIN }}"
+          AGAPE_PASSWORD="${{ secrets.AGAPE_PASSWORD }}"
+          AGAPE_HOOK="${{ secrets.AGAPE_HOOK }}"
+          AGAPE_SECRET="${{ secrets.AGAPE_SECRET }}"
 
           # Azure Blob Storage
 

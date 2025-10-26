@@ -7,13 +7,14 @@ import initDatabase from "#lib/db";
 import auth from "#lib/access/middleware";
 import rpc from "#lib/rpc/middleware";
 import { verifyRootUser } from "#lib/db/root";
+import useHook from "#lib/hook/middleware";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
     NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
     PORT = "3000",
 
-    AGAPE_TENANT = "demo",
+    AGAPE_HOOK = "admin",
     AGAPE_SECRET = import.meta.filename,
     AGAPE_ADMIN = "admin",
     AGAPE_PASSWORD = "admin",
@@ -34,6 +35,8 @@ await initDatabase(DATABASE_URI, isDevelopment);
 await verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD);
 
 const app = express();
+
+app.use(useHook(AGAPE_HOOK));
 
 // HTTP request logging
 app.use(morgan(isDevelopment ? "dev" : "common"));
