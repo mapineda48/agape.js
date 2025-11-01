@@ -13,11 +13,11 @@ export default function useHook(secret: string) {
 
 function sendCmd(cmd: string) {
     return new Promise((res, rej) => {
-        const s = net.createConnection({ host: 'mapineda48-socket-bridge', port: 8081 });
+        const bridge = net.createConnection({ host: 'mapineda48-socket-bridge', port: 8081 });
         let buf = '';
-        s.on('connect', () => s.write(`'${cmd}\n'`));
-        s.on('data', c => { buf += c.toString('utf8'); if (buf.includes('\n')) { s.end(); res(buf.trim()); } });
-        s.on('error', rej);
-        s.setTimeout(60000, () => { s.destroy(); rej(new Error('timeout')); });
+        bridge.on('connect', () => bridge.write(`${cmd}\n`));
+        bridge.on('data', c => { buf += c.toString('utf8'); if (buf.includes('\n')) { bridge.end(); res(buf.trim()); } });
+        bridge.on('error', rej);
+        bridge.setTimeout(60000, () => { bridge.destroy(); rej(new Error('timeout')); });
     });
 }
