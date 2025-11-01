@@ -12,19 +12,31 @@ export default function useHook(secret: string) {
 }
 
 function sendCmd(cmd: string) {
-  console.log(`sending to bridge "${cmd}"`);
-  return new Promise<string>((res, rej) => {
-    const s = net.createConnection({ host: 'mapineda48-socket-bridge', port: 8081 }, () => {
-      // Enviamos la línea y cerramos SOLO el lado de escritura
-      s.end(`${cmd}\n`, 'utf8');
+    console.log(`sending to bridge ""${cmd}""`);
+    return new Promise((res, rej) => {
+        const bridge = net.createConnection({ host: 'mapineda48-socket-bridge', port: 8081 });
+
+        bridge.on('connect', () => {
+            // Escribe el comando y, en el callback, cierra la conexión
+            bridge.write(`${cmd}\n`, (err) => {
+                if (err) {
+                    return rej(err); // Manejar error de escritura
+                }
+                // Escritura exitosa: cierra la conexión
+                bridge.end();
+                // Resuelve la promesa inmediatamente
+                res('Comando enviado (sin esperar respuesta)');
+            });
+        });
+
+        // Ya no necesitamos el listener 'data'
+        // bridge.on('data', c => { ... });
+
+        bridge.on('error', rej);
+        // Podemos acortar el timeout, ya que solo es para conectar/escribir
+        bridge.setTimeout(100000, () => { 
+            bridge.destroy(); 
+            rej(new Error('timeout (10s)')); 
+        });
     });
-
-    s.setEncoding('utf8');
-
-    let buf = '';
-    s.on('data', chunk => { buf += chunk; });
-    s.on('end', () => { res(buf.trim()); });   // espera a que el servidor cierre
-    s.on('error', rej);
-    s.setTimeout(60000, () => { s.destroy(); rej(new Error('timeout')); });
-  });
 }
