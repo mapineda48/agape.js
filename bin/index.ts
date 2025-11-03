@@ -14,7 +14,7 @@ import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
   NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
-  PORT = "5001",
+  PORT = "3000",
 
   AGAPE_HOOK = "admin",
   AGAPE_SECRET = import.meta.filename,
