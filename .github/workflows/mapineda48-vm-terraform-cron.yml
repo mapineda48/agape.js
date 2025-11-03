@@ -56,6 +56,7 @@ jobs:
           AGAPE_PASSWORD="${{ secrets.AGAPE_PASSWORD }}"
           AGAPE_HOOK="${{ secrets.AGAPE_HOOK }}"
           AGAPE_SECRET="${{ secrets.AGAPE_SECRET }}"
+          AGAPE_CDN_HOST="${{ secrets.AGAPE_CDN_HOST }}"
 
           # Azure Blob Storage
 
