@@ -10,6 +10,7 @@ variable "resource_group_name" {
   type        = string
 }
 
+# https://azure.microsoft.com/en-us/pricing/spot-advisor/
 variable "VM_SIZE" {
   description = "Tamaño de la maquina virtual"
   default     = "Standard_B2s"
@@ -38,10 +39,12 @@ variable "SSH_PUBLIC_KEY" {
   type        = string
   default     = ""
   description = "Clave pública SSH"
+  sensitive   = true
 }
 
 variable "SOURCE_IP" {
   description = "My public IP for SSH connection"
-  default     = ""
+  default     = "179.1.131.62/31"
   type        = string
+  sensitive   = true
 }

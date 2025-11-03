@@ -110,6 +110,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   size                = var.VM_SIZE
   admin_username      = "azureuser"
 
+    # ⚡ Activar modo Spot
+  # priority            = "Spot"
+  # eviction_policy     = "Deallocate"  # o "Delete"
+
   network_interface_ids = [azurerm_network_interface.nic.id]
 
   admin_ssh_key {
