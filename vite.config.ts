@@ -2,6 +2,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import vitePluginRpc from "./lib/rpc/vite-plugin";
 
 const rootDir = process.cwd();
@@ -18,6 +19,7 @@ function hashOf(facadeModuleId: string) {
 export default defineConfig({
   plugins: [
     vitePluginRpc,
+    tailwindcss(),
     react({
       babel: {
         plugins: [['babel-plugin-react-compiler']],

@@ -20,3 +20,5 @@ export function encode(value: unknown): Uint8Array {
 export function decode<T = unknown>(buffer: Buffer | Uint8Array): T {
   return unpack(buffer);
 }
+
+export const contentType = "application/msgpack";

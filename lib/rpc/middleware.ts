@@ -9,37 +9,46 @@ import { cwd, svc, toPublicUrl } from "./path";
 const rpc = express.Router();
 
 for await (const src of svc) {
-    const filename = path.join(cwd, src);
+  const filename = path.join(cwd, src);
 
-    const module = await import(pathToFileURL(filename).href);
+  const module = await import(pathToFileURL(filename).href);
 
-    const moduleUrl = toPublicUrl(src);
+  const moduleUrl = toPublicUrl(src);
 
-    for (const [exportName, fn] of Object.entries(module)) {
-        if (typeof fn !== "function") continue;
+  for (const [exportName, fn] of Object.entries(module)) {
+    if (typeof fn !== "function") continue;
 
-        const endpoint = path.posix.join("/", moduleUrl, exportName !== "default" ? exportName : "");
+    const endpoint = path.posix.join(
+      "/",
+      moduleUrl,
+      exportName !== "default" ? exportName : ""
+    );
 
-        rpc.post(endpoint, async (req, res, next) => {
-            try {
-                const args = await parseArgs(req);
+    rpc.post(endpoint, async (req, res, next) => {
+      try {
+        if (req.headers.accept !== "application/msgpack") {
+          next();
+          return;
+        }
 
-                const result = await fn.call(null, ...args);
+        const args = await parseArgs(req);
 
-                const payload = encode(result);
+        const result = await fn.call(null, ...args);
 
-                res.set("Content-Type", "application/msgpack");
-                res.status(200).send(payload);
-            } catch (error) {
-                const result = parseError(error);
+        const payload = encode(result);
 
-                const payload = encode(result);
+        res.set("Content-Type", "application/msgpack");
+        res.status(200).send(payload);
+      } catch (error) {
+        const result = parseError(error);
 
-                res.set("Content-Type", "application/msgpack");
-                res.status(400).send(payload);
-            }
-        });
-    }
+        const payload = encode(result);
+
+        res.set("Content-Type", "application/msgpack");
+        res.status(400).send(payload);
+      }
+    });
+  }
 }
 
 export default rpc;

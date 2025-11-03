@@ -8,21 +8,24 @@ import auth from "#lib/access/middleware";
 import rpc from "#lib/rpc/middleware";
 import { verifyRootUser } from "#lib/db/root";
 import bridge from "#lib/bridge/middleware";
+import logger from "#lib/log/logger";
+import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
-    NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
-    PORT = "3000",
+  NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test",
+  PORT = "5001",
 
-    AGAPE_HOOK = "admin",
-    AGAPE_SECRET = import.meta.filename,
-    AGAPE_ADMIN = "admin",
-    AGAPE_PASSWORD = "admin",
-    AGAPE_CDN_HOST = "http://127.0.0.1:10000",
+  AGAPE_HOOK = "admin",
+  AGAPE_SECRET = import.meta.filename,
+  AGAPE_ADMIN = "admin",
+  AGAPE_PASSWORD = "admin",
+  AGAPE_TENANT = "demo",
+  AGAPE_CDN_HOST = "http://127.0.0.1:10000",
 
-    DATABASE_URI = "postgresql://postgres:mypassword@localhost",
-    AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true",
-    CACHE_URL = "redis://localhost:6379"
+  DATABASE_URI = "postgresql://postgres:mypassword@localhost",
+  AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true",
+  CACHE_URL = "redis://localhost:6379",
 } = process.env;
 
 const isProduction = NODE_ENV === "production";
@@ -33,6 +36,13 @@ const isDevelopment = NODE_ENV === "development";
 await initDatabase(DATABASE_URI, isDevelopment);
 
 await verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD);
+
+// Initialize storage backend (e.g., Azure Blob or development emulator)
+const blobStorageHost = await AzureBlobStorage.connect(
+  AZURE_CONNECTION_STRING,
+  AGAPE_TENANT,
+  AGAPE_CDN_HOST
+);
 
 const app = express();
 
@@ -46,68 +56,83 @@ app.use(express.raw({ type: "application/msgpack", limit: "5mb" }));
 
 // Production-specific security hardening
 if (isProduction) {
-    // Allow Express to trust headers from Nginx or reverse proxies
-    app.set("trust proxy", 1);
+  // Allow Express to trust headers from Nginx or reverse proxies
+  app.set("trust proxy", 1);
 
-    // Enable Helmet with secure Content Security Policy (CSP)
-    app.use(helmet({
-        contentSecurityPolicy: {
-            useDefaults: true,
-            directives: {
-                "img-src": [
-                    ...helmet.contentSecurityPolicy.getDefaultDirectives()["img-src"],
-                    "blob:"
-                ]
-            }
-        }
-    }));
+  // Enable Helmet with secure Content Security Policy (CSP)
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          "img-src": [
+            ...helmet.contentSecurityPolicy.getDefaultDirectives()["img-src"],
+            "blob:",
+            blobStorageHost,
+          ],
+        },
+      },
+    })
+  );
 
-    // Enable Permissions-Policy for restricting sensitive browser APIs
-    app.use((_req, res, next) => {
-        res.setHeader("Permissions-Policy", "geolocation=(self), camera=(self), microphone=(self), fullscreen=(self)");
-        next();
-    });
+  // Enable Permissions-Policy for restricting sensitive browser APIs
+  app.use((_req, res, next) => {
+    res.setHeader(
+      "Permissions-Policy",
+      "geolocation=(self), camera=(self), microphone=(self), fullscreen=(self)"
+    );
+    next();
+  });
 }
 
 // Development-only settings (e.g., CORS for Vite dev server)
 if (isDevelopment) {
-    const { default: cors } = await import("cors");
+  const { default: cors } = await import("cors");
 
-    app.use(cors({
-        origin: "http://localhost:5173",
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: true
-    }));
+  logger.log("[server] enabled cors http://localhost:5173");
 
-    // Simple test endpoint to verify Express is running
-    app.get("/express", (req, res) => { res.send("express") });
+  const corsConfig = cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    optionsSuccessStatus: 204, // OK para preflight
+  });
+
+  app.use(corsConfig);
+
+  // Simple test endpoint to verify Express is running
+  app.get("/express", (req, res) => {
+    res.send("express");
+  });
 }
 
 app.use(auth(AGAPE_SECRET));
 app.use(rpc);
 
 if (!isDevelopment) {
-    // Path to frontend Vite build output
-    const frontendRoot = path.resolve("web/www");
-    const indexHtml = path.resolve("web/index.html");
+  // Path to frontend Vite build output
+  const frontendRoot = path.resolve("web/www");
+  const indexHtml = path.resolve("web/index.html");
 
-    // Enable GZIP compression for all responses
-    app.use(compression());
+  // Enable GZIP compression for all responses
+  app.use(compression());
 
-    // Serve static frontend assets with long cache headers
-    app.use(express.static(frontendRoot, {
-        maxAge: "1y",
-        etag: false,
-        lastModified: false
-    }));
+  // Serve static frontend assets with long cache headers
+  app.use(
+    express.static(frontendRoot, {
+      maxAge: "1y",
+      etag: false,
+      lastModified: false,
+    })
+  );
 
-    // Fallback to SPA entrypoint (for client-side routing)
-    app.get(/.*/, (_req, res) => {
-        res.sendFile(indexHtml);
-    });
+  // Fallback to SPA entrypoint (for client-side routing)
+  app.get(/.*/, (_req, res) => {
+    res.sendFile(indexHtml);
+  });
 }
 
-app.listen(3000, () => {
-    console.log(`listeng at port 3000`)
-})
+app.listen(PORT, () => {
+  console.log(`listeng at port ${PORT}`);
+});

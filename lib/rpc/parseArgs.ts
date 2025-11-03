@@ -8,7 +8,7 @@ import type { Request } from "express";
 const uploadDir = os.tmpdir();
 
 export async function parseArgs(req: Request): Promise<unknown[]> {
-    const contentType = req.headers.accept;
+    const contentType = req.headers["content-type"];
 
     const payload = req.body;
 
@@ -16,7 +16,7 @@ export async function parseArgs(req: Request): Promise<unknown[]> {
         return Promise.resolve(decode<unknown[]>(payload));
     }
 
-    if (contentType !== "multipart/form-data") {
+    if (!contentType?.startsWith("multipart/form-data")) {
         throw new Error("unsupport content type");
     }
 

@@ -1,8 +1,10 @@
 import { Fragment, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import EventEmitter from "@/components/util/event-emiter";
+import PortalProvider from "@/components/util/portal.tsx";
+import App from '@/app'
+import "@/app/error";
 import './index.css'
-import App from './app'
-import "./app/error.ts";
 
 /**
  * https://github.com/facebook/react/issues/24502
@@ -11,7 +13,11 @@ const Enviroment = process.env.NODE_ENV === "development" ? Fragment : StrictMod
 
 createRoot(document.getElementById('root')!).render(
   <Enviroment>
-    <App />
+    <EventEmitter>
+      <PortalProvider>
+        <App />
+      </PortalProvider>
+    </EventEmitter>
   </Enviroment>,
 )
 

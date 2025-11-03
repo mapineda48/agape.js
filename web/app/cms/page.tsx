@@ -1,16 +1,9 @@
-import { logout } from "@agape/access"
-import { router } from "../router"
+import Layout from "./Layout";
 
-export default function LoginPage() {
-    return <>
-        <button onClick={() => router.navigateTo("/login")}>
-            Login
-        </button>
-        <button onClick={() => {
-            logout().then(() => {
-                router.navigateTo("/")
-            })
-        }}>
-            Logout
-        </button></>
+export default function CMs() {
+  return (
+    <Layout>
+      <div>Hello worldsss</div>
+    </Layout>
+  );
 }

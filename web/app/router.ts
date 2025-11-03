@@ -141,8 +141,6 @@ export class Router {
         try {
             const { id } = await isAuthenticated();
 
-            console.log({ id, pathname })
-
             if (id && pathname.startsWith("/cms")) {
                 return pathname;
             }
