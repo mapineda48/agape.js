@@ -66,10 +66,7 @@ jobs:
           NEON_DATABASE_URI="${{ secrets.NEON_DATABASE_URI }}"
 
           # Variables ARM_ para Terraform y Azure CLI
-          AZURE_SP_CLIENT_ID="${{ secrets.AZURE_SP_CLIENT_ID }}"
-          AZURE_SP_CLIENT_SECRET="${{ secrets.AZURE_SP_CLIENT_SECRET }}"
-          AZURE_SP_SUBSCRIPTION_ID="${{ secrets.AZURE_SP_SUBSCRIPTION_ID }}"
-          AZURE_SP_TENANT_ID="${{ secrets.AZURE_SP_TENANT_ID }}"
+          NGROK_AUTHTOKEN="${{ secrets.NGROK_AUTHTOKEN }}"
           EOF
 
       - name: Write backend.hcl from secrets

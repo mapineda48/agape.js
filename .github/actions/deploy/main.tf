@@ -107,7 +107,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = "mapineda48"
   location            = azurerm_resource_group.agape_app.location
   resource_group_name = azurerm_resource_group.agape_app.name
-  size                = "Standard_B2s"
+  size                = var.VM_SIZE
   admin_username      = "azureuser"
 
   network_interface_ids = [azurerm_network_interface.nic.id]

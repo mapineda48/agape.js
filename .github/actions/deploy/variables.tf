@@ -10,6 +10,12 @@ variable "resource_group_name" {
   type        = string
 }
 
+variable "VM_SIZE" {
+  description = "Tamaño de la maquina virtual"
+  default     = "Standard_B2s"
+  type        = string
+}
+
 variable "resource_group_location" {
   description = "Localización del grupo de recursos"
   default     = "eastus"
@@ -36,6 +42,6 @@ variable "SSH_PUBLIC_KEY" {
 
 variable "SOURCE_IP" {
   description = "My public IP for SSH connection"
-  default     = ""
+  default     = "179.1.131.62/31"
   type        = string
 }
