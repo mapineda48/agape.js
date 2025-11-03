@@ -14,6 +14,9 @@ log() {
   fi
 }
 
+VARLIST='${AGAPE_FQDN} ${AGAPE_EMAIL_ACME} ${AGAPE_ADMIN} ${AGAPE_PASSWORD} ${AGAPE_HOOK} ${AGAPE_SECRET} ${STORAGE_ACCOUNT_NAME} ${STORAGE_ACCOUNT_KEY} ${STORAGE_CONNECTION_STRING} ${NEON_DATABASE_URI} ${NGROK_AUTHTOKEN}'
+
+
 # Directorios
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../cloud-init && pwd)"
 TEMPLATE="$SCRIPT_DIR/cloud-init.tpl.yaml"
@@ -51,8 +54,14 @@ RENDERED_AWK="$(
           rel = file
           sub(write_dir "/", "", rel)
 
-          print "  - path: /etc/" rel
-          print "    permissions: \"0644\""
+          # Detectar extensión .sh → permisos ejecutables
+          perm = "0644"
+          if (rel ~ /\.sh$/) {
+            perm = "0755"
+          }
+
+          print "  - path: /" rel
+          printf "    permissions: \"%s\"\n", perm
           print "    content: |"
           while (( "cat \"" file "\"" | getline line ) > 0 ) {
             print "      " line
@@ -66,9 +75,10 @@ RENDERED_AWK="$(
   ' "$TEMPLATE"
 )"
 
+
 # 2) Aplica envsubst AL FINAL sobre lo producido por awk
 #    (Opción A: sustituir TODAS las variables exportadas)
-FINAL_RENDERED="$(printf '%s' "$RENDERED_AWK" | envsubst)"
+FINAL_RENDERED="$(printf '%s' "$RENDERED_AWK" | envsubst "$VARLIST")"
 
 # Leemos el JSON solo si existe algo en stdin
 if [ -t 0 ]; then

@@ -1,0 +1,18 @@
+[Unit]
+Description=Docker Compose Service for mapineda48
+Requires=docker.service mapineda48-blobfuse2.service mapineda48.socket mapineda48-loki.service
+After=docker.service mapineda48-blobfuse2.service mapineda48.socket mapineda48-loki.service
+# Asegura que los mounts existan antes
+RequiresMountsFor=/mnt/deploy/vm/agape.js/docker/certs /mnt/deploy/vm/agape.js/docker/acme
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+StandardOutput=journal+console
+StandardError=journal+console
+WorkingDirectory=/opt/mapineda48/compose
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+
+[Install]
+WantedBy=multi-user.target

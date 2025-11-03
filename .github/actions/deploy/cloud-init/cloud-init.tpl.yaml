@@ -10,6 +10,9 @@ packages:
   - lsb-release
   - software-properties-common
   - fuse3
+  - micro
+  - unzip
+  - nginx
 
 write_files:
   - path: /etc/fuse.conf
@@ -18,44 +21,60 @@ write_files:
       user_allow_other
 
 runcmd:
+  # Monitoring
+  - rm -f /etc/nginx/sites-enabled/default
+  - ln -sf /etc/nginx/sites-available/monitoring /etc/nginx/sites-enabled/monitoring
+  - nginx -t
+  - systemctl enable --now nginx
+  - systemctl restart nginx
+
+  - curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+  - echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" |  tee /etc/apt/sources.list.d/ngrok.list
+  - apt-get update
+  - apt-get install -y ngrok
+  - ngrok config add-authtoken ${NGROK_AUTHTOKEN}
+
+  # https://github.com/google/cadvisor
+  - wget https://github.com/google/cadvisor/releases/download/v0.53.0/cadvisor-v0.53.0-linux-amd64 -O /usr/local/bin/cadvisor
+  - chmod +x /usr/local/bin/cadvisor
+  - systemctl enable --now mapineda48-cadvisor
+
+  # https://github.com/prometheus/node_exporter/releases
+  - wget https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz -O /tmp/node_exporter.tar.gz
+  - tar xvfz /tmp/node_exporter.tar.gz -C /tmp --strip-components=1
+  - install -m 0755 /tmp/node_exporter /usr/local/bin/node_exporter
+  - systemctl enable --now mapineda48-node-exporter
+
+  # https://prometheus.io/download/
+  # https://github.com/prometheus/prometheus/releases
+  - wget https://github.com/prometheus/prometheus/releases/download/v3.7.3/prometheus-3.7.3.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
+  - tar xvfz /tmp/prometheus.tar.gz -C /tmp --strip-components=1
+  - install -m 0755 /tmp/prometheus /usr/local/bin/prometheus
+  - mkdir -p /var/lib/prometheus
+  - systemctl enable --now mapineda48-prometheus
+
+  # https://github.com/grafana/loki/releases
+  - wget https://github.com/grafana/loki/releases/download/v3.5.7/loki-linux-amd64.zip -O /tmp/loki.zip
+  - unzip /tmp/loki.zip -d /tmp
+  - install -m 0755 /tmp/loki-linux-amd64 /usr/local/bin/loki
+  - mkdir -p /var/lib/loki/{tsdb-index,tsdb-cache,chunks,wal,compactor}
+  - systemctl enable --now mapineda48-loki
+
   # Instalar Docker
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
   - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
   - apt-get update
   - apt-get install -y docker-ce docker-ce-cli containerd.io
-
-  # Crear grupo fuse si no existe y agregar usuario a grupos necesarios
-  - groupadd --system fuse || true
-  - usermod -aG docker azureuser
-  - usermod -aG fuse azureuser
+  - /opt/mapineda48/scripts/docker-plugin-loki.sh
 
   # Instalar Blobfuse2
   - curl -L https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -o packages-microsoft-prod.deb
   - dpkg -i packages-microsoft-prod.deb
   - apt-get update
   - apt-get install -y blobfuse2
-
-  # Crear punto de montaje
-  - mkdir -p /mnt/deploy
-  - chown azureuser:docker /mnt/deploy
-  - chmod 775 /mnt/deploy
-
-  # Iniciar blob2
-  - blobfuse2 mount /mnt/deploy --config-file=/etc/agape.js/blobfuse2.yaml --allow-other
-
-  # Crear carpetas necesarias
-  - mkdir -p /mnt/deploy/vm/agape.js/docker/certs
-  - mkdir -p /mnt/deploy/vm/agape.js/docker/vhost.d
-  - mkdir -p /mnt/deploy/vm/agape.js/docker/html
-
-  # Permisos para que grupo docker acceda a los volúmenes
-  - chown -R azureuser:docker /mnt/deploy/vm/agape.js
-  - chmod -R 775 /mnt/deploy/vm/agape.js
+  - systemctl enable --now mapineda48-blobfuse2
+  - /opt/mapineda48/scripts/blobfuse2.sh
 
   # Habilitar el servicios
-  - systemctl enable --now mapineda48-blobfuse2-deploy
-  - systemctl enable --now mapineda48-docker-compose
   - systemctl enable --now mapineda48.socket
-
-  # Reiniciar la VM para aplicar cambios de grupos
-  - reboot
+  - systemctl enable --now mapineda48-docker-compose

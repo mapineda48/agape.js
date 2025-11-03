@@ -1,0 +1,16 @@
+[Unit]
+Description=Ngrok tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ngrok http 8081 --log=stdout --log-level=info
+Restart=no
+KillSignal=SIGINT
+TimeoutStopSec=5
+StandardOutput=append:/var/log/ngrok.log
+StandardError=append:/var/log/ngrok.log
+
+[Install]
+# vacío o sin WantedBy

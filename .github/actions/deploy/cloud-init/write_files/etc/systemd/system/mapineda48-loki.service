@@ -1,0 +1,11 @@
+# /etc/systemd/system/loki.service
+[Unit]
+Description=Grafana Loki
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/loki --config.file=/etc/loki/config.yml
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,55 @@
+server {
+  listen 8081;
+  server_name _;
+
+  # --- Loki en /loki ---
+  location /loki/ {
+    proxy_pass http://127.0.0.1:3100/;  # strip del prefijo /loki/
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    proxy_buffering off;
+    client_max_body_size 10m;
+
+    # (Opcional) CORS si enviarás logs desde un frontend
+    # add_header 'Access-Control-Allow-Origin' '*' always;
+    # add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+    # add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+    # if ($request_method = OPTIONS) { return 204; }
+  }
+
+  # --- Prometheus en /prometheus ---
+  # VARIANTE A — SI iniciaste Prometheus con --web.route-prefix=/prometheus
+  location /prometheus/ {
+    proxy_pass http://127.0.0.1:9090/;  # el UI ya vive bajo /prometheus
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    proxy_redirect off;
+  }
+
+  # VARIANTE B — SI NO usas route-prefix (comenta el bloque de arriba y descomenta este)
+  # location /prometheus/ {
+  #   rewrite ^/prometheus/(.*)$ /$1 break;  # strip del prefijo
+  #   proxy_pass http://127.0.0.1:9090;      # OJO: sin '/' final cuando hay rewrite
+  #   proxy_http_version 1.1;
+  #
+  #   proxy_set_header Host $host;
+  #   proxy_set_header X-Real-IP $remote_addr;
+  #   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  #
+  #   proxy_redirect off;
+  # }
+
+  # Cortesía
+  location = / {
+    add_header Content-Type text/plain;
+    return 200 "OK: /prometheus y /loki en puerto 8081\n";
+  }
+}

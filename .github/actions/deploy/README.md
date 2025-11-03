@@ -204,3 +204,37 @@ Se encuentra en:
 ```
 
 sudo systemctl status mapineda48.socket
+sudo systemctl status mapineda48-cadvisor
+sudo systemctl status mapineda48-docker-compose
+sudo systemctl status mapineda48-blobfuse2
+
+curl -X POST https://example.com/login
+
+sudo journalctl -u 'mapineda48@*' -f
+
+echo "ngrok" | sudo socat - UNIX-CONNECT:/run/mapineda48.sock
+
+sudo systemctl restart mapineda48.socket
+sudo systemctl restart mapineda48@.service
+
+sudo systemctl daemon-reload && sudo systemctl enable --now mapineda48.socket
+
+sudo systemctl daemon-reload &&  sudo systemctl enable --now node_exporter
+
+sudo journalctl -u mapineda48-loki -f
+sudo journalctl -u mapineda48-docker-compose -f
+sudo journalctl -u docker -b
+sudo journalctl -u mapineda48-blobfuse2 -f
+
+sudo systemctl cat docker.service
+
+# Mensajes críticos del boot anterior
+sudo journalctl -p 3 -b -1
+
+
+# grafana dashboard
+
+## node exporter 1860
+https://grafana.com/grafana/dashboards/1860-node-exporter-full/
+
+https://grafana.com/grafana/dashboards/19792-cadvisor-dashboard/

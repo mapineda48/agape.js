@@ -51,6 +51,19 @@ services:
       - mapineda48-net
     restart: unless-stopped
 
+  socket-bridge:
+    container_name: mapineda48-socket-bridge
+    image: alpine/socat
+    command: >
+      -d -d
+      TCP-LISTEN:8081,fork,reuseaddr
+      UNIX-CONNECT:/run/mapineda48.sock
+    volumes:
+      - /run/mapineda48.sock:/run/mapineda48.sock:ro
+    networks:
+      - mapineda48-net
+    restart: unless-stopped
+
   agape-app:
     image: mapineda48/agape.js:develop
     container_name: agape-app
@@ -67,8 +80,6 @@ services:
       AGAPE_SECRET: ${AGAPE_SECRET}
       AGAPE_HOOK: ${AGAPE_HOOK}
       NODE_ENV: production
-    volumes:
-      - /run/mapineda48.sock:/run/mapineda48.sock
     depends_on:
       - nginx-proxy
       - nginx-proxy-acme

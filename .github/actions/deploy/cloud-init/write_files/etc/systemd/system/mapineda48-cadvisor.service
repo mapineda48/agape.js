@@ -1,0 +1,10 @@
+[Unit]
+Description=cAdvisor (container metrics)
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/cadvisor --port=8080  --listen_ip=127.0.0.1
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
