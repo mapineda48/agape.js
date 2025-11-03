@@ -40,6 +40,7 @@ jobs:
           echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_SP_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SP_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=${{ secrets.AZURE_SP_TENANT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_VM_SIZE=${{ secrets.AGAPE_VM_SIZE }}" >> $GITHUB_ENV
 
       - name: Export TF_VAR_* variables for Terraform
         run: |
