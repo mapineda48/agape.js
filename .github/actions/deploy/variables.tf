@@ -44,7 +44,7 @@ variable "SSH_PUBLIC_KEY" {
 
 variable "SOURCE_IP" {
   description = "My public IP for SSH connection"
-  default     = "179.1.131.62/31"
+  default     = ""
   type        = string
   sensitive   = true
 }
