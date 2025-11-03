@@ -16,7 +16,5 @@ if ! docker plugin inspect loki >/dev/null 2>&1; then
     mv /etc/docker/daemon.disabled.json /etc/docker/daemon.json
 
     echo "Reiniciar el daemon docker"
-    systemctl daemon-reload
-    systemctl enable --now docker
-
+    systemctl restart docker
 fi
