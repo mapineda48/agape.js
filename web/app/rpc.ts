@@ -3,7 +3,7 @@ import { decode, encode } from "@utils/msgpack";
 // Determines the base URL depending on the environment (production or development)
 const baseURL =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:5001/"
+    ? "http://localhost:3000/"
     : location.origin;
 const credentials =
   process.env.NODE_ENV === "development" ? "include" : "same-origin";

@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import Layout from "../Layout";
+import { Fragment, useEffect } from "react";
 import getProducts, { type GetProductsParams, type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
 import { getProduct } from "@agape/cms/inventory/product";
 import { useEvent } from "@/components/util/event-emiter";
@@ -70,7 +69,7 @@ export default function Inventory(props: GetProductsResult) {
   }, [fetch, filters, notify, setState, totalCount]);
 
   return (
-    <Layout>
+    <Fragment>
       <div
         className="relative flex size-full min-h-screen flex-col bg-gray-50"
         style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
@@ -196,7 +195,7 @@ export default function Inventory(props: GetProductsResult) {
           </div>
         </div>
       </div>
-    </Layout>
+    </Fragment>
   );
 }
 

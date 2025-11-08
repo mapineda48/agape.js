@@ -1,224 +1,237 @@
 import { Action, createBrowserHistory } from "history";
-import { createElement, type JSX, } from "react";
+import { createElement, type JSX } from "react";
 import NoFoundPage from "./NotFound";
 import { isAuthenticated } from "@agape/access";
 
-/**
- * Router class to manage dynamic page loading, navigation,
- * and history listening in a React application.
- */
 export class Router {
-    // History instance from the history library for navigation control
-    private history = createBrowserHistory();
+  private history = createBrowserHistory();
 
-    get pathname() {
-        return this.history.location.pathname;
+  get pathname() {
+    return this.history.location.pathname;
+  }
+
+  private routes: IRoute = {};
+  private layouts: ILayouts = {};
+
+  private loading = false;
+
+  constructor() {
+    this.initRoutesAndLayouts();
+  }
+
+  /** Escanea páginas y layouts y los registra como loaders lazy */
+  private initRoutesAndLayouts() {
+    const pageModules = import.meta.glob<unknown>("./**/page.{ts,tsx}");
+    const layoutModules = import.meta.glob<unknown>("./**/_layout.{ts,tsx}");
+
+    // Páginas
+    Object.entries(pageModules).forEach(([filename, loader]) => {
+      const pathname = this.toPathnameFromPage(filename);
+      this.routes[pathname] = this.toPage(loader);
+    });
+
+    // Layouts
+    Object.entries(layoutModules).forEach(([filename, loader]) => {
+      const dirpath = this.toPathnameFromLayout(filename);
+      this.layouts[dirpath] = this.toLayout(loader);
+    });
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("Registered routes:", this.routes);
+      console.log("Registered layouts:", this.layouts);
     }
+  }
 
-    // Map of route paths to their corresponding lazy-loaded pages
-    private routes: IRoute = {};
+  public listen(cb: (page: JSX.Element) => void) {
+    const unlisten = this.history.listen(({ location: { pathname, state }, action }) => {
+      const page = this.routes[pathname];
 
-    // Flag to prevent concurrent navigation or loading
-    private loading = false;
+      // Si existe una página registrada, construimos el árbol con layouts
+      if (page?.Component) {
+        const props = (state as Record<string, unknown>) ?? {};
+        const element = this.wrapWithLayouts(pathname, createElement(page.Component, props));
+        cb(element);
+        return;
+      }
 
-    /**
-     * Constructor initializes routes and performs first navigation
-     */
-    constructor() {
-        // Load all page modules into the routes map
-        this.initRoutes();
-    }
+      // Si fue un POP a una ruta aún no precargada, re-disparamos navegación
+      if (action === Action.Pop) {
+        router.navigateTo(pathname);
+        return;
+      }
 
-    /**
-     * Scan for all index.ts and index.tsx files under this directory,
-     * create lazy loaders, and store them under their URL paths.
-     */
-    private initRoutes() {
-        const modules = import.meta.glob<unknown>("./**/page.{ts,tsx}");
+      // NotFound (sin layouts para evitar confusiones)
+      cb(createElement(NoFoundPage));
+    });
 
-        Object.entries(modules).forEach(([filename, loader]) => {
-            // Convert filename to URL-friendly pathname
-            const pathname = this.toPathname(filename);
+    // Primera navegación al path actual
+    this.navigateTo(this.history.location.pathname, { replace: true });
 
-            // Wrap the dynamic import loader into our IPage structure
-            this.routes[pathname] = this.toPage(loader);
-        });
+    return unlisten;
+  }
 
-        // Log the routes map for debugging purposes
-        if (process.env.NODE_ENV === "development") {
-            console.log("Registered routes:", this.routes);
+  public navigateTo(pathname: string, opt: INavigateTo = {}) {
+    if (this.loading) return;
+
+    this.loading = true;
+    const ctx = structuredClone(opt);
+
+    (async () => {
+      // 1) Auth gates
+      pathname = await this.isAuthenticated(pathname, ctx);
+
+      const page = this.routes[pathname];
+
+      // 2) Not found: sólo cambia history
+      if (!page) {
+        this.updateHistory(pathname, ctx);
+        return;
+      }
+
+      // 3) Lazy-load de la página
+      if (!page.Component) {
+        await page();
+      }
+
+      // 4) Lazy-load de todos los layouts requeridos por el path
+      const needed = this.collectLayoutPaths(pathname);
+      for (const p of needed) {
+        const layout = this.layouts[p];
+        if (layout && !layout.Component) {
+          await layout();
         }
-    }
+      }
 
-    /**
-     * Subscribe to history changes. On each navigation, create the new
-     * React element and pass it to the provided callback.
-     * @param cb - Callback receiving the rendered page element
-     */
-    public listen(cb: (page: JSX.Element) => void) {
-        const unlisten = this.history.listen(({ location: { pathname, state }, action }) => {
-            const { Component } = this.routes[pathname] ?? {};
-
-            if (Component) {
-                // Use navigation state as component props, if provided
-                const props = (state as Record<string, unknown>) ?? {};
-
-                // Create and pass the React element
-                cb(createElement(Component, props));
-                return
-            }
-
-            if (action === Action.Pop) {
-                router.navigateTo(pathname);
-                return
-            }
-
-            // show not found page
-            cb(createElement(NoFoundPage));
-            return;
-        });
-
-        // Navigate to the current browser location on startup
-        this.navigateTo(this.history.location.pathname, { replace: true });
-
-        return unlisten;
-    }
-
-
-    /**
-     * Navigate to a given pathname. Handles lazy loading of modules,
-     * optional onInit logic, and pushes or replaces history entries.
-     * @param pathname - URL path to navigate to
-     * @param ctx - Options for replace and initial state
-     */
-    public navigateTo(pathname: string, opt: INavigateTo = {}) {
-        if (this.loading) {
-            return;
-        };
-
-        this.loading = true;
-
-        const ctx = structuredClone(opt);
-
-        (async () => {
-            pathname = await this.isAuthenticated(pathname, ctx);
-
-            const page = this.routes[pathname];
-
-            // show not found page
-            if (!page) {
-                this.updateHistory(pathname, ctx);
-                return;
-            }
-
-            // If the component isn't loaded yet, load it first
-            if (!page.Component) {
-                await page();
-            }
-
-            // If an onInit hook is provided and no state passed, run it
-            if (page.onInit && !ctx.state) {
-                ctx.state = await page.onInit();
-            }
-
-            this.updateHistory(pathname, ctx);
-        })()
-            .catch(error => {
-                console.error(error);
-            })
-            .finally(() => {
-                this.loading = false;
-            })
-    }
-
-    private async isAuthenticated(pathname: string, ctx: INavigateTo) {
-        if (!pathname.startsWith("/cms") && !pathname.startsWith("/login")) {
-            return Promise.resolve(pathname);
-        }
-
-        ctx.replace = true;
-
-        try {
-            const { id } = await isAuthenticated();
-
-            if (id && pathname.startsWith("/cms")) {
-                return pathname;
-            }
-
-            if (!id && pathname.startsWith("/cms")) {
-                return "/login"
-            }
-
-            if (id && pathname.startsWith("/login")) {
-                return "/cms";
-            }
-
-            return "/login";
-        } catch (error) {
-            if (process.env.NODE_ENV === "development") {
-                console.error(error);
-            }
-
-            return "/";
-        }
-    }
-
-    private updateHistory(pathname: string, { state, replace }: INavigateTo) {
-        if (replace) {
-            this.history.replace(pathname, state);
+      // 5) Ejecutar onInit del primero que lo defina si no hay state:
+      //    prioridad página > layout más interno > ... > root
+      if (!ctx.state) {
+        if (page.onInit) {
+          ctx.state = await page.onInit();
         } else {
-            this.history.push(pathname, state);
+          for (let i = needed.length - 1; i >= 0; i--) {
+            const l = this.layouts[needed[i]];
+            if (l?.onInit) {
+              ctx.state = await l.onInit();
+              break;
+            }
+          }
         }
+      }
+
+      // 6) Empuja/reemplaza history (el listener renderiza sincrónicamente)
+      this.updateHistory(pathname, ctx);
+    })()
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        this.loading = false;
+      });
+  }
+
+  private async isAuthenticated(pathname: string, ctx: INavigateTo) {
+    if (!pathname.startsWith("/cms") && !pathname.startsWith("/login")) {
+      return pathname;
     }
 
-    /**
-     * Wraps a dynamic import loader to asynchronously load a module,
-     * then extract its default component and optional onInit function.
-     * @param loader - Function returning the dynamic import promise
-     */
-    private toPage(loader: () => Promise<unknown>): IPage {
-        const wrapper: any = async () => {
-            const module: any = await loader();
+    ctx.replace = true;
 
-            // Save component and onInit for future navigations
-            wrapper.Component = module.default ?? NoFoundPage;
-            wrapper.onInit = module.onInit;
-        };
-        return wrapper as IPage;
-    }
+    try {
+      const { id } = await isAuthenticated();
 
-    /**
-     * Convert a glob filename into a URL pathname:
-     * - Remove leading './'
-     * - Strip '/index.ts' or '/index.tsx'
-     * - Convert to lowercase
-     * - Map empty string to '/'
-     */
-    private toPathname(filename: string): string {
-        const path = filename
-            .replace(/^\.\//, "/")
-            .replace(/\/page\.tsx?$/, "")
-            .toLowerCase();
-        return path === "" ? "/" : path;
+      if (id && pathname.startsWith("/cms")) return pathname;
+      if (!id && pathname.startsWith("/cms")) return "/login";
+      if (id && pathname.startsWith("/login")) return "/cms";
+      return "/login";
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") console.error(error);
+      return "/";
     }
+  }
+
+  private updateHistory(pathname: string, { state, replace }: INavigateTo) {
+    if (replace) this.history.replace(pathname, state);
+    else this.history.push(pathname, state);
+  }
+
+  /** Crea un IPage lazy que guarda Component/onInit la primera vez */
+  private toPage(loader: () => Promise<unknown>): IPage {
+    const wrapper: any = async () => {
+      const module: any = await loader();
+      wrapper.Component = module.default ?? NoFoundPage;
+      wrapper.onInit = module.onInit;
+    };
+    return wrapper as IPage;
+  }
+
+  /** Crea un ILayout lazy que guarda Component/onInit la primera vez */
+  private toLayout(loader: () => Promise<unknown>): ILayout {
+    const wrapper: any = async () => {
+      const module: any = await loader();
+      wrapper.Component = module.default ?? (({ children }: { children?: JSX.Element }) => createElement("div", null, children));
+      wrapper.onInit = module.onInit;
+    };
+    return wrapper as ILayout;
+  }
+
+  /** Convierte './foo/bar/page.tsx' -> '/foo/bar' (ruta de la página) */
+  private toPathnameFromPage(filename: string): string {
+    const path = filename.replace(/^\.\//, "/").replace(/\/page\.tsx?$/, "").toLowerCase();
+    return path === "" ? "/" : path;
+  }
+
+  /** Convierte './foo/_layout.tsx' -> '/foo' (carpeta del layout) */
+  private toPathnameFromLayout(filename: string): string {
+    const path = filename.replace(/^\.\//, "/").replace(/\/_layout\.tsx?$/, "").toLowerCase();
+    return path === "" ? "/" : path;
+  }
+
+  /** Devuelve rutas de layouts padre de un path: '/', '/a', '/a/b', ... (si existen) */
+  private collectLayoutPaths(pathname: string): string[] {
+    const parts = pathname.split("/").filter(Boolean);
+    const acc: string[] = ["/"]; // raíz siempre considerada
+    let curr = "";
+    for (const p of parts) {
+      curr += "/" + p;
+      acc.push(curr);
+    }
+    // filtra sólo los que están registrados como layout
+    return acc.filter((p) => this.layouts[p]);
+  }
+
+  /** Envuelve un elemento de página con layouts (root -> más interno) */
+  private wrapWithLayouts(pathname: string, element: JSX.Element): JSX.Element {
+    const paths = this.collectLayoutPaths(pathname);
+    let wrapped = element;
+    for (let i = 0; i < paths.length; i++) {
+      const L = this.layouts[paths[i]];
+      if (L?.Component) {
+        wrapped = createElement(L.Component, null, wrapped);
+      }
+    }
+    return wrapped;
+  }
 }
 
-// Create and export a singleton router instance
 export const router = new Router();
 
-/**
- * Types (moved to bottom for readability)
- */
+/** Tipos */
 interface IPage {
-    (): Promise<void>;
-    Component?: () => JSX.Element;
-    onInit?: () => Promise<{}>;
+  (): Promise<void>;
+  Component?: () => JSX.Element;
+  onInit?: () => Promise<Record<string, unknown>>;
+}
+
+interface ILayout {
+  (): Promise<void>;
+  Component?: (props: { children?: JSX.Element }) => JSX.Element;
+  onInit?: () => Promise<Record<string, unknown>>;
 }
 
 interface INavigateTo {
-    replace?: boolean;
-    state?: Record<string, unknown>;
-    isAuthenticated?: boolean
+  replace?: boolean;
+  state?: Record<string, unknown>;
 }
 
 type IRoute = Record<string, IPage>;
+type ILayouts = Record<string, ILayout>;

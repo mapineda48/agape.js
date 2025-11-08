@@ -1,8 +1,7 @@
-import { useState, type ReactNode, useEffect } from "react";
+import { useState, type ReactNode, useEffect, Fragment } from "react";
 import clsx from "clsx";
 import CategoryConfiguration from "./Category";
 import { useEmitter } from "@/components/util/event-emiter";
-import Layout from "../Layout";
 
 interface CollapsibleItemProps {
   title: string;
@@ -80,8 +79,8 @@ const CollapsibleList = () => {
 
 export default function ConfigurationCMS() {
   return (
-    <Layout>
+    <Fragment>
       <CollapsibleList />
-    </Layout>
+    </Fragment>
   );
 }
