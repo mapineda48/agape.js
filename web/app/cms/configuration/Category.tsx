@@ -68,24 +68,21 @@ export function Categories() {
   const emitter = useEventEmitter();
   const categories = useInputArray<Category[]>();
 
-  console.log(categories.length);
-
   useEffect(() => {
     findAll()
       .then((payload) => {
-        console.log(payload);
         emitter.emit("setCategories", payload);
       })
       .catch((error) => emitter.emit("failLoadCategories", error));
 
     return emitter.on("setCategories", ((payload: Category[]) => {
       categories.set(payload);
-      setIndex(null);
+      setIndex(0);
     }) as any);
-  }, [emitter, categories]);
+  }, [emitter]);
 
   // Estado para saber qué categoría está seleccionada
-  const [current, setIndex] = useState<number | null>(null);
+  const [current, setIndex] = useState<number>(0);
 
   return (
     <div className="md:w-1/3 bg-muted rounded-lg p-4 border border-secondary/20">

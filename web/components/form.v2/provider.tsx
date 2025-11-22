@@ -55,7 +55,7 @@ export function useEvent() {
 /**
  * Types
  */
-export interface Props<T extends object = object> extends Core {
+export interface Props<T extends object | any[] = object> extends Core {
   state?: T;
 }
 
