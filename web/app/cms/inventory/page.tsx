@@ -1,7 +1,11 @@
 import { Fragment, useEffect } from "react";
-import getProducts, { type GetProductsParams, type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
+import getProducts, {
+  type GetProductsParams,
+  type GetProduct,
+  type GetProductsResult,
+} from "@agape/cms/inventory/getProducts";
 import { getProduct } from "@agape/cms/inventory/product";
-import { useEvent } from "@/components/util/event-emiter";
+import { useSharedState } from "@/components/util/event-emitter";
 import useProductModal from "./product";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "lodash";
@@ -14,21 +18,22 @@ export async function onInit() {
     pageIndex: 0,
     pageSize: PAGE_SIZE,
     includeTotalCount: true,
-  })
+  });
 }
 
 export default function Inventory(props: GetProductsResult) {
   const notify = useNotificacion();
   const show = useProductModal();
 
-  const [{ filters, totalCount, products, fetch }, setState] = useEvent<IState>(() => {
-    return {
-      filters: {},
-      fetch: false,
-      products: props.products,
-      totalCount: props.totalCount || 0,
-    };
-  });
+  const [{ filters, totalCount, products, fetch }, setState] =
+    useSharedState<IState>(() => {
+      return {
+        filters: {},
+        fetch: false,
+        products: props.products,
+        totalCount: props.totalCount || 0,
+      };
+    });
 
   const debouncedSearch = debounce((value: string) => {
     setState({
@@ -39,7 +44,7 @@ export default function Inventory(props: GetProductsResult) {
         fullName: value,
         pageIndex: 0,
         includeTotalCount: true,
-      }
+      },
     });
   }, 300);
 
@@ -60,12 +65,11 @@ export default function Inventory(props: GetProductsResult) {
           totalCount: response.totalCount ?? totalCount,
         });
       })
-      .catch(error => {
+      .catch((error) => {
         notify({
           payload: error,
-        })
+        });
       });
-
   }, [fetch, filters, notify, setState, totalCount]);
 
   return (
@@ -81,7 +85,10 @@ export default function Inventory(props: GetProductsResult) {
                 <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">
                   Products
                 </p>
-                <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 bg-[#eaedf1] text-[#101518] text-sm font-medium leading-normal" onClick={() => show({})}>
+                <button
+                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 bg-[#eaedf1] text-[#101518] text-sm font-medium leading-normal"
+                  onClick={() => show({})}
+                >
                   <span className="truncate">Add Product</span>
                 </button>
               </div>
@@ -140,18 +147,25 @@ export default function Inventory(props: GetProductsResult) {
                     </thead>
                     <tbody>
                       {products.map((product) => (
-                        <tr key={product.id} className="border-t border-t-[#d4dce2]">
-
+                        <tr
+                          key={product.id}
+                          className="border-t border-t-[#d4dce2]"
+                        >
                           <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">
                             {product.fullName}
                           </td>
                           <td className="h-[72px] px-4 py-2 w-60 text-sm font-normal leading-normal">
                             <button
                               disabled
-                              className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 text-sm font-medium leading-normal w-full transition-colors duration-200 ${product.isActive ? "bg-green-500 text-white" : "bg-[#eaedf1] text-[#101518]"
-                                }`}
+                              className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-8 px-4 text-sm font-medium leading-normal w-full transition-colors duration-200 ${
+                                product.isActive
+                                  ? "bg-green-500 text-white"
+                                  : "bg-[#eaedf1] text-[#101518]"
+                              }`}
                             >
-                              <span className="truncate">{product.isActive ? "Active" : "Inactive"}</span>
+                              <span className="truncate">
+                                {product.isActive ? "Active" : "Inactive"}
+                              </span>
                             </button>
                           </td>
                           <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c748a] text-sm font-normal leading-normal">
@@ -163,11 +177,16 @@ export default function Inventory(props: GetProductsResult) {
                           <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c748a] text-sm font-normal leading-normal">
                             {product.category}
                           </td>
-                          <td className="h-[72px] px-4 py-2 w-60 text-[#5c748a] text-sm font-bold leading-normal tracking-[0.015em] cursor-pointer" onClick={() => {
-                            getProduct(product.id).then(record => {
-                              show({ product: record });
-                            }).catch((error) => notify({ payload: error }))
-                          }}>
+                          <td
+                            className="h-[72px] px-4 py-2 w-60 text-[#5c748a] text-sm font-bold leading-normal tracking-[0.015em] cursor-pointer"
+                            onClick={() => {
+                              getProduct(product.id)
+                                .then((record) => {
+                                  show({ product: record });
+                                })
+                                .catch((error) => notify({ payload: error }));
+                            }}
+                          >
                             Edit
                           </td>
                         </tr>
@@ -176,21 +195,25 @@ export default function Inventory(props: GetProductsResult) {
                   </table>
                 </div>
               </div>
-              <Pagination totalItems={totalCount} pageIndex={filters?.pageIndex ?? 0} onChange={(pageIndex) => {
-                if (fetch) {
-                  return;
-                }
-
-                setState({
-                  products,
-                  totalCount,
-                  fetch: true,
-                  filters: {
-                    ...filters,
-                    pageIndex: pageIndex,
+              <Pagination
+                totalItems={totalCount}
+                pageIndex={filters?.pageIndex ?? 0}
+                onChange={(pageIndex) => {
+                  if (fetch) {
+                    return;
                   }
-                });
-              }} />
+
+                  setState({
+                    products,
+                    totalCount,
+                    fetch: true,
+                    filters: {
+                      ...filters,
+                      pageIndex: pageIndex,
+                    },
+                  });
+                }}
+              />
             </div>
           </div>
         </div>
@@ -198,7 +221,6 @@ export default function Inventory(props: GetProductsResult) {
     </Fragment>
   );
 }
-
 
 /**
  * Types

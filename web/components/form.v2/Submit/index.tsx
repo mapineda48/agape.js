@@ -1,10 +1,10 @@
 import { createElement, useEffect, type JSX } from "react";
 import { useEvent } from "../provider";
-import { useMitt } from "@/components/util/event-emiter";
+import { useEventEmitter } from "@/components/util/event-emitter";
 
 export function Submit({ onSubmit, ...core }: Props) {
   const event = useEvent();
-  const emitter = useMitt();
+  const emitter = useEventEmitter();
 
   console.log(event);
 

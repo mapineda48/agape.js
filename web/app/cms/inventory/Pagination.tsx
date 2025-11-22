@@ -1,4 +1,4 @@
-import { useEvent } from "@/components/util/event-emiter";
+import { useSharedState } from "@/components/util/event-emitter";
 import { useEffect } from "react";
 
 const PAGE_SIZE = 10;
@@ -9,7 +9,7 @@ export function Pagination(props: {
   pageIndex: number;
   onChange: (pageIndex: number) => void;
 }) {
-  const [chunk, setChunk] = useEvent<number>(0);
+  const [chunk, setChunk] = useSharedState<number>(0);
 
   const totalPages = Math.ceil(props.totalItems / PAGE_SIZE);
   const totalChunks = Math.ceil(totalPages / SIZE_PAGE_CHUNK);
@@ -19,7 +19,7 @@ export function Pagination(props: {
   const canGoPrev = chunk > 0;
   const canGoNext = chunk < totalChunks - 1;
 
-  useEffect(() => setChunk(0), [totalChunks])
+  useEffect(() => setChunk(0), [totalChunks]);
 
   const handleChunkPrev = () => {
     if (canGoPrev) {
@@ -55,10 +55,11 @@ export function Pagination(props: {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              props.onChange(pageIndex)
+              props.onChange(pageIndex);
             }}
-            className={`text-sm font-normal leading-normal flex size-10 items-center justify-center rounded-full text-[#101518] ${pageIndex === props.pageIndex ? "bg-[#eaedf1]" : ""
-              }`}
+            className={`text-sm font-normal leading-normal flex size-10 items-center justify-center rounded-full text-[#101518] ${
+              pageIndex === props.pageIndex ? "bg-[#eaedf1]" : ""
+            }`}
           >
             {pageIndex + 1}
           </a>

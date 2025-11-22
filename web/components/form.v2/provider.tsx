@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, type JSX } from "react";
-import { useMitt } from "../util/event-emiter";
+import { useEventEmitter } from "../util/event-emitter";
 import { useStore } from "react-redux";
 import type { RootState } from "./store";
 
@@ -13,7 +13,7 @@ const Context = createContext<EventForm>({ SUBMIT: Symbol("SUBMIT") });
  */
 export default function FormProvider({ state = {}, ...core }: Props) {
   const store = useStore<RootState>();
-  const emitter = useMitt();
+  const emitter = useEventEmitter();
 
   const evt = useMemo(() => {
     return {

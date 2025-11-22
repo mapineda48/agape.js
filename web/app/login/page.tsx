@@ -2,7 +2,7 @@ import { login, logout } from "@agape/access";
 import Form from "@/components/form.v2";
 import Input from "@/components/form.v2/Input";
 import { Submit } from "@/components/form.v2/Submit";
-import { useEvent } from "@/components/util/event-emiter";
+import { useSharedState } from "@/components/util/event-emitter";
 import router from "@/app/router";
 import { useNotificacion } from "@/components/ui/notification";
 
@@ -27,7 +27,7 @@ export function LogOut() {
 }
 
 export function IniciarSesion() {
-  const [loading, setLoading] = useEvent(false);
+  const [loading, setLoading] = useSharedState(false);
   const notify = useNotificacion();
 
   return (

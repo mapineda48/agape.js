@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import FormProvider, { useForm, useAppDispatch, setAtPath } from "@/components/form.v2";
+import FormProvider, {
+  useForm,
+  useAppDispatch,
+  setAtPath,
+} from "@/components/form.v2";
 import * as Input from "@/components/form.v2/Input";
 import Checkbox from "@/components/form.v2/CheckBox";
 import { upsertProduct, type Product } from "@agape/cms/inventory/product";
@@ -8,124 +12,122 @@ import { type PropsPortal, withPortalToRoot } from "@/components/util/portal";
 import { useNotificacion } from "@/components/ui/notification";
 import Categories from "./Categories";
 import { SubCategories } from "./SubCategories";
-import { useMitt } from "@/components/util/event-emiter";
+import { useEventEmitter } from "@/components/util/event-emitter";
 
 export function Inventory(props: { product?: Product }) {
-    console.log(props);
-    return (
-        <FormProvider state={props.product} className="max-w-2xl mx-auto space-y-6 p-6 bg-white rounded shadow">
-            {/* Nombre */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Nombre
-                </label>
-                <Input.Text
-                    path="fullName"
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded p-2"
-                />
-            </div>
+  console.log(props);
+  return (
+    <FormProvider
+      state={props.product}
+      className="max-w-2xl mx-auto space-y-6 p-6 bg-white rounded shadow"
+    >
+      {/* Nombre */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Nombre
+        </label>
+        <Input.Text
+          path="fullName"
+          required
+          className="mt-1 block w-full border-gray-300 rounded p-2"
+        />
+      </div>
 
-            {/* Slogan */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Slogan
-                </label>
-                <Input.Text
-                    path="slogan"
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded p-2"
-                />
-            </div>
+      {/* Slogan */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Slogan
+        </label>
+        <Input.Text
+          path="slogan"
+          required
+          className="mt-1 block w-full border-gray-300 rounded p-2"
+        />
+      </div>
 
-            {/* Descripción */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Descripción
-                </label>
-                <Input.TextArea
-                    path="description"
-                    className="mt-1 block w-full border-gray-300 rounded p-2"
-                    rows={4}
-                />
-            </div>
+      {/* Descripción */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Descripción
+        </label>
+        <Input.TextArea
+          path="description"
+          className="mt-1 block w-full border-gray-300 rounded p-2"
+          rows={4}
+        />
+      </div>
 
-            {/* Habilitado */}
-            <div className="flex items-center">
-                <Checkbox
-                    checked
-                    path="isActive"
-                    className="h-4 w-4 text-blue-600"
-                />
-                <label htmlFor="enabled" className="ml-2 block text-sm text-gray-700">
-                    Habilitado
-                </label>
-            </div>
+      {/* Habilitado */}
+      <div className="flex items-center">
+        <Checkbox checked path="isActive" className="h-4 w-4 text-blue-600" />
+        <label htmlFor="enabled" className="ml-2 block text-sm text-gray-700">
+          Habilitado
+        </label>
+      </div>
 
-            {/* Rating y Precio */}
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Rating
-                    </label>
-                    <Input.Int
-                        path="rating"
-                        min={0}
-                        max={5}
-                        required
-                        className="mt-1 block w-full border-gray-300 rounded p-2"
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Precio
-                    </label>
-                    <Input.Float
-                        path="price"
-                        required
-                        className="mt-1 block w-full border-gray-300 rounded p-2"
-                    />
-                </div>
-            </div>
+      {/* Rating y Precio */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Rating
+          </label>
+          <Input.Int
+            path="rating"
+            min={0}
+            max={5}
+            required
+            className="mt-1 block w-full border-gray-300 rounded p-2"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Precio
+          </label>
+          <Input.Float
+            path="price"
+            required
+            className="mt-1 block w-full border-gray-300 rounded p-2"
+          />
+        </div>
+      </div>
 
-            {/* Categoría y Subcategoría */}
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Categoría
-                    </label>
-                    <Categories />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Subcategoría
-                    </label>
-                    <SubCategories />
-                </div>
-            </div>
+      {/* Categoría y Subcategoría */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Categoría
+          </label>
+          <Categories />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Subcategoría
+          </label>
+          <SubCategories />
+        </div>
+      </div>
 
-            {/* Imágenes */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">
-                    Imágenes
-                </label>
-                <InputImages />
-            </div>
+      {/* Imágenes */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Imágenes
+        </label>
+        <InputImages />
+      </div>
 
-            {/* Submit */}
-            <div>
-                <InsertUpdate />
-            </div>
-        </FormProvider>
-    );
+      {/* Submit */}
+      <div>
+        <InsertUpdate />
+      </div>
+    </FormProvider>
+  );
 }
 
 function InsertUpdate() {
   const notify = useNotificacion();
   const { SUBMIT } = useForm();
-  const { on } = useMitt();
+  const { on } = useEventEmitter();
   const dispatch = useAppDispatch();
-
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -155,7 +157,9 @@ function InsertUpdate() {
       type="submit"
       disabled={loading}
       className={`w-full py-2 px-4 text-white rounded transition ${
-        loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+        loading
+          ? "bg-blue-400 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
       }`}
     >
       {loading ? (
@@ -190,30 +194,32 @@ function InsertUpdate() {
 }
 
 export function InventoryModal(props: PropsModal) {
-    return (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-black/60 via-gray-900/40 to-blue-900/30 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl p-0 w-full max-w-2xl sm:w-full max-h-[95vh] overflow-y-auto border border-gray-200 relative m-2 sm:m-0">
-                {/* Header */}
-                <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-t-xl flex items-center justify-between mb-0 border-b px-4 sm:px-6 py-3 sm:py-4 shadow-sm">
-                    <h2 className="text-lg sm:text-2xl font-bold text-blue-800 tracking-tight">Agregar Producto</h2>
-                    <button
-                        onClick={props.remove}
-                        className="ml-2 sm:ml-4 px-3 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold shadow"
-                        aria-label="Cerrar"
-                    >
-                        ✕
-                    </button>
-                </div>
-                <div className="p-4 sm:p-6">
-                    <Inventory product={props.product} />
-                </div>
-            </div>
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-black/60 via-gray-900/40 to-blue-900/30 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl p-0 w-full max-w-2xl sm:w-full max-h-[95vh] overflow-y-auto border border-gray-200 relative m-2 sm:m-0">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-t-xl flex items-center justify-between mb-0 border-b px-4 sm:px-6 py-3 sm:py-4 shadow-sm">
+          <h2 className="text-lg sm:text-2xl font-bold text-blue-800 tracking-tight">
+            Agregar Producto
+          </h2>
+          <button
+            onClick={props.remove}
+            className="ml-2 sm:ml-4 px-3 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold shadow"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
         </div>
-    );
+        <div className="p-4 sm:p-6">
+          <Inventory product={props.product} />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default withPortalToRoot(InventoryModal);
 
 interface PropsModal extends PropsPortal {
-    product?: Product
+  product?: Product;
 }

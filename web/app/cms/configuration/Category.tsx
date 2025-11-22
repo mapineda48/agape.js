@@ -5,8 +5,12 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import { findAll, insertUpdate, type Category } from "@agape/cms/inventory/configuration/category";
-import { useDispatch, useMitt } from "@/components/util/event-emiter";
+import {
+  findAll,
+  insertUpdate,
+  type Category,
+} from "@agape/cms/inventory/configuration/category";
+import { useEventEmitter } from "@/components/util/event-emitter";
 import Form, { Path, useForm, useInputArray } from "@/components/form.v2";
 import * as Input from "@/components/form.v2/Input";
 import Checkbox from "@/components/form.v2/CheckBox";
@@ -35,20 +39,19 @@ const ContegoryConfiguration = () => {
 };
 
 function InsertUpdate() {
-  const emitter = useDispatch();
-  const { on } = useMitt();
+  const emitter = useEventEmitter();
 
   const { SUBMIT } = useForm();
 
   useEffect(() => {
-    return on(SUBMIT, ((state: Category[]) => {
+    return emitter.on(SUBMIT, ((state: Category[]) => {
       console.log(state);
-      
+
       insertUpdate(state)
-        .then(emitter.setCategories)
-        .catch(emitter.failInsertUpdateCategories);
+        .then((categories) => emitter.emit("setCategories", categories))
+        .catch((error) => emitter.emit("failInsertUpdateCategories", error));
     }) as any);
-  }, [emitter, on, SUBMIT]);
+  }, [emitter, SUBMIT]);
 
   return (
     <button
@@ -62,23 +65,24 @@ function InsertUpdate() {
 }
 
 export function Categories() {
-  const emitter = useDispatch();
+  const emitter = useEventEmitter();
   const categories = useInputArray<Category[]>();
 
   console.log(categories.length);
 
   useEffect(() => {
-    findAll().then((payload) =>{
-      console.log(payload);
-      emitter.setCategories(payload);
-      
-    }).catch(emitter.failLoadCategories);
+    findAll()
+      .then((payload) => {
+        console.log(payload);
+        emitter.emit("setCategories", payload);
+      })
+      .catch((error) => emitter.emit("failLoadCategories", error));
 
-    return emitter.setCategories((payload: Category[]) => {
+    return emitter.on("setCategories", ((payload: Category[]) => {
       categories.set(payload);
       setIndex(null);
-    });
-  }, [emitter]);
+    }) as any);
+  }, [emitter, categories]);
 
   // Estado para saber qué categoría está seleccionada
   const [current, setIndex] = useState<number | null>(null);
@@ -115,7 +119,7 @@ export function Categories() {
             e.stopPropagation();
 
             setIndex(index);
-            emitter.setCategory(paths);
+            emitter.emit("setCategory", paths);
           }}
         >
           {/* Checkbox isEnabled */}
@@ -155,11 +159,11 @@ export function Categories() {
 }
 
 function FCategory() {
-  const emitter = useDispatch();
+  const emitter = useEventEmitter();
 
   const [category, setCategory] = useState<string[]>([]);
 
-  useEffect(() => emitter.setCategory(setCategory), []);
+  useEffect(() => emitter.on("setCategory", setCategory as any), [emitter]);
 
   return (
     <Path value={category}>
@@ -172,7 +176,7 @@ function FCategory() {
             onClick={(e) => {
               e.stopPropagation();
 
-              emitter.addSubcategories();
+              emitter.emit("addSubcategories");
             }}
           >
             <PlusIcon className="w-6 h-6 text-accent" />
@@ -185,20 +189,20 @@ function FCategory() {
 }
 
 function SubCategories() {
-  const emitter = useDispatch();
+  const emitter = useEventEmitter();
 
   const subcategories = useInputArray<ISubCategories[]>("subcategories");
 
   const [current, setIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    return emitter.addSubcategories(() => {
+    return emitter.on("addSubcategories", (() => {
       subcategories.addItem({
         fullName: "SubCategoria " + (subcategories.length + 1),
         isEnabled: false,
       });
-    });
-  }, [subcategories]);
+    }) as any);
+  }, [emitter, subcategories]);
 
   if (!subcategories.length) {
     return <p className="text-gray-500">Sin subcategorías</p>;

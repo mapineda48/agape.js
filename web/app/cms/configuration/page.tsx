@@ -1,7 +1,7 @@
 import { useState, type ReactNode, useEffect, Fragment } from "react";
 import clsx from "clsx";
 import CategoryConfiguration from "./Category";
-import { useDispatch, useMitt } from "@/components/util/event-emiter";
+import { useEventEmitter } from "@/components/util/event-emitter";
 
 interface CollapsibleItemProps {
   title: string;
@@ -11,18 +11,18 @@ interface CollapsibleItemProps {
 const CollapsibleItem = ({ title, children }: CollapsibleItemProps) => {
   const [state, setState] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const emitter = useDispatch();
+  const emitter = useEventEmitter();
 
   useEffect(() => {
-    return emitter.closeCollapsibleItem(() => setIsOpen(false));
-  }, []);
+    return emitter.on("closeCollapsibleItem", (() => setIsOpen(false)) as any);
+  }, [emitter]);
 
   return (
     <div className="border border-secondary/30 rounded-xl mb-4 overflow-hidden shadow-sm bg-white">
       <button
         type="button"
         onClick={() => {
-          emitter.closeCollapsibleItem();
+          emitter.emit("closeCollapsibleItem");
           setIsOpen(!isOpen);
           if (!isOpen) setState(true);
         }}
