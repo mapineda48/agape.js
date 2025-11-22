@@ -14,7 +14,7 @@ import {
 /**
  * Contexto de React que provee la instancia del emisor de eventos.
  */
-const EmitterContext = createContext<Emitter>(null as unknown as Emitter);
+const Context = createContext<Emitter>(null as unknown as Emitter);
 
 /**
  * Componente EventEmitter.
@@ -42,10 +42,31 @@ export default function EventEmitter({
     };
   }, [emitter]);
 
-  return createElement(EmitterContext.Provider, {
+  return createElement(Context.Provider, {
     value: emitter,
     children,
   });
+}
+
+export function useDispatch() {
+  const emitter = useContext(Context);
+
+  return useMemo(() => {
+    // Se utiliza un Proxy para manejar dinámicamente las llamadas a métodos de emisión o suscripción.
+    return new Proxy({} as IProxy, {
+      get(_, event: string) {
+        return (payload: any) => {
+          if (typeof payload !== "function") {
+            return emitter.emit(event, payload);
+          }
+
+          emitter.on(event, payload);
+
+          return () => emitter.off(event, payload);
+        };
+      },
+    });
+  }, [emitter]);
 }
 
 /**
@@ -54,10 +75,10 @@ export default function EventEmitter({
  * Este hook devuelve un objeto proxy que facilita la suscripción y emisión
  * de eventos. Emite payloads clonados profundamente para evitar efectos secundarios.
  *
- * @returns {EmitterProxy} Objeto proxy con métodos para emitir y suscribirse a eventos.
+ * @returns {IEmitter} Objeto proxy con métodos para emitir y suscribirse a eventos.
  */
-export function useEmitter(): EmitterProxy {
-  const emitter = useContext(EmitterContext);
+export function useMitt(): IEmitter {
+  const emitter = useContext(Context);
 
   return useMemo(() => {
     /**
@@ -67,7 +88,7 @@ export function useEmitter(): EmitterProxy {
      * @param {() => void} cb - Callback que se ejecutará cuando se emita el evento.
      * @returns {() => void} Función para cancelar la suscripción.
      */
-    const on = (event: string, cb: () => void): (() => void) => {
+    const on: any = (event: string, cb: () => void): (() => void) => {
       emitter.on(event, cb);
       return () => emitter.off(event, cb);
     };
@@ -78,35 +99,11 @@ export function useEmitter(): EmitterProxy {
      * @param {string} event - Nombre del evento.
      * @param {unknown} payload - Datos asociados al evento.
      */
-    const emit$ = (event: string, payload: unknown) => {
-      emitter.emit(event, _.cloneDeep(payload));
+    const emit: any = (event: string, payload: unknown) => {
+      emitter.emit(event, payload);
     };
 
-    // Se utiliza un Proxy para manejar dinámicamente las llamadas a métodos de emisión o suscripción.
-    return new Proxy(
-      {},
-      {
-        get(_, event: string) {
-          // Para los métodos "emit" y "on", devuelve las funciones definidas.
-          switch (event) {
-            case "emit":
-              return emit$;
-            case "on":
-              return on;
-          }
-          // Para otros eventos, si se pasa una función, se interpreta como suscripción.
-          // De lo contrario, se emite el evento con el payload proporcionado.
-          return (payload: any) => {
-            if (typeof payload !== "function") {
-              emit$(event, payload);
-              return;
-            }
-
-            return on(event, payload);
-          };
-        },
-      }
-    );
+    return { on, emit };
   }, [emitter]);
 }
 
@@ -120,28 +117,35 @@ export function useEmitter(): EmitterProxy {
  * @returns [state, setState] Estado actual y función para actualizarlo (emitir evento).
  */
 export function useEvent<T = unknown>(
-  initialState: T | ((state?: T) => T),
-  event?: string | symbol
+  initialState: T | ((state?: T) => T)
 ): [T, (state: T) => void] {
   const [state, setState] = useState<T>(initialState);
-  const emitter = useEmitter();
+  const emitter = useContext(Context);
 
   // Memoiza el identificador del evento para que sea estable.
-  const eventKey = useMemo(() => event ?? Symbol(), [event]);
+  const { event, setValue } = useMemo(() => {
+    const event = Symbol();
+
+    const setValue = (value: T) => {
+      const payload =
+        typeof value === "function" ? value : structuredClone(value);
+
+      emitter.emit(event, payload);
+    };
+
+    return { event, setValue };
+  }, []);
 
   useEffect(() => {
-    // Suscribe a cambios del evento y actualiza el estado.
-    const off = emitter.on(eventKey as string, setState);
-    return off;
-  }, [emitter, eventKey]);
+    const handler: any = setState;
 
-  // Función para emitir el evento y actualizar el estado en otros componentes.
-  const emitState = useMemo(
-    () => (nextState: T) => emitter.emit(eventKey as string, nextState),
-    [emitter, eventKey]
-  );
+    emitter.on(event, handler);
+    return () => {
+      emitter.off(event, handler);
+    };
+  }, [emitter, event]);
 
-  return [state, emitState];
+  return [state, setValue];
 }
 
 /**
@@ -153,7 +157,15 @@ export function useEvent<T = unknown>(
  *
  * Permite llamar a eventos como métodos para emitir o suscribirse a ellos.
  */
-type EmitterProxy = {
+type IEmitter = {
+  on: (
+    event: string | Symbol,
+    cb: (() => void) | (<T>(payload: T) => void)
+  ) => () => void;
+  emit: <T>(event: string | Symbol, payload: T) => void;
+};
+
+type IProxy = {
   readonly [K: string]: (...args: unknown[]) => void;
 };
 

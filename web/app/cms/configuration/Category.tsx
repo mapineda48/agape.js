@@ -6,7 +6,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/solid";
 import { findAll, insertUpdate, type Category } from "@agape/cms/inventory/configuration/category";
-import { useEmitter } from "@/components/util/event-emiter";
+import { useDispatch, useMitt } from "@/components/util/event-emiter";
 import Form, { Path, useForm, useInputArray } from "@/components/form";
 import Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
@@ -35,7 +35,7 @@ const ContegoryConfiguration = () => {
 };
 
 function InsertUpdate() {
-  const emitter = useEmitter();
+  const emitter = useDispatch();
 
   const form: any = useForm();
 
@@ -61,7 +61,7 @@ function InsertUpdate() {
 }
 
 export function Categories() {
-  const emitter = useEmitter();
+  const emitter = useDispatch();
   const categories = useInputArray<Category[]>();
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export function Categories() {
 }
 
 function FCategory() {
-  const emitter = useEmitter();
+  const emitter = useDispatch();
 
   const [category, setCategory] = useState<string[]>([]);
 
@@ -178,7 +178,7 @@ function FCategory() {
 }
 
 function SubCategories() {
-  const emitter = useEmitter();
+  const emitter = useDispatch();
 
   const subcategories = useInputArray<ISubCategories[]>("subcategories");
 

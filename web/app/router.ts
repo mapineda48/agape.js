@@ -1,5 +1,5 @@
 import { Action, createBrowserHistory } from "history";
-import { createElement, type JSX } from "react";
+import { createElement, useEffect, useMemo, useState, type JSX } from "react";
 import NoFoundPage from "./NotFound";
 import { isAuthenticated } from "@agape/access";
 
@@ -42,27 +42,42 @@ export class Router {
     }
   }
 
-  public listen(cb: (page: JSX.Element) => void) {
-    const unlisten = this.history.listen(({ location: { pathname, state }, action }) => {
-      const page = this.routes[pathname];
-
-      // Si existe una página registrada, construimos el árbol con layouts
-      if (page?.Component) {
-        const props = (state as Record<string, unknown>) ?? {};
-        const element = this.wrapWithLayouts(pathname, createElement(page.Component, props));
-        cb(element);
-        return;
-      }
-
-      // Si fue un POP a una ruta aún no precargada, re-disparamos navegación
-      if (action === Action.Pop) {
-        router.navigateTo(pathname);
-        return;
-      }
-
-      // NotFound (sin layouts para evitar confusiones)
-      cb(createElement(NoFoundPage));
+  public listenPath(cb: (pathname: string) => void) {
+    const unlisten = this.history.listen(({ location: { pathname } }) => {
+      cb(pathname);
     });
+
+    //cb(this.history.location.pathname);
+
+    return unlisten;
+  }
+
+  public listenPage(cb: (page: JSX.Element) => void) {
+    const unlisten = this.history.listen(
+      ({ location: { pathname, state }, action }) => {
+        const page = this.routes[pathname];
+
+        // Si existe una página registrada, construimos el árbol con layouts
+        if (page?.Component) {
+          const props = (state as Record<string, unknown>) ?? {};
+          const element = this.wrapWithLayouts(
+            pathname,
+            createElement(page.Component, props)
+          );
+          cb(element);
+          return;
+        }
+
+        // Si fue un POP a una ruta aún no precargada, re-disparamos navegación
+        if (action === Action.Pop) {
+          router.navigateTo(pathname);
+          return;
+        }
+
+        // NotFound (sin layouts para evitar confusiones)
+        cb(createElement(NoFoundPage));
+      }
+    );
 
     // Primera navegación al path actual
     this.navigateTo(this.history.location.pathname, { replace: true });
@@ -168,7 +183,10 @@ export class Router {
   private toLayout(loader: () => Promise<unknown>): ILayout {
     const wrapper: any = async () => {
       const module: any = await loader();
-      wrapper.Component = module.default ?? (({ children }: { children?: JSX.Element }) => createElement("div", null, children));
+      wrapper.Component =
+        module.default ??
+        (({ children }: { children?: JSX.Element }) =>
+          createElement("div", null, children));
       wrapper.onInit = module.onInit;
     };
     return wrapper as ILayout;
@@ -176,13 +194,19 @@ export class Router {
 
   /** Convierte './foo/bar/page.tsx' -> '/foo/bar' (ruta de la página) */
   private toPathnameFromPage(filename: string): string {
-    const path = filename.replace(/^\.\//, "/").replace(/\/page\.tsx?$/, "").toLowerCase();
+    const path = filename
+      .replace(/^\.\//, "/")
+      .replace(/\/page\.tsx?$/, "")
+      .toLowerCase();
     return path === "" ? "/" : path;
   }
 
   /** Convierte './foo/_layout.tsx' -> '/foo' (carpeta del layout) */
   private toPathnameFromLayout(filename: string): string {
-    const path = filename.replace(/^\.\//, "/").replace(/\/_layout\.tsx?$/, "").toLowerCase();
+    const path = filename
+      .replace(/^\.\//, "/")
+      .replace(/\/_layout\.tsx?$/, "")
+      .toLowerCase();
     return path === "" ? "/" : path;
   }
 
@@ -213,7 +237,10 @@ export class Router {
   }
 }
 
-export const router = new Router();
+const router = new Router();
+
+
+export default router;
 
 /** Tipos */
 interface IPage {

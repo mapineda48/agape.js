@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import Select from "@/components/form/Select";
-import { useEmitter, useEvent } from "@/components/util/event-emiter";
+import { useDispatch, useMitt, useEvent } from "@/components/util/event-emiter";
 import { type Category, findAll } from "@agape/cms/inventory/configuration/category";
 
 const DEFAULT_CATEGORY: Category = {
@@ -14,7 +14,7 @@ const REF_READ_DELAY_MS = 5;
 
 export default function Categories() {
     const ref = useRef<HTMLSelectElement>(null);
-    const emitter = useEmitter();
+    const emitter = useDispatch();
     const [state, setState] = useEvent<Category[]>([]);
 
     useEffect(() => {
@@ -55,7 +55,7 @@ export default function Categories() {
 function updateSubcategories(
     ref: HTMLSelectElement | null,
     categories: Category[],
-    emitter: ReturnType<typeof useEmitter>
+    emitter: ReturnType<typeof useDispatch>
 ) {
     setTimeout(() => {
         const selectedId = parseInt(ref?.value || "0");

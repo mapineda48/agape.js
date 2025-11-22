@@ -11,7 +11,7 @@ import {
     useState,
 } from "react";
 import _, { type PropertyPath } from "lodash";
-import { useEmitter } from "@/components/util/event-emiter";
+import { useMitt } from "@/components/util/event-emiter";
 import yieldToUI from "@/utils/yieldToUI";
 
 const DefaultArray: any = [];
@@ -28,7 +28,7 @@ const Context = {
  * control de inputs y eventos `merge` y `submit` mediante un EventEmitter.
  */
 export default function FormProvider({ state = {}, ...core }: Props) {
-    const emitter = useEmitter();
+    const emitter = useMitt();
     const ref = useRef(state);
 
     const form: any = useMemo(() => {
@@ -103,7 +103,7 @@ export default function FormProvider({ state = {}, ...core }: Props) {
                 }
 
                 if (typeof cb === "function") {
-                    return emitter.on(SUBMIT, cb);
+                    return emitter.on(SUBMIT, cb as any);
                 }
 
                 throw new Error("Unknown submit action");

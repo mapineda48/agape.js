@@ -1,5 +1,5 @@
 import { type JSX, useEffect, useState } from "react";
-import { router } from "./router";
+import router from "./router";
 
 /**
  * Routes component for React apps. Subscribes to router events
@@ -9,7 +9,7 @@ export default function Routes() {
     const [state, setState] = useState<null | JSX.Element>(null);
 
     // Start listening for route changes
-    useEffect(() => router.listen(setState), []);
+    useEffect(() => router.listenPage(setState), []);
 
     // Render the current page, or null until first route executes
     return state;

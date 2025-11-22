@@ -1,7 +1,7 @@
 import { useState, type ReactNode, useEffect, Fragment } from "react";
 import clsx from "clsx";
 import CategoryConfiguration from "./Category";
-import { useEmitter } from "@/components/util/event-emiter";
+import { useDispatch, useMitt } from "@/components/util/event-emiter";
 
 interface CollapsibleItemProps {
   title: string;
@@ -11,7 +11,7 @@ interface CollapsibleItemProps {
 const CollapsibleItem = ({ title, children }: CollapsibleItemProps) => {
   const [state, setState] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const emitter = useEmitter();
+  const emitter = useDispatch();
 
   useEffect(() => {
     return emitter.closeCollapsibleItem(() => setIsOpen(false));

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useEmitter } from "@/components/util/event-emiter";
 import FormProvider, { useForm } from "@/components/form";
 import Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
@@ -122,7 +121,6 @@ export function Inventory(props: { product?: Product }) {
 
 function InsertUpdate() {
   const notify = useNotificacion();
-  const emitter = useEmitter();
   const form = useForm<Product>();
 
   const [loading, setLoading] = useState(false);
@@ -147,7 +145,7 @@ function InsertUpdate() {
           setLoading(false);
         });
     });
-  }, [emitter]);
+  }, []);
 
   return (
     <button

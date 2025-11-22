@@ -1,9 +1,9 @@
-import { useEffect } from "react";
 import { login, logout } from "@agape/access";
-import Form, { useForm } from "@/components/form";
-import Input from "@/components/form/Input";
+import Form from "@/components/form.v2";
+import Input from "@/components/form.v2/Input";
+import { Submit } from "@/components/form.v2/Submit";
 import { useEvent } from "@/components/util/event-emiter";
-import { router } from "@/app/router";
+import router from "@/app/router";
 import { useNotificacion } from "@/components/ui/notification";
 
 export function LogOut() {
@@ -18,7 +18,7 @@ export function LogOut() {
             notify({
               payload: error,
             });
-          })
+          });
       }}
     >
       Salir
@@ -28,36 +28,36 @@ export function LogOut() {
 
 export function IniciarSesion() {
   const [loading, setLoading] = useEvent(false);
-  const form = useForm();
   const notify = useNotificacion();
 
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    return form.submit((state: any) => {
-      setLoading(true);
-
-      login(state.username, state.password)
-        .then(() => setTimeout(() => router.navigateTo("/cms", { replace: true }), 0))
-        .catch((error) => notify({
-            payload: error,
-          }))
-        .finally(() => setLoading(false));
-    });
-  }, [loading, setLoading]);
-
   return (
-    <button
+    <Submit
+      onSubmit={(state: any) => {
+        if (loading) {
+          return;
+        }
+
+        console.log(state);
+
+        setLoading(true);
+
+        login(state.username, state.password)
+          .then(() =>
+            setTimeout(() => router.navigateTo("/cms", { replace: true }), 0)
+          )
+          .catch((error) =>
+            notify({
+              payload: error,
+            })
+          )
+          .finally(() => setLoading(false));
+      }}
       disabled={loading}
       style={loading ? { cursor: "progress" } : undefined}
-      type="submit"
       className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200"
     >
       Iniciar Sesión
-    </button>
+    </Submit>
   );
 }
 

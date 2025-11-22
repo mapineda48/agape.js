@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type ReactNode } from "react";
 import {
   HomeIcon,
   ChartBarIcon,
@@ -11,7 +11,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { session } from "@agape/access";
 import { LogOut } from "@/app/login/page";
-import { router } from "@/app/router";
 import Link from "@/components/ui/link";
 import { factoryBreakpointValue } from "@/hook/useBreakpointValue";
 import clsx from "clsx";
@@ -34,10 +33,37 @@ const CMS_INVENTORY_PATH = "/cms/inventory";
 const CMS_CONFIGURATION_PATH = "/cms/configuration";
 const CMS_CLIENT_PATH = "/cms/crm";
 
+function PageItem({
+  pathname,
+  label,
+  children,
+}: {
+  pathname: string;
+  label: string;
+  children: ReactNode;
+}) {
+
+
+  return (
+    <li key={pathname}>
+      <Link
+        to={pathname}
+        title={label}
+        className={clsx(
+          "flex items-center py-2 px-4 text-white transition-colors duration-200 hover:bg-accent hover:bg-opacity-20",
+          {
+            "bg-secondary bg-opacity-20": false,
+          }
+        )}
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
 
 export default function Layout({ children }: LayoutProps) {
   const [collapsed, setCollapsed] = useBreakpointValue(false);
-  const pathname = router.pathname;
 
   const navItems = [
     { to: CMS_PATH, icon: HomeIcon, label: "Inicio" },
@@ -78,23 +104,11 @@ export default function Layout({ children }: LayoutProps) {
         {/* NAV ITEMS */}
         <ul className="flex-1 overflow-y-auto mt-4 space-y-1">
           {navItems.map(({ to, icon: Icon, label }) => {
-            const isActive = pathname === to;
             return (
-              <li key={to}>
-                <Link
-                  to={to}
-                  title={label}
-                  className={clsx(
-                    "flex items-center py-2 px-4 text-white transition-colors duration-200 hover:bg-accent hover:bg-opacity-20",
-                    {
-                      "bg-secondary bg-opacity-20": isActive,
-                    }
-                  )}
-                >
-                  <Icon className="w-6 h-6" />
-                  {!collapsed && <span className="ml-3">{label}</span>}
-                </Link>
-              </li>
+              <PageItem key={to} pathname={to} label={label}>
+                <Icon className="w-6 h-6" />
+                {!collapsed && <span className="ml-3">{label}</span>}
+              </PageItem>
             );
           })}
         </ul>

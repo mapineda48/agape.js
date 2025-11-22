@@ -2,7 +2,7 @@ import { Fragment, useEffect } from "react";
 import getProducts, { type GetProductsParams, type GetProduct, type GetProductsResult } from "@agape/cms/inventory/getProducts";
 import { getProduct } from "@agape/cms/inventory/product";
 import { useEvent } from "@/components/util/event-emiter";
-import insertUpdateProduct from "./product/page";
+import useProductModal from "./product";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "lodash";
 import { Pagination } from "./Pagination";
@@ -19,7 +19,7 @@ export async function onInit() {
 
 export default function Inventory(props: GetProductsResult) {
   const notify = useNotificacion();
-  const show = insertUpdateProduct();
+  const show = useProductModal();
 
   const [{ filters, totalCount, products, fetch }, setState] = useEvent<IState>(() => {
     return {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Select from "@/components/form/Select";
-import { useEmitter } from "@/components/util/event-emiter";
+import { useDispatch, useMitt } from "@/components/util/event-emiter";
 
 const DEFAULT_SUBCATEGORY = {
     id: 0,
@@ -13,7 +13,7 @@ export function SubCategories() {
         { ...DEFAULT_SUBCATEGORY },
     ]);
 
-    const emitter = useEmitter();
+    const emitter = useDispatch();
 
     useEffect(() => {
         // Escucha los cambios que llegan desde el componente padre
