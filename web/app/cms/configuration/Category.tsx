@@ -11,9 +11,9 @@ import {
   type Category,
 } from "@agape/cms/inventory/configuration/category";
 import { useEventEmitter } from "@/components/util/event-emitter";
-import Form, { Path, useForm, useInputArray } from "@/components/form.v2";
-import * as Input from "@/components/form.v2/Input";
-import Checkbox from "@/components/form.v2/CheckBox";
+import Form, { Path, useForm, useInputArray } from "@/components/form";
+import * as Input from "@/components/form/Input";
+import Checkbox from "@/components/form/CheckBox";
 
 const state: Category[] = [];
 

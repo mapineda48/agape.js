@@ -3,9 +3,9 @@ import FormProvider, {
   useForm,
   useAppDispatch,
   setAtPath,
-} from "@/components/form.v2";
-import * as Input from "@/components/form.v2/Input";
-import Checkbox from "@/components/form.v2/CheckBox";
+} from "@/components/form";
+import * as Input from "@/components/form/Input";
+import Checkbox from "@/components/form/CheckBox";
 import { upsertProduct, type Product } from "@agape/cms/inventory/product";
 import InputImages from "./Images";
 import { type PropsPortal, withPortalToRoot } from "@/components/util/portal";

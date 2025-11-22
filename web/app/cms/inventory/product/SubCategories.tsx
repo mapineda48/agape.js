@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Select from "@/components/form.v2/Select";
+import Select from "@/components/form/Select";
 import { useEventEmitter } from "@/components/util/event-emitter";
 
 const DEFAULT_SUBCATEGORY = {

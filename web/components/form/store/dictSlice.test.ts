@@ -1,8 +1,4 @@
-import dictReducer, {
-  setAtPath,
-  pushAtPath,
-  removeAtPath,
-} from "../store/dictSlice";
+import dictReducer, { setAtPath, pushAtPath, removeAtPath } from "./dictSlice";
 
 describe("dictSlice", () => {
   const initialState = { data: {} };

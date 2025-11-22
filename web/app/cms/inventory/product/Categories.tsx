@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import Select from "@/components/form.v2/Select";
+import Select from "@/components/form/Select";
 import {
   useEventEmitter,
   useSharedState,

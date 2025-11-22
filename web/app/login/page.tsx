@@ -1,7 +1,7 @@
 import { login, logout } from "@agape/access";
-import Form from "@/components/form.v2";
-import Input from "@/components/form.v2/Input";
-import { Submit } from "@/components/form.v2/Submit";
+import Form from "@/components/form";
+import Input from "@/components/form/Input";
+import { Submit } from "@/components/form/Submit";
 import { useSharedState } from "@/components/util/event-emitter";
 import router from "@/app/router";
 import { useNotificacion } from "@/components/ui/notification";
