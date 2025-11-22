@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import Select from "@/components/form/Select";
-import { useDispatch, useMitt, useEvent } from "@/components/util/event-emiter";
+import Select from "@/components/form.v2/Select";
+import { useDispatch, useEvent } from "@/components/util/event-emiter";
 import { type Category, findAll } from "@agape/cms/inventory/configuration/category";
 
 const DEFAULT_CATEGORY: Category = {

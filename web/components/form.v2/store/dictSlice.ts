@@ -37,8 +37,26 @@ const dictSlice = createSlice({
     setAtPath(state, action: PayloadAction<{ path: Path; value: any }>) {
       setByPath(state.data, action.payload.path, action.payload.value);
     },
+    pushAtPath(state, action: PayloadAction<{ path: Path; value: any }>) {
+      const arr = getByPath(state.data, action.payload.path, []);
+      if (Array.isArray(arr)) {
+        arr.push(action.payload.value);
+      }
+    },
+    removeAtPath(state, action: PayloadAction<{ path: Path; index: number[] }>) {
+      const arr = getByPath(state.data, action.payload.path, []);
+      if (Array.isArray(arr)) {
+        // Sort indices in descending order to avoid shifting issues
+        const indices = [...action.payload.index].sort((a, b) => b - a);
+        for (const idx of indices) {
+          if (idx >= 0 && idx < arr.length) {
+            arr.splice(idx, 1);
+          }
+        }
+      }
+    },
   },
 });
 
-export const { setAtPath } = dictSlice.actions;
+export const { setAtPath, pushAtPath, removeAtPath } = dictSlice.actions;
 export default dictSlice.reducer;

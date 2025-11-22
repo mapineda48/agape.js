@@ -7,9 +7,9 @@ import {
 } from "@heroicons/react/24/solid";
 import { findAll, insertUpdate, type Category } from "@agape/cms/inventory/configuration/category";
 import { useDispatch, useMitt } from "@/components/util/event-emiter";
-import Form, { Path, useForm, useInputArray } from "@/components/form";
-import Input from "@/components/form/Input";
-import Checkbox from "@/components/form/CheckBox";
+import Form, { Path, useForm, useInputArray } from "@/components/form.v2";
+import * as Input from "@/components/form.v2/Input";
+import Checkbox from "@/components/form.v2/CheckBox";
 
 const state: Category[] = [];
 
@@ -36,18 +36,19 @@ const ContegoryConfiguration = () => {
 
 function InsertUpdate() {
   const emitter = useDispatch();
+  const { on } = useMitt();
 
-  const form: any = useForm();
+  const { SUBMIT } = useForm();
 
   useEffect(() => {
-    return form.submit((state: Category[]) => {
+    return on(SUBMIT, ((state: Category[]) => {
       console.log(state);
       
       insertUpdate(state)
         .then(emitter.setCategories)
         .catch(emitter.failInsertUpdateCategories);
-    });
-  }, [emitter]);
+    }) as any);
+  }, [emitter, on, SUBMIT]);
 
   return (
     <button
@@ -64,8 +65,14 @@ export function Categories() {
   const emitter = useDispatch();
   const categories = useInputArray<Category[]>();
 
+  console.log(categories.length);
+
   useEffect(() => {
-    findAll().then(emitter.setCategories).catch(emitter.failLoadCategories);
+    findAll().then((payload) =>{
+      console.log(payload);
+      emitter.setCategories(payload);
+      
+    }).catch(emitter.failLoadCategories);
 
     return emitter.setCategories((payload: Category[]) => {
       categories.set(payload);

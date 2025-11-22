@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Select from "@/components/form/Select";
-import { useDispatch, useMitt } from "@/components/util/event-emiter";
+import Select from "@/components/form.v2/Select";
+import { useDispatch } from "@/components/util/event-emiter";
 
 const DEFAULT_SUBCATEGORY = {
     id: 0,

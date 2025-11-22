@@ -1,4 +1,4 @@
-import { useInput } from "@/components/form";
+import { useInput } from "@/components/form.v2";
 import { useState } from "react";
 
 const path = "images";
@@ -40,7 +40,7 @@ export default function InputImages() {
           return;
         }
 
-        setState((currents: File[]) => [...currents, ...filesArray]);
+        setState([...images, ...filesArray]);
         setCurrentImage(images.length);
         currentTarget.value = "";
         }}

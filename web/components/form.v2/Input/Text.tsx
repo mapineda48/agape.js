@@ -6,8 +6,6 @@ export default function InputText(props: Props) {
 
   const [state, setState] = useInput(path, value);
 
-  console.log(state);
-
   return (
     <input
       {...core}

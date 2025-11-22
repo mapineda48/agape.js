@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type JSX } from "react";
+import { createContext, useContext, useEffect, useMemo, type JSX } from "react";
 import { useMitt } from "../util/event-emiter";
 import { useStore } from "react-redux";
 import type { RootState } from "./store";
@@ -20,6 +20,15 @@ export default function FormProvider({ state = {}, ...core }: Props) {
       SUBMIT: Symbol("SUBMIT"),
     };
   }, []);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      const unsubscribe = store.subscribe(() => {
+        console.log("Form State:", store.getState().form.data);
+      });
+      return unsubscribe;
+    }
+  }, [store]);
 
   return (
     <Context.Provider value={evt}>

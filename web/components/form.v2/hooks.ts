@@ -1,24 +1,24 @@
-import { createElement, useMemo, useReducer, type JSX } from "react";
+import { createElement, useMemo, type JSX } from "react";
 import { usePaths, type Path } from "./paths";
-import { useAppSelector } from "./store/hooks";
-import useInput from "./Input/useInput";
-import { pullAt } from "@/utils/objectPath";
+import { useAppSelector, useAppDispatch, useSelectPath } from "./store/hooks";
+import { setAtPath, pushAtPath, removeAtPath } from "./store/dictSlice";
 import PathProvider from "./paths";
 
 export function useSelector<S, T>(selector: (state: S) => T) {
   return useAppSelector((state: any) => selector(state.form.data));
 }
 
-export function useInputArray<T extends unknown[]>(path: Path) {
+export function useInputArray<T extends unknown[]>(path?: Path) {
   const paths = usePaths(path);
-  const [state, setState] = useInput(paths, [] as unknown[]);
+  const state = useSelectPath<T>(paths, [] as unknown as T);
+  const dispatch = useAppDispatch();
 
   return useMemo(() => {
     const uuid = crypto.randomUUID();
 
     return {
-      set(state: T) {
-        setState(state);
+      set(value: T) {
+        dispatch(setAtPath({ path: paths, value }));
       },
 
       map(cb: IMap<T>) {
@@ -32,11 +32,13 @@ export function useInputArray<T extends unknown[]>(path: Path) {
       },
 
       addItem(...items: T) {
-        state.push(...items);
+        items.forEach(item => {
+             dispatch(pushAtPath({ path: paths, value: item }));
+        })
       },
 
       removeItem(...index: number[]) {
-        pullAt(state, index);
+        dispatch(removeAtPath({ path: paths, index }));
       },
 
       get length() {
@@ -44,7 +46,7 @@ export function useInputArray<T extends unknown[]>(path: Path) {
       },
 
     };
-  }, [state, path, paths]);
+  }, [state, path, paths, dispatch]);
 }
 
 export interface IInputArray<T extends unknown[]> {

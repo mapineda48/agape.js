@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import FormProvider, { useForm } from "@/components/form";
-import Input from "@/components/form/Input";
-import Checkbox from "@/components/form/CheckBox";
+import FormProvider, { useForm, useAppDispatch, setAtPath } from "@/components/form.v2";
+import * as Input from "@/components/form.v2/Input";
+import Checkbox from "@/components/form.v2/CheckBox";
 import { upsertProduct, type Product } from "@agape/cms/inventory/product";
 import InputImages from "./Images";
 import { type PropsPortal, withPortalToRoot } from "@/components/util/portal";
 import { useNotificacion } from "@/components/ui/notification";
 import Categories from "./Categories";
 import { SubCategories } from "./SubCategories";
+import { useMitt } from "@/components/util/event-emiter";
 
 export function Inventory(props: { product?: Product }) {
     console.log(props);
@@ -121,16 +122,18 @@ export function Inventory(props: { product?: Product }) {
 
 function InsertUpdate() {
   const notify = useNotificacion();
-  const form = useForm<Product>();
+  const { SUBMIT } = useForm();
+  const { on } = useMitt();
+  const dispatch = useAppDispatch();
 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    return form.submit((state: any) => {
+    return on(SUBMIT, ((state: any) => {
       setLoading(true);
       upsertProduct(state)
         .then((record) => {
-          form.set(record);
+          dispatch(setAtPath({ path: [], value: record }));
           notify({
             payload: "Producto creado/actualizado correctamente.",
             type: "success",
@@ -144,8 +147,8 @@ function InsertUpdate() {
         .finally(() => {
           setLoading(false);
         });
-    });
-  }, []);
+    }) as any);
+  }, [on, SUBMIT, dispatch, notify]);
 
   return (
     <button

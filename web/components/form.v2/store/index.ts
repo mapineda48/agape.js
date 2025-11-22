@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import dict from "./dictSlice";
 
-export const store = configureStore({
+export const createStore = (preloadedState?: any) => configureStore({
   reducer: { form: dict },
+  preloadedState: preloadedState ? { form: { data: preloadedState } } : undefined
 });
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export type AppStore = ReturnType<typeof createStore>;
+export type RootState = ReturnType<AppStore['getState']>;
+export type AppDispatch = AppStore['dispatch'];
