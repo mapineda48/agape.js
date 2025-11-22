@@ -89,7 +89,7 @@ if (isProduction) {
 if (isDevelopment) {
   const { default: cors } = await import("cors");
 
-  logger.log("[server] enabled cors http://localhost:5173");
+  logger.scope("Server").info("Enabled CORS for http://localhost:5173");
 
   const corsConfig = cors({
     origin: "http://localhost:5173",
@@ -134,5 +134,5 @@ if (!isDevelopment) {
 }
 
 app.listen(PORT, () => {
-  console.log(`listeng at port ${PORT}`);
+  logger.scope("Server").info(`Listening at port ${PORT}`);
 });

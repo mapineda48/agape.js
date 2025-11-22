@@ -4,35 +4,34 @@ import sgMail from "@sendgrid/mail";
 const { SENDGRID_API_KEY = "" } = process.env;
 
 if (SENDGRID_API_KEY) {
-    sgMail.setApiKey(SENDGRID_API_KEY);
-    //logger.log("[MailManager] ✅ Enabled");
+  sgMail.setApiKey(SENDGRID_API_KEY);
+  //logger.scope('Mail').info("✅ Enabled");
 } else {
-    //logger.warning("[MailManager] ❌ Disabled")
+  //logger.scope('Mail').warn("❌ Disabled")
 }
 
-
 export default class MailManager {
-    public static async sendMail(msg: IMail) {
-        try {
-            await sgMail.send({
-                ...msg,
-                from: "noreply@mapineda48.de"
-            });
+  public static async sendMail(msg: IMail) {
+    try {
+      await sgMail.send({
+        ...msg,
+        from: "noreply@mapineda48.de",
+      });
 
-            logger.log("[MailManager] ✅ Correo enviado correctamente")
-        } catch (error) {
-            logger.error(error);
+      logger.scope("Mail").info("✅ Email sent successfully");
+    } catch (error) {
+      logger.scope("Mail").error("Error sending email", error);
 
-            throw new Error("❌ Error al enviar el correo")
-        }
+      throw new Error("❌ Error sending email");
     }
+  }
 }
 
 /**
  * Types
  */
 export interface IMail {
-    to: string;
-    subject: string;
-    html: string;
+  to: string;
+  subject: string;
+  html: string;
 }

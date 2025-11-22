@@ -1,46 +1,84 @@
-import chalk from 'chalk';
-import cluster from 'cluster';
-import { threadId } from 'worker_threads';
+import chalk from "chalk";
+import cluster from "cluster";
+import { threadId } from "worker_threads";
 
-function getTime(): string {
-    // Ej: "14:23:45"
-    return new Date().toLocaleTimeString();
-}
+type LogLevel = "debug" | "info" | "warn" | "error";
 
-function getThreadInfo(): string {
+class Logger {
+  private scopeName: string;
+
+  constructor(scopeName: string = "App") {
+    this.scopeName = scopeName;
+  }
+
+  public scope(name: string): Logger {
+    return new Logger(name);
+  }
+
+  public debug(message: string, ...args: unknown[]) {
+    this.print("debug", message, args);
+  }
+
+  public log(message: string, ...args: unknown[]) {
+    this.info(message, ...args);
+  }
+
+  public info(message: string, ...args: unknown[]) {
+    this.print("info", message, args);
+  }
+
+  public warn(message: string, ...args: unknown[]) {
+    this.print("warn", message, args);
+  }
+
+  public error(message: string, ...args: unknown[]) {
+    this.print("error", message, args);
+  }
+
+  private print(level: LogLevel, message: string, args: unknown[]) {
+    const timestamp = new Date().toISOString();
+    const thread = this.getThreadInfo();
+    const levelColor = this.getLevelColor(level);
+    const scope = chalk.gray(`[${this.scopeName}]`);
+
+    const prefix = `${chalk.gray(timestamp)} ${levelColor(
+      level.toUpperCase().padEnd(5)
+    )} ${scope} ${thread}`;
+
+    const consoleMethod =
+      level === "error"
+        ? console.error
+        : level === "warn"
+        ? console.warn
+        : console.log;
+
+    consoleMethod(`${prefix} ${message}`, ...args);
+  }
+
+  private getLevelColor(level: LogLevel) {
+    switch (level) {
+      case "debug":
+        return chalk.magenta;
+      case "info":
+        return chalk.blue;
+      case "warn":
+        return chalk.yellow;
+      case "error":
+        return chalk.red;
+    }
+  }
+
+  private getThreadInfo(): string {
     if (cluster.isWorker && cluster.worker) {
-        return `worker-${cluster.worker.id}`;
+      return chalk.gray(`(worker-${cluster.worker.id})`);
     }
-
-    if (!threadId) {
-        return "";
+    if (threadId) {
+      return chalk.gray(`(thread-${threadId})`);
     }
-
-    // threadId es 0 en el hilo principal si no usas worker_threads
-    return `thread-${threadId}`;
+    return "";
+  }
 }
 
-function format(level: 'log' | 'warning' | 'error'): string {
-    const time = getTime();
-    const thread = getThreadInfo();
+const logger = new Logger();
 
-    const chunks = [time, level.toUpperCase(), thread].filter(r => r);
-
-    return `[${chunks.join(" ")}]`;
-}
-
-function log(...args: unknown[]) {
-    console.log(chalk.blue(`${format('log')}:`), ...args);
-}
-
-function warning(...args: unknown[]) {
-    console.warn(chalk.yellow(`${format('warning')}:`), ...args);
-}
-
-function error(...args: unknown[]) {
-    console.error(chalk.red(`${format('error')}:`), ...args);
-}
-
-export default {
-    log, warning, error
-}
+export default logger;
