@@ -1,77 +1,97 @@
 import { db } from "#lib/db";
 import { product } from "#models/inventory/product";
-import { and, count, eq, like, sql } from "drizzle-orm";
+import { and, count, eq, gte, lte, sql } from "drizzle-orm";
 import { category } from "#models/inventory/category";
 
-export default async function getProducts(params: GetProductsParams): Promise<GetProductsResult> {
-    const {
-        fullName,
-        isActive,
-        categoryId,
-        includeTotalCount = false,
-        pageIndex = 0,
-        pageSize = 10,
-    } = params;
+export default async function getProducts(
+  params: GetProductsParams
+): Promise<GetProductsResult> {
+  const {
+    fullName,
+    isActive,
+    categoryId,
+    minPrice,
+    maxPrice,
+    rating,
+    includeTotalCount = false,
+    pageIndex = 0,
+    pageSize = 10,
+  } = params;
 
-    const conditions = [];
+  const conditions = [];
 
-    if (fullName) {
-        // Usamos ILIKE directamente en SQL para insensibilidad a mayúsculas/minúsculas
-        conditions.push(
-            sql`${product.fullName} ILIKE ${`%${fullName}%`}`
-        );
-    }
+  if (fullName) {
+    // Usamos ILIKE directamente en SQL para insensibilidad a mayúsculas/minúsculas
+    conditions.push(sql`${product.fullName} ILIKE ${`%${fullName}%`}`);
+  }
 
-    if (isActive !== undefined) {
-        conditions.push(eq(product.isActive, isActive));
-    }
+  if (isActive !== undefined) {
+    conditions.push(eq(product.isActive, isActive));
+  }
 
-    if (categoryId !== undefined) {
-        conditions.push(eq(product.categoryId, categoryId));
-    }
+  if (categoryId !== undefined) {
+    conditions.push(eq(product.categoryId, categoryId));
+  }
 
-    const whereClause = conditions.length ? and(...conditions) : undefined;
+  if (minPrice !== undefined) {
+    conditions.push(gte(product.price, minPrice.toString()));
+  }
 
-    // Consulta de productos
-    const queryProducts = db
-        .select({
-            id: product.id,
-            fullName: product.fullName,
-            isActive: product.isActive,
-            price: product.price,
-            category: category.fullName,
-            inventory: product.id, // Ajusta si tienes un campo real de inventario
-        })
-        .from(product)
-        .innerJoin(category, eq(product.categoryId, category.id))
-        .where(whereClause)
-        .orderBy(product.id)
-        .limit(pageSize)
-        .offset(pageIndex * pageSize);
+  if (maxPrice !== undefined) {
+    conditions.push(lte(product.price, maxPrice.toString()));
+  }
 
-    // Si no se requiere totalCount, devolvemos solo los productos
-    if (!includeTotalCount) {
-        const products = await queryProducts;
-        return {
-            products,
-        };
-    }
+  if (rating !== undefined) {
+    conditions.push(gte(product.rating, rating));
+  }
 
-    // Consulta de totalCount solo si se requiere
-    const queryCount = db
-        .select({ totalCount: count() })
-        .from(product)
-        .where(whereClause);
+  const whereClause = conditions.length ? and(...conditions) : undefined;
 
-    // Ejecutar ambas consultas en paralelo
-    // Esto mejora el rendimiento al evitar esperar una consulta antes de la otra
-    // y permite que ambas se ejecuten simultáneamente.
-    const [products, [{ totalCount }]] = await Promise.all([queryProducts, queryCount]);
+  // Consulta de productos
+  const queryProducts = db
+    .select({
+      id: product.id,
+      fullName: product.fullName,
+      isActive: product.isActive,
+      price: product.price,
+      category: category.fullName,
+      inventory: product.id, // Ajusta si tienes un campo real de inventario
+      images: product.images,
+      rating: product.rating,
+    })
+    .from(product)
+    .innerJoin(category, eq(product.categoryId, category.id))
+    .where(whereClause)
+    .orderBy(product.id)
+    .limit(pageSize)
+    .offset(pageIndex * pageSize);
 
+  // Si no se requiere totalCount, devolvemos solo los productos
+  if (!includeTotalCount) {
+    const products = await queryProducts;
     return {
-        products,
-        totalCount,
+      products,
     };
+  }
+
+  // Consulta de totalCount solo si se requiere
+  const queryCount = db
+    .select({ totalCount: count() })
+    .from(product)
+    .where(whereClause);
+
+  // Ejecutar ambas consultas en paralelo
+  // Esto mejora el rendimiento al evitar esperar una consulta antes de la otra
+  // y permite que ambas se ejecuten simultáneamente.
+  const [products, [{ totalCount }]] = await Promise.all([
+    queryProducts,
+    queryCount,
+  ]);
+
+  return {
+    products,
+    totalCount,
+  };
 }
 
 /**
@@ -79,24 +99,29 @@ export default async function getProducts(params: GetProductsParams): Promise<Ge
  */
 
 export interface GetProductsParams {
-    fullName?: string;
-    isActive?: boolean;
-    categoryId?: number;
-    includeTotalCount?: boolean; // más claro que "count"
-    pageIndex?: number;
-    pageSize?: number;
+  fullName?: string;
+  isActive?: boolean;
+  categoryId?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number;
+  includeTotalCount?: boolean; // más claro que "count"
+  pageIndex?: number;
+  pageSize?: number;
 }
 
 export interface GetProduct {
-    id: number;
-    fullName: string;
-    isActive: boolean;
-    price: string; // o number, según tu modelo
-    category: string; // o el tipo adecuado según tu modelo
-    inventory: number
+  id: number;
+  fullName: string;
+  isActive: boolean;
+  price: string; // o number, según tu modelo
+  category: string; // o el tipo adecuado según tu modelo
+  inventory: number;
+  images: unknown;
+  rating: number;
 }
 
 export interface GetProductsResult {
-    products: GetProduct[];
-    totalCount?: number; // solo presente si includeTotalCount === true
+  products: GetProduct[];
+  totalCount?: number; // solo presente si includeTotalCount === true
 }
