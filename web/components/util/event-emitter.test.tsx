@@ -286,7 +286,9 @@ describe("useEventEmitter Hook", () => {
       );
 
       const sendButton = screen.getByText("Send");
-      sendButton.click();
+      act(() => {
+        sendButton.click();
+      });
 
       await waitFor(() => {
         expect(screen.getByTestId("receiver")).toHaveTextContent(
