@@ -21,7 +21,7 @@ const itemVariants = {
     transition: {
       type: "spring",
       stiffness: 100,
-    },
+    } as any,
   },
 };
 
