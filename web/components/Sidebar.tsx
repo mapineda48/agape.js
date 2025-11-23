@@ -10,7 +10,10 @@ import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
   ArrowLeftOnRectangleIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/24/outline";
+import { useTheme } from "./ThemeProvider";
 import { logout, session } from "@agape/access";
 import router from "@/app/router";
 import clsx from "clsx";
@@ -28,6 +31,7 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [currentPath, setCurrentPath] = useState(router.pathname);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const unlisten = router.listenPath((path) => {
@@ -55,10 +59,17 @@ export default function Sidebar() {
       animate={isCollapsed ? "collapsed" : "expanded"}
       variants={sidebarVariants}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="relative h-screen bg-white border-r border-gray-100 shadow-xl z-50 flex flex-col"
+      className="relative h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 shadow-xl z-50 flex flex-col transition-colors duration-300"
     >
       {/* Header */}
-      <div className="p-6 flex items-center justify-between">
+      <div
+        className={clsx(
+          "flex items-center transition-all duration-300",
+          isCollapsed
+            ? "flex-col justify-center p-4 gap-4"
+            : "flex-row justify-between p-6"
+        )}
+      >
         <AnimatePresence mode="wait">
           {!isCollapsed && (
             <motion.div
@@ -71,16 +82,33 @@ export default function Sidebar() {
             </motion.div>
           )}
         </AnimatePresence>
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
-        >
-          {isCollapsed ? (
-            <ChevronDoubleRightIcon className="w-5 h-5" />
-          ) : (
-            <ChevronDoubleLeftIcon className="w-5 h-5" />
+        <div
+          className={clsx(
+            "flex items-center gap-2",
+            isCollapsed && "flex-col-reverse"
           )}
-        </button>
+        >
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          >
+            {theme === "dark" ? (
+              <SunIcon className="w-5 h-5" />
+            ) : (
+              <MoonIcon className="w-5 h-5" />
+            )}
+          </button>
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          >
+            {isCollapsed ? (
+              <ChevronDoubleRightIcon className="w-5 h-5" />
+            ) : (
+              <ChevronDoubleLeftIcon className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -94,14 +122,14 @@ export default function Sidebar() {
               className={clsx(
                 "flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 group relative overflow-hidden",
                 isActive
-                  ? "bg-indigo-50 text-indigo-600 shadow-sm"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-indigo-50 rounded-xl"
+                  className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl"
                   initial={false}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
@@ -109,7 +137,9 @@ export default function Sidebar() {
               <item.icon
                 className={clsx(
                   "w-6 h-6 relative z-10 transition-colors",
-                  isActive ? "text-indigo-600" : "group-hover:text-gray-900"
+                  isActive
+                    ? "text-indigo-600 dark:text-indigo-400"
+                    : "group-hover:text-gray-900 dark:group-hover:text-gray-200"
                 )}
               />
               <AnimatePresence>
@@ -130,10 +160,10 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100 dark:border-gray-800">
         <div
           className={clsx(
-            "flex items-center p-3 rounded-xl bg-gray-50 transition-all",
+            "flex items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 transition-all",
             isCollapsed ? "justify-center" : "justify-start"
           )}
         >
@@ -141,9 +171,9 @@ export default function Sidebar() {
             <img
               src={session.avatarUrl || "https://ui-avatars.com/api/?name=User"}
               alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+              className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm"
             />
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-700 rounded-full"></div>
           </div>
 
           <AnimatePresence>
@@ -154,10 +184,12 @@ export default function Sidebar() {
                 exit={{ opacity: 0, width: 0 }}
                 className="ml-3 overflow-hidden"
               >
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {session.fullName || "Usuario"}
                 </p>
-                <p className="text-xs text-gray-500 truncate">Administrador</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  Administrador
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -165,7 +197,7 @@ export default function Sidebar() {
           {!isCollapsed && (
             <button
               onClick={handleLogout}
-              className="ml-auto p-2 text-gray-400 hover:text-red-500 transition-colors"
+              className="ml-auto p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
               title="Cerrar Sesión"
             >
               <ArrowLeftOnRectangleIcon className="w-5 h-5" />

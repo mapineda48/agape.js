@@ -2,17 +2,19 @@
 
 /* https://tailwindcss.com/docs/theme#default-theme-variable-reference */
 @theme {
-    /* Colores Ágape migrados */
-    --color-primary:   #1E40AF;  /* Azul Profundo */
-    --color-secondary: #3B82F6;  /* Azul Brillante */
-    --color-accent:    #0EA5E9;  /* Celeste Vibrante */
-    --color-muted:     #F3F4F6;  /* Fondo Suave */
-    --color-dark:      #111827;  /* Texto Oscuro */
-    --color-light:     #F9FAFB;  /* Fondo General */
-    --color-danger:    #EF4444;  /* Errores */
-    --color-warning:   #F59E0B;  /* Advertencias */
-    --color-success:   #10B981;  /* Confirmaciones */
-  }
+  /* Colores Ágape migrados */
+  --color-primary: #1e40af; /* Azul Profundo */
+  --color-secondary: #3b82f6; /* Azul Brillante */
+  --color-accent: #0ea5e9; /* Celeste Vibrante */
+  --color-muted: #f3f4f6; /* Fondo Suave */
+  --color-dark: #111827; /* Texto Oscuro */
+  --color-light: #f9fafb; /* Fondo General */
+  --color-danger: #ef4444; /* Errores */
+  --color-warning: #f59e0b; /* Advertencias */
+  --color-success: #10b981; /* Confirmaciones */
+}
+
+@variant dark (&:where(.dark, .dark *));
 
 /* Si quieres utilities extra o animaciones: */
 @layer utilities {
