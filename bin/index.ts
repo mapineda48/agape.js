@@ -6,7 +6,6 @@ import morgan from "morgan";
 import initDatabase from "#lib/db";
 import auth from "#lib/access/middleware";
 import rpc from "#lib/rpc/middleware";
-import { verifyRootUser } from "#lib/db/root";
 import bridge from "#lib/bridge/middleware";
 import logger from "#lib/log/logger";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
@@ -33,9 +32,13 @@ const isTest = NODE_ENV === "test";
 const isDevelopment = NODE_ENV === "development";
 
 // Initialize DB connection and models (required before importing model-dependent logic like auth)
-await initDatabase(DATABASE_URI, isDevelopment);
-
-await verifyRootUser(AGAPE_ADMIN, AGAPE_PASSWORD);
+await initDatabase(DATABASE_URI, {
+  dev: isDevelopment,
+  rootUser: {
+    username: AGAPE_ADMIN,
+    password: AGAPE_PASSWORD,
+  },
+});
 
 // Initialize storage backend (e.g., Azure Blob or development emulator)
 const blobStorageHost = await AzureBlobStorage.connect(

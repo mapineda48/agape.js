@@ -1,18 +1,55 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { eq, sql } from "drizzle-orm";
 import { Pool } from "pg";
 import applyMigrations from "./migrations";
+import applySeeds from "./seeds";
+import { verifyRootUser } from "./root";
 
 export let db: Database = null as any;
 
-export default async function initDatabase(connectionString: string, dev = false) {
-    const pool = new Pool({ connectionString });
-
-    await applyMigrations(pool, dev);
-
-    db = drizzle(pool);
+/**
+ * Configuration options for the database initialization.
+ */
+interface DatabaseConfig {
+  /**
+   * If true, runs migrations in development mode (if applicable).
+   */
+  dev?: boolean;
+  /**
+   * Configuration for the root (super user) synchronization.
+   * If provided, the system will attempt to sync the root user credentials on startup.
+   */
+  rootUser?: {
+    username: string;
+    password?: string;
+  };
 }
 
+/**
+ * Initializes the database connection, applies migrations, and optionally syncs the root user.
+ *
+ * @param connectionString - The PostgreSQL connection string.
+ * @param config - Optional configuration for development mode and root user sync.
+ */
+export default async function initDatabase(
+  connectionString: string,
+  config: DatabaseConfig = {}
+) {
+  const pool = new Pool({ connectionString });
+
+  // Apply database migrations to ensure schema is up-to-date
+  await applyMigrations(pool, config.dev || false);
+
+  // Apply data seeds (post-deploy scripts)
+  await applySeeds(pool, config.dev || false);
+
+  // Initialize the Drizzle ORM instance
+  db = drizzle(pool);
+
+  // If root user configuration is provided, verify and sync the root user
+  if (config.rootUser) {
+    await verifyRootUser(config.rootUser.username, config.rootUser.password);
+  }
+}
 
 /**
  * Types

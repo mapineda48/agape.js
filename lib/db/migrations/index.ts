@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import type { Pool } from "pg";
 import logger from "#lib/log/logger";
-import config from "./config";
+import config from "../config";
 import { toRegExp } from "#utils/toRegExp";
 import { glob } from "node:fs/promises";
 
@@ -13,14 +13,14 @@ export default async function applyMigrations(
   dev: boolean,
   attempt = 0
 ) {
-  if (dev) {
-    logger
-      .scope("Database")
-      .info(
-        "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
-      );
-    return;
-  }
+  // if (dev) {
+  //   logger
+  //     .scope("Database")
+  //     .info(
+  //       "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
+  //     );
+  //   return;
+  // }
 
   const { migrations, migrationSqlMap } = await loadMigrations();
 
@@ -172,11 +172,11 @@ async function fetchAppliedMigrations(pg: Pool, schemaName: string) {
 }
 
 async function loadMigrations() {
-  const migrationsDir = path.join(import.meta.dirname, "migrations");
+  const migrationsDir = path.join(import.meta.dirname, "scripts");
 
   const src = path.resolve(
     import.meta.dirname,
-    "migrations",
+    "scripts",
     "meta",
     "0000_snapshot.json"
   );
@@ -187,24 +187,27 @@ async function loadMigrations() {
   // Build regex to replace placeholder schema for tenant
   const schemaRegex = toRegExp(schema);
 
-  const sql = await Array.fromAsync(glob("**/*.sql", { cwd: migrationsDir }));
-
-  // Map each file to a loader function
-  const tasks = sql.sort().map(
-    (fileName) =>
-      [
-        fileName,
-        async () => {
-          const filePath = path.join(migrationsDir, fileName);
-          const rawSql = await fs.readFile(filePath, "utf8");
-          return rawSql.replace(schemaRegex, config.schema);
-        },
-      ] as const
+  const sqlFiles = await Array.fromAsync(
+    glob("**/*.sql", { cwd: migrationsDir })
   );
 
-  const migrationSqlMap = Object.fromEntries(await Promise.all(tasks));
+  // Map each file to a loader function
+  const tasks = sqlFiles.sort().map((fileName) => {
+    const migrationName = fileName.replace(/\.sql$/, "");
+    return [
+      migrationName,
+      async () => {
+        const filePath = path.join(migrationsDir, fileName);
+        const rawSql = await fs.readFile(filePath, "utf8");
+        return rawSql.replace(schemaRegex, config.schema);
+      },
+    ] as const;
+  });
 
-  return { migrations: sql, migrationSqlMap } as const;
+  const migrationSqlMap = Object.fromEntries(await Promise.all(tasks));
+  const migrations = Object.keys(migrationSqlMap).sort();
+
+  return { migrations, migrationSqlMap } as const;
 }
 
 function delay(ms = 1000): Promise<void> {

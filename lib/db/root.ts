@@ -8,56 +8,94 @@ import { db } from ".";
 import logger from "#lib/log/logger";
 
 const CODE_SUPER_USER_ROLE = "SP";
+const ADVISORY_LOCK_ID = 123456789111;
 
-export async function verifyRootUser(username: string, password: string) {
+/**
+ * Verifies and synchronizes the root user (Super User) in the database.
+ *
+ * This function ensures that a user with the Super User role exists and matches
+ * the provided credentials. It uses an advisory lock to prevent race conditions
+ * when multiple instances of the application are starting simultaneously.
+ *
+ * @param username - The username for the root user.
+ * @param password - The password for the root user.
+ */
+export async function verifyRootUser(username: string, password?: string) {
   if (!username || !password) {
+    logger
+      .scope("RootUser")
+      .warn("Root user credentials not provided, skipping synchronization.");
     return;
   }
 
-  // Attempt non-blocking advisory lock
+  // Attempt non-blocking advisory lock to ensure only one instance syncs the root user
   const lockResult = await db.execute(
-    sql`SELECT pg_try_advisory_lock(123456789111) AS acquired;`
+    sql`SELECT pg_try_advisory_lock(${ADVISORY_LOCK_ID}) AS acquired;`
   );
   const acquired = lockResult.rows[0].acquired as boolean;
 
   if (!acquired) {
-    logger.scope("RootUser").info("Skipped synchronization due to concurrency");
+    logger
+      .scope("RootUser")
+      .info("Skipped synchronization due to concurrency (lock not acquired).");
     return;
   }
 
   try {
-    logger.scope("RootUser").info("Starting root user synchronization");
+    logger.scope("RootUser").info("Starting root user synchronization...");
 
     const current = await findAccessByRoleCode(CODE_SUPER_USER_ROLE);
 
-    const isPassword = await verifyPassword(password, current.password);
-
-    if (current.username === username && isPassword) {
-      logger.scope("RootUser").info("Root user is already synchronized");
-
+    if (!current) {
+      // This might happen if the seed data hasn't been applied or the role doesn't exist.
+      // For now, we assume the role and basic structure exist (e.g. via migrations/seeds).
+      logger
+        .scope("RootUser")
+        .warn(
+          `Role '${CODE_SUPER_USER_ROLE}' not found or no user assigned. Cannot sync root user.`
+        );
       return;
     }
 
-    const auth: IUpdate = {};
+    const isPasswordMatch = await verifyPassword(password, current.password);
+
+    if (current.username === username && isPasswordMatch) {
+      logger.scope("RootUser").info("Root user is already synchronized.");
+      return;
+    }
+
+    const updates: IUpdate = {};
 
     if (current.username !== username) {
-      auth.username = username;
+      updates.username = username;
     }
 
-    if (!isPassword) {
-      auth.password = await hashPassword(password);
+    if (!isPasswordMatch) {
+      updates.password = await hashPassword(password);
     }
 
-    await db.update(accessUser).set(auth).where(eq(accessUser.id, current.id));
-
-    logger.scope("RootUser").info("Root user has been synchronized");
+    if (Object.keys(updates).length > 0) {
+      await db
+        .update(accessUser)
+        .set(updates)
+        .where(eq(accessUser.id, current.id));
+      logger
+        .scope("RootUser")
+        .info("Root user has been successfully synchronized.");
+    }
   } catch (error) {
     logger.scope("RootUser").error("Failed to synchronize root user", error);
   } finally {
-    await db.execute(sql`SELECT pg_advisory_unlock(123456789111);`);
+    await db.execute(sql`SELECT pg_advisory_unlock(${ADVISORY_LOCK_ID});`);
   }
 }
 
+/**
+ * Finds the access credentials for a user with a specific role code.
+ *
+ * @param code - The role code to search for (e.g., 'SP').
+ * @returns The user's access details (id, username, password hash).
+ */
 async function findAccessByRoleCode(code: string) {
   const [result] = await db
     .select({
