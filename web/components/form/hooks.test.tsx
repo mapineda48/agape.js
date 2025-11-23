@@ -479,7 +479,7 @@ describe("form hooks", () => {
         const list = useInputArray<{ name: string }[]>();
         return (
           <div>
-            {list.map((item, index) => (
+            {list.map((_item, index) => (
               <div key={index}>
                 <Item />
               </div>
@@ -517,6 +517,30 @@ describe("form hooks", () => {
       ) as HTMLInputElement[];
       expect(newInputs).toHaveLength(3);
       expect(newInputs[2].value).toBe("New");
+    });
+  });
+
+  describe("Stability", () => {
+    it("should generate stable keys across renders", () => {
+      const { result } = renderHook(() => useInputArray<string[]>(["items"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ items: ["a", "b", "c"] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      const elements1 = result.current.map((_item, _index) => <div />);
+      const key1 = elements1[0].key;
+
+      act(() => {
+        result.current.addItem("d");
+      });
+
+      const elements2 = result.current.map((_item, _index) => <div />);
+      const key2 = elements2[0].key;
+
+      // This expectation fails with current implementation (bug reproduction)
+      expect(key1).toBe(key2);
     });
   });
 });

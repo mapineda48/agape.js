@@ -14,8 +14,6 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
   const dispatch = useAppDispatch();
 
   return useMemo(() => {
-    const uuid = crypto.randomUUID();
-
     return {
       set(value: T) {
         dispatch(setAtPath({ path: paths, value }));
@@ -24,7 +22,7 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
       map(cb: IMap<T>) {
         return state.map((payload: any, index: number) => {
           return createElement(PathProvider, {
-            key: uuid + index,
+            key: index,
             value: [...paths, index],
             children: cb(payload, index, [...paths, index]),
           });
@@ -32,9 +30,9 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
       },
 
       addItem(...items: T) {
-        items.forEach(item => {
-             dispatch(pushAtPath({ path: paths, value: item }));
-        })
+        items.forEach((item) => {
+          dispatch(pushAtPath({ path: paths, value: item }));
+        });
       },
 
       removeItem(...index: number[]) {
@@ -44,26 +42,25 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
       get length() {
         return state.length;
       },
-
     };
   }, [state, path, paths, dispatch]);
 }
 
 export interface IInputArray<T extends unknown[]> {
-    readonly map: (
-        cb: (
-            payload: T[number],
-            index: number,
-            paths: Path
-        ) => JSX.Element
-    ) => JSX.Element[];
+  readonly map: (
+    cb: (payload: T[number], index: number, paths: Path) => JSX.Element
+  ) => JSX.Element[];
 
-    readonly get: () => T;
-    readonly set: (state: T) => void;
-    readonly addItem: (...items: T) => void;
-    readonly removeItem: (...index: number[]) => void;
-    readonly length: number;
-    readonly forceUpdate: () => void;
+  readonly get: () => T;
+  readonly set: (state: T) => void;
+  readonly addItem: (...items: T) => void;
+  readonly removeItem: (...index: number[]) => void;
+  readonly length: number;
+  readonly forceUpdate: () => void;
 }
 
-type IMap<T extends unknown[]> = (payload: T[number], index: number, paths: Path) => JSX.Element
+type IMap<T extends unknown[]> = (
+  payload: T[number],
+  index: number,
+  paths: Path
+) => JSX.Element;
