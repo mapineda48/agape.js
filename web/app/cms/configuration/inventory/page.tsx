@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import clsx from "clsx";
 import {
   CheckCircleIcon,
@@ -14,9 +14,10 @@ import {
   type Category,
 } from "@agape/cms/inventory/configuration/category";
 import { useEventEmitter } from "@/components/util/event-emitter";
-import Form, { Path, useForm, useInputArray } from "@/components/form";
+import Form, { Path, useInputArray } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
+import Submit from "@/components/ui/submit";
 
 const state: Category[] = [];
 
@@ -54,43 +55,29 @@ export default function InventoryPage() {
 
 function InsertUpdate() {
   const emitter = useEventEmitter();
-  const { SUBMIT } = useForm();
-  const [isSaving, setIsSaving] = useState(false);
+  const setCategoriesEvent = useMemo(() => Symbol("setCategories"), []);
 
   useEffect(() => {
-    return emitter.on(SUBMIT, ((state: Category[]) => {
-      setIsSaving(true);
-      insertUpdate(state)
-        .then((categories) => {
-          emitter.emit("setCategories", categories);
-          // Optional: Show success toast
-        })
-        .catch((error) => {
-          emitter.emit("failInsertUpdateCategories", error);
-          // Optional: Show error toast
-        })
-        .finally(() => setIsSaving(false));
+    return emitter.on(setCategoriesEvent, ((categories: Category[]) => {
+      emitter.emit("setCategories", categories);
     }) as any);
-  }, [emitter, SUBMIT]);
+  }, [emitter, setCategoriesEvent]);
 
   return (
-    <button
-      type="submit"
-      disabled={isSaving}
+    <Submit
+      onSubmit={async (state: Category[]) => {
+        const categories = await insertUpdate(state);
+        return categories;
+      }}
+      event={setCategoriesEvent}
       className={clsx(
         "flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white transition-all shadow-sm",
-        isSaving
-          ? "bg-indigo-400 cursor-not-allowed"
-          : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-md"
+        "bg-indigo-600 hover:bg-indigo-700 hover:shadow-md"
       )}
     >
-      {isSaving ? (
-        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-      ) : (
-        <CheckCircleIcon className="w-5 h-5 mr-2" />
-      )}
-      {isSaving ? "Guardando..." : "Guardar Cambios"}
-    </button>
+      <CheckCircleIcon className="w-5 h-5 mr-2" />
+      Guardar Cambios
+    </Submit>
   );
 }
 

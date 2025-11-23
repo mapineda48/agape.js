@@ -6,17 +6,16 @@ import { useEvent as useForm } from "../form/provider";
 
 interface SubmitProps extends React.ComponentProps<typeof Button> {
   onSubmit: (payload: any) => Promise<any>;
-  text?: string;
   event?: symbol;
   disableSuccessNotification?: boolean;
 }
 
 export default function Submit({
   onSubmit,
-  text = "Guardar",
   className,
   event,
   disableSuccessNotification = false,
+  children,
   ...props
 }: SubmitProps) {
   const [loading, setLoading] = useState(false);
@@ -54,7 +53,15 @@ export default function Submit({
     return () => {
       unsubscribe();
     };
-  }, [emitter, SUBMIT, onSubmit, notify, event, disableSuccessNotification]);
+  }, [
+    emitter,
+    SUBMIT,
+    SUBMIT_SUCCESS,
+    onSubmit,
+    notify,
+    event,
+    disableSuccessNotification,
+  ]);
 
   return (
     <Button
@@ -63,7 +70,7 @@ export default function Submit({
       disabled={loading || props.disabled}
       {...props}
     >
-      {loading ? "Guardando..." : text}
+      {loading ? "Guardando..." : children}
     </Button>
   );
 }

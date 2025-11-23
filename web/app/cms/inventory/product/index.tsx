@@ -1,18 +1,14 @@
-import { useEffect, useState } from "react";
-import FormProvider, {
-  useForm,
-  useAppDispatch,
-  setAtPath,
-} from "@/components/form";
+import { useEffect, useMemo } from "react";
+import FormProvider, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
 import { upsertProduct, type Product } from "@agape/cms/inventory/product";
 import InputImages from "./Images";
 import { type PropsPortal, withPortalToRoot } from "@/components/util/portal";
-import { useNotificacion } from "@/components/ui/notification";
 import Categories from "./Categories";
 import { SubCategories } from "./SubCategories";
 import { useEventEmitter } from "@/components/util/event-emitter";
+import Submit from "@/components/ui/submit";
 
 export function Inventory(props: { product?: Product }) {
   console.log(props);
@@ -124,72 +120,27 @@ export function Inventory(props: { product?: Product }) {
 }
 
 function InsertUpdate() {
-  const notify = useNotificacion();
-  const { SUBMIT } = useForm();
-  const { on } = useEventEmitter();
   const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(false);
+  const emitter = useEventEmitter();
+  const updateFormEvent = useMemo(() => Symbol("updateForm"), []);
 
   useEffect(() => {
-    return on(SUBMIT, ((state: any) => {
-      setLoading(true);
-      upsertProduct(state)
-        .then((record) => {
-          dispatch(setAtPath({ path: [], value: record }));
-          notify({
-            payload: "Producto creado/actualizado correctamente.",
-            type: "success",
-          });
-        })
-        .catch((error) => {
-          notify({
-            payload: error,
-          });
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+    return emitter.on(updateFormEvent, ((record: Product) => {
+      dispatch(setAtPath({ path: [], value: record }));
     }) as any);
-  }, [on, SUBMIT, dispatch, notify]);
+  }, [emitter, updateFormEvent, dispatch]);
 
   return (
-    <button
-      type="submit"
-      disabled={loading}
-      className={`w-full py-2 px-4 text-white rounded transition ${
-        loading
-          ? "bg-blue-400 cursor-not-allowed"
-          : "bg-blue-600 hover:bg-blue-700"
-      }`}
+    <Submit
+      onSubmit={async (state: any) => {
+        const record = await upsertProduct(state);
+        return record;
+      }}
+      event={updateFormEvent}
+      className="w-full py-2 px-4 text-white rounded transition bg-blue-600 hover:bg-blue-700"
     >
-      {loading ? (
-        <span className="flex justify-center items-center space-x-2">
-          <svg
-            className="animate-spin h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16 8 8 0 01-8-8z"
-            />
-          </svg>
-          <span>Cargando...</span>
-        </span>
-      ) : (
-        "Crear/Actualizar"
-      )}
-    </button>
+      Crear/Actualizar
+    </Submit>
   );
 }
 

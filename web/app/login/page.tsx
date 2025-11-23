@@ -1,96 +1,14 @@
-import { login, logout } from "@agape/access";
+import { login } from "@agape/access";
 import Form from "@/components/form";
 import Input from "@/components/form/Input";
-import { Submit } from "@/components/form/Submit";
-import { useSharedState } from "@/components/util/event-emitter";
-import router from "@/app/router";
-import { useNotificacion } from "@/components/ui/notification";
+import Submit from "@/components/ui/submit";
 import { motion } from "framer-motion";
 import { User, Lock, ArrowRight } from "lucide-react";
-
-export function LogOut() {
-  const notify = useNotificacion();
-
-  return (
-    <button
-      onClick={() => {
-        logout()
-          .then(() => router.navigateTo("/login", { replace: true }))
-          .catch((error) => {
-            notify({
-              payload: error,
-            });
-          });
-      }}
-    >
-      Salir
-    </button>
-  );
-}
-
-export function IniciarSesion() {
-  const [loading, setLoading] = useSharedState(false);
-  const notify = useNotificacion();
-
-  return (
-    <Submit
-      onSubmit={(state: any) => {
-        if (loading) {
-          return;
-        }
-
-        setLoading(true);
-
-        login(state.username, state.password)
-          .then(() =>
-            setTimeout(() => router.navigateTo("/cms", { replace: true }), 0)
-          )
-          .catch((error) =>
-            notify({
-              payload: error,
-            })
-          )
-          .finally(() => setLoading(false));
-      }}
-      disabled={loading}
-      style={loading ? { cursor: "progress" } : undefined}
-      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
-    >
-      {loading ? (
-        <span className="flex items-center gap-2">
-          <svg
-            className="animate-spin h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          Iniciando...
-        </span>
-      ) : (
-        <>
-          Iniciar Sesión
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </>
-      )}
-    </Submit>
-  );
-}
+import { useRouter } from "../router-hook";
 
 export default function LoginForm() {
+  const router = useRouter();
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
       {/* Animated Background */}
@@ -171,7 +89,17 @@ export default function LoginForm() {
               </div>
 
               <div className="pt-2">
-                <IniciarSesion />
+                <Submit
+                  onSubmit={async (state: any) => {
+                    await login(state.username, state.password);
+                    router.navigate("/cms", { replace: true });
+                  }}
+                  disableSuccessNotification
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
+                >
+                  Iniciar Sesión
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Submit>
               </div>
 
               <p className="text-center text-sm text-blue-200/60 mt-6">
