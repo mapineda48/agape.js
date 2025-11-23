@@ -3,7 +3,10 @@ import { useEventEmitter } from "../util/event-emitter";
 import { useStore } from "react-redux";
 import type { RootState } from "./store";
 
-const Context = createContext<EventForm>({ SUBMIT: Symbol("SUBMIT") });
+const Context = createContext<EventForm>({
+  SUBMIT: Symbol("SUBMIT"),
+  SUBMIT_SUCCESS: Symbol("SUBMIT_SUCCESS"),
+});
 
 /**
  * Proveedor de formulario controlado.
@@ -18,6 +21,7 @@ export default function FormProvider({ state = {}, ...core }: Props) {
   const evt = useMemo(() => {
     return {
       SUBMIT: Symbol("SUBMIT"),
+      SUBMIT_SUCCESS: Symbol("SUBMIT_SUCCESS"),
     };
   }, []);
 
@@ -63,4 +67,5 @@ type Core = Omit<JSX.IntrinsicElements["form"], "action" | "onSubmit">;
 
 export interface EventForm {
   SUBMIT: symbol;
+  SUBMIT_SUCCESS: symbol;
 }
