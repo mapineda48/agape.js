@@ -23,7 +23,10 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
         return state.map((payload: any, index: number) => {
           return createElement(PathProvider, {
             key: index,
-            value: [...paths, index],
+            value: [
+              ...(Array.isArray(path) ? path : path ? [path] : []),
+              index,
+            ],
             children: cb(payload, index, [...paths, index]),
           });
         });

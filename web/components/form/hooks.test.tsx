@@ -1,5 +1,6 @@
 import { renderHook, act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import PathProvider from "./paths";
 import { Provider } from "react-redux";
 import { createStore } from "./store";
 import useInput from "./Input/useInput";
@@ -541,6 +542,60 @@ describe("form hooks", () => {
 
       // This expectation fails with current implementation (bug reproduction)
       expect(key1).toBe(key2);
+    });
+  });
+
+  describe("Nested Context Updates", () => {
+    it("should update inputs when parent context path changes", () => {
+      const store = createStore({
+        categories: [
+          { name: "Cat 1", subs: [{ name: "Sub 1-1" }] },
+          { name: "Cat 2", subs: [{ name: "Sub 2-1" }] },
+        ],
+      });
+
+      const SubList = () => {
+        const subs = useInputArray<{ name: string }[]>("subs");
+        return (
+          <div>
+            {subs.map((_item, index) => (
+              <div key={index}>
+                <InputTest path="name" />
+              </div>
+            ))}
+          </div>
+        );
+      };
+
+      const InputTest = ({ path }: { path: string }) => {
+        const [value] = useInput(path);
+        return <div data-testid="input-value">{value as string}</div>;
+      };
+
+      const App = () => {
+        const [index, setIndex] = React.useState(0);
+        return (
+          <Provider store={store}>
+            <PathProvider value={["categories", index]}>
+              <SubList />
+              <button onClick={() => setIndex(1)}>Switch</button>
+            </PathProvider>
+          </Provider>
+        );
+      };
+
+      render(<App />);
+
+      // Initial check: Cat 1 -> Sub 1-1
+      expect(screen.getByTestId("input-value").textContent).toBe("Sub 1-1");
+
+      // Switch category
+      act(() => {
+        screen.getByText("Switch").click();
+      });
+
+      // Should now be: Cat 2 -> Sub 2-1
+      expect(screen.getByTestId("input-value").textContent).toBe("Sub 2-1");
     });
   });
 });
