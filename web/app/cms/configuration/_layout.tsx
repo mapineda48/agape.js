@@ -6,7 +6,7 @@ import {
   UsersIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import router from "@/app/router";
+import { useRouter } from "@/app/router-hook";
 
 interface ConfigurationLayoutProps {
   children: ReactNode;
@@ -14,17 +14,17 @@ interface ConfigurationLayoutProps {
 
 const TABS = [
   {
-    path: "/cms/configuration/inventory",
+    path: "inventory",
     label: "Inventario",
     icon: CubeIcon,
   },
   {
-    path: "/cms/configuration/users",
+    path: "users",
     label: "Usuarios",
     icon: UsersIcon,
   },
   {
-    path: "/cms/configuration/general",
+    path: "general",
     label: "General",
     icon: Cog6ToothIcon,
   },
@@ -33,30 +33,46 @@ const TABS = [
 export default function ConfigurationLayout({
   children,
 }: ConfigurationLayoutProps) {
-  const [currentPath, setCurrentPath] = useState(router.pathname);
+  const { pathname, navigate, listen } = useRouter();
+  const [currentPath, setCurrentPath] = useState(pathname);
 
   useEffect(() => {
-    const unlisten = router.listenPath((path) => {
+    const unlisten = listen((path) => {
       setCurrentPath(path);
 
       // Validate if the current path matches any of the tabs
-      const isValidPath = TABS.some((tab) => path.startsWith(tab.path));
-      if (!isValidPath && path.startsWith("/cms/configuration")) {
-        router.navigateTo(TABS[0].path);
+      // Since listen now returns relative paths, we can compare directly
+      const isValidPath = TABS.some(
+        (tab) => path === tab.path || path.startsWith(tab.path + "/")
+      );
+      if (
+        !isValidPath &&
+        path !== "/" &&
+        !path.startsWith("inventory") &&
+        !path.startsWith("users") &&
+        !path.startsWith("general")
+      ) {
+        navigate(TABS[0].path);
       }
     });
     return unlisten;
-  }, []);
+  }, [listen, navigate]);
 
   // Initial check
   useEffect(() => {
-    const isValidPath = TABS.some((tab) =>
-      router.pathname.startsWith(tab.path)
+    const isValidPath = TABS.some(
+      (tab) => pathname === tab.path || pathname.startsWith(tab.path + "/")
     );
-    if (!isValidPath && router.pathname.startsWith("/cms/configuration")) {
-      router.navigateTo(TABS[0].path);
+    if (
+      !isValidPath &&
+      pathname !== "/" &&
+      !pathname.startsWith("inventory") &&
+      !pathname.startsWith("users") &&
+      !pathname.startsWith("general")
+    ) {
+      navigate(TABS[0].path);
     }
-  }, []);
+  }, [pathname, navigate]);
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -65,11 +81,14 @@ export default function ConfigurationLayout({
         {/* Tabs */}
         <div className="flex space-x-8 pt-4">
           {TABS.map((tab) => {
-            const isActive = currentPath.startsWith(tab.path);
+            // Since currentPath is now relative, we can compare directly
+            const isActive =
+              currentPath === tab.path ||
+              currentPath.startsWith(tab.path + "/");
             return (
               <div
                 key={tab.path}
-                onClick={() => router.navigateTo(tab.path)}
+                onClick={() => navigate(tab.path)}
                 className={clsx(
                   "group flex items-center pb-4 border-b-2 cursor-pointer transition-all duration-200",
                   isActive

@@ -2,6 +2,7 @@ import { Action, createBrowserHistory } from "history";
 import { createElement, useEffect, useMemo, useState, type JSX } from "react";
 import NoFoundPage from "./NotFound";
 import { isAuthenticated } from "@agape/access";
+import { RouterPathProvider } from "./router-context";
 
 export class Router {
   private history = createBrowserHistory();
@@ -230,7 +231,13 @@ export class Router {
     for (let i = paths.length - 1; i >= 0; i--) {
       const L = this.layouts[paths[i]];
       if (L?.Component) {
-        wrapped = createElement(L.Component, null, wrapped);
+        // Wrap the layout component with RouterPathProvider
+        const layoutElement = createElement(L.Component, null, wrapped);
+        wrapped = createElement(
+          RouterPathProvider,
+          { path: paths[i] },
+          layoutElement
+        );
       }
     }
     return wrapped;
