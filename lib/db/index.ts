@@ -36,7 +36,7 @@ export default async function initDatabase(
 ) {
   const pool = new Pool({ connectionString });
 
-  // Apply database migrations to ensure schema is up-to-date
+  // Apply database migrations to ensure schema is up-to-date.
   await applyMigrations(pool, config.dev || false);
 
   // Apply data seeds (post-deploy scripts)
