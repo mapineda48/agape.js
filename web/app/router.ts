@@ -227,7 +227,7 @@ export class Router {
   private wrapWithLayouts(pathname: string, element: JSX.Element): JSX.Element {
     const paths = this.collectLayoutPaths(pathname);
     let wrapped = element;
-    for (let i = 0; i < paths.length; i++) {
+    for (let i = paths.length - 1; i >= 0; i--) {
       const L = this.layouts[paths[i]];
       if (L?.Component) {
         wrapped = createElement(L.Component, null, wrapped);
@@ -238,7 +238,6 @@ export class Router {
 }
 
 const router = new Router();
-
 
 export default router;
 
