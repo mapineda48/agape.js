@@ -27,6 +27,197 @@ describe("form hooks", () => {
     expect(result.current[0]).toBe("Bob");
   });
 
+  describe("useInput with boolean values", () => {
+    it("should initialize with boolean true", () => {
+      const { result } = renderHook(
+        () => useInput(["settings", "enabled"], true),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe(true);
+    });
+
+    it("should initialize with boolean false", () => {
+      const { result } = renderHook(
+        () => useInput(["settings", "enabled"], false),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe(false);
+    });
+
+    it("should update boolean from false to true", () => {
+      const { result } = renderHook(
+        () => useInput(["settings", "enabled"], false),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe(false);
+
+      act(() => {
+        result.current[1](true);
+      });
+
+      expect(result.current[0]).toBe(true);
+    });
+
+    it("should update boolean from true to false", () => {
+      const { result } = renderHook(
+        () => useInput(["settings", "enabled"], true),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe(true);
+
+      act(() => {
+        result.current[1](false);
+      });
+
+      expect(result.current[0]).toBe(false);
+    });
+
+    it("should handle multiple boolean updates", () => {
+      const { result } = renderHook(
+        () => useInput(["settings", "enabled"], false),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe(false);
+
+      act(() => {
+        result.current[1](true);
+      });
+      expect(result.current[0]).toBe(true);
+
+      act(() => {
+        result.current[1](false);
+      });
+      expect(result.current[0]).toBe(false);
+
+      act(() => {
+        result.current[1](true);
+      });
+      expect(result.current[0]).toBe(true);
+    });
+
+    it("should work with boolean in nested path", () => {
+      const { result } = renderHook(
+        () => useInput(["user", "profile", "verified"], true),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe(true);
+
+      act(() => {
+        result.current[1](false);
+      });
+
+      expect(result.current[0]).toBe(false);
+    });
+  });
+
+  describe("useInput with numeric values", () => {
+    it("should initialize with number", () => {
+      const { result } = renderHook(() => useInput(["user", "age"], 25), {
+        wrapper,
+      });
+
+      expect(result.current[0]).toBe(25);
+    });
+
+    it("should update numeric value", () => {
+      const { result } = renderHook(() => useInput(["count"], 0), {
+        wrapper,
+      });
+
+      expect(result.current[0]).toBe(0);
+
+      act(() => {
+        result.current[1](5);
+      });
+
+      expect(result.current[0]).toBe(5);
+    });
+
+    it("should handle negative numbers", () => {
+      const { result } = renderHook(() => useInput(["temperature"], -10), {
+        wrapper,
+      });
+
+      expect(result.current[0]).toBe(-10);
+
+      act(() => {
+        result.current[1](0);
+      });
+
+      expect(result.current[0]).toBe(0);
+    });
+
+    it("should handle floating point numbers", () => {
+      const { result } = renderHook(() => useInput(["price"], 19.99), {
+        wrapper,
+      });
+
+      expect(result.current[0]).toBe(19.99);
+
+      act(() => {
+        result.current[1](29.99);
+      });
+
+      expect(result.current[0]).toBe(29.99);
+    });
+  });
+
+  describe("useInput with null and undefined", () => {
+    it("should initialize with null", () => {
+      const { result } = renderHook(() => useInput(["user", "avatar"], null), {
+        wrapper,
+      });
+
+      expect(result.current[0]).toBe(null);
+    });
+
+    it("should initialize with undefined", () => {
+      const { result } = renderHook(
+        () => useInput(["user", "avatar"], undefined),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe(undefined);
+    });
+
+    it("should update from value to null", () => {
+      const { result } = renderHook(
+        () => useInput<string | null>(["user", "name"], "Alice"),
+        {
+          wrapper,
+        }
+      );
+
+      expect(result.current[0]).toBe("Alice");
+
+      act(() => {
+        result.current[1](null);
+      });
+
+      expect(result.current[0]).toBe(null);
+    });
+  });
+
   describe("useInputArray", () => {
     it("should initialize with correct length", () => {
       const { result } = renderHook(() => useInputArray<string[]>(["items"]), {
@@ -37,6 +228,142 @@ describe("form hooks", () => {
       });
 
       expect(result.current.length).toBe(3);
+    });
+
+    it("should handle array of booleans - initialization", () => {
+      const { result } = renderHook(() => useInputArray<boolean[]>(["flags"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ flags: [true, false, true] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(3);
+    });
+
+    it("should handle array of booleans - adding items", () => {
+      const { result } = renderHook(() => useInputArray<boolean[]>(["flags"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ flags: [true, false] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(2);
+
+      act(() => {
+        result.current.addItem(true);
+      });
+
+      expect(result.current.length).toBe(3);
+
+      act(() => {
+        result.current.addItem(false, true);
+      });
+
+      expect(result.current.length).toBe(5);
+    });
+
+    it("should handle array of booleans - removing items", () => {
+      const { result } = renderHook(() => useInputArray<boolean[]>(["flags"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ flags: [true, false, true, false] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(4);
+
+      act(() => {
+        result.current.removeItem(1);
+      });
+
+      expect(result.current.length).toBe(3);
+    });
+
+    it("should handle array of booleans - set entire array", () => {
+      const { result } = renderHook(() => useInputArray<boolean[]>(["flags"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ flags: [true] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(1);
+
+      act(() => {
+        result.current.set([false, true, false]);
+      });
+
+      expect(result.current.length).toBe(3);
+    });
+
+    it("should handle array of numbers - initialization", () => {
+      const { result } = renderHook(() => useInputArray<number[]>(["scores"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ scores: [10, 20, 30] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(3);
+    });
+
+    it("should handle array of numbers - adding items", () => {
+      const { result } = renderHook(() => useInputArray<number[]>(["scores"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ scores: [10, 20] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(2);
+
+      act(() => {
+        result.current.addItem(30);
+      });
+
+      expect(result.current.length).toBe(3);
+
+      act(() => {
+        result.current.addItem(40, 50);
+      });
+
+      expect(result.current.length).toBe(5);
+    });
+
+    it("should handle array of numbers - removing items", () => {
+      const { result } = renderHook(() => useInputArray<number[]>(["scores"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ scores: [10, 20, 30, 40] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(4);
+
+      act(() => {
+        result.current.removeItem(0, 2);
+      });
+
+      expect(result.current.length).toBe(2);
+    });
+
+    it("should handle array of numbers with zero and negative values", () => {
+      const { result } = renderHook(() => useInputArray<number[]>(["values"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ values: [0, -5, 10] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current.length).toBe(3);
+
+      act(() => {
+        result.current.addItem(-10, 0);
+      });
+
+      expect(result.current.length).toBe(5);
     });
 
     it("should set entire array with set()", () => {
