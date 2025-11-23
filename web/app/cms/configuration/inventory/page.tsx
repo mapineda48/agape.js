@@ -26,10 +26,10 @@ export default function InventoryPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-gray-900">
               Categorías y Subcategorías
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500">
               Gestiona la estructura de tu inventario
             </p>
           </div>

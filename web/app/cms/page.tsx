@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import router from "@/app/router";
 import { findAll } from "@agape/cms/inventory/configuration/category";
+import PageLayout from "@/components/cms/PageLayout";
 
 // Animation variants
 const containerVariants = {
@@ -61,7 +62,7 @@ export default function CMSHome() {
     hour < 12 ? "Buenos días" : hour < 18 ? "Buenas tardes" : "Buenas noches";
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <PageLayout>
       <motion.div
         initial="hidden"
         animate="visible"
@@ -253,7 +254,7 @@ export default function CMSHome() {
           </div>
         </motion.div>
       </motion.div>
-    </div>
+    </PageLayout>
   );
 }
 

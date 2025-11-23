@@ -11,13 +11,9 @@ export default function Layout({ children }: LayoutProps) {
       {/* Modern Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
+      {/* Main Content - Importante no se debe estableces estilos aqui para las paginas, cada una es reposanble de sus maquetación en caso de ser necesario estilos en comun se debe establecer un componente en comun para esto */}
       <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none">
-        <div className="py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-            {children}
-          </div>
-        </div>
+        {children}
       </main>
     </div>
   );
