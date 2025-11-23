@@ -19,9 +19,20 @@ export default function Submit({
   ...props
 }: SubmitProps) {
   const [loading, setLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
   const emitter = useEventEmitter();
   const { SUBMIT, SUBMIT_SUCCESS } = useForm();
   const notify = useNotificacion();
+
+  // Debounce loading visual state by 50ms
+  useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => setShowLoading(true), 50);
+      return () => clearTimeout(timeout);
+    } else {
+      setShowLoading(false);
+    }
+  }, [loading]);
 
   useEffect(() => {
     const unsubscribe = emitter.on(SUBMIT, async (payload: any) => {
@@ -70,7 +81,7 @@ export default function Submit({
       disabled={loading || props.disabled}
       {...props}
     >
-      {loading ? "Guardando..." : children}
+      {showLoading ? "Guardando..." : children}
     </Button>
   );
 }
