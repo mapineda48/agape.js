@@ -1,106 +1,121 @@
-import ReactDOM from "react-dom";
 import React, {
   Fragment,
   useCallback,
   useContext,
   useEffect,
+  useState,
   type JSX,
+  type ReactNode,
 } from "react";
-
-const Context = React.createContext<PushToPortal>(() => {});
+import ReactDOM from "react-dom";
 
 /**
- * If you wonder why I just don't use ReactDOM.createPortal,
- * it's because this way I can nested zindex and allow push
- * a function component with a callback
+ * Types
  */
-export function withPortalToRoot<P>(Element: React.ComponentType<P>) {
+export interface PropsPortal {
+  style?: React.CSSProperties;
+  remove: () => void;
+}
+
+export type FunctionComponent<T extends PropsPortal = PropsPortal> = (
+  props: T
+) => JSX.Element;
+
+type PushToPortal = (Element: FunctionComponent) => void;
+
+interface PortalItem {
+  Item: FunctionComponent;
+  key: string;
+}
+
+const Context = React.createContext<PushToPortal>(() => {
+  console.warn("Portal Context not found");
+});
+
+/**
+ * Higher-order component to push a component to the portal root.
+ *
+ * @example
+ * const showModal = withPortalToRoot(MyModal);
+ * showModal({ someProp: "value" });
+ */
+export function withPortalToRoot<P extends object>(
+  Element: React.ComponentType<P & PropsPortal>
+) {
   return function useShow() {
     const pushToBody = useContext(Context);
 
     return useCallback(
-      function pushModal(props: Omit<P, keyof PropsPortal>) {
-        pushToBody((portal) => <Element {...(props as any)} {...portal} />);
+      (props: Omit<P, keyof PropsPortal>) => {
+        pushToBody((portalProps) => (
+          <Element {...(props as P)} {...portalProps} />
+        ));
       },
       [pushToBody]
     );
   };
 }
 
-export default function PortalProvider(props: { children: React.ReactNode }) {
-  const [state, setState] = React.useState<StateProvider>({ push: () => {} });
+export default function PortalProvider({ children }: { children: ReactNode }) {
+  // We use a ref or just a state that is stable.
+  // Actually, we need the `push` function to be stable and available to consumers.
+  // The `PortalFactory` needs to register itself to receive the updates,
+  // OR we can lift the state up here.
+  // Lifting state up is cleaner than the previous "setPush" callback pattern.
 
-  const setPush = useCallback((push: PushToPortal) => setState({ push }), []);
+  const [items, setItems] = useState<PortalItem[]>([]);
+
+  const push: PushToPortal = useCallback((Item) => {
+    setItems((prev) => [...prev, { Item, key: crypto.randomUUID() }]);
+  }, []);
+
+  const remove = useCallback((key: string) => {
+    setItems((prev) => prev.filter((item) => item.key !== key));
+  }, []);
 
   return (
-    <Context.Provider value={state.push}>
-      {props.children}
-      <PortalFactory setPush={setPush} />
+    <Context.Provider value={push}>
+      {children}
+      <PortalRoot items={items} remove={remove} />
     </Context.Provider>
   );
 }
 
 /**
- * Prevent render all tree on update state
+ * The actual portal root that renders the items into document.body
  */
-export function PortalFactory(props: PortalFactoryProps) {
-  const { setPush } = props;
+function PortalRoot({
+  items,
+  remove,
+}: {
+  items: PortalItem[];
+  remove: (key: string) => void;
+}) {
+  const [mounted, setMounted] = useState(false);
 
-  const [state, setState] = React.useState<State>([]);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
-  useEffect(
-    () =>
-      setPush((Item) =>
-        setState((state) => [...state, { Item, key: crypto.randomUUID() }])
-      ),
-    [setPush]
-  );
-
-  if (!state.length) {
+  if (!mounted || typeof document === "undefined") {
     return null;
   }
 
-  const Elements = (
+  if (items.length === 0) {
+    return null;
+  }
+
+  return ReactDOM.createPortal(
     <Fragment>
-      {state.map(({ Item, key }, index) => (
+      {items.map(({ Item, key }, index) => (
         <Item
           key={key}
           style={{ zIndex: 1500 + index * 100 }}
-          remove={() =>
-            setState((current) => {
-              const state = [...current];
-              state.splice(index, 1);
-              return state;
-            })
-          }
+          remove={() => remove(key)}
         />
       ))}
-    </Fragment>
+    </Fragment>,
+    document.body
   );
-
-  return ReactDOM.createPortal(Elements, document.body);
 }
-
-/**
- * Types
- */
-type State = { Item: FunctionComponent; key: string }[];
-
-export type FunctionComponent<T extends PropsPortal = PropsPortal> = (
-  props: T
-) => JSX.Element;
-
-export interface PropsPortal {
-  style: React.CSSProperties;
-  remove: () => void;
-}
-
-interface PortalFactoryProps {
-  setPush: (push: PushToPortal) => void;
-}
-
-interface StateProvider {
-  push: PushToPortal;
-}
-
-type PushToPortal = (Element: FunctionComponent) => void;
