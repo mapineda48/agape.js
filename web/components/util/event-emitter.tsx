@@ -99,7 +99,7 @@ export function useEventEmitter(): EventEmitterAPI {
      * @param {unknown} payload - Data associated with the event.
      */
     const emit = (event: string | symbol, payload?: unknown) => {
-      emitter.emit(event, payload);
+      setTimeout(() => emitter.emit(event, payload), 0);
     };
 
     /**
