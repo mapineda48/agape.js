@@ -88,8 +88,11 @@ export function useRouter(): RouterHookAPI {
   };
 
   const navigate = (to: string, opt?: INavigateTo) => {
-    const resolvedPath = resolvePath(to);
-    router.navigateTo(resolvedPath, opt);
+    // Use setTimeout to avoid race condition with router.loading
+    setTimeout(() => {
+      const resolvedPath = resolvePath(to);
+      router.navigateTo(resolvedPath, opt);
+    }, 0);
   };
 
   const listen = (cb: (pathname: string) => void) => {

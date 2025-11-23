@@ -47,10 +47,7 @@ export default function ConfigurationLayout({
   useEffect(() => {
     // Check if we're at the exact root of this layout context
     if (pathname === "" || pathname === "/") {
-      // Use setTimeout to avoid race condition with router.loading
-      setTimeout(() => {
-        navigate(TABS[0].path, { replace: true });
-      }, 0);
+      navigate(TABS[0].path, { replace: true });
     }
   }, [pathname, navigate]);
 
