@@ -39,38 +39,18 @@ export default function ConfigurationLayout({
   useEffect(() => {
     const unlisten = listen((path) => {
       setCurrentPath(path);
-
-      // Validate if the current path matches any of the tabs
-      // Since listen now returns relative paths, we can compare directly
-      const isValidPath = TABS.some(
-        (tab) => path === tab.path || path.startsWith(tab.path + "/")
-      );
-      if (
-        !isValidPath &&
-        path !== "/" &&
-        !path.startsWith("inventory") &&
-        !path.startsWith("users") &&
-        !path.startsWith("general")
-      ) {
-        navigate(TABS[0].path);
-      }
     });
     return unlisten;
-  }, [listen, navigate]);
+  }, [listen]);
 
-  // Initial check
+  // Auto-redirect to first tab when at root path
   useEffect(() => {
-    const isValidPath = TABS.some(
-      (tab) => pathname === tab.path || pathname.startsWith(tab.path + "/")
-    );
-    if (
-      !isValidPath &&
-      pathname !== "/" &&
-      !pathname.startsWith("inventory") &&
-      !pathname.startsWith("users") &&
-      !pathname.startsWith("general")
-    ) {
-      navigate(TABS[0].path);
+    // Check if we're at the exact root of this layout context
+    if (pathname === "" || pathname === "/") {
+      // Use setTimeout to avoid race condition with router.loading
+      setTimeout(() => {
+        navigate(TABS[0].path, { replace: true });
+      }, 0);
     }
   }, [pathname, navigate]);
 

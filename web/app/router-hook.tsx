@@ -60,6 +60,10 @@ export function useRouter(): RouterHookAPI {
   });
 
   useEffect(() => {
+    // Update pathname immediately if router.pathname changed
+    setPathname(toRelativePathHelper(router.pathname, basePath));
+
+    // Listen for future changes
     return router.listenPath((path) => {
       // Update with relative path
       setPathname(toRelativePathHelper(path, basePath));

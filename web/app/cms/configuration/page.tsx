@@ -1,10 +1,5 @@
-import { useEffect } from "react";
-import router from "@/app/router";
-
+// This page just acts as a placeholder
+// The layout handles auto-navigation to the first tab
 export default function ConfigurationPage() {
-  useEffect(() => {
-    router.navigateTo("/cms/configuration/inventory", { replace: true });
-  }, []);
-
   return null;
 }
