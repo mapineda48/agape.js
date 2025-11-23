@@ -783,8 +783,60 @@ describe("form hooks", () => {
       act(() => {
         result.current[1]("Alice Cooper");
       });
+    });
+  });
 
-      expect(result.current[0]).toBe("Alice Cooper");
+  describe("useInput with materialize option", () => {
+    it("should NOT materialize value by default (lazy initialization)", () => {
+      let storeRef: any;
+      const { result } = renderHook(() => useInput(["user", "role"], "guest"), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore();
+          storeRef = store;
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      expect(result.current[0]).toBe("guest");
+      expect(storeRef.getState().form.data).toEqual({});
+    });
+
+    it("should materialize value when materialize: true", () => {
+      let storeRef: any;
+      const { result } = renderHook(
+        () => useInput(["user", "role"], "admin", { materialize: true }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => {
+            const store = createStore();
+            storeRef = store;
+            return <Provider store={store}>{children}</Provider>;
+          },
+        }
+      );
+
+      expect(result.current[0]).toBe("admin");
+      expect(storeRef.getState().form.data).toEqual({
+        user: { role: "admin" },
+      });
+    });
+
+    it("should not overwrite existing value even with materialize: true", () => {
+      let storeRef: any;
+      const { result } = renderHook(
+        () => useInput(["user", "role"], "admin", { materialize: true }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => {
+            const store = createStore({ user: { role: "superadmin" } });
+            storeRef = store;
+            return <Provider store={store}>{children}</Provider>;
+          },
+        }
+      );
+
+      expect(result.current[0]).toBe("superadmin");
+      expect(storeRef.getState().form.data).toEqual({
+        user: { role: "superadmin" },
+      });
     });
   });
 

@@ -55,7 +55,12 @@ export function Inventory(props: { product?: Product }) {
 
       {/* Habilitado */}
       <div className="flex items-center">
-        <Checkbox checked path="isActive" className="h-4 w-4 text-blue-600" />
+        <Checkbox
+          materialize
+          checked
+          path="isActive"
+          className="h-4 w-4 text-blue-600"
+        />
         <label htmlFor="enabled" className="ml-2 block text-sm text-gray-700">
           Habilitado
         </label>

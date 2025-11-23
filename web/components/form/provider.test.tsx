@@ -1,8 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FormProvider from "./index";
 import * as Input from "./Input";
 import Checkbox from "./CheckBox";
+import { Submit } from "./Submit";
+import EventEmitter from "@/components/util/event-emitter";
 
 describe("FormProvider", () => {
   it("should render children", () => {
@@ -458,6 +460,150 @@ describe("FormProvider", () => {
 
       const input = screen.getByTestId("input") as HTMLInputElement;
       expect(input.value).toBe("0");
+    });
+  });
+
+  describe("Submit", () => {
+    // Helper wrapper that provides EventEmitter context
+    const SubmitWrapper = ({
+      children,
+      ...props
+    }: React.ComponentProps<typeof FormProvider>) => (
+      <EventEmitter>
+        <FormProvider {...props}>{children}</FormProvider>
+      </EventEmitter>
+    );
+
+    it("should submit form with state initialized in provider", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <SubmitWrapper state={{ name: "John", age: 30 }}>
+          <Input.Text path="name" data-testid="name" />
+          <Input.Int path="age" data-testid="age" />
+          <Submit onSubmit={onSubmit} data-testid="submit">
+            Submit
+          </Submit>
+        </SubmitWrapper>
+      );
+
+      const submitButton = screen.getByTestId("submit");
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({ name: "John", age: 30 });
+      });
+    });
+
+    it("should submit form with state initialized by inputs", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <SubmitWrapper state={{ name: "Jane", age: 0, active: true }}>
+          <Input.Text path="name" data-testid="name" />
+          <Input.Int path="age" data-testid="age" />
+          <Checkbox path="active" data-testid="active" />
+          <Submit onSubmit={onSubmit} data-testid="submit">
+            Submit
+          </Submit>
+        </SubmitWrapper>
+      );
+
+      const submitButton = screen.getByTestId("submit");
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          name: "Jane",
+          age: 0,
+          active: true,
+        });
+      });
+    });
+
+    it("should submit form after updating input values", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <SubmitWrapper state={{ name: "", count: 0 }}>
+          <Input.Text path="name" data-testid="name" />
+          <Input.Int path="count" data-testid="count" />
+          <Submit onSubmit={onSubmit} data-testid="submit">
+            Submit
+          </Submit>
+        </SubmitWrapper>
+      );
+
+      const nameInput = screen.getByTestId("name") as HTMLInputElement;
+      const countInput = screen.getByTestId("count") as HTMLInputElement;
+      const submitButton = screen.getByTestId("submit");
+
+      await user.type(nameInput, "Updated Name");
+      await user.clear(countInput);
+      await user.type(countInput, "42");
+
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          name: "Updated Name",
+          count: 42,
+        });
+      });
+    });
+
+    it("should submit form with boolean values", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <SubmitWrapper state={{ notifications: false, newsletter: true }}>
+          <Checkbox path="notifications" data-testid="notifications" />
+          <Checkbox path="newsletter" data-testid="newsletter" />
+          <Submit onSubmit={onSubmit} data-testid="submit">
+            Submit
+          </Submit>
+        </SubmitWrapper>
+      );
+
+      const notificationsCheckbox = screen.getByTestId("notifications");
+      const newsletterCheckbox = screen.getByTestId("newsletter");
+      const submitButton = screen.getByTestId("submit");
+
+      await user.click(notificationsCheckbox); // toggle to true
+      await user.click(newsletterCheckbox); // toggle to false
+
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          notifications: true,
+          newsletter: false,
+        });
+      });
+    });
+
+    it("should submit empty form", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <SubmitWrapper>
+          <Submit onSubmit={onSubmit} data-testid="submit">
+            Submit
+          </Submit>
+        </SubmitWrapper>
+      );
+
+      const submitButton = screen.getByTestId("submit");
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({});
+      });
     });
   });
 });

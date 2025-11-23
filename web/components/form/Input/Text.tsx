@@ -2,9 +2,9 @@ import { type JSX } from "react";
 import useInput from "./useInput";
 
 export default function InputText(props: Props) {
-  const { path, password, email, value = "", ...core } = props;
+  const { path, password, email, value = "", materialize, ...core } = props;
 
-  const [state, setState] = useInput(path, value);
+  const [state, setState] = useInput(path, value, { materialize });
 
   return (
     <input
@@ -21,6 +21,7 @@ interface Props extends Core {
   password?: boolean;
   email?: boolean;
   value?: string;
+  materialize?: boolean;
 }
 
 type Core = Omit<

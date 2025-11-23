@@ -2,10 +2,9 @@ import { type JSX } from "react";
 import useInput from "../Input/useInput";
 
 export default function Checkbox(props: Props) {
-  const { 
-    path, password, email, checked = false, ...core } = props;
+  const { path, checked = false, materialize, ...core } = props;
 
-  const [state, setState] = useInput(path, checked);
+  const [state, setState] = useInput(path, checked, { materialize });
 
   return (
     <input
@@ -19,8 +18,7 @@ export default function Checkbox(props: Props) {
 
 interface Props extends Core {
   path: string;
-  password?: boolean;
-  email?: boolean;
+  materialize?: boolean;
 }
 
 type Core = Omit<
