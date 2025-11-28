@@ -30,7 +30,7 @@ export default async function applySeeds(pg: Pool, dev: boolean, attempt = 0) {
   //   logger
   //     .scope("Database")
   //     .info(
-  //       "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
+  //       "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'."
   //     );
   //   return;
   // }

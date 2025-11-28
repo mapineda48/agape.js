@@ -4,6 +4,12 @@ import NoFoundPage from "./NotFound";
 import { isAuthenticated } from "@agape/access";
 import { RouterPathProvider } from "./router-context";
 
+import { encode, decode } from "../../lib/utils/msgpack";
+import {
+  applyHelpersToSerialized,
+  removeHelpersFromSerialized,
+} from "@/utils/structuredClone";
+
 export class Router {
   private history = createBrowserHistory();
 
@@ -60,11 +66,13 @@ export class Router {
 
         // Si existe una página registrada, construimos el árbol con layouts
         if (page?.Component) {
-          const props = (state as Record<string, unknown>) ?? {};
+          const props = removeHelpersFromSerialized(state);
+
           const element = this.wrapWithLayouts(
             pathname,
             createElement(page.Component, props)
           );
+
           cb(element);
           return;
         }
@@ -166,8 +174,9 @@ export class Router {
   }
 
   private updateHistory(pathname: string, { state, replace }: INavigateTo) {
-    if (replace) this.history.replace(pathname, state);
-    else this.history.push(pathname, state);
+    const serializedState = applyHelpersToSerialized(state);
+    if (replace) this.history.replace(pathname, serializedState);
+    else this.history.push(pathname, serializedState);
   }
 
   /** Crea un IPage lazy que guarda Component/onInit la primera vez */

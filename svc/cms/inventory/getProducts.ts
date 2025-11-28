@@ -2,6 +2,7 @@ import { db } from "#lib/db";
 import { product } from "#models/inventory/product";
 import { and, count, eq, gte, lte, sql } from "drizzle-orm";
 import { category } from "#models/inventory/category";
+import Decimal from "#utils/data/Decimal";
 
 export default async function getProducts(
   params: GetProductsParams
@@ -34,11 +35,11 @@ export default async function getProducts(
   }
 
   if (minPrice !== undefined) {
-    conditions.push(gte(product.price, minPrice.toString()));
+    conditions.push(gte(product.price, minPrice));
   }
 
   if (maxPrice !== undefined) {
-    conditions.push(lte(product.price, maxPrice.toString()));
+    conditions.push(lte(product.price, maxPrice));
   }
 
   if (rating !== undefined) {
@@ -102,8 +103,8 @@ export interface GetProductsParams {
   fullName?: string;
   isActive?: boolean;
   categoryId?: number;
-  minPrice?: number;
-  maxPrice?: number;
+  minPrice?: Decimal;
+  maxPrice?: Decimal;
   rating?: number;
   includeTotalCount?: boolean; // más claro que "count"
   pageIndex?: number;
@@ -114,7 +115,7 @@ export interface GetProduct {
   id: number;
   fullName: string;
   isActive: boolean;
-  price: string; // o number, según tu modelo
+  price: Decimal; // o number, según tu modelo
   category: string; // o el tipo adecuado según tu modelo
   inventory: number;
   images: unknown;

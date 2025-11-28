@@ -11,6 +11,7 @@ import useProductModal from "./product";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "lodash";
 import { Pagination } from "./Pagination";
+import Decimal from "@utils/data/Decimal";
 
 const PAGE_SIZE = 12; // Increased page size for grid view
 
@@ -80,8 +81,8 @@ export default function Inventory(props: Props) {
 
   const debouncedPriceSearch = debounce((min: string, max: string) => {
     updateFilter({
-      minPrice: min ? parseFloat(min) : undefined,
-      maxPrice: max ? parseFloat(max) : undefined,
+      minPrice: min ? new Decimal(min) : undefined,
+      maxPrice: max ? new Decimal(max) : undefined,
     });
   }, 500);
 
@@ -473,7 +474,7 @@ function ProductCard({
         </h3>
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
           <span className="text-xl font-bold text-gray-900">
-            ${product.price}
+            ${product.price.toFixed(2)}
           </span>
           <button
             className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"

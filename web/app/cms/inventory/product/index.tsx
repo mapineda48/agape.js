@@ -84,7 +84,7 @@ export function Inventory(props: { product?: Product }) {
           <label className="block text-sm font-medium text-gray-700">
             Precio
           </label>
-          <Input.Float
+          <Input.Decimal
             path="price"
             required
             className="mt-1 block w-full border-gray-300 rounded p-2"

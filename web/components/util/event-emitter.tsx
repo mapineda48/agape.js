@@ -1,3 +1,4 @@
+import { cloneWithHelpers } from "@/utils/structuredClone";
 import mitt from "mitt";
 import {
   createContext,
@@ -157,7 +158,7 @@ export function useSharedState<T = unknown>(
     const setValue = (value: T | ((prev: T) => T)) => {
       // Clone non-function values to prevent unintended mutations
       const payload =
-        typeof value === "function" ? value : structuredClone(value);
+        typeof value === "function" ? value : cloneWithHelpers(value);
 
       emitter.emit(event, payload);
     };
