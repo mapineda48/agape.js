@@ -1,5 +1,6 @@
 import { type JSX, createElement } from "react";
 import NoFoundPage from "../../app/NotFound";
+import type { RouteParams, MatchResult } from "./types";
 
 export type ModuleType = Record<string, () => Promise<unknown>>;
 
@@ -18,6 +19,45 @@ export interface ILayout {
 export type IRoute = Record<string, IPage>;
 export type ILayouts = Record<string, ILayout>;
 
+/**
+ * Matches a pathname against a route pattern and extracts parameters.
+ * Pattern uses :param syntax for dynamic segments.
+ *
+ * @example
+ * matchPath('/users/:id', '/users/123') // { id: '123' }
+ * matchPath('/posts/:postId/comments/:commentId', '/posts/42/comments/99')
+ * // { postId: '42', commentId: '99' }
+ * matchPath('/users/:id', '/posts/123') // null
+ */
+function matchPath(pattern: string, pathname: string): RouteParams | null {
+  const patternParts = pattern.split("/").filter(Boolean);
+  const pathnameParts = pathname.split("/").filter(Boolean);
+
+  // Must have same number of segments
+  if (patternParts.length !== pathnameParts.length) {
+    return null;
+  }
+
+  const params: RouteParams = {};
+
+  for (let i = 0; i < patternParts.length; i++) {
+    const patternPart = patternParts[i];
+    const pathnamePart = pathnameParts[i];
+
+    // Dynamic segment - extract param
+    if (patternPart.startsWith(":")) {
+      const paramName = patternPart.slice(1);
+      params[paramName] = decodeURIComponent(pathnamePart);
+    }
+    // Static segment - must match exactly
+    else if (patternPart !== pathnamePart) {
+      return null;
+    }
+  }
+
+  return params;
+}
+
 export class RouteRegistry {
   private routes: IRoute = {};
   private layouts: ILayouts = {};
@@ -28,6 +68,46 @@ export class RouteRegistry {
 
   public getPage(pathname: string): IPage | undefined {
     return this.routes[pathname];
+  }
+
+  /**
+   * Gets a page and extracts route parameters if the route is parameterized.
+   * First tries exact match, then searches for parameterized routes.
+   *
+   * @param pathname - The pathname to match
+   * @returns Object with page and params, or null if no match
+   */
+  public getPageWithParams(
+    pathname: string
+  ): (MatchResult & { page: IPage }) | null {
+    // Try exact match first (for non-parameterized routes)
+    const exactPage = this.routes[pathname];
+    if (exactPage) {
+      return {
+        page: exactPage,
+        params: {},
+        pattern: pathname,
+      };
+    }
+
+    // Search for parameterized route that matches
+    for (const [pattern, page] of Object.entries(this.routes)) {
+      // Skip patterns without params
+      if (!pattern.includes(":")) {
+        continue;
+      }
+
+      const params = matchPath(pattern, pathname);
+      if (params !== null) {
+        return {
+          page,
+          params,
+          pattern,
+        };
+      }
+    }
+
+    return null;
   }
 
   public getLayout(pathname: string): ILayout | undefined {
@@ -93,11 +173,16 @@ export class RouteRegistry {
     return wrapper as ILayout;
   }
 
-  /** Convierte './foo/bar/page.tsx' -> '/foo/bar' (ruta de la página) */
+  /**
+   * Convierte './foo/bar/page.tsx' -> '/foo/bar' (ruta de la página)
+   * Convierte './users/[id]/page.tsx' -> '/users/:id' (ruta con parámetros)
+   */
   private toPathnameFromPage(filename: string): string {
     const path = filename
       .replace(/^\.\//, "/")
       .replace(/\/page\.tsx?$/, "")
+      // Convert [param] to :param
+      .replace(/\[([^\]]+)\]/g, ":$1")
       .toLowerCase();
     return path === "" ? "/" : path;
   }

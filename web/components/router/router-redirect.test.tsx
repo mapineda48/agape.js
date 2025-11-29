@@ -35,6 +35,12 @@ describe("useRouter - auto-redirect on root path", () => {
       return () => {};
     });
 
+    // Mock listenParams (required by useRouter hook)
+    vi.spyOn(router, "listenParams").mockReturnValue(() => {});
+
+    // Mock params getter
+    vi.spyOn(router, "params", "get").mockReturnValue({});
+
     // Component that mimics the ConfigurationLayout behavior with setTimeout
     const TestLayout = () => {
       const { pathname, navigate } = useRouter();
@@ -88,6 +94,12 @@ describe("useRouter - auto-redirect on root path", () => {
     vi.spyOn(router, "listenPath").mockImplementation(() => {
       return () => {};
     });
+
+    // Mock listenParams (required by useRouter hook)
+    vi.spyOn(router, "listenParams").mockReturnValue(() => {});
+
+    // Mock params getter
+    vi.spyOn(router, "params", "get").mockReturnValue({});
 
     const TestLayout = () => {
       const { pathname, navigate } = useRouter();
@@ -143,6 +155,12 @@ describe("useRouter - auto-redirect on root path", () => {
         pathListener = null;
       };
     });
+
+    // Mock listenParams (required by useRouter hook)
+    vi.spyOn(router, "listenParams").mockReturnValue(() => {});
+
+    // Mock params getter
+    vi.spyOn(router, "params", "get").mockReturnValue({});
 
     const TestLayout = () => {
       const { pathname, navigate } = useRouter();

@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { RouterPathContext } from "./path-context";
 import { useHistory } from "./router";
+import type { RouteParams } from "./types";
 
 /**
  * Helper function to convert an absolute path to relative based on a base path
@@ -28,6 +29,8 @@ interface INavigateTo {
 interface RouterHookAPI {
   /** Current pathname */
   pathname: string;
+  /** Route parameters extracted from URL */
+  params: RouteParams;
   /** Navigate to a path (absolute or relative) */
   navigate(to: string, opt?: INavigateTo): void;
   /** Listen to pathname changes */
@@ -61,15 +64,30 @@ export function useRouter(): RouterHookAPI {
     return toRelativePathHelper(router.pathname, basePath);
   });
 
+  const [params, setParams] = useState<RouteParams>(() => router.params);
+
   useEffect(() => {
     // Update pathname immediately if router.pathname changed
     setPathname(toRelativePathHelper(router.pathname, basePath));
 
-    // Listen for future changes
-    return router.listenPath((path) => {
+    // Update params immediately
+    setParams(router.params);
+
+    // Listen for future pathname changes
+    const unlistenPath = router.listenPath((path) => {
       // Update with relative path
       setPathname(toRelativePathHelper(path, basePath));
     });
+
+    // Listen for future param changes
+    const unlistenParams = router.listenParams((newParams) => {
+      setParams(newParams);
+    });
+
+    return () => {
+      unlistenPath();
+      unlistenParams();
+    };
   }, [basePath]);
 
   /**
@@ -107,6 +125,7 @@ export function useRouter(): RouterHookAPI {
 
   return {
     pathname,
+    params,
     navigate,
     listen,
   };

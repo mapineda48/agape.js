@@ -5,6 +5,7 @@ import { RouterPathProvider } from "./path-context";
 import { RouteRegistry, type ModuleType } from "./route-registry";
 import { Navigator } from "./navigator";
 import { AuthGuard, type INavigateTo } from "./auth-guard";
+import type { RouteParams } from "./types";
 
 /**
  * Context that holds the parent path for nested layouts.
@@ -28,6 +29,7 @@ export class HistoryManager {
   public authGuard: AuthGuard;
 
   private loading = false;
+  private currentParams: RouteParams = {};
 
   constructor(pageModules: ModuleType = {}, layoutModules: ModuleType = {}) {
     this.navigator = new Navigator();
@@ -39,6 +41,10 @@ export class HistoryManager {
     return this.navigator.pathname;
   }
 
+  get params(): RouteParams {
+    return { ...this.currentParams };
+  }
+
   public listenPath(cb: (pathname: string) => void) {
     const unlisten = this.navigator.listen((pathname) => {
       cb(pathname);
@@ -46,17 +52,30 @@ export class HistoryManager {
     return unlisten;
   }
 
+  public listenParams(cb: (params: RouteParams) => void) {
+    const unlisten = this.navigator.listen(() => {
+      cb(this.params);
+    });
+    return unlisten;
+  }
+
   public listenPage(cb: (page: JSX.Element) => void) {
     const unlisten = this.navigator.listen((pathname, action, state) => {
-      const page = this.registry.getPage(pathname);
+      const result = this.registry.getPageWithParams(pathname);
 
       // Si existe una página registrada, construimos el árbol con layouts
-      if (page?.Component) {
-        const props = this.navigator.getCleanState(state);
+      if (result?.page.Component) {
+        // Update current params
+        this.currentParams = result.params;
+
+        const props = {
+          ...this.navigator.getCleanState(state),
+          params: result.params,
+        };
 
         const element = this.wrapWithLayouts(
           pathname,
-          createElement(page.Component, props)
+          createElement(result.page.Component, props)
         );
 
         cb(element);
@@ -70,6 +89,7 @@ export class HistoryManager {
       }
 
       // NotFound (sin layouts para evitar confusiones)
+      this.currentParams = {};
       cb(createElement(NoFoundPage));
     });
 
@@ -89,13 +109,16 @@ export class HistoryManager {
       // 1) Auth gates
       pathname = await this.authGuard.check(pathname, ctx);
 
-      const page = this.registry.getPage(pathname);
+      const result = this.registry.getPageWithParams(pathname);
 
-      // 2) Not found: sólo cambia history
-      if (!page) {
+      // 2) Not found: sólo cambia history y limpia params
+      if (!result) {
+        this.currentParams = {};
         this.navigator.updateHistory(pathname, ctx);
         return;
       }
+
+      const { page, params } = result;
 
       // 3) Lazy-load de la página
       if (!page.Component) {
@@ -127,7 +150,10 @@ export class HistoryManager {
         }
       }
 
-      // 6) Empuja/reemplaza history (el listener renderiza sincrónicamente)
+      // 6) Update current params before history update
+      this.currentParams = params;
+
+      // 7) Empuja/reemplaza history (el listener renderiza sincrónicamente)
       this.navigator.updateHistory(pathname, ctx);
     })()
       .catch((error) => {

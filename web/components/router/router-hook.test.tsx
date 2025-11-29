@@ -579,3 +579,138 @@ describe("useRouter - integration", () => {
     expect(navigateSpy).toHaveBeenCalledWith("/login", undefined);
   });
 });
+
+describe("useRouter - params", () => {
+  let router: HistoryManager;
+
+  beforeEach(() => {
+    router = new HistoryManager();
+  });
+
+  it("should return empty params by default", () => {
+    vi.spyOn(router, "params", "get").mockReturnValue({});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+    vi.spyOn(router, "listenParams").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
+
+    expect(result.current.params).toEqual({});
+  });
+
+  it("should expose route params from router", () => {
+    vi.spyOn(router, "params", "get").mockReturnValue({ id: "123" });
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+    vi.spyOn(router, "listenParams").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
+
+    expect(result.current.params).toEqual({ id: "123" });
+  });
+
+  it("should update params when router params change", async () => {
+    // Don't use fake timers for this test as waitFor needs real timers
+    let listener: ((params: Record<string, string>) => void) | null = null;
+
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+    vi.spyOn(router, "listenParams").mockImplementation((cb: any) => {
+      listener = cb;
+      return () => {
+        listener = null;
+      };
+    });
+
+    vi.spyOn(router, "params", "get").mockReturnValue({});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
+
+    expect(result.current.params).toEqual({});
+
+    // Simulate params change
+    act(() => {
+      if (listener) {
+        (listener as any)({ id: "456", type: "user" });
+      }
+    });
+
+    await waitFor(() => {
+      expect(result.current.params).toEqual({ id: "456", type: "user" });
+    });
+  });
+
+  it("should handle multiple params", () => {
+    vi.spyOn(router, "params", "get").mockReturnValue({
+      postId: "42",
+      commentId: "99",
+    });
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+    vi.spyOn(router, "listenParams").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
+
+    expect(result.current.params).toEqual({
+      postId: "42",
+      commentId: "99",
+    });
+  });
+
+  it("should clear params when navigating to non-param route", async () => {
+    let listener: ((params: Record<string, string>) => void) | null = null;
+
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+    vi.spyOn(router, "listenParams").mockImplementation((cb: any) => {
+      listener = cb;
+      return () => {
+        listener = null;
+      };
+    });
+
+    vi.spyOn(router, "params", "get").mockReturnValue({ id: "123" });
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
+
+    expect(result.current.params).toEqual({ id: "123" });
+
+    // Simulate navigation to route without params
+    act(() => {
+      if (listener) {
+        (listener as any)({});
+      }
+    });
+
+    await waitFor(() => {
+      expect(result.current.params).toEqual({});
+    });
+  });
+
+  it("should work with nested providers and params", () => {
+    vi.spyOn(router, "params", "get").mockReturnValue({ id: "789" });
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+    vi.spyOn(router, "listenParams").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(RouterPathProvider, { path: "/users/:id" }, children)
+      );
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
+
+    expect(result.current.params).toEqual({ id: "789" });
+  });
+});
