@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import applyMigrations from "./migrations";
+import applyMigrations from "./migrations/applyMigrations";
 import { verifyRootUser } from "./root";
 
 export let db: Database = null as any;
