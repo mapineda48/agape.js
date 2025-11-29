@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import { createElement } from "react";
 import { act } from "react";
@@ -8,11 +8,22 @@ vi.mock("@agape/access", () => ({
   isAuthenticated: vi.fn().mockResolvedValue({ id: "test-user" }),
 }));
 
-import router from "./router";
+import { HistoryManager, HistoryContext } from "./router";
 import { useRouter } from "./router-hook";
 import { RouterPathProvider } from "./path-context";
 
 describe("RouterPathProvider", () => {
+  let router: HistoryManager;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    router = new HistoryManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("should provide root path '/' by default", () => {
     const TestComponent = () => {
       const { pathname } = useRouter();
@@ -21,8 +32,17 @@ describe("RouterPathProvider", () => {
 
     // Mock router pathname
     vi.spyOn(router, "pathname", "get").mockReturnValue("/");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    render(createElement(TestComponent));
+    act(() => {
+      render(
+        createElement(
+          HistoryContext.Provider,
+          { value: router },
+          createElement(TestComponent)
+        )
+      );
+    });
 
     expect(screen.getByTestId("pathname")).toHaveTextContent("/");
   });
@@ -38,17 +58,30 @@ describe("RouterPathProvider", () => {
     };
 
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    render(
-      createElement(
-        RouterPathProvider,
-        { path: "/cms/configuration" },
-        createElement(TestComponent)
-      )
-    );
+    act(() => {
+      render(
+        createElement(
+          HistoryContext.Provider,
+          { value: router },
+          createElement(
+            RouterPathProvider,
+            { path: "/cms/configuration" },
+            createElement(TestComponent)
+          )
+        )
+      );
+    });
 
     const button = screen.getByText("Navigate to inventory");
-    button.click();
+    act(() => {
+      button.click();
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
 
     expect(navigateSpy).toHaveBeenCalledWith(
       "/cms/configuration/inventory",
@@ -63,21 +96,34 @@ describe("RouterPathProvider", () => {
     };
 
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    render(
-      createElement(
-        RouterPathProvider,
-        { path: "/cms" },
+    act(() => {
+      render(
         createElement(
-          RouterPathProvider,
-          { path: "/cms/configuration" },
-          createElement(TestComponent)
+          HistoryContext.Provider,
+          { value: router },
+          createElement(
+            RouterPathProvider,
+            { path: "/cms" },
+            createElement(
+              RouterPathProvider,
+              { path: "/cms/configuration" },
+              createElement(TestComponent)
+            )
+          )
         )
-      )
-    );
+      );
+    });
 
     const button = screen.getByText("Navigate to page");
-    button.click();
+    act(() => {
+      button.click();
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
 
     // The inner provider overrides, so it should use /cms/configuration
     expect(navigateSpy).toHaveBeenCalledWith(
@@ -88,19 +134,40 @@ describe("RouterPathProvider", () => {
 });
 
 describe("useRouter - pathname", () => {
+  let router: HistoryManager;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    router = new HistoryManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("should return current pathname relative to context", () => {
     vi.spyOn(router, "pathname", "get").mockReturnValue("/test/path");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    const { result } = renderHook(() => useRouter());
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     // In root context, pathname is still absolute but without leading slash
     expect(result.current.pathname).toBe("test/path");
   });
 
   it("should update pathname when router location changes", async () => {
+    // Don't use fake timers for this test as waitFor needs real timers
+    vi.useRealTimers();
+
     let listener: ((pathname: string) => void) | null = null;
 
-    vi.spyOn(router, "listenPath").mockImplementation((cb) => {
+    vi.spyOn(router, "listenPath").mockImplementation((cb: any) => {
       listener = cb;
       return () => {
         listener = null;
@@ -109,33 +176,58 @@ describe("useRouter - pathname", () => {
 
     vi.spyOn(router, "pathname", "get").mockReturnValue("/initial");
 
-    const { result } = renderHook(() => useRouter());
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
 
     expect(result.current.pathname).toBe("initial");
 
     // Simulate pathname change
     act(() => {
-      if (listener) listener("/new/path");
+      if (listener) (listener as any)("/new/path");
     });
 
     await waitFor(() => {
       expect(result.current.pathname).toBe("new/path");
     });
+
+    // Restore fake timers for subsequent tests
+    vi.useFakeTimers();
   });
 });
 
 describe("useRouter - navigate with absolute paths", () => {
+  let router: HistoryManager;
+
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
+    router = new HistoryManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("should navigate to absolute path without modification", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    const { result } = renderHook(() => useRouter());
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("/about");
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith("/about", undefined);
@@ -143,18 +235,30 @@ describe("useRouter - navigate with absolute paths", () => {
 
   it("should navigate to absolute path regardless of context", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
       createElement(
-        RouterPathProvider,
-        { path: "/cms/configuration" },
-        children
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/configuration" },
+          children
+        )
       );
 
-    const { result } = renderHook(() => useRouter(), { wrapper });
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("/login");
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith("/login", undefined);
@@ -162,14 +266,25 @@ describe("useRouter - navigate with absolute paths", () => {
 
   it("should pass navigate options correctly", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    const { result } = renderHook(() => useRouter());
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("/home", {
         replace: true,
         state: { foo: "bar" },
       });
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith("/home", {
@@ -180,17 +295,36 @@ describe("useRouter - navigate with absolute paths", () => {
 });
 
 describe("useRouter - navigate with relative paths", () => {
+  let router: HistoryManager;
+
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
+    router = new HistoryManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("should resolve relative path against root context", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    const { result } = renderHook(() => useRouter());
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("about");
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith("/about", undefined);
@@ -198,14 +332,26 @@ describe("useRouter - navigate with relative paths", () => {
 
   it("should resolve relative path against custom context", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
-      createElement(RouterPathProvider, { path: "/cms" }, children);
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(RouterPathProvider, { path: "/cms" }, children)
+      );
 
-    const { result } = renderHook(() => useRouter(), { wrapper });
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("configuration");
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith("/cms/configuration", undefined);
@@ -213,22 +359,34 @@ describe("useRouter - navigate with relative paths", () => {
 
   it("should resolve relative path with nested contexts", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
       createElement(
-        RouterPathProvider,
-        { path: "/cms" },
+        HistoryContext.Provider,
+        { value: router },
         createElement(
           RouterPathProvider,
-          { path: "/cms/configuration" },
-          children
+          { path: "/cms" },
+          createElement(
+            RouterPathProvider,
+            { path: "/cms/configuration" },
+            children
+          )
         )
       );
 
-    const { result } = renderHook(() => useRouter(), { wrapper });
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("inventory");
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith(
@@ -239,14 +397,26 @@ describe("useRouter - navigate with relative paths", () => {
 
   it("should handle trailing slashes in context path", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
-      createElement(RouterPathProvider, { path: "/cms/" }, children);
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(RouterPathProvider, { path: "/cms/" }, children)
+      );
 
-    const { result } = renderHook(() => useRouter(), { wrapper });
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("settings");
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith("/cms/settings", undefined);
@@ -254,18 +424,30 @@ describe("useRouter - navigate with relative paths", () => {
 
   it("should handle multi-segment relative paths", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
       createElement(
-        RouterPathProvider,
-        { path: "/cms/configuration" },
-        children
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/configuration" },
+          children
+        )
       );
 
-    const { result } = renderHook(() => useRouter(), { wrapper });
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
 
     act(() => {
       result.current.navigate("users/new");
+    });
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(navigateSpy).toHaveBeenCalledWith(
@@ -276,10 +458,19 @@ describe("useRouter - navigate with relative paths", () => {
 });
 
 describe("useRouter - listen", () => {
+  let router: HistoryManager;
+
+  beforeEach(() => {
+    router = new HistoryManager();
+  });
+
   it("should call router.listenPath", () => {
     const listenSpy = vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
-    const { result } = renderHook(() => useRouter());
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
 
     const callback = vi.fn();
     result.current.listen(callback);
@@ -291,7 +482,10 @@ describe("useRouter - listen", () => {
     const unlistenMock = vi.fn();
     vi.spyOn(router, "listenPath").mockReturnValue(unlistenMock);
 
-    const { result } = renderHook(() => useRouter());
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    const { result } = renderHook(() => useRouter(), { wrapper });
 
     const callback = vi.fn();
     const unlisten = result.current.listen(callback);
@@ -303,8 +497,20 @@ describe("useRouter - listen", () => {
 });
 
 describe("useRouter - integration", () => {
+  let router: HistoryManager;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    router = new HistoryManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("should handle complex nested navigation scenario", () => {
     const navigateSpy = vi.spyOn(router, "navigateTo");
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const NestedComponent = () => {
       const { navigate } = useRouter();
@@ -316,28 +522,44 @@ describe("useRouter - integration", () => {
       );
     };
 
-    render(
-      createElement(
-        RouterPathProvider,
-        { path: "/cms" },
+    act(() => {
+      render(
         createElement(
-          RouterPathProvider,
-          { path: "/cms/configuration" },
-          createElement(NestedComponent)
+          HistoryContext.Provider,
+          { value: router },
+          createElement(
+            RouterPathProvider,
+            { path: "/cms" },
+            createElement(
+              RouterPathProvider,
+              { path: "/cms/configuration" },
+              createElement(NestedComponent)
+            )
+          )
         )
-      )
-    );
+      );
+    });
 
     const inventoryButton = screen.getByText("Inventory");
     const loginButton = screen.getByText("Login");
 
-    inventoryButton.click();
+    act(() => {
+      inventoryButton.click();
+    });
+    act(() => {
+      vi.runAllTimers();
+    });
     expect(navigateSpy).toHaveBeenCalledWith(
       "/cms/configuration/inventory",
       undefined
     );
 
-    loginButton.click();
+    act(() => {
+      loginButton.click();
+    });
+    act(() => {
+      vi.runAllTimers();
+    });
     expect(navigateSpy).toHaveBeenCalledWith("/login", undefined);
   });
 });

@@ -49,9 +49,6 @@ export class HistoryManager {
   public listenPage(cb: (page: JSX.Element) => void) {
     const unlisten = this.navigator.listen((pathname, action, state) => {
       const page = this.registry.getPage(pathname);
-      console.error(
-        `DEBUG: listenPage callback for ${pathname}. page found: ${!!page}, Component: ${!!page?.Component}`
-      );
 
       // Si existe una página registrada, construimos el árbol con layouts
       if (page?.Component) {

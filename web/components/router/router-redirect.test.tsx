@@ -7,14 +7,17 @@ vi.mock("@agape/access", () => ({
   isAuthenticated: vi.fn().mockResolvedValue({ id: "test-user" }),
 }));
 
-import router from "./router";
+import { HistoryManager, HistoryContext } from "./router";
 import { useRouter } from "./router-hook";
 import { RouterPathProvider } from "./path-context";
 
 describe("useRouter - auto-redirect on root path", () => {
+  let router: HistoryManager;
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    router = new HistoryManager();
   });
 
   afterEach(() => {
@@ -51,9 +54,13 @@ describe("useRouter - auto-redirect on root path", () => {
 
     render(
       createElement(
-        RouterPathProvider,
-        { path: "/cms/configuration" },
-        createElement(TestLayout)
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/configuration" },
+          createElement(TestLayout)
+        )
       )
     );
 
@@ -98,9 +105,13 @@ describe("useRouter - auto-redirect on root path", () => {
 
     render(
       createElement(
-        RouterPathProvider,
-        { path: "/cms/configuration" },
-        createElement(TestLayout)
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/configuration" },
+          createElement(TestLayout)
+        )
       )
     );
 
@@ -126,7 +137,7 @@ describe("useRouter - auto-redirect on root path", () => {
       .mockReturnValue("/cms/configuration");
 
     // Mock listenPath to capture the listener
-    vi.spyOn(router, "listenPath").mockImplementation((cb) => {
+    vi.spyOn(router, "listenPath").mockImplementation((cb: any) => {
       pathListener = cb;
       return () => {
         pathListener = null;
@@ -149,9 +160,13 @@ describe("useRouter - auto-redirect on root path", () => {
 
     const { rerender } = render(
       createElement(
-        RouterPathProvider,
-        { path: "/cms/configuration" },
-        createElement(TestLayout)
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/configuration" },
+          createElement(TestLayout)
+        )
       )
     );
 
@@ -162,15 +177,19 @@ describe("useRouter - auto-redirect on root path", () => {
     // Simulate navigating back to root (like clicking Configuration again)
     mockPathname.mockReturnValue("/cms/configuration");
     if (pathListener) {
-      pathListener("/cms/configuration");
+      (pathListener as any)("/cms/configuration");
     }
 
     // Force re-render
     rerender(
       createElement(
-        RouterPathProvider,
-        { path: "/cms/configuration" },
-        createElement(TestLayout)
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/configuration" },
+          createElement(TestLayout)
+        )
       )
     );
 

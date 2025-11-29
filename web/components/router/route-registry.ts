@@ -55,7 +55,6 @@ export class RouteRegistry {
     // Páginas
     Object.entries(pageModules).forEach(([filename, loader]) => {
       const pathname = this.toPathnameFromPage(filename);
-      console.error(`DEBUG: Registering page: ${filename} -> ${pathname}`);
       this.routes[pathname] = this.toPage(loader);
     });
 
@@ -75,7 +74,6 @@ export class RouteRegistry {
   private toPage(loader: () => Promise<unknown>): IPage {
     const wrapper: any = async () => {
       const module: any = await loader();
-      console.error(`DEBUG: typeof module.default:`, typeof module.default);
       wrapper.Component = module.default ?? NoFoundPage;
       wrapper.onInit = module.onInit;
     };
