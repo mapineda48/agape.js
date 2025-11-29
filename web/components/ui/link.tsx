@@ -1,14 +1,15 @@
 import { type HTMLAttributes } from "react";
-import router from "@/components/router/router";
+import { useRouter } from "../router/router-hook";
 
 export default function Link({ to, ...core }: Props) {
+  const router = useRouter();
   return (
     <a
       href={to}
       {...core}
       onClick={(e) => {
         e.preventDefault();
-        router.navigateTo(to);
+        router.navigate(to);
       }}
     />
   );
