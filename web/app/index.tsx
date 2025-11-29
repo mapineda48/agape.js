@@ -1,5 +1,6 @@
 import { type JSX, useEffect, useMemo, useState } from "react";
-import { HistoryManager } from "../components/router/router";
+import { HistoryManager, HistoryContext } from "../components/router/router";
+import ErrorBoundary from "../components/util/error-boundary";
 
 /**
  * Routes component for React apps. Subscribes to router events
@@ -19,5 +20,9 @@ export default function Routes() {
   useEffect(() => router.listenPage(setState), []);
 
   // Render the current page, or null until first route executes
-  return state;
+  return (
+    <HistoryContext.Provider value={router}>
+      <ErrorBoundary>{state}</ErrorBoundary>
+    </HistoryContext.Provider>
+  );
 }

@@ -154,6 +154,6 @@ export class HistoryManager {
         );
       }
     }
-    return createElement(HistoryContext.Provider, { value: this }, wrapped);
+    return wrapped;
   }
 }
