@@ -8,36 +8,39 @@ const namespace = "@agape";
 const virtualModule: { [endpoint: string]: string } = {};
 
 for await (const src of svc) {
-    const filename = path.join(cwd, src);
+  const filename = path.join(cwd, src);
 
-    const module = await import(pathToFileURL(filename).href);
+  const module = await import(pathToFileURL(filename).href);
 
-    const moduleUrl = toPublicUrl(src);
+  const moduleUrl = toPublicUrl(src);
 
-    const resolvedId = "\0" + path.posix.join(namespace, moduleUrl);
+  const resolvedId = "\0" + path.posix.join(namespace, moduleUrl);
 
-    const js = ['import makeRcp from "@/app/rpc";'];
+  const js = ['import makeRcp from "@/utils/rpc";'];
 
-    for (const [exportName, fn] of Object.entries(module)) {
-        if (typeof fn !== "function") {
-            continue
-        };
-
-        if (exportName === "default") {
-            const endpoint = path.posix.join("/", moduleUrl);
-
-            js.push(`export default makeRcp("${endpoint}");`);
-            continue;
-        }
-
-        const endpoint = path.posix.join("/", moduleUrl, exportName);
-
-        js.push(`export const ${exportName} = makeRcp("${endpoint}");`);
+  for (const [exportName, fn] of Object.entries(module)) {
+    if (typeof fn !== "function") {
+      continue;
     }
 
-    virtualModule[resolvedId] = js.join("\n");
+    if (exportName === "default") {
+      const endpoint = path.posix.join("/", moduleUrl);
+
+      js.push(`export default makeRcp("${endpoint}");`);
+      continue;
+    }
+
+    const endpoint = path.posix.join("/", moduleUrl, exportName);
+
+    js.push(`export const ${exportName} = makeRcp("${endpoint}");`);
+  }
+
+  virtualModule[resolvedId] = js.join("\n");
 }
 
-virtualModule["\0" + "@agape/access"] = fs.readFileSync("lib/access/browser.js", "utf8");
+virtualModule["\0" + "@agape/access"] = fs.readFileSync(
+  "lib/access/browser.js",
+  "utf8"
+);
 
 console.log(JSON.stringify(virtualModule));
