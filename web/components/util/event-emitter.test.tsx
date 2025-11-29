@@ -20,7 +20,7 @@ describe("EventEmitter Component", () => {
     expect(screen.getByText("Context Available")).toBeInTheDocument();
   });
 
-  it("should cleanup all listeners on unmount", () => {
+  it("should cleanup all listeners on unmount", async () => {
     const { result: emitterResult } = renderHook(() => useEventEmitter(), {
       wrapper: EventEmitter,
     });
@@ -36,13 +36,15 @@ describe("EventEmitter Component", () => {
       emitterResult.current.emit("test-event", { data: "test" });
     });
 
-    expect(handler).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
   });
 });
 
 describe("useEventEmitter Hook", () => {
   describe("on method", () => {
-    it("should register event handler and receive payload", () => {
+    it("should register event handler and receive payload", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -57,11 +59,13 @@ describe("useEventEmitter Hook", () => {
         result.current.emit("test-event", { data: "hello" });
       });
 
-      expect(handler).toHaveBeenCalledTimes(1);
-      expect(handler).toHaveBeenCalledWith({ data: "hello" });
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(handler).toHaveBeenCalledWith({ data: "hello" });
+      });
     });
 
-    it("should return cleanup function that removes listener", () => {
+    it("should return cleanup function that removes listener", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -77,7 +81,9 @@ describe("useEventEmitter Hook", () => {
         result.current.emit("test-event", "first");
       });
 
-      expect(handler).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
 
       act(() => {
         cleanup();
@@ -88,10 +94,12 @@ describe("useEventEmitter Hook", () => {
       });
 
       // Should still be 1 because listener was removed
-      expect(handler).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it("should support Symbol as event identifier", () => {
+    it("should support Symbol as event identifier", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -107,10 +115,12 @@ describe("useEventEmitter Hook", () => {
         result.current.emit(eventSymbol, "test-data");
       });
 
-      expect(handler).toHaveBeenCalledWith("test-data");
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledWith("test-data");
+      });
     });
 
-    it("should handle multiple listeners for same event", () => {
+    it("should handle multiple listeners for same event", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -127,13 +137,15 @@ describe("useEventEmitter Hook", () => {
         result.current.emit("multi-event", "shared-data");
       });
 
-      expect(handler1).toHaveBeenCalledWith("shared-data");
-      expect(handler2).toHaveBeenCalledWith("shared-data");
+      await waitFor(() => {
+        expect(handler1).toHaveBeenCalledWith("shared-data");
+        expect(handler2).toHaveBeenCalledWith("shared-data");
+      });
     });
   });
 
   describe("emit method", () => {
-    it("should emit event without payload", () => {
+    it("should emit event without payload", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -148,10 +160,12 @@ describe("useEventEmitter Hook", () => {
         result.current.emit("no-payload");
       });
 
-      expect(handler).toHaveBeenCalledWith(undefined);
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledWith(undefined);
+      });
     });
 
-    it("should emit event with various payload types", () => {
+    it("should emit event with various payload types", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -166,32 +180,42 @@ describe("useEventEmitter Hook", () => {
       act(() => {
         result.current.emit("typed-event", "string payload");
       });
-      expect(handler).toHaveBeenCalledWith("string payload");
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledWith("string payload");
+      });
 
       // Number
       act(() => {
         result.current.emit("typed-event", 42);
       });
-      expect(handler).toHaveBeenCalledWith(42);
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledWith(42);
+      });
 
       // Object
       act(() => {
         result.current.emit("typed-event", { key: "value" });
       });
-      expect(handler).toHaveBeenCalledWith({ key: "value" });
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledWith({ key: "value" });
+      });
 
       // Array
       act(() => {
         result.current.emit("typed-event", [1, 2, 3]);
       });
-      expect(handler).toHaveBeenCalledWith([1, 2, 3]);
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledWith([1, 2, 3]);
+      });
 
       // Function
       const fnPayload = () => "test";
       act(() => {
         result.current.emit("typed-event", fnPayload);
       });
-      expect(handler).toHaveBeenCalledWith(fnPayload);
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledWith(fnPayload);
+      });
     });
 
     it("should not throw when emitting event with no listeners", () => {
@@ -208,7 +232,7 @@ describe("useEventEmitter Hook", () => {
   });
 
   describe("once method", () => {
-    it("should trigger handler only once", () => {
+    it("should trigger handler only once", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -223,15 +247,21 @@ describe("useEventEmitter Hook", () => {
         result.current.emit("once-event", "first");
       });
 
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(handler).toHaveBeenCalledWith("first");
+      });
+
       act(() => {
         result.current.emit("once-event", "second");
       });
 
+      // Wait a bit to ensure second emit doesn't trigger handler
+      await new Promise((resolve) => setTimeout(resolve, 10));
       expect(handler).toHaveBeenCalledTimes(1);
-      expect(handler).toHaveBeenCalledWith("first");
     });
 
-    it("should work with Symbol events", () => {
+    it("should work with Symbol events", async () => {
       const { result } = renderHook(() => useEventEmitter(), {
         wrapper: EventEmitter,
       });
@@ -248,7 +278,9 @@ describe("useEventEmitter Hook", () => {
         result.current.emit(eventSymbol, "data2");
       });
 
-      expect(handler).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
