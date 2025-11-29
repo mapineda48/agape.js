@@ -12,6 +12,22 @@ import { HistoryManager, HistoryContext } from "./router";
 import { useRouter } from "./router-hook";
 import { RouterPathProvider } from "./path-context";
 
+/**
+ * Testing Strategy: Spy-based Mocking
+ *
+ * These tests use Vitest spies on actual HistoryManager instances rather than
+ * mocking the entire 'history' module or creating full mock implementations.
+ * This approach:
+ *
+ * - Tests behavior closer to production (real router logic)
+ * - Reduces false positives from over-mocking
+ * - Makes tests more resilient to implementation changes
+ * - Follows Testing Library best practices
+ *
+ * For integration tests that need full control over history behavior,
+ * see router.test.tsx which uses the createMockHistory helper.
+ */
+
 describe("RouterPathProvider", () => {
   let router: HistoryManager;
 

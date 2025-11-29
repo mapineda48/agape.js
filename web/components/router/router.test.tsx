@@ -8,6 +8,7 @@ vi.mock("@agape/access", () => ({
 }));
 
 import { HistoryManager, HistoryContext } from "./router";
+import { createMockHistory } from "@/test/helpers/mock-history";
 
 // Mock components
 const RootLayout = ({ children }: { children?: any }) => (
@@ -53,35 +54,11 @@ describe("Router Layout Nesting", () => {
 
     const router = new HistoryManager(pageModules, layoutModules);
 
-    // Mock history to prevent real browser history changes
-    let historyListener: any = null;
-    const mockHistory = {
-      location: { pathname: "/parent/child", state: {} },
-      listen: vi.fn((cb: any) => {
-        historyListener = cb;
-        return () => {};
-      }),
-      push: vi.fn((path: string, state: any) => {
-        mockHistory.location = { pathname: path, state };
-        if (historyListener) {
-          historyListener({
-            location: { pathname: path, state },
-            action: "PUSH",
-          });
-        }
-      }),
-      replace: vi.fn((path: string, state: any) => {
-        mockHistory.location = { pathname: path, state };
-        if (historyListener) {
-          historyListener({
-            location: { pathname: path, state },
-            action: "REPLACE",
-          });
-        }
-      }),
-    } as any;
+    // Use mock history instead of real browser history to control navigation
+    // in tests and prevent side effects. See test/helpers/mock-history.ts for details.
+    const mockHistory = createMockHistory("/parent/child");
 
-    // @ts-ignore
+    // @ts-ignore - Injecting mock for testing purposes
     router.navigator.history = mockHistory;
 
     // Spy on console.error to suppress debug logs
@@ -90,14 +67,12 @@ describe("Router Layout Nesting", () => {
       .mockImplementation(() => {});
 
     // Component to hold and render the router's page
-    let renderedElement: JSX.Element | null = null;
     const { rerender } = render(
       createElement(HistoryContext.Provider, { value: router }, null)
     );
 
     // Set up page listener
     router.listenPage((element: JSX.Element) => {
-      renderedElement = element;
       rerender(
         createElement(HistoryContext.Provider, { value: router }, element)
       );
