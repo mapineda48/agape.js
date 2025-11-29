@@ -25,15 +25,6 @@ export default function FormProvider({ state = {}, ...core }: Props) {
     };
   }, []);
 
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      const unsubscribe = store.subscribe(() => {
-        console.log("Form State:", store.getState().form.data);
-      });
-      return unsubscribe;
-    }
-  }, [store]);
-
   return (
     <Context.Provider value={evt}>
       <form
