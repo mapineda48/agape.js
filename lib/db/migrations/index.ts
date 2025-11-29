@@ -13,14 +13,14 @@ export default async function applyMigrations(
   dev: boolean,
   attempt = 0
 ) {
-  // if (dev) {
-  //   logger
-  //     .scope("Database")
-  //     .info(
-  //       "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
-  //     );
-  //   return;
-  // }
+  if (dev) {
+    logger
+      .scope("Database")
+      .info(
+        "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
+      );
+    return;
+  }
 
   const { migrations, migrationSqlMap } = await loadMigrations();
 

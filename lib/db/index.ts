@@ -1,7 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import applyMigrations from "./migrations";
-import applySeeds from "./seeds";
 import { verifyRootUser } from "./root";
 
 export let db: Database = null as any;
@@ -38,9 +37,6 @@ export default async function initDatabase(
 
   // Apply database migrations to ensure schema is up-to-date.
   await applyMigrations(pool, config.dev || false);
-
-  // Apply data seeds (post-deploy scripts)
-  await applySeeds(pool, config.dev || false);
 
   // Initialize the Drizzle ORM instance
   db = drizzle(pool);
