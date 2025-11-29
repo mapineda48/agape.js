@@ -1,7 +1,9 @@
-import router from "@/app/router";
 import { motion } from "framer-motion";
+import { useRouter } from "./router/router-hook";
 
 export default function NotFound() {
+  const router = useRouter();
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4 overflow-hidden">
       <div className="text-center max-w-md mx-auto relative z-10">
@@ -98,7 +100,7 @@ export default function NotFound() {
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           transition={{ delay: 0.7, duration: 0.4 }}
-          onClick={() => router.navigateTo("/cms", { replace: true })}
+          onClick={() => router.navigate("/cms", { replace: true })}
           className="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg hover:shadow-xl"
         >
           <span className="mr-2">←</span> Regresar

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
-import router from "./router";
-import { RouterPathContext } from "./router-context";
+import { RouterPathContext } from "./path-context";
+import { useHistory } from "./router";
 
 /**
  * Helper function to convert an absolute path to relative based on a base path
@@ -53,6 +53,8 @@ interface RouterHookAPI {
  * ```
  */
 export function useRouter(): RouterHookAPI {
+  const router = useHistory();
+
   const basePath = useContext(RouterPathContext);
   const [pathname, setPathname] = useState(() => {
     // Initialize with relative path

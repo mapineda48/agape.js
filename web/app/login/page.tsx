@@ -4,7 +4,7 @@ import Input from "@/components/form/Input";
 import Submit from "@/components/ui/submit";
 import { motion } from "framer-motion";
 import { User, Lock, ArrowRight } from "lucide-react";
-import { useRouter } from "../router-hook";
+import { useRouter } from "../../components/router/router-hook";
 
 export default function LoginForm() {
   const router = useRouter();

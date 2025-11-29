@@ -7,7 +7,7 @@ vi.mock("@agape/access", () => ({
   isAuthenticated: vi.fn().mockResolvedValue({ id: "test-user" }),
 }));
 
-import { Router } from "./router";
+import { HistoryManager } from "./router";
 
 // Mock components
 const RootLayout = ({ children }: { children?: any }) => (
@@ -28,7 +28,7 @@ const ChildPage = () => <div data-testid="child-page">Child Page Content</div>;
 
 describe("Router Layout Nesting", () => {
   it("should nest layouts in correct order (Root > Parent > Page)", async () => {
-    const router = new Router();
+    const router = new HistoryManager();
 
     // Manually inject routes and layouts (bypassing private modifier for testing)
     // @ts-ignore

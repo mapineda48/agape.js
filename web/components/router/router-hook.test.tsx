@@ -10,7 +10,7 @@ vi.mock("@agape/access", () => ({
 
 import router from "./router";
 import { useRouter } from "./router-hook";
-import { RouterPathProvider } from "./router-context";
+import { RouterPathProvider } from "./path-context";
 
 describe("RouterPathProvider", () => {
   it("should provide root path '/' by default", () => {

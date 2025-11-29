@@ -15,8 +15,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useTheme } from "./ThemeProvider";
 import { logout, session } from "@agape/access";
-import router from "@/app/router";
 import clsx from "clsx";
+import { useHistory } from "./router/router";
 
 // Navigation Items
 const NAV_ITEMS = [
@@ -29,6 +29,8 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar() {
+  const router = useHistory();
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [currentPath, setCurrentPath] = useState(router.pathname);
   const { theme, setTheme } = useTheme();

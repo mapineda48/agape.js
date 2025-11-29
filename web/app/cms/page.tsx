@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import router from "@/app/router";
 import { findAll } from "@agape/cms/inventory/configuration/category";
 import PageLayout from "@/components/cms/PageLayout";
+import { useRouter } from "@/components/router/router-hook";
 
 // Animation variants
 const containerVariants = {
@@ -38,23 +38,27 @@ const QuickActionCard = ({
   icon: React.ReactNode;
   path: string;
   color: string;
-}) => (
-  <motion.div
-    variants={itemVariants}
-    whileHover={{ y: -5, scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    onClick={() => router.navigateTo(path)}
-    className={`bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-${color}-200 group`}
-  >
-    <div
-      className={`w-12 h-12 rounded-xl bg-${color}-50 flex items-center justify-center mb-4 group-hover:bg-${color}-100 transition-colors text-${color}-600`}
+}) => {
+  const router = useRouter();
+
+  return (
+    <motion.div
+      variants={itemVariants}
+      whileHover={{ y: -5, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => router.navigate(path)}
+      className={`bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-${color}-200 group`}
     >
-      {icon}
-    </div>
-    <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
-    <p className="text-sm text-gray-500">{description}</p>
-  </motion.div>
-);
+      <div
+        className={`w-12 h-12 rounded-xl bg-${color}-50 flex items-center justify-center mb-4 group-hover:bg-${color}-100 transition-colors text-${color}-600`}
+      >
+        {icon}
+      </div>
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+      <p className="text-sm text-gray-500">{description}</p>
+    </motion.div>
+  );
+};
 
 export default function CMSHome() {
   const hour = new Date().getHours();

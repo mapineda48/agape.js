@@ -1,16 +1,33 @@
 import { Action, createBrowserHistory } from "history";
-import { createElement, useEffect, useMemo, useState, type JSX } from "react";
-import NoFoundPage from "./NotFound";
+import { createContext, createElement, useContext, type JSX } from "react";
+import NoFoundPage from "../../app/NotFound";
 import { isAuthenticated } from "@agape/access";
-import { RouterPathProvider } from "./router-context";
+import { RouterPathProvider } from "./path-context";
 
-import { encode, decode } from "../../lib/utils/msgpack";
 import {
   applyHelpersToSerialized,
   removeHelpersFromSerialized,
 } from "@/utils/structuredClone";
 
-export class Router {
+type ModuleType = Record<string, () => Promise<unknown>>;
+
+/**
+ * Context that holds the parent path for nested layouts.
+ * This allows child components to use relative paths.
+ */
+export const HistoryContext = createContext<HistoryManager | null>(null);
+
+export function useHistory() {
+  const ctx = useContext(HistoryContext);
+
+  if (!ctx) {
+    throw new Error("useHistory must be used within a HistoryProvider");
+  }
+
+  return ctx;
+}
+
+export class HistoryManager {
   private history = createBrowserHistory();
 
   get pathname() {
@@ -22,15 +39,15 @@ export class Router {
 
   private loading = false;
 
-  constructor() {
-    this.initRoutesAndLayouts();
+  constructor(pageModules: ModuleType, layoutModules: ModuleType) {
+    this.initRoutesAndLayouts(pageModules, layoutModules);
   }
 
   /** Escanea páginas y layouts y los registra como loaders lazy */
-  private initRoutesAndLayouts() {
-    const pageModules = import.meta.glob<unknown>("./**/page.{ts,tsx}");
-    const layoutModules = import.meta.glob<unknown>("./**/_layout.{ts,tsx}");
-
+  private initRoutesAndLayouts(
+    pageModules: ModuleType,
+    layoutModules: ModuleType
+  ) {
     // Páginas
     Object.entries(pageModules).forEach(([filename, loader]) => {
       const pathname = this.toPathnameFromPage(filename);
@@ -79,7 +96,7 @@ export class Router {
 
         // Si fue un POP a una ruta aún no precargada, re-disparamos navegación
         if (action === Action.Pop) {
-          router.navigateTo(pathname);
+          this.navigateTo(pathname);
           return;
         }
 
@@ -249,13 +266,9 @@ export class Router {
         );
       }
     }
-    return wrapped;
+    return createElement(HistoryContext.Provider, { value: this }, wrapped);
   }
 }
-
-const router = new Router();
-
-export default router;
 
 /** Tipos */
 interface IPage {

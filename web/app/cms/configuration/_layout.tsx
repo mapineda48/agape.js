@@ -6,7 +6,7 @@ import {
   UsersIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import { useRouter } from "@/app/router-hook";
+import { useRouter } from "@/components/router/router-hook";
 
 interface ConfigurationLayoutProps {
   children: ReactNode;

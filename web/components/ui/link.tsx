@@ -1,5 +1,5 @@
 import { type HTMLAttributes } from "react";
-import router from "@/app/router";
+import router from "@/components/router/router";
 
 export default function Link({ to, ...core }: Props) {
   return (
