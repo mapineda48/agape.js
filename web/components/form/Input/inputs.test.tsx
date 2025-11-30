@@ -116,4 +116,43 @@ describe("Extended Inputs", () => {
       expect(input.value).toBe("2023-01-01T12:00");
     });
   });
+
+  describe("File Input", () => {
+    it("should handle single file selection and update state", async () => {
+      const user = userEvent.setup();
+      const file = new File(["hello"], "hello.png", { type: "image/png" });
+
+      render(
+        <FormProvider state={{ avatar: null }}>
+          <Input.File path="avatar" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      await user.upload(input, file);
+
+      expect(input.files![0]).toBe(file);
+      expect(input.files).toHaveLength(1);
+    });
+
+    it("should handle multiple file selection", async () => {
+      const user = userEvent.setup();
+      const files = [
+        new File(["hello"], "hello.png", { type: "image/png" }),
+        new File(["world"], "world.png", { type: "image/png" }),
+      ];
+      render(
+        <FormProvider state={{ photos: [] }}>
+          <Input.File path="photos" multiple data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      await user.upload(input, files);
+
+      expect(input.files).toHaveLength(2);
+      expect(input.files![0]).toBe(files[0]);
+      expect(input.files![1]).toBe(files[1]);
+    });
+  });
 });
