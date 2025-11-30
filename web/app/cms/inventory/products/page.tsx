@@ -4,13 +4,13 @@ import getProducts, {
   type GetProduct,
   type GetProductsResult,
 } from "@agape/cms/inventory/getProducts";
-import { getProduct } from "@agape/cms/inventory/product";
+
 import { findAll } from "@agape/cms/inventory/configuration/category";
 import { useSharedState } from "@/components/util/event-emitter";
-import useProductModal from "./product";
+import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "lodash";
-import { Pagination } from "./Pagination";
+import { Pagination } from "../Pagination";
 import Decimal from "@utils/data/Decimal";
 
 const PAGE_SIZE = 12; // Increased page size for grid view
@@ -39,7 +39,7 @@ export async function onInit() {
 
 export default function Inventory(props: Props) {
   const notify = useNotificacion();
-  const show = useProductModal();
+  const { navigate } = useRouter();
 
   const [{ filters, totalCount, products, fetch }, setState] =
     useSharedState<IState>(() => {
@@ -125,7 +125,7 @@ export default function Inventory(props: Props) {
               </p>
             </div>
             <button
-              onClick={() => show({})}
+              onClick={() => navigate("../product")}
               className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
             >
               <svg
@@ -358,11 +358,7 @@ export default function Inventory(props: Props) {
                       key={product.id}
                       product={product}
                       onEdit={() => {
-                        getProduct(product.id)
-                          .then((record) => {
-                            show({ product: record });
-                          })
-                          .catch((error) => notify({ payload: error }));
+                        navigate(`../product/${product.id}`);
                       }}
                     />
                   ))}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useRouter } from "@/components/router/router-hook";
 import FormProvider, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
@@ -127,6 +128,7 @@ export function Inventory(props: { product?: Product }) {
 function InsertUpdate() {
   const dispatch = useAppDispatch();
   const emitter = useEventEmitter();
+  const { navigate } = useRouter();
   const updateFormEvent = useMemo(() => Symbol("updateForm"), []);
 
   useEffect(() => {
@@ -139,6 +141,7 @@ function InsertUpdate() {
     <Submit
       onSubmit={async (state: any) => {
         const record = await upsertProduct(state);
+        navigate("../products");
         return record;
       }}
       event={updateFormEvent}
