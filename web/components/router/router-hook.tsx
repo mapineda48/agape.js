@@ -5,9 +5,32 @@ import { useHistory } from "./router";
 import type { RouteParams } from "./types";
 
 /**
- * Helper function to convert an absolute path to relative based on a base path
+ * Converts an absolute path to a relative path based on a base path context.
+ *
+ * This helper is used internally to display relative paths to components within
+ * a specific layout context, making the `pathname` value more intuitive for
+ * nested layouts.
+ *
+ * @param absolutePath - The full absolute pathname (e.g., "/cms/inventory/products")
+ * @param basePath - The base path context from RouterPathProvider (e.g., "/cms")
+ * @returns The relative portion of the path, or the absolute path if not within the base context
+ *
+ * @example
+ * ```ts
+ * toRelativeLayoutPathHelper("/cms/inventory/products", "/cms")
+ * // Returns: "inventory/products"
+ *
+ * toRelativeLayoutPathHelper("/cms/inventory", "/cms")
+ * // Returns: "inventory"
+ *
+ * toRelativeLayoutPathHelper("/other/path", "/cms")
+ * // Returns: "/other/path" (not within base context)
+ * ```
  */
-function toRelativePathHelper(absolutePath: string, basePath: string): string {
+function toRelativeLayoutPathHelper(
+  absolutePath: string,
+  basePath: string
+): string {
   // If not within our base path context, return the absolute path
   if (!absolutePath.startsWith(basePath)) {
     return absolutePath;
@@ -39,22 +62,76 @@ interface RouterHookAPI {
 }
 
 /**
- * Hook that provides router functionality with automatic path resolution.
+ * Custom hook that provides router functionality with intelligent path resolution.
  *
- * The router automatically provides path context for each layout based on its location.
- * This allows layouts to use relative paths without knowing their full path.
+ * This hook supports three types of navigation paths, each suited for different use cases:
  *
- * - Absolute paths (starting with `/`) are used as-is
- * - Relative paths are resolved against the current path context
+ * ## Navigation Types
+ *
+ * ### 1. Absolute Paths (starts with `/`)
+ * Navigate to a specific route regardless of current context.
+ * These paths are used as-is without any transformation.
+ *
+ * **Use when:** Navigating to top-level routes or completely different sections
  *
  * @example
  * ```tsx
- * const { navigate, pathname } = useRouter();
- *
- * // In context of "/cms/configuration":
- * navigate("inventory"); // navigates to "/cms/configuration/inventory"
- * navigate("/home");     // navigates to "/home"
+ * const { navigate } = useRouter();
+ * navigate("/login");        // Always goes to /login
+ * navigate("/cms/dashboard"); // Always goes to /cms/dashboard
  * ```
+ *
+ * ### 2. Relative Paths (starts with `.`)
+ * Navigate relative to the **current pathname** (actual browser location).
+ * Uses `pathe` library for proper path resolution with support for:
+ * - Current directory: `./path`
+ * - Parent directory: `../path`
+ * - Multiple levels: `../../path`
+ *
+ * **Use when:** Navigating based on the actual current route, like sibling or parent pages
+ *
+ * @example
+ * ```tsx
+ * // Current pathname: /cms/inventory/products
+ * const { navigate } = useRouter();
+ *
+ * navigate("./categories");   // → /cms/inventory/products/categories
+ * navigate("../product");     // → /cms/inventory/product
+ * navigate("../../config");   // → /cms/config
+ * ```
+ *
+ * ### 3. Layout-Level Paths (no prefix)*
+ * Navigate within the current layout context (from `RouterPathProvider`).
+ * These paths are resolved against the `basePath` context, making them
+ * portable across different layout implementations.
+ *
+ * **Use when:** Navigating between pages within the same layout/module
+ *
+ * @example
+ * ```tsx
+ * // Inside a layout with basePath="/cms/inventory"
+ * const { navigate } = useRouter();
+ *
+ * navigate("products");       // → /cms/inventory/products
+ * navigate("categories");     // → /cms/inventory/categories
+ * navigate("config/settings"); // → /cms/inventory/config/settings
+ * ```
+ *
+ * ## Additional Features
+ *
+ * ### pathname
+ * Returns the current pathname relative to the layout context for easier
+ * path matching within nested layouts.
+ *
+ * ### params
+ * Route parameters extracted from dynamic route segments (e.g., `:id`).
+ *
+ * ### listen
+ * Subscribe to pathname changes, receiving relative paths based on context.
+ *
+ * @returns {RouterHookAPI} Router API with navigate, pathname, params, and listen
+ *
+ * @see {@link https://github.com/unjs/pathe} for pathe path resolution details
  */
 export function useRouter(): RouterHookAPI {
   const router = useHistory();
@@ -62,14 +139,14 @@ export function useRouter(): RouterHookAPI {
   const basePath = useContext(RouterPathContext);
   const [pathname, setPathname] = useState(() => {
     // Initialize with relative path
-    return toRelativePathHelper(router.pathname, basePath);
+    return toRelativeLayoutPathHelper(router.pathname, basePath);
   });
 
   const [params, setParams] = useState<RouteParams>(() => router.params);
 
   useEffect(() => {
     // Update pathname immediately if router.pathname changed
-    setPathname(toRelativePathHelper(router.pathname, basePath));
+    setPathname(toRelativeLayoutPathHelper(router.pathname, basePath));
 
     // Update params immediately
     setParams(router.params);
@@ -77,7 +154,7 @@ export function useRouter(): RouterHookAPI {
     // Listen for future pathname changes
     const unlistenPath = router.listenPath((path) => {
       // Update with relative path
-      setPathname(toRelativePathHelper(path, basePath));
+      setPathname(toRelativeLayoutPathHelper(path, basePath));
     });
 
     // Listen for future param changes
@@ -92,19 +169,28 @@ export function useRouter(): RouterHookAPI {
   }, [basePath]);
 
   /**
-   * Resolves a path (absolute or relative) against the current context
+   * Resolves a navigation path based on its type (absolute, relative, or layout-level).
+   *
+   * @param to - The target path to navigate to
+   * @returns The resolved absolute path ready for navigation
+   *
+   * @internal
    */
   const resolvePath = (to: string): string => {
-    // Absolute path: use as-is
+    // Type 1: Absolute path - use as-is
+    // Example: "/login" → "/login"
     if (to.startsWith("/")) {
       return to;
     }
 
+    // Type 2: Relative path - resolve against current pathname using pathe
+    // Example: from "/cms/products", navigate("../config") → "/cms/config"
     if (to.startsWith(".")) {
       return join(router.pathname, to);
     }
 
-    // _layout navigations take baseURL layout to change page
+    // Type 3: Layout-level path - resolve against basePath context
+    // Example: with basePath="/cms", navigate("products") → "/cms/products"
     return join(basePath, to);
   };
 
@@ -119,7 +205,7 @@ export function useRouter(): RouterHookAPI {
   const listen = (cb: (pathname: string) => void) => {
     return router.listenPath((absolutePath) => {
       // Convert to relative path before calling the callback
-      const relativePath = toRelativePathHelper(absolutePath, basePath);
+      const relativePath = toRelativeLayoutPathHelper(absolutePath, basePath);
       cb(relativePath);
     });
   };
