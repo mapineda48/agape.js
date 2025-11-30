@@ -18,7 +18,7 @@ import { useTheme } from "./ThemeProvider";
 import { logout, session } from "@agape/access";
 import clsx from "clsx";
 import { useHistory } from "./router/router";
-import { useBreakpointValue } from "../hook/useBreakpointValue";
+import { factoryHook } from "../hook/useBreakpointValue";
 
 // Navigation Items
 const NAV_ITEMS = [
@@ -30,22 +30,18 @@ const NAV_ITEMS = [
   { path: "/cms/configuration", icon: CogIcon, label: "Configuración" },
 ];
 
+const useBreakpointValue = factoryHook({
+  xs: true,
+  sm: false,
+});
+
 export default function Sidebar() {
   const router = useHistory();
 
   // Use useBreakpointValue to automatically manage collapsed state based on breakpoint
   // xs: collapsed (true)
   // sm+: expanded (false) - cascades from sm: false
-  const [isCollapsed, setIsCollapsed, breakpoint] = useBreakpointValue(
-    {
-      xs: true,
-      sm: false,
-    },
-    false
-  );
-
-  // Derive isMobile from breakpoint (xs is < 640px)
-  const isMobile = breakpoint === "xs";
+  const [isCollapsed, setIsCollapsed, breakpoint] = useBreakpointValue(false);
 
   const [currentPath, setCurrentPath] = useState(router.pathname);
   const { theme, setTheme } = useTheme();
@@ -70,13 +66,16 @@ export default function Sidebar() {
 
   const sidebarVariants = {
     expanded: { width: 280, opacity: 1 },
-    collapsed: { width: isMobile ? 0 : 80, opacity: isMobile ? 0 : 1 },
+    collapsed: {
+      width: breakpoint.isMobile ? 0 : 80,
+      opacity: breakpoint.isMobile ? 0 : 1,
+    },
   };
 
   return (
     <>
       {/* Mobile Floating Toggle Button */}
-      {isMobile && isCollapsed && (
+      {breakpoint.isMobile && isCollapsed && (
         <button
           onClick={() => setIsCollapsed(false)}
           className="fixed bottom-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
@@ -86,7 +85,7 @@ export default function Sidebar() {
       )}
 
       {/* Overlay for mobile when expanded */}
-      {isMobile && !isCollapsed && (
+      {breakpoint.isMobile && !isCollapsed && (
         <div
           className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
           onClick={() => setIsCollapsed(true)}
@@ -100,7 +99,7 @@ export default function Sidebar() {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={clsx(
           "h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 shadow-xl z-50 flex flex-col transition-colors duration-300 overflow-hidden",
-          isMobile ? "fixed left-0 top-0" : "relative"
+          breakpoint.isMobile ? "fixed left-0 top-0" : "relative"
         )}
       >
         {/* Header */}
@@ -162,7 +161,7 @@ export default function Sidebar() {
                 key={item.path}
                 onClick={() => {
                   router.navigateTo(item.path);
-                  if (isMobile) {
+                  if (breakpoint.isMobile) {
                     setIsCollapsed(true);
                   }
                 }}

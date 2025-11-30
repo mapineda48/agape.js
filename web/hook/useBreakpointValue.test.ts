@@ -5,7 +5,7 @@ import {
   useBreakpointValue,
   useBreakpointValidator,
   useBreakpointMatch,
-  factoryBreakpointValue,
+  factoryHook,
   resetMqls,
   type Breakpoint,
 } from "./useBreakpointValue";
@@ -186,7 +186,7 @@ describe("useBreakpointValue hooks", () => {
     it("should create a reusable hook with predefined values", () => {
       setupBreakpoint("lg");
 
-      const useGridColumns = factoryBreakpointValue({
+      const useGridColumns = factoryHook({
         xs: 1,
         sm: 2,
         md: 3,

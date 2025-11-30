@@ -156,7 +156,9 @@ export function useBreakpointValue<T>(
   values: BreakpointValueMap<T>,
   defaultValue: T
 ) {
-  const { breakpoint } = useBreakpoint();
+  const helpers = useBreakpoint();
+
+  const { breakpoint } = helpers;
 
   const findMatchValue = useCallback((): T => {
     // First try exact match
@@ -183,19 +185,20 @@ export function useBreakpointValue<T>(
     setState(() => findMatchValue());
   }, [findMatchValue]);
 
-  return [state, setState, breakpoint] as const;
+  return [state, setState, helpers] as const;
 }
 
 /**
  * Factory function to create a useBreakpointValue hook with predefined values.
- * Useful for reusing the same breakpoint configuration across components.
+ * Siempre se recomiendo usar este dado que evitamos los prerender innecesarios. al usar el factoryHook
+ * para evitar que se recrear la instacia de los estados por defecto
  *
  * @param values - Map of breakpoint to value
  * @returns A hook that accepts a default value
  *
  * @example
  * ```tsx
- * const useGridColumns = factoryBreakpointValue({
+ * const useGridColumns = factoryHook({
  *   xs: 1,
  *   sm: 2,
  *   md: 3,
@@ -208,7 +211,7 @@ export function useBreakpointValue<T>(
  * }
  * ```
  */
-export function factoryBreakpointValue<T>(values: BreakpointValueMap<T>) {
+export function factoryHook<T>(values: BreakpointValueMap<T>) {
   return (defaultValue: T) => useBreakpointValue(values, defaultValue);
 }
 
