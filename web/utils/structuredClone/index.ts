@@ -18,16 +18,7 @@ export function applyHelpersToSerialized(value: any): any {
     return value.map(applyHelpersToSerialized);
   }
 
-  if (value && typeof value === "object") {
-    // Check if it's a plain object or something we should traverse
-    // If it's a class instance that wasn't marked (e.g. unknown class), we might destroy it if we clone it.
-    // But for Redux serialization, we generally want to serialize everything.
-    // However, if we encounter an object that we don't know how to mark, we should probably leave it as is if it's not a plain object?
-    // But standard Redux behavior is to warn. Here we just traverse.
-
-    // Optimization: if constructor is not Object, maybe we shouldn't traverse?
-    // But we need to traverse plain objects.
-
+  if (isPlainObject(value)) {
     const result: any = {};
     for (const key of Object.keys(value)) {
       result[key] = applyHelpersToSerialized(value[key]);
@@ -51,7 +42,7 @@ export function removeHelpersFromSerialized(value: any): any {
     return value.map(removeHelpersFromSerialized);
   }
 
-  if (value && typeof value === "object") {
+  if (isPlainObject(value)) {
     const result: any = {};
     for (const key of Object.keys(value)) {
       result[key] = removeHelpersFromSerialized(value[key]);
@@ -60,6 +51,13 @@ export function removeHelpersFromSerialized(value: any): any {
   }
 
   return value;
+}
+
+function isPlainObject(value: any): value is Record<string, any> {
+  if (!value || typeof value !== "object") return false;
+
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
 }
 
 /**
