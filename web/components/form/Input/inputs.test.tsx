@@ -4,7 +4,6 @@ import FormProvider from "../index";
 import * as Input from "./index";
 import Decimal from "@utils/data/Decimal";
 import DateTime from "@utils/data/DateTime";
-import { format } from "date-fns";
 
 describe("Extended Inputs", () => {
   describe("Decimal Input", () => {

@@ -17,6 +17,8 @@ export default function InputImages() {
 
   const current = images[currentImage];
 
+  console.log(images);
+
   return (
     <>
       <label className="block">
@@ -39,6 +41,11 @@ export default function InputImages() {
             if (!filesArray.length) {
               return;
             }
+
+            console.log({
+              images,
+              filesArray,
+            });
 
             setState([...images, ...filesArray]);
             setCurrentImage(images.length);

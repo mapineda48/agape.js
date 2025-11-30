@@ -10,7 +10,12 @@ export default function InputDateTime(props: Props) {
   const [state, setState] = useInput<DateTime>(path, new DateTime());
 
   const displayValue =
-    state instanceof Date ? format(state, "yyyy-MM-dd'T'HH:mm") : "";
+    state &&
+    typeof state === "object" &&
+    "addHours" in state &&
+    typeof (state as any).addHours === "function"
+      ? format(state as Date, "yyyy-MM-dd'T'HH:mm")
+      : "";
 
   return (
     <input

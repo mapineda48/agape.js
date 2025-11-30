@@ -4,8 +4,15 @@ import { useAppSelector, useAppDispatch, useSelectPath } from "./store/hooks";
 import { setAtPath, pushAtPath, removeAtPath } from "./store/dictSlice";
 import PathProvider from "./paths";
 
+import { removeHelpersFromSerialized } from "../../utils/structuredClone";
+
 export function useSelector<S, T>(selector: (state: S) => T) {
-  return useAppSelector((state: any) => selector(state.form.data));
+  const rawData = useAppSelector((state: any) => state.form.data);
+  const revivedData = useMemo(
+    () => removeHelpersFromSerialized(rawData),
+    [rawData]
+  );
+  return selector(revivedData);
 }
 
 export function useInputArray<T extends unknown[]>(path?: Path) {
