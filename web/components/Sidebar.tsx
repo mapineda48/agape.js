@@ -18,6 +18,7 @@ import { useTheme } from "./ThemeProvider";
 import { logout, session } from "@agape/access";
 import clsx from "clsx";
 import { useHistory } from "./router/router";
+import { useBreakpointValue } from "../hook/useBreakpointValue";
 
 // Navigation Items
 const NAV_ITEMS = [
@@ -32,33 +33,32 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const router = useHistory();
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  // Use useBreakpointValue to automatically manage collapsed state based on breakpoint
+  // xs: collapsed (true)
+  // sm+: expanded (false) - cascades from sm: false
+  const [isCollapsed, setIsCollapsed, breakpoint] = useBreakpointValue(
+    {
+      xs: true,
+      sm: false,
+    },
+    false
+  );
+
+  // Derive isMobile from breakpoint (xs is < 640px)
+  const isMobile = breakpoint === "xs";
+
   const [currentPath, setCurrentPath] = useState(router.pathname);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 640;
-      setIsMobile(mobile);
-      if (mobile) {
-        setIsCollapsed(true);
-      }
-    };
-
-    // Initial check
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
     const unlisten = router.listenPath((path) => {
       setCurrentPath(path);
     });
 
     return () => {
-      window.removeEventListener("resize", handleResize);
       unlisten();
     };
-  }, []);
+  }, [router]);
 
   const handleLogout = () => {
     logout()
