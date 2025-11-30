@@ -73,7 +73,9 @@ describe("RouterPathProvider", () => {
       );
     };
 
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     act(() => {
@@ -111,7 +113,9 @@ describe("RouterPathProvider", () => {
       return <button onClick={() => navigate("page")}>Navigate to page</button>;
     };
 
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     act(() => {
@@ -227,7 +231,9 @@ describe("useRouter - navigate with absolute paths", () => {
   });
 
   it("should navigate to absolute path without modification", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -250,7 +256,9 @@ describe("useRouter - navigate with absolute paths", () => {
   });
 
   it("should navigate to absolute path regardless of context", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -281,7 +289,9 @@ describe("useRouter - navigate with absolute paths", () => {
   });
 
   it("should pass navigate options correctly", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -324,7 +334,9 @@ describe("useRouter - navigate with relative paths", () => {
   });
 
   it("should resolve relative path against root context", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -347,7 +359,9 @@ describe("useRouter - navigate with relative paths", () => {
   });
 
   it("should resolve relative path against custom context", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -374,7 +388,9 @@ describe("useRouter - navigate with relative paths", () => {
   });
 
   it("should resolve relative path with nested contexts", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -412,7 +428,9 @@ describe("useRouter - navigate with relative paths", () => {
   });
 
   it("should handle trailing slashes in context path", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -439,7 +457,9 @@ describe("useRouter - navigate with relative paths", () => {
   });
 
   it("should handle multi-segment relative paths", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -525,7 +545,9 @@ describe("useRouter - integration", () => {
   });
 
   it("should handle complex nested navigation scenario", () => {
-    const navigateSpy = vi.spyOn(router, "navigateTo");
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
     vi.spyOn(router, "listenPath").mockReturnValue(() => {});
 
     const NestedComponent = () => {
