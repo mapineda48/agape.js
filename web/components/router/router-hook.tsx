@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { join } from "pathe";
 import { RouterPathContext } from "./path-context";
 import { useHistory } from "./router";
 import type { RouteParams } from "./types";
@@ -99,12 +100,12 @@ export function useRouter(): RouterHookAPI {
       return to;
     }
 
-    // Relative path: resolve against basePath
-    const normalizedBase = basePath.endsWith("/")
-      ? basePath.slice(0, -1)
-      : basePath;
+    if (to.startsWith(".")) {
+      return join(router.pathname, to);
+    }
 
-    return `${normalizedBase}/${to}`;
+    // _layout navigations take baseURL layout to change page
+    return join(basePath, to);
   };
 
   const navigate = (to: string, opt?: INavigateTo) => {

@@ -5,7 +5,7 @@ import { getProduct, type Product } from "@agape/cms/inventory/product";
 import { useNotificacion } from "@/components/ui/notification";
 
 export default function EditProductPage() {
-  const { params } = useRouter();
+  const { params, navigate } = useRouter();
   const notify = useNotificacion();
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -49,9 +49,17 @@ export default function EditProductPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Producto</h1>
-        <p className="text-gray-500">Modifica la información del producto.</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Editar Producto</h1>
+          <p className="text-gray-500">Modifica la información del producto.</p>
+        </div>
+        <button
+          onClick={() => navigate("../../products")}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Ver Lista de Productos
+        </button>
       </div>
       <Inventory product={product} />
     </div>

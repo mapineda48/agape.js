@@ -736,3 +736,347 @@ describe("useRouter - params", () => {
     expect(result.current.params).toEqual({ id: "789" });
   });
 });
+
+describe("useRouter - navigate with parent directory paths", () => {
+  let router: HistoryManager;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+    router = new HistoryManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("should navigate to parent directory with '../'", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/inventory/products" },
+          children
+        )
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../product");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/cms/inventory/product",
+      undefined
+    );
+  });
+
+  it("should navigate to parent directory with multiple '../'", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/inventory/products" },
+          children
+        )
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../../configuration");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith("/cms/configuration", undefined);
+  });
+
+  it("should handle mixed relative paths with parent navigation", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/inventory/products" },
+          children
+        )
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../categories/list");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/cms/inventory/categories/list",
+      undefined
+    );
+  });
+
+  it("should clamp to root when navigating beyond root", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(RouterPathProvider, { path: "/cms" }, children)
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../../../beyond/root");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith("/beyond/root", undefined);
+  });
+
+  it("should handle parent navigation from root context", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(HistoryContext.Provider, { value: router }, children);
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../somewhere");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    // From root, parent navigation stays at root
+    expect(navigateSpy).toHaveBeenCalledWith("/somewhere", undefined);
+  });
+
+  it("should handle complex parent navigation with nested paths", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/inventory/products/category/electronics" },
+          children
+        )
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../../brands/samsung");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/cms/inventory/products/brands/samsung",
+      undefined
+    );
+  });
+
+  it("should handle trailing slashes in parent navigation", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(RouterPathProvider, { path: "/cms/inventory/" }, children)
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../configuration");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith("/cms/configuration", undefined);
+  });
+
+  it("should handle current directory '.' in paths", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(RouterPathProvider, { path: "/cms/inventory" }, children)
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("./products");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/cms/inventory/products",
+      undefined
+    );
+  });
+
+  it("should combine absolute beginning and parent navigation correctly", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/inventory/products" },
+          children
+        )
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      // Absolute path should ignore context
+      result.current.navigate("/absolute/path");
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith("/absolute/path", undefined);
+  });
+
+  it("should pass navigate options correctly with parent navigation", () => {
+    const navigateSpy = vi
+      .spyOn(router, "navigateTo")
+      .mockImplementation(() => {});
+    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      createElement(
+        HistoryContext.Provider,
+        { value: router },
+        createElement(
+          RouterPathProvider,
+          { path: "/cms/inventory/products" },
+          children
+        )
+      );
+
+    let result: any;
+    act(() => {
+      result = renderHook(() => useRouter(), { wrapper }).result;
+    });
+
+    act(() => {
+      result.current.navigate("../product", {
+        replace: true,
+        state: { from: "products" },
+      });
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(navigateSpy).toHaveBeenCalledWith("/cms/inventory/product", {
+      replace: true,
+      state: { from: "products" },
+    });
+  });
+});
