@@ -21,7 +21,7 @@ const DATETIME_MARK = "__datetime.js__";
  * Problema:
  *  - `structuredClone` no sabe cómo clonar instancias personalizadas (por ejemplo
  *    `Decimal` o `DateTime`), lo que rompe cuando queremos usarlo para clonar
- *    el estado (Redux, formularios, DTOs, etc.).
+ *    el estados complejos.
  *
  * Solución:
  *  - Antes de clonar, transformamos los tipos especiales a una representación
@@ -50,7 +50,7 @@ const DATETIME_MARK = "__datetime.js__";
  *      b) structuredClone
  *      c) restore (`removeHelpersFromSerialized`)
  *  - Es perfectamente razonable para estructuras de tamaño medio
- *    (p.ej. estado de Redux, payloads normales).
+ *    (p.ej. estado de formularios).
  *  - No está pensado para clonar:
  *      - árboles de datos gigantes (logs masivos, dumps, etc.),
  *      - ni estructuras extremadamente profundas.
