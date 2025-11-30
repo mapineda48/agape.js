@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FormProvider from "../index";
 import * as Input from "./index";
+import { useAppSelector } from "../store/hooks";
 import Decimal from "@utils/data/Decimal";
 import DateTime from "@utils/data/DateTime";
 
@@ -153,6 +154,33 @@ describe("Extended Inputs", () => {
       expect(input.files).toHaveLength(2);
       expect(input.files![0]).toBe(files[0]);
       expect(input.files![1]).toBe(files[1]);
+    });
+
+    it("should correctly update the Redux state with the File object", async () => {
+      const user = userEvent.setup();
+      const file = new File(["content"], "test.pdf", {
+        type: "application/pdf",
+      });
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ document: null }}>
+          <StateSpy />
+          <Input.File path="document" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      await user.upload(input, file);
+
+      expect(capturedState.document).toBeInstanceOf(File);
+      expect(capturedState.document).toBe(file);
     });
   });
 });
