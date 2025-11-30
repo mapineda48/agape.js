@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from "react";
-import { useRouter } from "@/components/router/router-hook";
 import FormProvider, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
@@ -151,35 +150,4 @@ function InsertUpdate(props: { onSuccess?: () => void }) {
       Crear/Actualizar
     </Submit>
   );
-}
-
-export function InventoryModal(props: PropsModal) {
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-black/60 via-gray-900/40 to-blue-900/30 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl p-0 w-full max-w-2xl sm:w-full max-h-[95vh] overflow-y-auto border border-gray-200 relative m-2 sm:m-0">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-t-xl flex items-center justify-between mb-0 border-b px-4 sm:px-6 py-3 sm:py-4 shadow-sm">
-          <h2 className="text-lg sm:text-2xl font-bold text-blue-800 tracking-tight">
-            Agregar Producto
-          </h2>
-          <button
-            onClick={props.remove}
-            className="ml-2 sm:ml-4 px-3 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold shadow"
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="p-4 sm:p-6">
-          <Inventory product={props.product} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default withPortalToRoot(InventoryModal);
-
-interface PropsModal extends PropsPortal {
-  product?: Product;
 }
