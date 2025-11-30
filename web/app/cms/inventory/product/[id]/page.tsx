@@ -61,7 +61,10 @@ export default function EditProductPage() {
           Ver Lista de Productos
         </button>
       </div>
-      <Inventory product={product} />
+      <Inventory
+        product={product}
+        onSuccess={() => navigate("../../products")}
+      />
     </div>
   );
 }

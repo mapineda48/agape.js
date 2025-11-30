@@ -20,7 +20,7 @@ export default function CreateProductPage() {
           Ver Lista de Productos
         </button>
       </div>
-      <Inventory />
+      <Inventory onSuccess={() => navigate("../products")} />
     </div>
   );
 }

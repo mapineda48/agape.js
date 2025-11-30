@@ -11,8 +11,10 @@ import { SubCategories } from "./SubCategories";
 import { useEventEmitter } from "@/components/util/event-emitter";
 import Submit from "@/components/ui/submit";
 
-export function Inventory(props: { product?: Product }) {
-  console.log(props);
+export function Inventory(props: {
+  product?: Product;
+  onSuccess?: () => void;
+}) {
   return (
     <FormProvider
       state={props.product}
@@ -119,16 +121,15 @@ export function Inventory(props: { product?: Product }) {
 
       {/* Submit */}
       <div>
-        <InsertUpdate />
+        <InsertUpdate onSuccess={props.onSuccess} />
       </div>
     </FormProvider>
   );
 }
 
-function InsertUpdate() {
+function InsertUpdate(props: { onSuccess?: () => void }) {
   const dispatch = useAppDispatch();
   const emitter = useEventEmitter();
-  const { navigate } = useRouter();
   const updateFormEvent = useMemo(() => Symbol("updateForm"), []);
 
   useEffect(() => {
@@ -141,7 +142,7 @@ function InsertUpdate() {
     <Submit
       onSubmit={async (state: any) => {
         const record = await upsertProduct(state);
-        navigate("../products");
+        props.onSuccess?.();
         return record;
       }}
       event={updateFormEvent}
