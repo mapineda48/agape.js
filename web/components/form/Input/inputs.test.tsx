@@ -6,6 +6,24 @@ import { useAppSelector } from "../store/hooks";
 import Decimal from "@utils/data/Decimal";
 import DateTime from "@utils/data/DateTime";
 
+beforeAll(() => {
+  if (!globalThis.structuredClone) {
+    globalThis.structuredClone = (val) => {
+      // Handle File and Blob explicitly to ensure they are preserved
+      // even if structuredClone is not available or behaves unexpectedly in tests
+      if (typeof File !== "undefined" && val instanceof File) {
+        return val;
+      }
+
+      if (typeof Blob !== "undefined" && val instanceof Blob) {
+        return val;
+      }
+
+      return JSON.parse(JSON.stringify(val));
+    };
+  }
+});
+
 describe("Extended Inputs", () => {
   describe("Decimal Input", () => {
     it("should initialize with Decimal value", () => {

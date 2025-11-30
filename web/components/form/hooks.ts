@@ -4,12 +4,12 @@ import { useAppSelector, useAppDispatch, useSelectPath } from "./store/hooks";
 import { setAtPath, pushAtPath, removeAtPath } from "./store/dictSlice";
 import PathProvider from "./paths";
 
-import { removeHelpersFromSerialized } from "../../utils/structuredClone";
+import { deepCloneWithOutHelpers } from "../../utils/structuredClone";
 
 export function useSelector<S, T>(selector: (state: S) => T) {
   const rawData = useAppSelector((state: any) => state.form.data);
   const revivedData = useMemo(
-    () => removeHelpersFromSerialized(rawData),
+    () => deepCloneWithOutHelpers(rawData),
     [rawData]
   );
   return selector(revivedData);

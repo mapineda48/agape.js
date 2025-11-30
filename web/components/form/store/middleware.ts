@@ -1,5 +1,5 @@
 import type { Middleware } from "@reduxjs/toolkit";
-import { applyHelpersToSerialized } from "../../../utils/structuredClone";
+import { deepCloneWithHelpersToSerialized } from "../../../utils/structuredClone";
 
 export const serializationMiddleware: Middleware =
   () => (next) => (action: any) => {
@@ -9,7 +9,7 @@ export const serializationMiddleware: Middleware =
       newAction.payload = { ...action.payload };
 
       if (newAction.payload.value !== undefined) {
-        newAction.payload.value = applyHelpersToSerialized(
+        newAction.payload.value = deepCloneWithHelpersToSerialized(
           newAction.payload.value
         );
       }

@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import dict from "./dictSlice";
 import { serializationMiddleware } from "./middleware";
-import { applyHelpersToSerialized } from "../../../utils/structuredClone";
+import { deepCloneWithHelpersToSerialized } from "../../../utils/structuredClone";
 
 /**
  * For internal use only - WebAPI Only Supported - structuredClone
@@ -45,7 +45,7 @@ export const createStore = (preloadedState?: object) =>
   configureStore({
     reducer: { form: dict },
     preloadedState: preloadedState
-      ? { form: { data: applyHelpersToSerialized(preloadedState) } }
+      ? { form: { data: deepCloneWithHelpersToSerialized(preloadedState) } }
       : undefined,
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, type JSX } from "react";
+import { createContext, useContext, useMemo, type JSX } from "react";
 import { useEventEmitter } from "../util/event-emitter";
 import { useStore } from "react-redux";
 import type { RootState } from "./store";
+import { deepCloneWithOutHelpers } from "@/utils/structuredClone";
 
 const Context = createContext<EventForm>({
   SUBMIT: Symbol("SUBMIT"),
@@ -34,7 +35,7 @@ export default function FormProvider({ state = {}, ...core }: Props) {
 
           const state = store.getState();
 
-          const payload = structuredClone(state.form.data);
+          const payload = deepCloneWithOutHelpers(state.form.data);
 
           emitter.emit(evt.SUBMIT, payload);
         }}

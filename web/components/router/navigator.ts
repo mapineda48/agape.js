@@ -1,7 +1,7 @@
 import { Action, createBrowserHistory, type History } from "history";
 import {
-  applyHelpersToSerialized,
-  removeHelpersFromSerialized,
+  deepCloneWithHelpersToSerialized,
+  deepCloneWithOutHelpers,
 } from "@/utils/structuredClone";
 import type { INavigateTo } from "./auth-guard";
 
@@ -23,12 +23,12 @@ export class Navigator {
   }
 
   public updateHistory(pathname: string, { state, replace }: INavigateTo) {
-    const serializedState = applyHelpersToSerialized(state);
+    const serializedState = deepCloneWithHelpersToSerialized(state);
     if (replace) this.history.replace(pathname, serializedState);
     else this.history.push(pathname, serializedState);
   }
 
   public getCleanState(state: any) {
-    return removeHelpersFromSerialized(state);
+    return deepCloneWithOutHelpers(state);
   }
 }

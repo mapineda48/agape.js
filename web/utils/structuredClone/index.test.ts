@@ -1,8 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
+
+beforeAll(() => {
+  if (!globalThis.structuredClone) {
+    globalThis.structuredClone = (val) => JSON.parse(JSON.stringify(val));
+  }
+});
+
 import {
-  cloneWithHelpers,
-  applyHelpersToSerialized,
-  removeHelpersFromSerialized,
+  deepClone,
+  deepCloneWithHelpersToSerialized,
+  deepCloneWithOutHelpers,
 } from "./index";
 import Decimal from "@utils/data/Decimal";
 import DateTime from "@utils/data/DateTime";
@@ -11,45 +18,45 @@ describe("structuredClone utilities", () => {
   describe("Primitive Values", () => {
     it("should clone string values", () => {
       const value = "hello world";
-      const cloned = cloneWithHelpers(value);
+      const cloned = deepClone(value);
       expect(cloned).toBe(value);
     });
 
     it("should clone number values", () => {
       const value = 42;
-      const cloned = cloneWithHelpers(value);
+      const cloned = deepClone(value);
       expect(cloned).toBe(value);
     });
 
     it("should clone boolean values", () => {
       const value = true;
-      const cloned = cloneWithHelpers(value);
+      const cloned = deepClone(value);
       expect(cloned).toBe(value);
     });
 
     it("should clone null", () => {
       const value = null;
-      const cloned = cloneWithHelpers(value);
+      const cloned = deepClone(value);
       expect(cloned).toBe(value);
     });
 
     it("should clone undefined", () => {
       const value = undefined;
-      const cloned = cloneWithHelpers(value);
+      const cloned = deepClone(value);
       expect(cloned).toBe(value);
     });
 
     it("should handle special number values", () => {
-      expect(cloneWithHelpers(NaN)).toBeNaN();
-      expect(cloneWithHelpers(Infinity)).toBe(Infinity);
-      expect(cloneWithHelpers(-Infinity)).toBe(-Infinity);
+      expect(deepClone(NaN)).toBeNaN();
+      expect(deepClone(Infinity)).toBe(Infinity);
+      expect(deepClone(-Infinity)).toBe(-Infinity);
     });
   });
 
   describe("Arrays", () => {
     it("should clone simple arrays", () => {
       const original = [1, 2, 3, 4, 5];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -61,7 +68,7 @@ describe("structuredClone utilities", () => {
         [3, 4],
         [5, 6],
       ];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -70,7 +77,7 @@ describe("structuredClone utilities", () => {
 
     it("should clone arrays with mixed types", () => {
       const original = [1, "two", true, null, undefined];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -78,7 +85,7 @@ describe("structuredClone utilities", () => {
 
     it("should clone empty arrays", () => {
       const original: any[] = [];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -86,7 +93,7 @@ describe("structuredClone utilities", () => {
 
     it("should clone arrays with undefined values", () => {
       const original = [1, undefined, 3];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -94,7 +101,7 @@ describe("structuredClone utilities", () => {
 
     it("should clone arrays containing Decimal instances", () => {
       const original = [new Decimal("10.5"), new Decimal("20.75")];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toHaveLength(2);
       expect(cloned[0]).toBeInstanceOf(Decimal);
@@ -108,7 +115,7 @@ describe("structuredClone utilities", () => {
       const date1 = new DateTime("2023-01-01T10:00:00Z");
       const date2 = new DateTime("2023-12-31T23:59:59Z");
       const original = [date1, date2];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toHaveLength(2);
       expect(cloned[0]).toBeInstanceOf(DateTime);
@@ -122,7 +129,7 @@ describe("structuredClone utilities", () => {
   describe("Plain Objects", () => {
     it("should clone simple objects", () => {
       const original = { a: 1, b: 2, c: 3 };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -138,7 +145,7 @@ describe("structuredClone utilities", () => {
           },
         },
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -148,7 +155,7 @@ describe("structuredClone utilities", () => {
 
     it("should clone empty objects", () => {
       const original = {};
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -156,7 +163,7 @@ describe("structuredClone utilities", () => {
 
     it("should clone objects with null values", () => {
       const original = { a: null, b: "value" };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -166,7 +173,7 @@ describe("structuredClone utilities", () => {
   describe("Decimal Support", () => {
     it("should clone Decimal instances", () => {
       const original = new Decimal("99.99");
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toBeInstanceOf(Decimal);
       expect(cloned.toString()).toBe("99.99");
@@ -178,7 +185,7 @@ describe("structuredClone utilities", () => {
         price: new Decimal("19.99"),
         discount: new Decimal("5"),
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.price).toBeInstanceOf(Decimal);
       expect(cloned.discount).toBeInstanceOf(Decimal);
@@ -197,7 +204,7 @@ describe("structuredClone utilities", () => {
           total: new Decimal("31.25"),
         },
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.cart.items[0].price).toBeInstanceOf(Decimal);
       expect(cloned.cart.items[1].price).toBeInstanceOf(Decimal);
@@ -208,7 +215,7 @@ describe("structuredClone utilities", () => {
 
     it("should preserve Decimal precision", () => {
       const original = new Decimal("123.456789");
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.toString()).toBe(original.toString());
     });
@@ -217,7 +224,7 @@ describe("structuredClone utilities", () => {
   describe("DateTime Support", () => {
     it("should clone DateTime instances", () => {
       const original = new DateTime("2023-10-27T10:30:00Z");
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toBeInstanceOf(DateTime);
       expect(cloned.getTime()).toBe(original.getTime());
@@ -229,7 +236,7 @@ describe("structuredClone utilities", () => {
         createdAt: new DateTime("2023-01-01T00:00:00Z"),
         updatedAt: new DateTime("2023-12-31T23:59:59Z"),
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.createdAt).toBeInstanceOf(DateTime);
       expect(cloned.updatedAt).toBeInstanceOf(DateTime);
@@ -248,7 +255,7 @@ describe("structuredClone utilities", () => {
           ],
         },
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.event.schedule[0].time).toBeInstanceOf(DateTime);
       expect(cloned.event.schedule[1].time).toBeInstanceOf(DateTime);
@@ -259,7 +266,7 @@ describe("structuredClone utilities", () => {
 
     it("should preserve DateTime millisecond precision", () => {
       const original = new DateTime("2023-10-27T10:30:45.123Z");
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.getTime()).toBe(original.getTime());
       expect(cloned.getMilliseconds()).toBe(original.getMilliseconds());
@@ -278,7 +285,7 @@ describe("structuredClone utilities", () => {
           },
         ],
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.amount).toBeInstanceOf(Decimal);
       expect(cloned.timestamp).toBeInstanceOf(DateTime);
@@ -292,7 +299,7 @@ describe("structuredClone utilities", () => {
   describe("Purity and Immutability", () => {
     it("should not mutate the original object", () => {
       const original = { a: 1, b: { c: 2 } };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       cloned.a = 999;
       cloned.b.c = 888;
@@ -303,7 +310,7 @@ describe("structuredClone utilities", () => {
 
     it("should not mutate the original array", () => {
       const original = [1, 2, [3, 4]];
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       cloned[0] = 999;
       (cloned[2] as number[])[0] = 888;
@@ -315,7 +322,7 @@ describe("structuredClone utilities", () => {
     it("should not mutate original Decimal instances", () => {
       const originalDecimal = new Decimal("50");
       const original = { price: originalDecimal };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       // Change the cloned value
       cloned.price = new Decimal("100.00");
@@ -328,7 +335,7 @@ describe("structuredClone utilities", () => {
     it("should not mutate original DateTime instances", () => {
       const originalDate = new DateTime("2023-01-01T00:00:00Z");
       const original = { date: originalDate };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       // Change the cloned value
       cloned.date = new DateTime("2024-01-01T00:00:00Z");
@@ -343,7 +350,7 @@ describe("structuredClone utilities", () => {
           values: [1, 2, 3],
         },
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       cloned.data.values.push(4);
 
@@ -353,33 +360,33 @@ describe("structuredClone utilities", () => {
   });
 
   describe("Helper Functions", () => {
-    describe("applyHelpersToSerialized", () => {
+    describe("deepCloneWithHelpersToSerialized", () => {
       it("should transform Decimal to marker object", () => {
         const decimal = new Decimal("99.99");
-        const result = applyHelpersToSerialized(decimal);
+        const result = deepCloneWithHelpersToSerialized(decimal);
 
         expect(result).toEqual({ "__decimal.js__": "99.99" });
       });
 
       it("should transform DateTime to marker object", () => {
         const date = new DateTime("2023-10-27T10:00:00Z");
-        const result = applyHelpersToSerialized(date);
+        const result = deepCloneWithHelpersToSerialized(date);
 
         expect(result).toHaveProperty("__datetime.js__");
         expect(typeof (result as any)["__datetime.js__"]).toBe("string");
       });
 
       it("should return primitives unchanged", () => {
-        expect(applyHelpersToSerialized(42)).toBe(42);
-        expect(applyHelpersToSerialized("hello")).toBe("hello");
-        expect(applyHelpersToSerialized(true)).toBe(true);
+        expect(deepCloneWithHelpersToSerialized(42)).toBe(42);
+        expect(deepCloneWithHelpersToSerialized("hello")).toBe("hello");
+        expect(deepCloneWithHelpersToSerialized(true)).toBe(true);
       });
     });
 
-    describe("removeHelpersFromSerialized", () => {
+    describe("deepCloneWithOutHelpers", () => {
       it("should restore Decimal from marker object", () => {
         const marker = { "__decimal.js__": "99.99" };
-        const result = removeHelpersFromSerialized(marker);
+        const result = deepCloneWithOutHelpers(marker);
 
         expect(result).toBeInstanceOf(Decimal);
         expect((result as Decimal).toString()).toBe("99.99");
@@ -388,15 +395,15 @@ describe("structuredClone utilities", () => {
       it("should restore DateTime from marker object", () => {
         const isoString = new DateTime("2023-10-27T10:00:00Z").toJSON();
         const marker = { "__datetime.js__": isoString };
-        const result = removeHelpersFromSerialized(marker);
+        const result = deepCloneWithOutHelpers(marker);
 
         expect(result).toBeInstanceOf(DateTime);
       });
 
       it("should return primitives unchanged", () => {
-        expect(removeHelpersFromSerialized(42)).toBe(42);
-        expect(removeHelpersFromSerialized("hello")).toBe("hello");
-        expect(removeHelpersFromSerialized(true)).toBe(true);
+        expect(deepCloneWithOutHelpers(42)).toBe(42);
+        expect(deepCloneWithOutHelpers("hello")).toBe("hello");
+        expect(deepCloneWithOutHelpers(true)).toBe(true);
       });
     });
   });
@@ -416,7 +423,7 @@ describe("structuredClone utilities", () => {
           },
         },
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.level1.level2.level3.level4.level5.value).toBeInstanceOf(
         Decimal
@@ -445,7 +452,7 @@ describe("structuredClone utilities", () => {
           updatedAt: new DateTime("2023-10-27T12:00:00Z"),
         },
       };
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned.users[0].balance).toBeInstanceOf(Decimal);
       expect(cloned.users[0].lastLogin).toBeInstanceOf(DateTime);
@@ -459,7 +466,7 @@ describe("structuredClone utilities", () => {
       for (let i = 0; i < 100; i++) {
         original[`key${i}`] = i;
       }
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
@@ -468,7 +475,7 @@ describe("structuredClone utilities", () => {
 
     it("should handle arrays with many elements", () => {
       const original = Array.from({ length: 100 }, (_, i) => i);
-      const cloned = cloneWithHelpers(original);
+      const cloned = deepClone(original);
 
       expect(cloned).toEqual(original);
       expect(cloned).not.toBe(original);
