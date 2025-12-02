@@ -139,12 +139,12 @@ export class HistoryManager {
       //    prioridad página > layout más interno > ... > root
       if (!ctx.state) {
         if (page.onInit) {
-          ctx.state = await page.onInit();
+          ctx.state = await page.onInit({ params });
         } else {
           for (let i = needed.length - 1; i >= 0; i--) {
             const l = this.registry.getLayout(needed[i]);
             if (l?.onInit) {
-              ctx.state = await l.onInit();
+              ctx.state = await l.onInit({ params });
               break;
             }
           }

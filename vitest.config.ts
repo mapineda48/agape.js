@@ -9,6 +9,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./web"),
       "@utils": path.resolve(__dirname, "./lib/utils"),
       "@agape/access": path.resolve(__dirname, "./web/test/mocks/access.ts"),
+      "@agape/spa": path.resolve(__dirname, "./web/test/mocks/spa.ts"),
       "@agape/cms/inventory/configuration/category": path.resolve(
         __dirname,
         "./web/test/mocks/category.ts"

@@ -7,13 +7,13 @@ export type ModuleType = Record<string, () => Promise<unknown>>;
 export interface IPage {
   (): Promise<void>;
   Component?: () => JSX.Element;
-  onInit?: () => Promise<Record<string, unknown>>;
+  onInit?: (args: { params: RouteParams }) => Promise<Record<string, unknown>>;
 }
 
 export interface ILayout {
   (): Promise<void>;
   Component?: (props: { children?: JSX.Element }) => JSX.Element;
-  onInit?: () => Promise<Record<string, unknown>>;
+  onInit?: (args: { params: RouteParams }) => Promise<Record<string, unknown>>;
 }
 
 export type IRoute = Record<string, IPage>;
@@ -123,8 +123,29 @@ export class RouteRegistry {
       curr += "/" + p;
       acc.push(curr);
     }
-    // filtra sólo los que están registrados como layout
-    return acc.filter((p) => this.layouts[p]);
+
+    const foundLayouts: string[] = [];
+
+    for (const pathToCheck of acc) {
+      // 1. Exact match
+      if (this.layouts[pathToCheck]) {
+        foundLayouts.push(pathToCheck);
+        continue;
+      }
+
+      // 2. Parameterized match
+      for (const layoutPattern of Object.keys(this.layouts)) {
+        if (layoutPattern.includes(":")) {
+          const match = matchPath(layoutPattern, pathToCheck);
+          if (match) {
+            foundLayouts.push(layoutPattern);
+            break;
+          }
+        }
+      }
+    }
+
+    return foundLayouts;
   }
 
   /** Escanea páginas y layouts y los registra como loaders lazy */
@@ -192,6 +213,8 @@ export class RouteRegistry {
     const path = filename
       .replace(/^\.\//, "/")
       .replace(/\/_layout\.tsx?$/, "")
+      // Convert [param] to :param
+      .replace(/\[([^\]]+)\]/g, ":$1")
       .toLowerCase();
     return path === "" ? "/" : path;
   }
