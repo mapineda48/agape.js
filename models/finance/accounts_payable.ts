@@ -1,6 +1,7 @@
-import { serial, integer, numeric } from "drizzle-orm/pg-core";
+import { serial, integer } from "drizzle-orm/pg-core";
 import { schema } from "../agape";
 import purchase_invoice from "./purchase_invoice";
+import { decimal } from "../../lib/db/custom-types";
 
 /**
  * Modelo de cartera por pagar (Accounts Payable)
@@ -10,9 +11,11 @@ const accounts_payable = schema.table("finance_accounts_payable", {
   /** Identificador único de la cartera por pagar */
   id: serial("id").primaryKey(),
   /** Identificador de la factura de compra relacionada */
-  purchaseInvoiceId: integer("purchase_invoice_id").notNull().references(() => purchase_invoice.id, { onDelete: "cascade" }),
+  purchaseInvoiceId: integer("purchase_invoice_id")
+    .notNull()
+    .references(() => purchase_invoice.id, { onDelete: "cascade" }),
   /** Monto pendiente por pagar */
-  pendingAmount: numeric("pending_amount", { precision: 12, scale: 2 }).notNull(),
+  pendingAmount: decimal("pending_amount").notNull(),
 });
 
 export default accounts_payable;

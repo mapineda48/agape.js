@@ -1,13 +1,10 @@
-import {
-  serial,
-  integer,
-  timestamp,
-  boolean,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { serial, integer, boolean, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { schema } from "../agape";
 import person from "../core/person";
 import client_type from "./client_type";
+import { dateTime } from "../../lib/db/custom-types";
+import DateTime from "../../lib/utils/data/DateTime";
 
 /**
  * Modelo de cliente (Client)
@@ -28,13 +25,13 @@ const client = schema.table("crm_client", {
   /** Indica si el cliente está activo */
   active: boolean("active").default(true).notNull(),
   /** Fecha de creación del registro */
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
+  createdAt: dateTime("created_at")
+    .default(sql`now()`)
     .notNull(),
   /** Fecha de última actualización del registro */
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .$onUpdate(() => new Date()),
+  updatedAt: dateTime("updated_at")
+    .default(sql`now()`)
+    .$onUpdate(() => new DateTime()),
 });
 
 export default client;
