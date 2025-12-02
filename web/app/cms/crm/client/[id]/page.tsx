@@ -58,7 +58,7 @@ export default function EditClientPage(props: Props) {
       email: props.client.email,
       phone: props.client.phone || "",
       address: props.client.address || "",
-      birthdate: props.client.birthdate.toISOString().split("T")[0],
+      birthdate: props.client.birthdate,
     },
     typeId: props.client.typeId?.toString() || "",
     active: props.client.active,

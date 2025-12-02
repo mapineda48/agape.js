@@ -17,7 +17,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 interface ClientType {
   id: number;
   name: string;
-  disabled: boolean;
+  isEnabled: boolean;
 }
 
 export default function GeneralConfigurationPage() {
@@ -143,12 +143,12 @@ export default function GeneralConfigurationPage() {
                       <span
                         className={clsx(
                           "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                          item.disabled
+                          !item.isEnabled
                             ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
                             : "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
                         )}
                       >
-                        {item.disabled ? "Deshabilitado" : "Activo"}
+                        {item.isEnabled ? "Activo" : "Deshabilitado"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -211,9 +211,9 @@ interface ClientTypeFormProps {
 
 function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
   const isEditing = !!item;
-  const initialState = item || { name: "", disabled: false };
+  const initialState = item || { name: "", isEnabled: false };
 
-  async function handleSubmit(data: { name: string; disabled: boolean }) {
+  async function handleSubmit(data: { name: string; isEnabled: boolean }) {
     try {
       if (isEditing && item) {
         await updateClientType(item.id, data);
@@ -245,11 +245,11 @@ function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
 
         <div className="flex items-center">
           <CheckBox
-            path="disabled"
+            path="isEnabled"
             className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
           />
           <label className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-            Deshabilitar este tipo de cliente
+            Activo
           </label>
         </div>
       </div>

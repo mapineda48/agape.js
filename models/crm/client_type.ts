@@ -1,7 +1,5 @@
-
 import { boolean, serial, varchar } from "drizzle-orm/pg-core";
 import { schema } from "../agape";
-
 
 /**
  * Modelo de tipo de cliente (ClientType)
@@ -13,7 +11,7 @@ const client_type = schema.table("crm_client_type", {
   /** Nombre del tipo de cliente (ej: 'Retail', 'Wholesale', 'VIP') */
   name: varchar("name", { length: 50 }).notNull(),
   /** Indica si el tipo de cliente está deshabilitado */
-  disabled: boolean("disabled").default(false).notNull(),
+  isEnabled: boolean("is_enabled").default(false).notNull(),
 });
 
 export default client_type;

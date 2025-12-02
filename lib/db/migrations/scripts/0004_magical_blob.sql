@@ -1,0 +1,1 @@
+ALTER TABLE "agape_app_development_demo"."crm_client_type" RENAME COLUMN "disabled" TO "is_enabled";

@@ -39,7 +39,7 @@ export default function Notification(props: NotificationProps) {
   const resolvedType: NotificationType = isError ? "error" : type;
   let message = isError ? payload.message : payload;
 
-  if (!isValidElement(message)) {
+  if (typeof message !== "string") {
     console.error("Invalid message type", message);
     message = "Unknown error";
   }

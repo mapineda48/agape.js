@@ -4,6 +4,7 @@ import person from "#models/core/person";
 import client_type from "#models/crm/client_type";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { eq } from "drizzle-orm";
+import type DateTime from "#utils/data/DateTime";
 
 export async function getClient(id: number) {
   const [match] = await db
@@ -123,7 +124,7 @@ export interface UpsertClientData {
     email: string;
     phone?: string;
     address?: string;
-    birthdate: Date;
+    birthdate: DateTime;
   };
   typeId?: number;
   active?: boolean;
@@ -136,8 +137,8 @@ export interface ClientRecord {
   typeId: number | null;
   photoUrl: string | null;
   active: boolean;
-  createdAt: Date;
-  updatedAt: Date | null;
+  createdAt: DateTime;
+  updatedAt: DateTime | null;
   person?: {
     id: number;
     firstName: string;
@@ -145,9 +146,9 @@ export interface ClientRecord {
     email: string;
     phone: string | null;
     address: string | null;
-    birthdate: Date;
-    createdAt: Date | null;
-    updateAt: Date | null;
+    birthdate: DateTime;
+    createdAt: DateTime | null;
+    updateAt: DateTime | null;
   };
 }
 

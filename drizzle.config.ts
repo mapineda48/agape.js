@@ -1,15 +1,14 @@
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  out: './lib/db/migrations',
+  out: "./lib/db/migrations/scripts",
 
-  schema: ['./models/**/*.ts'],
+  schema: ["./models/**/*.ts"],
 
   schemaFilter: ["agape_app_development_demo"],
 
-  dialect: 'postgresql',
+  dialect: "postgresql",
   dbCredentials: {
     url: "postgresql://postgres:mypassword@localhost",
-    
   },
 });

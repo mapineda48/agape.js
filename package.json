@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "tsx": "tsx watch --tsconfig ./tsconfig.app.json",
-    "backend": "drizzle-kit push && tsx watch --tsconfig ./tsconfig.app.json bin/index.ts",
+    "backend": "tsx watch --tsconfig ./tsconfig.app.json bin/index.ts",
     "frontend": "vite",
     "prebuild": "rimraf dist && tsc -p ./tsconfig.app.json && vite build",
     "build": "tsx bin/build.ts",

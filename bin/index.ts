@@ -33,7 +33,7 @@ const isDevelopment = NODE_ENV === "development";
 
 // Initialize DB connection and models (required before importing model-dependent logic like auth)
 await initDatabase(DATABASE_URI, {
-  dev: isDevelopment,
+  dev: false,
   rootUser: {
     username: AGAPE_ADMIN,
     password: AGAPE_PASSWORD,

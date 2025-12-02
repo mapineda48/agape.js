@@ -26,13 +26,13 @@ export async function getClientType(id: number) {
  */
 export async function createClientType(data: {
   name: string;
-  disabled?: boolean;
+  isEnabled?: boolean;
 }) {
   const [record] = await db
     .insert(client_type)
     .values({
       name: data.name,
-      disabled: data.disabled ?? false,
+      isEnabled: data.isEnabled ?? false,
     })
     .returning();
 
@@ -46,14 +46,14 @@ export async function updateClientType(
   id: number,
   data: {
     name: string;
-    disabled?: boolean;
+    isEnabled?: boolean;
   }
 ) {
   const [record] = await db
     .update(client_type)
     .set({
       name: data.name,
-      disabled: data.disabled ?? false,
+      isEnabled: data.isEnabled ?? false,
     })
     .where(eq(client_type.id, id))
     .returning();
