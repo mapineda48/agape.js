@@ -159,6 +159,9 @@ export class HistoryManager {
     })()
       .catch((error) => {
         checkError(error);
+        // Navigate to show error page instead of leaving blank
+        this.currentParams = {};
+        this.navigator.updateHistory(pathname, { replace: true });
       })
       .finally(() => {
         this.loading = false;
