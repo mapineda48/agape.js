@@ -2,9 +2,9 @@ import { type JSX } from "react";
 import useInput from "../Input/useInput";
 
 export default function SelectInt(props: Props) {
-  const { path, onChange, ...core } = props;
+  const { path, onChange, materialize, ...core } = props;
 
-  const [state, setState] = useInput(path, 0);
+  const [state, setState] = useInput(path, 0, { materialize });
 
   return (
     <select
@@ -27,6 +27,7 @@ export default function SelectInt(props: Props) {
 interface Props extends Core {
   path: string;
   default?: boolean;
+  materialize?: boolean;
   onChange?: (value: number, index: number) => void;
 }
 

@@ -2,9 +2,9 @@ import { type JSX } from "react";
 import useInput from "../Input/useInput";
 
 export default function SelectBoolean(props: Props) {
-  const { path, ...core } = props;
+  const { path, materialize, ...core } = props;
 
-  const [state, setState] = useInput(path, false);
+  const [state, setState] = useInput(path, false, { materialize });
 
   return (
     <select
@@ -20,6 +20,7 @@ export default function SelectBoolean(props: Props) {
 
 interface Props extends Core {
   path: string;
+  materialize?: boolean;
 }
 
 type Core = Omit<
