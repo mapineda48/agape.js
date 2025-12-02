@@ -37,6 +37,10 @@ export default function FormProvider({ state = {}, ...core }: Props) {
 
           const payload = deepCloneWithOutHelpers(state.form.data);
 
+          if (process.env.NODE_ENV === "development") {
+            console.log("[Form] Submit payload", payload);
+          }
+
           emitter.emit(evt.SUBMIT, payload);
         }}
       />

@@ -7,7 +7,9 @@ export default function InputDateTime(props: Props) {
   const { path, ...core } = props;
 
   // Default to now if no value
-  const [state, setState] = useInput<DateTime>(path, new DateTime());
+  const [state, setState] = useInput<DateTime>(path, new DateTime(), {
+    materialize: true,
+  });
 
   const displayValue =
     state &&

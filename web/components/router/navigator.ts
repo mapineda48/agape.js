@@ -23,6 +23,10 @@ export class Navigator {
   }
 
   public updateHistory(pathname: string, { state, replace }: INavigateTo) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("updateHistory", pathname, state);
+    }
+
     const serializedState = deepCloneWithHelpersToSerialized(state);
     if (replace) this.history.replace(pathname, serializedState);
     else this.history.push(pathname, serializedState);
