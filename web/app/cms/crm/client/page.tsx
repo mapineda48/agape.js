@@ -200,7 +200,7 @@ export default function NewClientPage(props: Props) {
                       <option value="">Seleccionar tipo...</option>
                       {props.clientTypes.map((type) => (
                         <option key={type.id} value={type.id}>
-                          {type.fullName}
+                          {type.name}
                         </option>
                       ))}
                     </Select.Int>

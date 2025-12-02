@@ -9,6 +9,7 @@ export default function SelectInt(props: Props) {
   return (
     <select
       {...core}
+      name={path}
       value={state as number}
       onChange={({ currentTarget }) => {
         const index = currentTarget.selectedIndex;

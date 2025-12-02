@@ -60,7 +60,7 @@ export default function EditClientPage(props: Props) {
       address: props.client.address || "",
       birthdate: props.client.birthdate,
     },
-    typeId: props.client.typeId?.toString() || "",
+    typeId: props.client.typeId || 0,
     active: props.client.active,
     photo: props.client.photoUrl || undefined,
   };
@@ -221,22 +221,44 @@ export default function EditClientPage(props: Props) {
                     Información de Cliente
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Select.Int
-                      path="typeId"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    >
-                      <option value="">Seleccionar tipo...</option>
-                      {props.clientTypes.map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.fullName}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Cliente
+                      </label>
+                      <Select.Int
+                        path="typeId"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900 hover:border-gray-400"
+                      >
+                        <option
+                          value={0}
+                          className="text-gray-500 bg-white py-2"
+                        >
+                          Seleccionar tipo...
                         </option>
-                      ))}
-                    </Select.Int>
-                    <div className="flex items-center pt-8">
-                      <Checkbox
-                        path="active"
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
+                        {props.clientTypes.map((type) => (
+                          <option
+                            key={type.id}
+                            value={type.id}
+                            className="text-gray-900 bg-white py-2 hover:bg-blue-50"
+                          >
+                            {type.name}
+                          </option>
+                        ))}
+                      </Select.Int>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Estado
+                      </label>
+                      <div className="flex items-center pt-2">
+                        <Checkbox
+                          path="active"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          Cliente Activo
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

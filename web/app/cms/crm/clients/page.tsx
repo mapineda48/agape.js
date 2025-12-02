@@ -182,7 +182,7 @@ export default function ClientsPage(props: Props) {
                   <option value="">Todos los tipos</option>
                   {props.clientTypes.map((type) => (
                     <option key={type.id} value={type.id}>
-                      {type.fullName}
+                      {type.name}
                     </option>
                   ))}
                 </select>
