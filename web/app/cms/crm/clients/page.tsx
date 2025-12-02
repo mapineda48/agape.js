@@ -36,6 +36,8 @@ export async function onInit() {
 }
 
 export default function ClientsPage(props: Props) {
+  console.log({ props });
+
   const notify = useNotificacion();
   const { navigate } = useRouter();
 

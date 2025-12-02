@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import FormProvider from "@/components/form/provider";
+import FormProvider from "@/components/form";
 import Input from "@/components/form/Input";
 import { Submit } from "@/components/form/Submit";
 import { useRouter } from "@/components/router/router-hook";
@@ -7,6 +7,9 @@ import { useNotificacion } from "@/components/ui/notification";
 import { upsertClient, getClient } from "@agape/cms/crm/client";
 import { listClientTypes as findAll } from "@agape/crm/client_type";
 import DateTime from "@utils/data/DateTime";
+import Select from "@/components/form/Select";
+import Checkbox from "@/components/form/CheckBox";
+import PathProvider from "@/components/form/paths";
 
 type ClientType = Awaited<ReturnType<typeof findAll>>[number];
 type ClientData = Awaited<ReturnType<typeof getClient>>;
@@ -48,8 +51,8 @@ export default function EditClientPage(props: Props) {
   // Prepare initial form data
   const initialData = {
     id: props.client.id,
-    personId: props.client.personId,
-    personData: {
+    person: {
+      id: props.client.personId,
       firstName: props.client.firstName,
       lastName: props.client.lastName,
       email: props.client.email,
@@ -95,7 +98,7 @@ export default function EditClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <FormProvider initialData={initialData}>
+          <FormProvider state={initialData}>
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               {/* Photo Section */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-12">
@@ -118,19 +121,8 @@ export default function EditClientPage(props: Props) {
                   </div>
                   <div className="mt-4">
                     <Input.File
-                      name="photo"
+                      path="photo"
                       accept="image/*"
-                      onChange={(file) => {
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setPhotoPreview(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        } else {
-                          setPhotoPreview(props.client.photoUrl);
-                        }
-                      }}
                       className="hidden"
                       id="photo-upload"
                     />
@@ -158,70 +150,62 @@ export default function EditClientPage(props: Props) {
 
               {/* Form Fields */}
               <div className="px-8 py-6 space-y-6">
-                {/* Hidden fields for ID */}
-                <Input.Text name="id" type="hidden" />
-                <Input.Text name="personId" type="hidden" />
-
                 {/* Personal Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <svg
-                      className="h-5 w-5 mr-2 text-blue-600"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                        clipRule="evenodd"
+                <PathProvider value="person">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <svg
+                        className="h-5 w-5 mr-2 text-blue-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Información Personal
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Input.Text
+                        path="firstName"
+                        placeholder="Juan"
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                       />
-                    </svg>
-                    Información Personal
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input.Text
-                      name="personData.firstName"
-                      label="Nombre"
-                      placeholder="Juan"
-                      required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    />
-                    <Input.Text
-                      name="personData.lastName"
-                      label="Apellido"
-                      placeholder="Pérez"
-                      required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    />
-                    <Input.Text
-                      name="personData.email"
-                      label="Email"
-                      type="email"
-                      placeholder="juan.perez@example.com"
-                      required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    />
-                    <Input.Text
-                      name="personData.phone"
-                      label="Teléfono"
-                      placeholder="+1 234 567 8900"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    />
-                    <Input.DateTime
-                      name="personData.birthdate"
-                      label="Fecha de Nacimiento"
-                      required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    />
-                    <Input.Text
-                      name="personData.address"
-                      label="Dirección"
-                      placeholder="Calle Principal 123"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    />
+                      <Input.Text
+                        path="lastName"
+                        placeholder="Pérez"
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      />
+                      <Input.Text
+                        path="email"
+                        email
+                        placeholder="juan.perez@example.com"
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      />
+                      <Input.Text
+                        path="phone"
+                        placeholder="+1 234 567 8900"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      />
+                      <Input.DateTime
+                        path="birthdate"
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      />
+                      <Input.Text
+                        path="address"
+                        placeholder="Calle Principal 123"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      />
+                    </div>
                   </div>
-                </div>
+                </PathProvider>
 
                 {/* Client Information */}
                 <div>
@@ -237,9 +221,8 @@ export default function EditClientPage(props: Props) {
                     Información de Cliente
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input.Select
-                      name="typeId"
-                      label="Tipo de Cliente"
+                    <Select.Int
+                      path="typeId"
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     >
                       <option value="">Seleccionar tipo...</option>
@@ -248,11 +231,10 @@ export default function EditClientPage(props: Props) {
                           {type.fullName}
                         </option>
                       ))}
-                    </Input.Select>
+                    </Select.Int>
                     <div className="flex items-center pt-8">
-                      <Input.Checkbox
-                        name="active"
-                        label="Cliente Activo"
+                      <Checkbox
+                        path="active"
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                     </div>
@@ -279,22 +261,19 @@ export default function EditClientPage(props: Props) {
                         personId: Number(data.personId),
                         personData: {
                           ...data.personData,
-                          birthdate: new DateTime(data.personData.birthdate),
+                          birthdate: new DateTime(data.birthdate),
                         },
                         typeId: data.typeId ? Number(data.typeId) : undefined,
                       };
 
                       await upsertClient(formData);
                       notify({
-                        payload: {
-                          message: "Cliente actualizado exitosamente",
-                          type: "success",
-                        },
+                        payload: "Cliente actualizado exitosamente",
                       });
                       navigate("../../clients");
                     } catch (error) {
                       notify({
-                        payload: error,
+                        payload: error as Error,
                       });
                     }
                   }}

@@ -17,7 +17,7 @@ export async function getClient(id: number) {
       address: person.address,
       birthdate: person.birthdate,
       typeId: client.typeId,
-      typeName: client_type.fullName,
+      typeName: client_type.name,
       photoUrl: client.photoUrl,
       active: client.active,
       createdAt: client.createdAt,
@@ -45,12 +45,12 @@ export async function upsertClient(
   // Step 1: Upsert person record
   let personRecord;
 
-  if (data.personId) {
+  if (personData.id) {
     // Update existing person
     [personRecord] = await db
       .update(person)
       .set(personData)
-      .where(eq(person.id, data.personId))
+      .where(eq(person.id, personData.id))
       .returning();
   } else {
     // Create new person

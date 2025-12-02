@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { isValidElement, useEffect, useState } from "react";
 import {
   X,
   CheckCircle,
@@ -37,7 +37,12 @@ export default function Notification(props: NotificationProps) {
 
   const isError = payload instanceof Error;
   const resolvedType: NotificationType = isError ? "error" : type;
-  const message = isError ? payload.message : payload;
+  let message = isError ? payload.message : payload;
+
+  if (!isValidElement(message)) {
+    console.error("Invalid message type", message);
+    message = "Unknown error";
+  }
 
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
