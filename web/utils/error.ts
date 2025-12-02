@@ -29,3 +29,13 @@ if (process.env.NODE_ENV !== "development") {
       .catch(() => {});
   });
 }
+
+export function checkError(error: Error) {
+  console.error(error);
+
+  const stack = error?.stack || error.message;
+
+  notifyError(stack)
+    .then(() => {})
+    .catch(() => {});
+}

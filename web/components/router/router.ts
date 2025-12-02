@@ -6,6 +6,7 @@ import { RouteRegistry, type ModuleType } from "./route-registry";
 import { Navigator } from "./navigator";
 import { AuthGuard, type INavigateTo } from "./auth-guard";
 import type { RouteParams } from "./types";
+import { checkError } from "@/utils/error";
 
 /**
  * Context that holds the parent path for nested layouts.
@@ -157,7 +158,7 @@ export class HistoryManager {
       this.navigator.updateHistory(pathname, ctx);
     })()
       .catch((error) => {
-        console.error(error);
+        checkError(error);
       })
       .finally(() => {
         this.loading = false;
