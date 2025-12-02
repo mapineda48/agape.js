@@ -9,7 +9,7 @@ import { findAll } from "@agape/cms/inventory/configuration/category";
 import { useSharedState } from "@/components/util/event-emitter";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
-import { debounce } from "lodash";
+import { debounce } from "@/utils/debounce";
 import { Pagination } from "../Pagination";
 import Decimal from "@utils/data/Decimal";
 
