@@ -1,34 +1,49 @@
 import { serial, varchar } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 import { schema } from "../agape";
+import user from "./user";
 import { dateTime } from "../../lib/db/custom-types";
-import DateTime from "../../lib/utils/data/DateTime";
+import {
+  relations,
+  type InferInsertModel,
+  type InferSelectModel,
+} from "drizzle-orm";
 
 /**
  * Modelo de persona (Person)
  * Representa una persona física en el sistema.
+ * PK = FK a user.id (herencia por tabla relacionada).
  */
-const person = schema.table("person", {
-  /** Identificador único de la persona */
-  id: serial("id").primaryKey(),
+export const person = schema.table("core_person", {
+  /**
+   * Identificador único de la persona
+   * Además es FK a user.id (una persona es una user).
+   */
+  id: serial("id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "restrict" }),
+
   /** Nombre de la persona */
   firstName: varchar("first_name", { length: 100 }).notNull(),
+
   /** Apellido de la persona */
   lastName: varchar("last_name", { length: 100 }).notNull(),
-  /** Fecha de nacimiento */
-  birthdate: dateTime("birthdate").notNull(),
-  /** Correo electrónico */
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  /** Teléfono de contacto */
-  phone: varchar("phone", { length: 20 }),
-  /** Dirección de la persona */
-  address: varchar("address", { length: 255 }),
-  /** Fecha de creación del registro */
-  createdAt: dateTime("created_at").default(sql`now()`),
-  /** Fecha de última actualización del registro */
-  updateAt: dateTime("updated_at")
-    .default(sql`now()`)
-    .$onUpdate(() => new DateTime()),
+
+  /** Fecha de nacimiento (opcional si tu dominio lo permite) */
+  birthdate: dateTime("birthdate"),
 });
+
+/**
+ * Relaciones de Person:
+ * - Cada persona pertenece a exactamente una user.
+ */
+export const personRelations = relations(person, ({ one }) => ({
+  user: one(user, {
+    fields: [person.id],
+    references: [user.id],
+  }),
+}));
+
+export type Person = InferSelectModel<typeof person>;
+export type NewPerson = InferInsertModel<typeof person>;
 
 export default person;

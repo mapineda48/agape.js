@@ -19,13 +19,14 @@ import DateTime from "../../lib/utils/data/DateTime";
  * Representa un empleado dentro del staff de la organización.
  */
 const employee = schema.table("staff_employee", {
-  /** Identificador único del empleado */
-  id: serial("id").primaryKey(),
-  /** Identificador de la persona asociada al empleado */
-  personId: integer("person_id")
-    .notNull()
-    .references(() => person.id)
-    .unique(),
+  /**
+   * Identificador único de la persona
+   * Además es FK a user.id (una empleado es una persona).
+   */
+  id: serial("id")
+    .primaryKey()
+    .references(() => person.id, { onDelete: "restrict" }),
+
   /** Fecha de contratación */
   hireDate: dateTime("hire_date")
     .default(sql`now()`)

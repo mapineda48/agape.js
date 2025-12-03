@@ -1,21 +1,23 @@
 import { db } from "#lib/db";
 import client from "#models/crm/client";
 import person from "#models/core/person";
+import party, { user } from "#models/core/user";
 import client_type from "#models/crm/client_type";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { eq } from "drizzle-orm";
 import type DateTime from "#utils/data/DateTime";
+import { upsertUser, type IUpsertUser, type IUser } from "#svc/user";
 
 export async function getClient(id: number) {
   const [match] = await db
     .select({
       id: client.id,
-      personId: client.personId,
+      userId: client.id,
       firstName: person.firstName,
       lastName: person.lastName,
-      email: person.email,
-      phone: person.phone,
-      address: person.address,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
       birthdate: person.birthdate,
       typeId: client.typeId,
       typeName: client_type.name,
@@ -25,7 +27,8 @@ export async function getClient(id: number) {
       updatedAt: client.updatedAt,
     })
     .from(client)
-    .innerJoin(person, eq(client.personId, person.id))
+    .innerJoin(user, eq(client.id, user.id))
+    .innerJoin(person, eq(client.id, person.id))
     .leftJoin(client_type, eq(client.typeId, client_type.id))
     .where(eq(client.id, id));
 
@@ -41,29 +44,15 @@ export async function getClient(id: number) {
 export async function upsertClient(
   data: UpsertClientData
 ): Promise<ClientRecord> {
-  const { id, photo, person: personData, ...clientData } = data;
+  const { id, photo, user: userDto, ...clientData } = data;
 
-  // Step 1: Upsert person record
-  let personRecord;
+  const user = await upsertUser(userDto);
 
-  if (personData.id) {
-    // Update existing person
-    [personRecord] = await db
-      .update(person)
-      .set(personData)
-      .where(eq(person.id, personData.id))
-      .returning();
-  } else {
-    // Create new person
-    [personRecord] = await db.insert(person).values(personData).returning();
-  }
-
-  // Step 2: Upsert client record
+  // Step 3: Upsert client record
   const [clientRecord] = await db
     .insert(client)
     .values({
       ...(id !== undefined && { id }),
-      personId: personRecord.id,
       typeId: clientData.typeId,
       active: clientData.active ?? true,
       photoUrl: null, // Will update if photo provided
@@ -77,7 +66,7 @@ export async function upsertClient(
     })
     .returning();
 
-  // Step 3: Handle photo upload if provided
+  // Step 4: Handle photo upload if provided
   if (photo) {
     let photoUrl: string;
 
@@ -101,13 +90,13 @@ export async function upsertClient(
     return {
       ...clientRecord,
       photoUrl,
-      person: personRecord,
+      user: user,
     };
   }
 
   return {
     ...clientRecord,
-    person: personRecord,
+    user: user,
   };
 }
 
@@ -117,39 +106,20 @@ export async function upsertClient(
 
 export interface UpsertClientData {
   id?: number;
-  person: {
-    id?: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    birthdate: DateTime;
-  };
-  typeId?: number;
-  active?: boolean;
+  user: IUser;
+  typeId: number;
+  active: boolean;
   photo?: string | File;
 }
 
 export interface ClientRecord {
   id: number;
-  personId: number;
   typeId: number | null;
   photoUrl: string | null;
   active: boolean;
   createdAt: DateTime;
   updatedAt: DateTime | null;
-  person?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string | null;
-    address: string | null;
-    birthdate: DateTime;
-    createdAt: DateTime | null;
-    updateAt: DateTime | null;
-  };
+  user: IUpsertUser;
 }
 
 export type { UpsertClientData as NewClient };

@@ -1,7 +1,7 @@
 import { serial, integer, boolean, varchar } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { schema } from "../agape";
-import person from "../core/person";
+import user from "../core/user";
 import client_type from "./client_type";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
@@ -11,13 +11,14 @@ import DateTime from "../../lib/utils/data/DateTime";
  * Representa un cliente en el sistema CRM.
  */
 const client = schema.table("crm_client", {
-  /** Identificador único del cliente */
-  id: serial("id").primaryKey(),
-  /** Identificador de la persona asociada al cliente */
-  personId: integer("person_id")
-    .notNull()
-    .references(() => person.id)
-    .unique(),
+  /**
+   * Identificador único de el cliente
+   * Además es FK a user.id (un cliente es una user).
+   */
+  id: serial("id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "restrict" }),
+
   /** Identificador del tipo de cliente */
   typeId: integer("type_id").references(() => client_type.id),
   /** URL de la foto del cliente */

@@ -1,8 +1,10 @@
 import { db } from "#lib/db";
 import client from "#models/crm/client";
 import person from "#models/core/person";
+import party from "#models/core/user";
 import client_type from "#models/crm/client_type";
 import { and, count, eq, sql } from "drizzle-orm";
+import type DateTime from "#utils/data/DateTime";
 
 export default async function getClients(
   params: GetClientsParams
@@ -41,12 +43,12 @@ export default async function getClients(
   const queryClients = db
     .select({
       id: client.id,
-      personId: client.personId,
+      userId: client.userId,
       firstName: person.firstName,
       lastName: person.lastName,
-      email: person.email,
-      phone: person.phone,
-      address: person.address,
+      email: party.email,
+      phone: party.phone,
+      address: party.address,
       birthdate: person.birthdate,
       typeId: client.typeId,
       typeName: client_type.name,
@@ -56,7 +58,8 @@ export default async function getClients(
       updatedAt: client.updatedAt,
     })
     .from(client)
-    .innerJoin(person, eq(client.personId, person.id))
+    .innerJoin(person, eq(client.userId, person.id))
+    .innerJoin(party, eq(person.id, party.id))
     .leftJoin(client_type, eq(client.typeId, client_type.id))
     .where(whereClause)
     .orderBy(client.id)
@@ -75,7 +78,8 @@ export default async function getClients(
   const queryCount = db
     .select({ totalCount: count() })
     .from(client)
-    .innerJoin(person, eq(client.personId, person.id))
+    .innerJoin(person, eq(client.userId, person.id))
+    .innerJoin(party, eq(person.id, party.id))
     .where(whereClause);
 
   // Execute both queries in parallel
@@ -105,19 +109,19 @@ export interface GetClientsParams {
 
 export interface GetClient {
   id: number;
-  personId: number;
+  userId: number;
   firstName: string;
   lastName: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   address: string | null;
-  birthdate: Date;
+  birthdate: DateTime | null;
   typeId: number | null;
   typeName: string | null;
   photoUrl: string | null;
   active: boolean;
-  createdAt: Date;
-  updatedAt: Date | null;
+  createdAt: DateTime | null;
+  updatedAt: DateTime | null;
 }
 
 export interface GetClientsResult {
