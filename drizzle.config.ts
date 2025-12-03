@@ -1,11 +1,16 @@
 import { defineConfig } from "drizzle-kit";
+import Config from "./lib/db/config";
+
+const schemaName = "agape_app_development_demo";
+
+Config.setSchemaName(schemaName);
 
 export default defineConfig({
   out: "./lib/db/migrations/scripts",
 
   schema: ["./models/**/*.ts"],
 
-  schemaFilter: ["agape_app_development_demo"],
+  schemaFilter: [Config.schemaName],
 
   dialect: "postgresql",
   dbCredentials: {

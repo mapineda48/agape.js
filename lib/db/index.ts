@@ -2,8 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import applyMigrations from "./migrations/applyMigrations";
 import logger from "#lib/log/logger";
-
-export let schemaName: string = "";
+import Config from "./config";
 
 export let db: Database = null as any;
 
@@ -54,7 +53,7 @@ export default async function initDatabase(
     throw new Error("Tenant is required");
   }
 
-  prepareOrmSchema(config);
+  const schemaName = prepareOrmSchema(config);
 
   const pool = new Pool({ connectionString });
 
@@ -89,7 +88,11 @@ function prepareOrmSchema(config: DatabaseConfig) {
 
   const env = !config.dev ? "production" : isTS ? "development" : "test";
 
-  schemaName = `agape_app_${env}_${config.tenant}`;
+  const schemaName = `agape_app_${env}_${config.tenant}`;
+
+  Config.setSchemaName(schemaName);
+
+  return schemaName;
 }
 
 /**

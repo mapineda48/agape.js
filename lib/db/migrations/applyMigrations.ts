@@ -209,6 +209,10 @@ async function loadMigrations(schemaName: string, skipSeeds = false) {
   return { migrations, migrationSqlMap } as const;
 }
 
+export async function deleteSchema(schemaName: string, pg: Pool) {
+  await pg.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
+}
+
 function delay(ms = 1000): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

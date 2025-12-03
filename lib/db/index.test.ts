@@ -1,6 +1,7 @@
 import initDatabase from "#lib/db";
-import { afterAll, it } from "vitest";
+import { afterAll, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
+import { deleteSchema } from "./migrations/applyMigrations";
 
 const db = await initDatabase("postgresql://postgres:mypassword@localhost", {
   tenant: "vitest",
@@ -9,12 +10,31 @@ const db = await initDatabase("postgresql://postgres:mypassword@localhost", {
 });
 
 afterAll(async () => {
+  const { default: config } = await import("./config");
+  await deleteSchema(config.schemaName, db.$client);
+
   await db.$client.end();
 });
 
-it("DB responde select 1 as foo", async () => {
+it("Check database connection is alive", async () => {
   const result = await db.execute(sql`select 1 as foo`);
-  // NodePgDatabase -> QueryResult
-  // @ts-ignore si toca
+
   expect(result.rows[0].foo).toBe(1);
+});
+
+it("Check migrations were applied", async () => {
+  const { default: config } = await import("./config");
+
+  const result = await db.execute<{ value: string[] }>(
+    sql.raw(`
+      SELECT value 
+      FROM "${config.schemaName}"."agape" 
+      WHERE key = 'migrations'
+    `)
+  );
+
+  const migrations = result.rows[0]?.value ?? [];
+
+  expect(migrations).toBeInstanceOf(Array);
+  expect(migrations.length).toBeGreaterThan(0);
 });
