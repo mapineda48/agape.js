@@ -13,7 +13,6 @@ export async function listSuppliers() {
   return db
     .select({
       id: supplier.id,
-      personId: supplier.personId,
       supplierTypeId: supplier.supplierTypeId,
       supplierTypeName: supplier_type.name,
       registrationDate: supplier.registrationDate,
@@ -26,7 +25,7 @@ export async function listSuppliers() {
       birthdate: person.birthdate,
     })
     .from(supplier)
-    .innerJoin(person, eq(supplier.personId, person.id))
+    .innerJoin(person, eq(supplier.id, person.id))
     .innerJoin(user, eq(person.id, user.id))
     .leftJoin(supplier_type, eq(supplier.supplierTypeId, supplier_type.id))
     .orderBy(desc(supplier.id));
@@ -140,7 +139,6 @@ export interface UpsertSupplierData {
 
 export interface SupplierRecord {
   id: number;
-  personId: number;
   supplierTypeId: number;
   supplierTypeName?: string | null;
   registrationDate: DateTime;
