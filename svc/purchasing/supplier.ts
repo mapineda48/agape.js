@@ -5,7 +5,6 @@ import user from "#models/core/user";
 import supplier_type from "#models/purchasing/supplier_type";
 import { desc, eq } from "drizzle-orm";
 import type DateTime from "#utils/data/DateTime";
-import { upsertUser, type IUpsertUser, type IUser } from "#svc/user";
 
 /**
  * Lista los proveedores con sus datos de persona y tipo.
@@ -14,7 +13,7 @@ export async function listSuppliers() {
   return db
     .select({
       id: supplier.id,
-      userId: supplier.userId,
+      personId: supplier.personId,
       supplierTypeId: supplier.supplierTypeId,
       supplierTypeName: supplier_type.name,
       registrationDate: supplier.registrationDate,
@@ -27,28 +26,75 @@ export async function listSuppliers() {
       birthdate: person.birthdate,
     })
     .from(supplier)
-    .innerJoin(person, eq(supplier.userId, person.id))
+    .innerJoin(person, eq(supplier.personId, person.id))
     .innerJoin(user, eq(person.id, user.id))
     .leftJoin(supplier_type, eq(supplier.supplierTypeId, supplier_type.id))
     .orderBy(desc(supplier.id));
 }
 
 /**
- * Crea o actualiza un proveedor con su usuario asociada.
+ * Crea o actualiza un proveedor con su persona asociada.
  */
 export async function upsertSupplier(
   data: UpsertSupplierData
 ): Promise<SupplierRecord> {
-  const { id, user: userDto, ...supplierData } = data;
+  const { id, person: personData, ...supplierData } = data;
 
-  const user = await upsertUser(userDto);
+  // Upsert de user
+  let userRecord;
+  if (personData.id) {
+    [userRecord] = await db
+      .update(user)
+      .set({
+        email: personData.email,
+        phone: personData.phone,
+        address: personData.address,
+      })
+      .where(eq(user.id, personData.id))
+      .returning();
+  } else {
+    [userRecord] = await db
+      .insert(user)
+      .values({
+        partyType: "PERSON",
+        email: personData.email,
+        phone: personData.phone,
+        address: personData.address,
+        isActive: supplierData.active ?? true,
+      })
+      .returning();
+  }
+
+  // Upsert de persona
+  let personRecord;
+  if (personData.id) {
+    [personRecord] = await db
+      .update(person)
+      .set({
+        firstName: personData.firstName,
+        lastName: personData.lastName,
+        birthdate: personData.birthdate,
+      })
+      .where(eq(person.id, partyRecord.id))
+      .returning();
+  } else {
+    [personRecord] = await db
+      .insert(person)
+      .values({
+        id: partyRecord.id,
+        firstName: personData.firstName,
+        lastName: personData.lastName,
+        birthdate: personData.birthdate,
+      })
+      .returning();
+  }
 
   // Upsert de proveedor
   const [supplierRecord] = await db
     .insert(supplier)
     .values({
       ...(id !== undefined && { id }),
-      userId: user.id,
+      personId: personRecord.id,
       supplierTypeId: supplierData.supplierTypeId,
       active: supplierData.active ?? true,
     })
@@ -63,7 +109,7 @@ export async function upsertSupplier(
 
   return {
     ...supplierRecord,
-    user: user,
+    person: personRecord,
   };
 }
 
@@ -79,17 +125,33 @@ export async function deleteSupplier(id: number) {
  */
 export interface UpsertSupplierData {
   id?: number;
-  user: IUser;
+  person: {
+    id?: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string | null;
+    address?: string | null;
+    birthdate: DateTime;
+  };
   supplierTypeId: number;
   active?: boolean;
 }
 
 export interface SupplierRecord {
   id: number;
-  userId: number;
+  personId: number;
   supplierTypeId: number;
   supplierTypeName?: string | null;
   registrationDate: DateTime;
   active: boolean;
-  user: IUpsertUser;
+  person?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string | null;
+    address: string | null;
+    birthdate: DateTime;
+  };
 }
