@@ -10,45 +10,21 @@
     "forceConsistentCasingInFileNames": true,
     "sourceMap": false,
     "resolveJsonModule": true,
-    "types": [
-      "node"
-    ],
-    "lib": [
-      "ESNext"
-    ],
+    "types": ["node"],
+    "lib": ["ESNext"],
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
     "rewriteRelativeImportExtensions": true,
     "baseUrl": ".",
     "paths": {
-      "#utils/*": [
-        "lib/utils/*"
-      ],
-      "#models/*": [
-        "models/*"
-      ],
-      "#lib/*": [
-        "lib/*"
-      ],
-      "#svc/*": [
-        "svc/*"
-      ],
-      "#session": [
-        "lib/access/session.ts"
-      ],
-      "#logger": [
-        "lib/log/logger.ts"
-      ]
+      "#utils/*": ["lib/utils/*"],
+      "#models/*": ["models/*"],
+      "#lib/*": ["lib/*"],
+      "#svc/*": ["svc/*"],
+      "#session": ["lib/access/session.ts"],
+      "#logger": ["lib/log/logger.ts"]
     }
   },
-  "include": [
-    "bin/index.ts",
-    "svc",
-    "lib",
-    "models"
-  ],
-  "exclude": [
-    "dist",
-    "web"
-  ]
+  "include": ["bin/index.ts", "svc", "lib", "models"],
+  "exclude": ["dist", "web"]
 }

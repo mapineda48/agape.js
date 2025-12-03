@@ -2,27 +2,21 @@ import path from "node:path";
 import fs from "fs-extra";
 import type { Pool } from "pg";
 import logger from "#lib/log/logger";
-import config from "../config";
 import { toRegExp } from "#utils/toRegExp";
 import { glob } from "node:fs/promises";
 
 const lockKey: bigint = 123456789n;
 
 export default async function applyMigrations(
+  schema: string,
   pg: Pool,
-  dev: boolean,
+  skipSeeds = false,
   attempt = 0
 ) {
-  if (dev) {
-    logger
-      .scope("Database")
-      .info(
-        "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
-      );
-    return;
-  }
-
-  const { migrations, migrationSqlMap } = await loadMigrations();
+  const { migrations, migrationSqlMap } = await loadMigrations(
+    schema,
+    skipSeeds
+  );
 
   if (attempt >= 5) {
     throw new Error(
@@ -44,7 +38,7 @@ export default async function applyMigrations(
 
     // Obtener migracion para iniciar el proceso de sincronizacion automatico
     const pendingMigrations: string[] = [];
-    const appliedMigrations = await fetchAppliedMigrations(pg, config.schema);
+    const appliedMigrations = await fetchAppliedMigrations(pg, schema);
 
     if (appliedMigrations.length > migrations.length) {
       throw new Error(
@@ -67,7 +61,7 @@ export default async function applyMigrations(
       await pg.query(query);
     }
 
-    await saveAppliedMigrations(pg, migrations);
+    await saveAppliedMigrations(schema, pg, migrations);
 
     logger.scope("Database").info("Migrations: Successfully installed");
   } catch (error) {
@@ -80,7 +74,7 @@ export default async function applyMigrations(
     // Wait 1 second before retry
     await delay(1000);
 
-    return applyMigrations(pg, dev, attempt + 1);
+    return applyMigrations(schema, pg, skipSeeds, attempt + 1);
   } finally {
     if (acquired) {
       await unlock(pg, lockKey);
@@ -127,6 +121,7 @@ export async function schemaExists(pg: Pool, schemaName: string) {
 }
 
 export async function saveAppliedMigrations(
+  schemaName: string,
   pg: Pool,
   migrationFiles: string[]
 ) {
@@ -134,7 +129,7 @@ export async function saveAppliedMigrations(
 
   await pg.query(
     `
-    INSERT INTO "${config.schema}"."agape" (key, value)
+    INSERT INTO "${schemaName}"."agape" (key, value)
     VALUES ($1, $2::jsonb)
     ON CONFLICT (key)
     DO UPDATE
@@ -171,7 +166,7 @@ async function fetchAppliedMigrations(pg: Pool, schemaName: string) {
   return appliedMigrations as string[];
 }
 
-async function loadMigrations() {
+async function loadMigrations(schemaName: string, skipSeeds = false) {
   const migrationsDir = path.join(import.meta.dirname, "scripts");
 
   const src = path.resolve(
@@ -191,6 +186,10 @@ async function loadMigrations() {
     glob("**/*.sql", { cwd: migrationsDir })
   );
 
+  if (skipSeeds) {
+    sqlFiles.filter((fileName) => !fileName.includes("_seed_"));
+  }
+
   // Map each file to a loader function
   const tasks = sqlFiles.sort().map((fileName) => {
     const migrationName = fileName.replace(/\.sql$/, "");
@@ -199,7 +198,7 @@ async function loadMigrations() {
       async () => {
         const filePath = path.join(migrationsDir, fileName);
         const rawSql = await fs.readFile(filePath, "utf8");
-        return rawSql.replace(schemaRegex, config.schema);
+        return rawSql.replace(schemaRegex, schemaName);
       },
     ] as const;
   });

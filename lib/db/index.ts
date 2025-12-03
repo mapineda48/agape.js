@@ -1,7 +1,9 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import applyMigrations from "./migrations/applyMigrations";
-import { verifyRootUser } from "./root";
+import logger from "#lib/log/logger";
+
+export let schemaName: string = "";
 
 export let db: Database = null as any;
 
@@ -10,9 +12,20 @@ export let db: Database = null as any;
  */
 interface DatabaseConfig {
   /**
+   * Tenant identifier.
+   */
+  tenant?: string;
+
+  /**
    * If true, runs migrations in development mode (if applicable).
    */
   dev?: boolean;
+
+  /**
+   * If true, skips seed migrations in development mode (if applicable).
+   */
+  skipSeeds?: boolean;
+
   /**
    * Configuration for the root (super user) synchronization.
    * If provided, the system will attempt to sync the root user credentials on startup.
@@ -33,18 +46,50 @@ export default async function initDatabase(
   connectionString: string,
   config: DatabaseConfig = {}
 ) {
+  if (db) {
+    throw new Error("Database already initialized");
+  }
+
+  if (!config.tenant) {
+    throw new Error("Tenant is required");
+  }
+
+  prepareOrmSchema(config);
+
   const pool = new Pool({ connectionString });
 
-  // Apply database migrations to ensure schema is up-to-date.
-  await applyMigrations(pool, config.dev || false);
+  if (!config.dev) {
+    // Apply database migrations to ensure schema is up-to-date.
+    await applyMigrations(schemaName, pool, config.skipSeeds);
+  } else {
+    logger
+      .scope("Database")
+      .info(
+        "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
+      );
+  }
 
   // Initialize the Drizzle ORM instance
   db = drizzle(pool);
 
   // If root user configuration is provided, verify and sync the root user
   if (config.rootUser) {
+    const { verifyRootUser } = await import("./root");
+
     await verifyRootUser(config.rootUser.username, config.rootUser.password);
   }
+
+  return db;
+}
+
+function prepareOrmSchema(config: DatabaseConfig) {
+  const isTS = process.argv.some(
+    (a) => a.endsWith(".ts") || a.endsWith(".cjs")
+  );
+
+  const env = !config.dev ? "production" : isTS ? "development" : "test";
+
+  schemaName = `agape_app_${env}_${config.tenant}`;
 }
 
 /**

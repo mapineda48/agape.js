@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.app.json",
+  "exclude": [
+    "dist",
+    "web",
+    "**/*.test.ts" // <- ¡Aquí está tu patrón!
+  ]
+}
