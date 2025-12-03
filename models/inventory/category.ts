@@ -1,6 +1,6 @@
 import { schema } from "../agape";
 import { serial, varchar, boolean } from "drizzle-orm/pg-core";
-
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**
  * Modelo de categoría de inventario (Category)
@@ -14,3 +14,8 @@ export const category = schema.table("inventory_categories", {
   /** Indica si la categoría está habilitada */
   isEnabled: boolean("isEnabled").notNull(),
 });
+
+export type Category = InferSelectModel<typeof category>;
+export type NewCategory = InferInsertModel<typeof category>;
+
+export default category;
