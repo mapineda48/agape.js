@@ -14,6 +14,11 @@ interface ConfigurationLayoutProps {
 
 const TABS = [
   {
+    path: "general",
+    label: "General",
+    icon: Cog6ToothIcon,
+  },
+  {
     path: "inventory",
     label: "Inventario",
     icon: CubeIcon,
@@ -22,11 +27,6 @@ const TABS = [
     path: "users",
     label: "Usuarios",
     icon: UsersIcon,
-  },
-  {
-    path: "general",
-    label: "General",
-    icon: Cog6ToothIcon,
   },
 ];
 
