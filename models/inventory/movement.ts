@@ -5,7 +5,7 @@ import { dateTime } from "../../lib/db/custom-types";
 import employee from "../staff/employee";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
-export const inventoryMovement = schema.table("inventory_movements", {
+export const inventoryMovement = schema.table("inventory_movement", {
   id: serial("id").primaryKey(),
 
   movementTypeId: integer("movement_type_id")

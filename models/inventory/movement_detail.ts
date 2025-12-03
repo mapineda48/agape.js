@@ -7,7 +7,7 @@ import { decimal } from "../../lib/db/custom-types";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 export const inventoryMovementDetail = schema.table(
-  "inventory_movement_details",
+  "inventory_movement_detail",
   {
     id: serial("id").primaryKey(),
     movementId: integer("movement_id")
