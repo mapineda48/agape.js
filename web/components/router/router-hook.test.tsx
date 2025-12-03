@@ -479,7 +479,7 @@ describe("useRouter - navigate with relative paths", () => {
     });
 
     act(() => {
-      result.current.navigate("users/new");
+      result.current.navigate("suppliers/new");
     });
 
     act(() => {
@@ -487,7 +487,7 @@ describe("useRouter - navigate with relative paths", () => {
     });
 
     expect(navigateSpy).toHaveBeenCalledWith(
-      "/cms/configuration/users/new",
+      "/cms/configuration/suppliers/new",
       undefined
     );
   });

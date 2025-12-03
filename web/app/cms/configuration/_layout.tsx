@@ -24,8 +24,8 @@ const TABS = [
     icon: CubeIcon,
   },
   {
-    path: "users",
-    label: "Usuarios",
+    path: "suppliers",
+    label: "Proveedores",
     icon: UsersIcon,
   },
 ];
