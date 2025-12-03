@@ -6,10 +6,6 @@ import tailwindcss from "@tailwindcss/vite";
 import vitePluginRpc from "./lib/rpc/vite-plugin";
 
 const cwd = process.cwd();
-const pages = path.resolve("web/app");
-const web = path.resolve("web");
-
-console.log(cwd);
 
 // función para generar un hash corto (8 chars) de una cadena
 function hashOf(facadeModuleId: string, len = 8) {
@@ -49,19 +45,17 @@ export default defineConfig({
         entryFileNames: "[name].[hash].js",
 
         chunkFileNames: (chunkInfo) => {
-          if (!chunkInfo.name.startsWith("vendor/")) {
-            return "[name].[hash].js";
+          if (chunkInfo.name.startsWith("vendor/")) {
+            return `assets/js/[name].[hash].js`;
           }
 
-          // los chunks sin moduleId (p.e. bundling interno)
-          return "assets/js/[name].[hash].js";
+          const facadeModuleId =
+            chunkInfo.facadeModuleId || chunkInfo.moduleIds.at(-1) || "";
+
+          return `${hashOf(facadeModuleId, 12)}.[hash].js`;
         },
 
         manualChunks(id) {
-          if (id.startsWith(web)) {
-            return hashOf(id, 12);
-          }
-
           // sólo node_modules
           if (!id.includes("node_modules")) return;
 
