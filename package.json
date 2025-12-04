@@ -11,7 +11,7 @@
     "tsx": "tsx watch --tsconfig ./tsconfig.app.json",
     "backend": "tsx watch --tsconfig ./tsconfig.app.json bin/index.ts",
     "frontend": "vite",
-    "prebuild": "rimraf dist && tsc -p ./tsconfig.app.json && vite build",
+    "prebuild": "rimraf dist && tsc -p ./tsconfig.app.prod.json && vite build",
     "build": "tsx bin/build.ts",
     "generate": "drizzle-kit generate",
     "test": "vitest",

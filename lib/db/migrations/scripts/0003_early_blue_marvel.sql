@@ -1,0 +1,3 @@
+CREATE TYPE "agape_app_development_demo"."purchasing_purchase_order_status" AS ENUM('pending', 'approved', 'received', 'cancelled');--> statement-breakpoint
+ALTER TABLE "agape_app_development_demo"."purchasing_purchase_order" ALTER COLUMN "status" SET DEFAULT 'pending'::"agape_app_development_demo"."purchasing_purchase_order_status";--> statement-breakpoint
+ALTER TABLE "agape_app_development_demo"."purchasing_purchase_order" ALTER COLUMN "status" SET DATA TYPE "agape_app_development_demo"."purchasing_purchase_order_status" USING "status"::"agape_app_development_demo"."purchasing_purchase_order_status";

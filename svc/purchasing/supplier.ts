@@ -157,7 +157,7 @@ export async function upsertSupplier(
 
   return {
     ...supplierRecord,
-    user: userRecord as IUser,
+    user: userRecord as any,
   };
 }
 

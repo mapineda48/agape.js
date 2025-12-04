@@ -1,3 +1,4 @@
+import DateTime from "#utils/data/DateTime";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 beforeAll(async () => {
@@ -47,7 +48,7 @@ describe("documentSeries service", () => {
           seriesCode: "B4-001",
           startNumber: 100,
           endNumber: 50,
-          validFrom: new Date("2025-01-01"),
+          validFrom: new DateTime("2025-01-01"),
           isActive: true,
         })
       ).rejects.toThrow(DocumentSeriesValidationError);
@@ -66,7 +67,7 @@ describe("documentSeries service", () => {
         seriesCode: "B5-001",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -83,7 +84,7 @@ describe("documentSeries service", () => {
         seriesCode: "B5B-001",
         startNumber: 100,
         endNumber: 999,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -105,8 +106,8 @@ describe("documentSeries service", () => {
           seriesCode: "B6-001",
           startNumber: 1,
           endNumber: 100,
-          validFrom: new Date("2025-02-01"),
-          validTo: new Date("2025-01-31"),
+          validFrom: new DateTime("2025-02-01"),
+          validTo: new DateTime("2025-01-31"),
           isActive: true,
         })
       ).rejects.toThrow(DocumentSeriesValidationError);
@@ -125,7 +126,7 @@ describe("documentSeries service", () => {
         seriesCode: "B7-001",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         validTo: null,
         isActive: true,
       });
@@ -146,7 +147,7 @@ describe("documentSeries service", () => {
         seriesCode: "F001",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -156,7 +157,7 @@ describe("documentSeries service", () => {
           seriesCode: "F001",
           startNumber: 101,
           endNumber: 200,
-          validFrom: new Date("2025-01-01"),
+          validFrom: new DateTime("2025-01-01"),
           isActive: true,
         })
       ).rejects.toThrow();
@@ -176,7 +177,7 @@ describe("documentSeries service", () => {
         seriesCode: "SHARED",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -185,7 +186,7 @@ describe("documentSeries service", () => {
         seriesCode: "SHARED",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -211,7 +212,7 @@ describe("documentSeries service", () => {
         seriesCode: "ACTIVE",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -221,13 +222,13 @@ describe("documentSeries service", () => {
         seriesCode: "INACTIVE",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: false,
       });
 
       const available = await getAvailableSeriesForDocument(
         docType.id,
-        new Date("2025-06-01")
+        new DateTime("2025-06-01")
       );
 
       expect(available.some((s) => s.seriesCode === "ACTIVE")).toBe(true);
@@ -249,8 +250,8 @@ describe("documentSeries service", () => {
         seriesCode: "EXPIRED",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
-        validTo: new Date("2025-02-28"),
+        validFrom: new DateTime("2025-01-01"),
+        validTo: new DateTime("2025-02-28"),
         isActive: true,
       });
 
@@ -260,7 +261,7 @@ describe("documentSeries service", () => {
         seriesCode: "CURRENT",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-03-01"),
+        validFrom: new DateTime("2025-03-01"),
         validTo: null,
         isActive: true,
       });
@@ -268,7 +269,7 @@ describe("documentSeries service", () => {
       // Consultar para el 1 de marzo
       const available = await getAvailableSeriesForDocument(
         docType.id,
-        new Date("2025-03-01")
+        new DateTime("2025-03-01")
       );
 
       expect(available.some((s) => s.seriesCode === "EXPIRED")).toBe(false);
@@ -290,7 +291,7 @@ describe("documentSeries service", () => {
         seriesCode: "LIST1-001",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -299,7 +300,7 @@ describe("documentSeries service", () => {
         seriesCode: "LIST2-001",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -322,7 +323,7 @@ describe("documentSeries service", () => {
         seriesCode: "ACTIVE-LIST",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
       });
 
@@ -331,7 +332,7 @@ describe("documentSeries service", () => {
         seriesCode: "INACTIVE-LIST",
         startNumber: 101,
         endNumber: 200,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: false,
       });
 
@@ -366,7 +367,7 @@ describe("documentSeries service", () => {
         seriesCode: "DEFAULT1",
         startNumber: 1,
         endNumber: 100,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
         isDefault: true,
       });
@@ -379,7 +380,7 @@ describe("documentSeries service", () => {
         seriesCode: "DEFAULT2",
         startNumber: 101,
         endNumber: 200,
-        validFrom: new Date("2025-01-01"),
+        validFrom: new DateTime("2025-01-01"),
         isActive: true,
         isDefault: true,
       });
