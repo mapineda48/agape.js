@@ -1,5 +1,6 @@
 import { boolean, serial, varchar } from "drizzle-orm/pg-core";
 import { schema } from "../agape";
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**
  * Modelo de tipo de cliente (ClientType)
@@ -10,8 +11,11 @@ const client_type = schema.table("crm_client_type", {
   id: serial("id").primaryKey(),
   /** Nombre del tipo de cliente (ej: 'Retail', 'Wholesale', 'VIP') */
   name: varchar("name", { length: 50 }).notNull(),
-  /** Indica si el tipo de cliente está deshabilitado */
+  /** Indica si el tipo de cliente está habilitado */
   isEnabled: boolean("is_enabled").default(false).notNull(),
 });
+
+export type ClientType = InferSelectModel<typeof client_type>;
+export type NewClientType = InferInsertModel<typeof client_type>;
 
 export default client_type;

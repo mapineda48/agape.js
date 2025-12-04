@@ -1,5 +1,5 @@
 import { serial, integer, boolean, varchar } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { sql, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
 import { schema } from "../agape";
 import user from "../core/user";
 import client_type from "./client_type";
@@ -34,5 +34,8 @@ const client = schema.table("crm_client", {
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
 });
+
+export type Client = InferSelectModel<typeof client>;
+export type NewClient = InferInsertModel<typeof client>;
 
 export default client;

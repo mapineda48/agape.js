@@ -8,6 +8,20 @@
       "when": 1764797710788,
       "tag": "0000_futuristic_echo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764865081797,
+      "tag": "0001_careful_baron_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764868115942,
+      "tag": "0002_little_magik",
+      "breakpoints": true
     }
   ]
 }

@@ -36,6 +36,9 @@ class Logger {
   }
 
   private print(level: LogLevel, message: string, args: unknown[]) {
+    // Si está corriendo Vitest, NO imprimir nada
+    if (process.env.VITEST_WORKER_ID !== undefined) return;
+
     const timestamp = new Date().toISOString();
     const thread = this.getThreadInfo();
     const levelColor = this.getLevelColor(level);

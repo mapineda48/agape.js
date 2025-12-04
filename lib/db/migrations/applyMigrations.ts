@@ -1,11 +1,11 @@
+import { threadId } from "node:worker_threads";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import fs from "fs-extra";
 import type { Pool } from "pg";
 import logger from "#lib/log/logger";
 import { toRegExp } from "#utils/toRegExp";
 import { glob } from "node:fs/promises";
-
-const lockKey: bigint = 123456789n;
 
 export default async function applyMigrations(
   schema: string,
@@ -23,6 +23,13 @@ export default async function applyMigrations(
       "No fue posible sincronizar el ORM con la base de datos, por favor validar los logs..."
     );
   }
+
+  const lockKey = stringToPgBigInt(schema);
+  logger
+    .scope("Database")
+    .info(
+      `Migrations: Lock acquired for schema ${schema} with key ${lockKey} threadId: ${threadId}`
+    );
 
   // libera solo si tú lo tienes; devuelve true si se liberó
   const acquired = await lock(pg, lockKey);
@@ -76,9 +83,12 @@ export default async function applyMigrations(
 
     return applyMigrations(schema, pg, skipSeeds, attempt + 1);
   } finally {
-    if (acquired) {
-      await unlock(pg, lockKey);
-    }
+    await unlock(pg, lockKey);
+    logger
+      .scope("Database")
+      .info(
+        `Migrations: Lock released for schema ${schema} with key ${lockKey} threadId: ${threadId}`
+      );
   }
 }
 
@@ -210,7 +220,21 @@ async function loadMigrations(schemaName: string, skipSeeds = false) {
 }
 
 export async function deleteSchema(schemaName: string, pg: Pool) {
+  logger.scope("Database").info(`Deleting schema: ${schemaName}`);
+
   await pg.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
+}
+
+export function stringToPgBigInt(str: string): bigint {
+  const hash = createHash("sha256").update(str).digest();
+
+  // Tomamos 8 bytes (64 bits)
+  let n = BigInt("0x" + hash.subarray(0, 8).toString("hex"));
+
+  // Forzamos que el bit más alto sea 0 → número siempre positivo y dentro de rango PG BIGINT
+  n = n & BigInt("0x7FFFFFFFFFFFFFFF");
+
+  return n;
 }
 
 function delay(ms = 1000): Promise<void> {

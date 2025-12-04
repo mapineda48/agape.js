@@ -1,5 +1,5 @@
 import { serial, integer, boolean } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { schema } from "../agape";
 import user from "../core/user";
 import supplier_type from "./supplier_type";
@@ -29,5 +29,8 @@ const supplier = schema.table("purchasing_supplier", {
   /** Indica si el proveedor está activo */
   active: boolean("active").default(true).notNull(),
 });
+
+export type Supplier = InferSelectModel<typeof supplier>;
+export type NewSupplier = InferInsertModel<typeof supplier>;
 
 export default supplier;
