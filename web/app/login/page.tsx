@@ -1,4 +1,4 @@
-import { login } from "@agape/access";
+import { login } from "@agape/security/access";
 import Form from "@/components/form";
 import Input from "@/components/form/Input";
 import Submit from "@/components/ui/submit";

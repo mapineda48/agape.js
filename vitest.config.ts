@@ -38,7 +38,7 @@ export default defineConfig({
           alias: {
             "@": path.resolve(__dirname, "./web"),
             "@utils": path.resolve(__dirname, "./lib/utils"),
-            "@agape/access": path.resolve(
+            "@agape/security/access": path.resolve(
               __dirname,
               "./web/test/mocks/access.ts"
             ),

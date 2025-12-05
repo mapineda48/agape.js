@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { createElement, type JSX } from "react";
 
-// Mock @agape/access before importing router
-vi.mock("@agape/access", () => ({
+// Mock @agape/security/access before importing router
+vi.mock("@agape/security/access", () => ({
   isAuthenticated: vi.fn().mockResolvedValue({ id: "test-user" }),
 }));
 

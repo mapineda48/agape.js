@@ -3,8 +3,8 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import { createElement } from "react";
 import { act } from "react";
 
-// Mock @agape/access before importing router
-vi.mock("@agape/access", () => ({
+// Mock @agape/security/access before importing router
+vi.mock("@agape/security/access", () => ({
   isAuthenticated: vi.fn().mockResolvedValue({ id: "test-user" }),
 }));
 

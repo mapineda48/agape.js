@@ -15,7 +15,7 @@ import {
   Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { useTheme } from "./ThemeProvider";
-import { logout, session } from "@agape/access";
+import { logout, session } from "@agape/security/access";
 import clsx from "clsx";
 import { useHistory } from "./router/router";
 import { factoryHook } from "../hook/useBreakpointValue";

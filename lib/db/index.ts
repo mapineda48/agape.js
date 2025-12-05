@@ -3,6 +3,7 @@ import { Pool } from "pg";
 import applyMigrations from "./migrations/applyMigrations";
 import logger from "#lib/log/logger";
 import Config from "./config";
+import { syncRootUserPg } from "./migrations/syncRootUserPg";
 
 export let db: Database = null as any;
 
@@ -59,7 +60,7 @@ export default async function initDatabase(
 
   if (!config.dev) {
     // Apply database migrations to ensure schema is up-to-date.
-    await applyMigrations(schemaName, pool, config.skipSeeds);
+    await applyMigrations(pool, schemaName, config.skipSeeds);
   } else {
     logger
       .scope("Database")
@@ -72,11 +73,12 @@ export default async function initDatabase(
   db = drizzle(pool);
 
   // If root user configuration is provided, verify and sync the root user
-  if (config.rootUser) {
-    const { verifyRootUser } = await import("./root");
-
-    await verifyRootUser(config.rootUser.username, config.rootUser.password);
-  }
+  await syncRootUserPg(
+    pool,
+    schemaName,
+    config.rootUser?.username,
+    config.rootUser?.password
+  );
 
   return db;
 }

@@ -8,8 +8,8 @@ import { toRegExp } from "#utils/toRegExp";
 import { glob } from "node:fs/promises";
 
 export default async function applyMigrations(
-  schema: string,
   pg: Pool,
+  schema: string,
   skipSeeds = false,
   attempt = 0
 ) {
@@ -81,7 +81,7 @@ export default async function applyMigrations(
     // Wait 1 second before retry
     await delay(1000);
 
-    return applyMigrations(schema, pg, skipSeeds, attempt + 1);
+    return applyMigrations(pg, schema, skipSeeds, attempt + 1);
   } finally {
     await unlock(pg, lockKey);
     logger

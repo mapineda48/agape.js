@@ -38,7 +38,7 @@ for await (const src of svc) {
   virtualModule[resolvedId] = js.join("\n");
 }
 
-virtualModule["\0" + "@agape/access"] = fs.readFileSync(
+virtualModule["\0" + "@agape/security/access"] = fs.readFileSync(
   "lib/access/browser.js",
   "utf8"
 );

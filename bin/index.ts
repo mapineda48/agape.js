@@ -4,8 +4,6 @@ import compression from "compression";
 import helmet from "helmet";
 import morgan from "morgan";
 import initDatabase from "#lib/db";
-import auth from "#lib/access/middleware";
-import rpc from "#lib/rpc/middleware";
 import bridge from "#lib/bridge/middleware";
 import logger from "#lib/log/logger";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
@@ -34,6 +32,7 @@ const isDevelopment = NODE_ENV === "development";
 // Initialize DB connection and models (required before importing model-dependent logic like auth)
 await initDatabase(DATABASE_URI, {
   dev: !isProduction,
+  tenant: AGAPE_TENANT,
   rootUser: {
     username: AGAPE_ADMIN,
     password: AGAPE_PASSWORD,
@@ -109,6 +108,13 @@ if (isDevelopment) {
     res.send("express");
   });
 }
+
+/**
+ * Dynamic imports for middleware after the database is initialized
+ * Importing middleware before the database is initialized will throw an error
+ */
+const { default: auth } = await import("#lib/access/middleware");
+const { default: rpc } = await import("#lib/rpc/middleware");
 
 app.use(auth(AGAPE_SECRET));
 app.use(rpc);

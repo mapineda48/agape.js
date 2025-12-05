@@ -1,4 +1,4 @@
-import { isAuthenticated } from "@agape/access";
+import { isAuthenticated } from "@agape/security/access";
 
 export interface INavigateTo {
   replace?: boolean;

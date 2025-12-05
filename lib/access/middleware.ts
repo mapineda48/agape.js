@@ -2,7 +2,7 @@ import express, { type Response } from "express";
 
 import Jwt from "./Jwt";
 import webSession, { initSession } from "./session";
-//import { findUser } from "#svc/staff/access";
+import { findUser } from "#svc/security/user";
 import { decode, encode } from "#utils/msgpack";
 
 const failLogin = new Error("Falló Autenticación");
@@ -21,14 +21,14 @@ export default function defineAuth(secret: string) {
     secure: true,
   };
 
-  router.post("/access/login", async (req, res, next) => {
+  router.post("/security/access/login", async (req, res, next) => {
     try {
       const [username, password] = decode(req.body) as [
         username: string,
         password: string
       ];
 
-      const user = {};
+      const user = await findUser(username, password);
 
       if (!user) {
         sendMsgPack(res, failLogin, 401);
@@ -44,7 +44,7 @@ export default function defineAuth(secret: string) {
       next(error);
     }
   });
-  router.post("/access/isAuthenticated", async (req, res, next) => {
+  router.post("/security/access/isAuthenticated", async (req, res, next) => {
     try {
       const refreshToken = getCookie(req.headers.cookie);
 
@@ -72,7 +72,7 @@ export default function defineAuth(secret: string) {
     }
   });
 
-  router.post("/access/logout", async (req, res) => {
+  router.post("/security/access/logout", async (req, res) => {
     res.clearCookie(AuthTokenCookie);
 
     sendMsgPack(res, { payload: "Sesión terminada" });
