@@ -538,6 +538,3 @@ En conjunto, todo este modelo sigue dos ideas fuerza:
    - `user` + `person` + `company` + `client` + `supplier` + `employee`.
    - `item` + `service` + `inventory_item`.
    - Documentos de negocio apoyados en `numbering_*` para la numeración.
-
-Si quieres, en el siguiente paso puedo redactar una sección tipo **“Guía para agregar nuevas entidades”**:
-reglas prácticas del estilo _“si vas a crear X, primero mira en qué dominio debería vivir y si extiende `user`, `item`, o un documento numerado”_.
