@@ -1,5 +1,5 @@
 import { schema } from "../agape";
-import { serial, integer } from "drizzle-orm/pg-core";
+import { integer, primaryKey } from "drizzle-orm/pg-core";
 import item from "./item";
 import { location } from "./location";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
@@ -7,23 +7,39 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 /**
  * Tabla de stock por ítem y ubicación.
  * Almacena la cantidad disponible de cada ítem inventariable en cada ubicación.
+ *
+ * Usa PK compuesto (item_id, location_id) para garantizar que no existan
+ * duplicados de stock para la misma combinación ítem-ubicación.
+ * Esto es el estándar en sistemas ERP para la gestión de inventario.
  */
-export const stock = schema.table("inventory_stock", {
-  id: serial("id").primaryKey(),
+export const stock = schema.table(
+  "inventory_stock",
+  {
+    /** Referencia al ítem maestro inventariable */
+    itemId: integer("item_id")
+      .notNull()
+      .references(() => item.itemId, { onDelete: "restrict" }),
 
-  /** Referencia al ítem maestro */
-  itemId: integer("item_id")
-    .notNull()
-    .references(() => item.itemId, { onDelete: "restrict" }),
+    /**
+     * Ubicación (bodega).
+     * Nota: En este diseño location_id es NOT NULL para la PK compuesta.
+     * Si necesitas stock sin ubicación, crea una ubicación "default" o "sin asignar".
+     */
+    locationId: integer("location_id")
+      .notNull()
+      .references(() => location.id, { onDelete: "restrict" }),
 
-  /** Ubicación (bodega). Nullable para soportar stock sin ubicación específica */
-  locationId: integer("location_id").references(() => location.id, {
-    onDelete: "restrict",
-  }),
-
-  /** Cantidad disponible */
-  quantity: integer("quantity").notNull(),
-});
+    /** Cantidad disponible */
+    quantity: integer("quantity").notNull(),
+  },
+  (table) => [
+    /**
+     * PK compuesto: garantiza unicidad de (item_id, location_id).
+     * Esto es el patrón estándar en ERPs para tablas de stock.
+     */
+    primaryKey({ columns: [table.itemId, table.locationId] }),
+  ]
+);
 
 export type Stock = InferSelectModel<typeof stock>;
 export type NewStock = InferInsertModel<typeof stock>;

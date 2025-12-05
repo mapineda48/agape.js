@@ -1,5 +1,4 @@
 import {
-  serial,
   integer,
   boolean,
   primaryKey,
@@ -17,13 +16,16 @@ import DateTime from "../../lib/utils/data/DateTime";
 /**
  * Modelo de empleado (Employee)
  * Representa un empleado dentro del staff de la organización.
+ * Implementa Class Table Inheritance (CTI): PK = FK a person.id.
+ * El id NO es serial porque se hereda del registro padre en person.
  */
 const employee = schema.table("staff_employee", {
   /**
-   * Identificador único de la persona
-   * Además es FK a user.id (una empleado es una persona).
+   * Identificador único del empleado.
+   * Es FK a person.id (un empleado ES una persona).
+   * No es serial: el id se asigna desde la tabla padre person.
    */
-  id: serial("id")
+  id: integer("id")
     .primaryKey()
     .references(() => person.id, { onDelete: "restrict" }),
 

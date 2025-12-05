@@ -1,4 +1,4 @@
-import { serial, integer, boolean, varchar } from "drizzle-orm/pg-core";
+import { integer, boolean, varchar } from "drizzle-orm/pg-core";
 import { sql, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
 import { schema } from "../agape";
 import user from "../core/user";
@@ -9,13 +9,16 @@ import DateTime from "../../lib/utils/data/DateTime";
 /**
  * Modelo de cliente (Client)
  * Representa un cliente en el sistema CRM.
+ * Implementa Class Table Inheritance (CTI): PK = FK a user.id.
+ * El id NO es serial porque se hereda del registro padre en user.
  */
 const client = schema.table("crm_client", {
   /**
-   * Identificador único de el cliente
-   * Además es FK a user.id (un cliente es una user).
+   * Identificador único del cliente.
+   * Es FK a user.id (un cliente ES un user).
+   * No es serial: el id se asigna desde la tabla padre user.
    */
-  id: serial("id")
+  id: integer("id")
     .primaryKey()
     .references(() => user.id, { onDelete: "restrict" }),
 

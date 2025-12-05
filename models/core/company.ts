@@ -1,6 +1,6 @@
 import { schema } from "../agape";
 import user from "./user";
-import { serial, varchar } from "drizzle-orm/pg-core";
+import { integer, varchar } from "drizzle-orm/pg-core";
 import {
   type InferSelectModel,
   type InferInsertModel,
@@ -10,14 +10,16 @@ import {
 /**
  * Modelo de empresa (Company)
  * Representa una persona jurídica en el sistema.
- * PK = FK a user.id (herencia por tabla relacionada).
+ * Implementa Class Table Inheritance (CTI): PK = FK a user.id.
+ * El id NO es serial porque se hereda del registro padre en user.
  */
-export const company = schema.table("company", {
+export const company = schema.table("core_company", {
   /**
-   * Identificador único de la empresa
-   * Además es FK a user.id (una empresa es una user).
+   * Identificador único de la empresa.
+   * Es FK a user.id (una empresa ES un user).
+   * No es serial: el id se asigna desde la tabla padre user.
    */
-  id: serial("id")
+  id: integer("id")
     .primaryKey()
     .references(() => user.id, { onDelete: "restrict" }),
 

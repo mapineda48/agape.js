@@ -1,4 +1,4 @@
-import { serial, varchar } from "drizzle-orm/pg-core";
+import { integer, varchar } from "drizzle-orm/pg-core";
 import { schema } from "../agape";
 import user from "./user";
 import { dateTime } from "../../lib/db/custom-types";
@@ -11,14 +11,16 @@ import {
 /**
  * Modelo de persona (Person)
  * Representa una persona física en el sistema.
- * PK = FK a user.id (herencia por tabla relacionada).
+ * Implementa Class Table Inheritance (CTI): PK = FK a user.id.
+ * El id NO es serial porque se hereda del registro padre en user.
  */
 export const person = schema.table("core_person", {
   /**
-   * Identificador único de la persona
-   * Además es FK a user.id (una persona es una user).
+   * Identificador único de la persona.
+   * Es FK a user.id (una persona ES un user).
+   * No es serial: el id se asigna desde la tabla padre user.
    */
-  id: serial("id")
+  id: integer("id")
     .primaryKey()
     .references(() => user.id, { onDelete: "restrict" }),
 

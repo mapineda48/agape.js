@@ -1,5 +1,5 @@
 {
-  "id": "41765ed6-0906-44a5-b3e4-f2dc2d4b760c",
+  "id": "2dbd8aa8-9c65-453c-9e51-289d9f64c5d8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -67,7 +67,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "ux_access_employee_employee_id": {
+          "name": "ux_access_employee_employee_id",
+          "columns": [
+            {
+              "expression": "employee_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "access_employee_employee_id_staff_employee_id_fk": {
           "name": "access_employee_employee_id_staff_employee_id_fk",
@@ -137,8 +153,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "agape_app_development_demo.inventory_categories": {
-      "name": "inventory_categories",
+    "agape_app_development_demo.catalogs_categories": {
+      "name": "catalogs_categories",
       "schema": "agape_app_development_demo",
       "columns": {
         "id": {
@@ -157,7 +173,8 @@
           "name": "is_enabled",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": true
         }
       },
       "indexes": {},
@@ -265,10 +282,10 @@
         }
       },
       "foreignKeys": {
-        "catalogs_item_category_id_inventory_categories_id_fk": {
-          "name": "catalogs_item_category_id_inventory_categories_id_fk",
+        "catalogs_item_category_id_catalogs_categories_id_fk": {
+          "name": "catalogs_item_category_id_catalogs_categories_id_fk",
           "tableFrom": "catalogs_item",
-          "tableTo": "inventory_categories",
+          "tableTo": "catalogs_categories",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "category_id"
@@ -378,10 +395,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "catalogs_subcategories_category_id_inventory_categories_id_fk": {
-          "name": "catalogs_subcategories_category_id_inventory_categories_id_fk",
+        "catalogs_subcategories_category_id_catalogs_categories_id_fk": {
+          "name": "catalogs_subcategories_category_id_catalogs_categories_id_fk",
           "tableFrom": "catalogs_subcategories",
-          "tableTo": "inventory_categories",
+          "tableTo": "catalogs_categories",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "category_id"
@@ -399,13 +416,13 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "agape_app_development_demo.company": {
-      "name": "company",
+    "agape_app_development_demo.core_company": {
+      "name": "core_company",
       "schema": "agape_app_development_demo",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true
         },
@@ -424,9 +441,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "company_id_user_id_fk": {
-          "name": "company_id_user_id_fk",
-          "tableFrom": "company",
+        "core_company_id_user_id_fk": {
+          "name": "core_company_id_user_id_fk",
+          "tableFrom": "core_company",
           "tableTo": "user",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
@@ -445,8 +462,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "agape_app_development_demo.document_type": {
-      "name": "document_type",
+    "agape_app_development_demo.core_identity_document_type": {
+      "name": "core_identity_document_type",
       "schema": "agape_app_development_demo",
       "columns": {
         "id": {
@@ -471,7 +488,8 @@
           "name": "is_enabled",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": true
         },
         "applies_to_person": {
           "name": "applies_to_person",
@@ -487,8 +505,8 @@
         }
       },
       "indexes": {
-        "ux_document_type_code": {
-          "name": "ux_document_type_code",
+        "ux_identity_document_type_code": {
+          "name": "ux_identity_document_type_code",
           "columns": [
             {
               "expression": "code",
@@ -516,7 +534,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true
         },
@@ -655,10 +673,10 @@
         }
       },
       "foreignKeys": {
-        "user_document_type_id_document_type_id_fk": {
-          "name": "user_document_type_id_document_type_id_fk",
+        "user_document_type_id_core_identity_document_type_id_fk": {
+          "name": "user_document_type_id_core_identity_document_type_id_fk",
           "tableFrom": "user",
-          "tableTo": "document_type",
+          "tableTo": "core_identity_document_type",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "document_type_id"
@@ -714,7 +732,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true
         },
@@ -852,9 +870,11 @@
         },
         "status": {
           "name": "status",
-          "type": "varchar(20)",
+          "type": "crm_order_status",
+          "typeSchema": "agape_app_development_demo",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'pending'"
         },
         "disabled": {
           "name": "disabled",
@@ -924,7 +944,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "ux_accounts_payable_invoice": {
+          "name": "ux_accounts_payable_invoice",
+          "columns": [
+            {
+              "expression": "purchase_invoice_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "finance_accounts_payable_purchase_invoice_id_finance_purchase_invoice_id_fk": {
           "name": "finance_accounts_payable_purchase_invoice_id_finance_purchase_invoice_id_fk",
@@ -970,7 +1006,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "ux_accounts_receivable_invoice": {
+          "name": "ux_accounts_receivable_invoice",
+          "columns": [
+            {
+              "expression": "sales_invoice_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "finance_accounts_receivable_sales_invoice_id_finance_sales_invoice_id_fk": {
           "name": "finance_accounts_receivable_sales_invoice_id_finance_sales_invoice_id_fk",
@@ -1498,12 +1550,6 @@
       "name": "inventory_stock",
       "schema": "agape_app_development_demo",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
         "item_id": {
           "name": "item_id",
           "type": "integer",
@@ -1514,7 +1560,7 @@
           "name": "location_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "quantity": {
           "name": "quantity",
@@ -1554,7 +1600,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "inventory_stock_item_id_location_id_pk": {
+          "name": "inventory_stock_item_id_location_id_pk",
+          "columns": [
+            "item_id",
+            "location_id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -2059,7 +2113,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true
         },
@@ -2127,7 +2181,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true
         },
@@ -2331,6 +2385,17 @@
       "values": [
         "person",
         "company"
+      ]
+    },
+    "agape_app_development_demo.crm_order_status": {
+      "name": "crm_order_status",
+      "schema": "agape_app_development_demo",
+      "values": [
+        "pending",
+        "confirmed",
+        "shipped",
+        "delivered",
+        "cancelled"
       ]
     },
     "agape_app_development_demo.purchasing_purchase_order_status": {
