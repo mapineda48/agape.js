@@ -95,9 +95,11 @@ beforeAll(async () => {
   categoryId = cat.id;
   const subcatId = cat.subcategories[0].id ?? 0;
 
-  // 5. Crear ítems directamente en DB
+  // 5. Crear ítems directamente en DB (con su registro en inventory_item)
   const { db } = await import("#lib/db");
   const { item } = await import("#models/catalogs/item");
+  const { inventoryItem } = await import("#models/inventory/item");
+
   const [createdItem1] = await db
     .insert(item)
     .values({
@@ -105,7 +107,7 @@ beforeAll(async () => {
       fullName: "Ítem Test 1",
       slogan: "Test Slogan 1",
       description: "Ítem para tests",
-      itemType: "good",
+      type: "good",
       isEnabled: true,
       rating: 5,
       basePrice: new Decimal("100.00"),
@@ -116,6 +118,12 @@ beforeAll(async () => {
     .returning();
   itemId = createdItem1.id;
 
+  // Crear registro en inventory_item (para Good items)
+  await db.insert(inventoryItem).values({
+    itemId: createdItem1.id,
+    uomId: 1,
+  });
+
   const [createdItem2] = await db
     .insert(item)
     .values({
@@ -123,7 +131,7 @@ beforeAll(async () => {
       fullName: "Ítem Test 2",
       slogan: "Test Slogan 2",
       description: "Ítem para tests 2",
-      itemType: "good",
+      type: "good",
       isEnabled: true,
       rating: 4,
       basePrice: new Decimal("200.00"),
@@ -133,6 +141,12 @@ beforeAll(async () => {
     })
     .returning();
   itemId2 = createdItem2.id;
+
+  // Crear registro en inventory_item (para Good items)
+  await db.insert(inventoryItem).values({
+    itemId: createdItem2.id,
+    uomId: 1,
+  });
 
   // 6. Crear ubicación
   const { upsertLocation } = await import("#svc/inventory/location");

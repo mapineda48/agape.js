@@ -1,5 +1,5 @@
 {
-  "id": "61c204fb-d4cf-4abf-946e-89b9b2c0dd9b",
+  "id": "41765ed6-0906-44a5-b3e4-f2dc2d4b760c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -131,6 +131,268 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "agape_app_development_demo.inventory_categories": {
+      "name": "inventory_categories",
+      "schema": "agape_app_development_demo",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_enabled": {
+          "name": "is_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "agape_app_development_demo.catalogs_item": {
+      "name": "catalogs_item",
+      "schema": "agape_app_development_demo",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slogan": {
+          "name": "slogan",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "catalogs_item_type",
+          "typeSchema": "agape_app_development_demo",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_enabled": {
+          "name": "is_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rating": {
+          "name": "rating",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "base_price": {
+          "name": "base_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subcategory_id": {
+          "name": "subcategory_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "images": {
+          "name": "images",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ux_inventory_item_code": {
+          "name": "ux_inventory_item_code",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "catalogs_item_category_id_inventory_categories_id_fk": {
+          "name": "catalogs_item_category_id_inventory_categories_id_fk",
+          "tableFrom": "catalogs_item",
+          "tableTo": "inventory_categories",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "catalogs_item_subcategory_id_catalogs_subcategories_id_fk": {
+          "name": "catalogs_item_subcategory_id_catalogs_subcategories_id_fk",
+          "tableFrom": "catalogs_item",
+          "tableTo": "catalogs_subcategories",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "subcategory_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "agape_app_development_demo.catalogs_service": {
+      "name": "catalogs_service",
+      "schema": "agape_app_development_demo",
+      "columns": {
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "duration_minutes": {
+          "name": "duration_minutes",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_recurring": {
+          "name": "is_recurring",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "catalogs_service_item_id_catalogs_item_id_fk": {
+          "name": "catalogs_service_item_id_catalogs_item_id_fk",
+          "tableFrom": "catalogs_service",
+          "tableTo": "catalogs_item",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "agape_app_development_demo.catalogs_subcategories": {
+      "name": "catalogs_subcategories",
+      "schema": "agape_app_development_demo",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_enabled": {
+          "name": "is_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "catalogs_subcategories_category_id_inventory_categories_id_fk": {
+          "name": "catalogs_subcategories_category_id_inventory_categories_id_fk",
+          "tableFrom": "catalogs_subcategories",
+          "tableTo": "inventory_categories",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -849,86 +1111,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "agape_app_development_demo.inventory_categories": {
-      "name": "inventory_categories",
-      "schema": "agape_app_development_demo",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "full_name": {
-          "name": "full_name",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_enabled": {
-          "name": "is_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "agape_app_development_demo.inventory_item_service": {
-      "name": "inventory_item_service",
-      "schema": "agape_app_development_demo",
-      "columns": {
-        "item_id": {
-          "name": "item_id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "duration_minutes": {
-          "name": "duration_minutes",
-          "type": "smallint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_recurring": {
-          "name": "is_recurring",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "inventory_item_service_item_id_inventory_item_id_fk": {
-          "name": "inventory_item_service_item_id_inventory_item_id_fk",
-          "tableFrom": "inventory_item_service",
-          "tableTo": "inventory_item",
-          "schemaTo": "agape_app_development_demo",
-          "columnsFrom": [
-            "item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "agape_app_development_demo.inventory_item_stock": {
-      "name": "inventory_item_stock",
+    "agape_app_development_demo.inventory_item": {
+      "name": "inventory_item",
       "schema": "agape_app_development_demo",
       "columns": {
         "item_id": {
@@ -942,13 +1126,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "track_stock": {
-          "name": "track_stock",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
         },
         "min_stock": {
           "name": "min_stock",
@@ -971,10 +1148,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "inventory_item_stock_item_id_inventory_item_id_fk": {
-          "name": "inventory_item_stock_item_id_inventory_item_id_fk",
-          "tableFrom": "inventory_item_stock",
-          "tableTo": "inventory_item",
+        "inventory_item_item_id_catalogs_item_id_fk": {
+          "name": "inventory_item_item_id_catalogs_item_id_fk",
+          "tableFrom": "inventory_item",
+          "tableTo": "catalogs_item",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "item_id"
@@ -983,138 +1160,6 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "agape_app_development_demo.inventory_item": {
-      "name": "inventory_item",
-      "schema": "agape_app_development_demo",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "code": {
-          "name": "code",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "full_name": {
-          "name": "full_name",
-          "type": "varchar(80)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "slogan": {
-          "name": "slogan",
-          "type": "varchar(80)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "item_type": {
-          "name": "item_type",
-          "type": "inventory_item_type",
-          "typeSchema": "agape_app_development_demo",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_enabled": {
-          "name": "is_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rating": {
-          "name": "rating",
-          "type": "smallint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "base_price": {
-          "name": "base_price",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "category_id": {
-          "name": "category_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "subcategory_id": {
-          "name": "subcategory_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "images": {
-          "name": "images",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "ux_inventory_item_code": {
-          "name": "ux_inventory_item_code",
-          "columns": [
-            {
-              "expression": "code",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "inventory_item_category_id_inventory_categories_id_fk": {
-          "name": "inventory_item_category_id_inventory_categories_id_fk",
-          "tableFrom": "inventory_item",
-          "tableTo": "inventory_categories",
-          "schemaTo": "agape_app_development_demo",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "inventory_item_subcategory_id_inventory_subcategories_id_fk": {
-          "name": "inventory_item_subcategory_id_inventory_subcategories_id_fk",
-          "tableFrom": "inventory_item",
-          "tableTo": "inventory_subcategories",
-          "schemaTo": "agape_app_development_demo",
-          "columnsFrom": [
-            "subcategory_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -1212,10 +1257,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "inventory_movement_detail_item_id_inventory_item_id_fk": {
-          "name": "inventory_movement_detail_item_id_inventory_item_id_fk",
+        "inventory_movement_detail_item_id_catalogs_item_id_fk": {
+          "name": "inventory_movement_detail_item_id_catalogs_item_id_fk",
           "tableFrom": "inventory_movement_detail",
-          "tableTo": "inventory_item",
+          "tableTo": "catalogs_item",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "item_id"
@@ -1480,8 +1525,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "inventory_stock_item_id_inventory_item_id_fk": {
-          "name": "inventory_stock_item_id_inventory_item_id_fk",
+        "inventory_stock_item_id_inventory_item_item_id_fk": {
+          "name": "inventory_stock_item_id_inventory_item_item_id_fk",
           "tableFrom": "inventory_stock",
           "tableTo": "inventory_item",
           "schemaTo": "agape_app_development_demo",
@@ -1489,7 +1534,7 @@
             "item_id"
           ],
           "columnsTo": [
-            "id"
+            "item_id"
           ],
           "onDelete": "restrict",
           "onUpdate": "no action"
@@ -1501,58 +1546,6 @@
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "agape_app_development_demo.inventory_subcategories": {
-      "name": "inventory_subcategories",
-      "schema": "agape_app_development_demo",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "full_name": {
-          "name": "full_name",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_enabled": {
-          "name": "is_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "category_id": {
-          "name": "category_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "inventory_subcategories_category_id_inventory_categories_id_fk": {
-          "name": "inventory_subcategories_category_id_inventory_categories_id_fk",
-          "tableFrom": "inventory_subcategories",
-          "tableTo": "inventory_categories",
-          "schemaTo": "agape_app_development_demo",
-          "columnsFrom": [
-            "category_id"
           ],
           "columnsTo": [
             "id"
@@ -1960,10 +1953,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "purchasing_order_item_item_id_inventory_item_id_fk": {
-          "name": "purchasing_order_item_item_id_inventory_item_id_fk",
+        "purchasing_order_item_item_id_catalogs_item_id_fk": {
+          "name": "purchasing_order_item_item_id_catalogs_item_id_fk",
           "tableFrom": "purchasing_order_item",
-          "tableTo": "inventory_item",
+          "tableTo": "catalogs_item",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "item_id"
@@ -2324,22 +2317,20 @@
     }
   },
   "enums": {
+    "agape_app_development_demo.catalogs_item_type": {
+      "name": "catalogs_item_type",
+      "schema": "agape_app_development_demo",
+      "values": [
+        "good",
+        "service"
+      ]
+    },
     "agape_app_development_demo.user_type_enum": {
       "name": "user_type_enum",
       "schema": "agape_app_development_demo",
       "values": [
         "person",
         "company"
-      ]
-    },
-    "agape_app_development_demo.inventory_item_type": {
-      "name": "inventory_item_type",
-      "schema": "agape_app_development_demo",
-      "values": [
-        "good",
-        "service",
-        "bundle",
-        "charge"
       ]
     },
     "agape_app_development_demo.purchasing_purchase_order_status": {

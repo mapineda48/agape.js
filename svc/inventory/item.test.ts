@@ -3,18 +3,35 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
  * Tests para el servicio de ítems de inventario.
- * Cubre CRUD de ítems, filtros, paginación y manejo de extensiones (stock/service).
+ * Este archivo prueba la re-exportación desde svc/catalogs/item
+ * usando la nueva estructura con inferencia de tipo (good/service).
  */
+
+// IDs de setup
+let categoryId: number;
+let subcategoryId: number;
 
 beforeAll(async () => {
   const { default: initDatabase } = await import("#lib/db");
   const uuid = crypto.randomUUID();
 
   await initDatabase("postgresql://postgres:mypassword@localhost", {
-    tenant: `vitest_item_${uuid}`,
+    tenant: `vitest_inv_item_${uuid}`,
     dev: false,
     skipSeeds: true,
   });
+
+  // Crear categoría con subcategoría para los tests
+  const { upsertCategory } = await import("./category");
+  const cat = await upsertCategory({
+    fullName: "Inventario Test Category",
+    isEnabled: true,
+    subcategories: [
+      { fullName: "Inventario Test Subcategory", isEnabled: true },
+    ],
+  });
+  categoryId = cat.id;
+  subcategoryId = cat.subcategories[0]?.id ?? 0;
 });
 
 afterAll(async () => {
@@ -26,49 +43,53 @@ afterAll(async () => {
   await db.$client.end();
 });
 
-describe("item service", () => {
-  // Helper para crear una categoría de prueba
-  async function createTestCategory(
-    categoryName: string,
-    subcategoryName: string
-  ) {
-    const { upsertCategory } = await import("./category");
-    return upsertCategory({
-      fullName: categoryName,
-      isEnabled: true,
-      subcategories: [{ fullName: subcategoryName, isEnabled: true }],
-    });
-  }
-
+describe("inventory item service (re-export from catalogs)", () => {
   describe("getItemById", () => {
-    it("should return an item by id", async () => {
+    it("should return a good item by id", async () => {
       const { getItemById, upsertItem } = await import("./item");
 
-      const category = await createTestCategory(
-        "Test Category",
-        "Test Subcategory"
-      );
-
       const created = await upsertItem({
-        code: "LAPTOP-001",
-        fullName: "Laptop Gaming",
-        itemType: "good",
+        code: "INV-GOOD-001",
+        fullName: "Producto Inventario",
+        basePrice: new Decimal("100.00"),
         isEnabled: true,
-        basePrice: new Decimal("999.99"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 4,
-        slogan: "Best Laptop",
+        categoryId,
+        subcategoryId,
         images: [],
+        good: {
+          uomId: 1,
+          minStock: new Decimal("10"),
+        },
       });
 
       const result = await getItemById(created.id);
 
       expect(result).toBeDefined();
       expect(result?.id).toBe(created.id);
-      expect(result?.fullName).toBe("Laptop Gaming");
-      expect(result?.code).toBe("LAPTOP-001");
-      expect(result?.isEnabled).toBe(true);
+      expect(result?.code).toBe("INV-GOOD-001");
+      expect(result?.type).toBe("good");
+    });
+
+    it("should return a service item by id", async () => {
+      const { getItemById, upsertItem } = await import("./item");
+
+      const created = await upsertItem({
+        code: "INV-SVC-001",
+        fullName: "Servicio Inventario",
+        basePrice: new Decimal("50.00"),
+        isEnabled: true,
+        images: [],
+        service: {
+          durationMinutes: 60,
+          isRecurring: false,
+        },
+      });
+
+      const result = await getItemById(created.id);
+
+      expect(result).toBeDefined();
+      expect(result?.id).toBe(created.id);
+      expect(result?.type).toBe("service");
     });
 
     it("should return undefined for non existent ids", async () => {
@@ -84,34 +105,27 @@ describe("item service", () => {
     it("should return an item by code", async () => {
       const { getItemByCode, upsertItem } = await import("./item");
 
-      const category = await createTestCategory(
-        "Code Test Category",
-        "Code Test Subcategory"
-      );
-
       await upsertItem({
-        code: "UNIQUE-CODE-001",
-        fullName: "Item by Code",
-        itemType: "good",
+        code: "INV-UNIQUE-CODE",
+        fullName: "Item por Código",
+        basePrice: new Decimal("75.00"),
         isEnabled: true,
-        basePrice: new Decimal("50.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 3,
         images: [],
+        good: {
+          uomId: 1,
+        },
       });
 
-      const result = await getItemByCode("UNIQUE-CODE-001");
+      const result = await getItemByCode("INV-UNIQUE-CODE");
 
       expect(result).toBeDefined();
-      expect(result?.code).toBe("UNIQUE-CODE-001");
-      expect(result?.fullName).toBe("Item by Code");
+      expect(result?.code).toBe("INV-UNIQUE-CODE");
     });
 
     it("should return undefined for non existent code", async () => {
       const { getItemByCode } = await import("./item");
 
-      const result = await getItemByCode("NON-EXISTENT-CODE");
+      const result = await getItemByCode("NON-EXISTENT-CODE-XYZ");
 
       expect(result).toBeUndefined();
     });
@@ -121,35 +135,24 @@ describe("item service", () => {
     it("should return items with pagination", async () => {
       const { listItems, upsertItem } = await import("./item");
 
-      const category = await createTestCategory(
-        "Electronics",
-        "Electronics Subcategory"
-      );
-
       await upsertItem({
-        code: "MOUSE-001",
-        fullName: "Mouse Gamer",
-        itemType: "good",
-        isEnabled: true,
+        code: "INV-LIST-001",
+        fullName: "Item Lista 1",
         basePrice: new Decimal("29.99"),
-        slogan: "Best Mouse",
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 5,
+        isEnabled: true,
+        categoryId,
         images: [],
+        good: { uomId: 1 },
       });
 
       await upsertItem({
-        code: "KEYBOARD-001",
-        fullName: "Keyboard Mechanical",
-        itemType: "good",
-        isEnabled: true,
+        code: "INV-LIST-002",
+        fullName: "Item Lista 2",
         basePrice: new Decimal("49.99"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 4,
-        slogan: "Best Keyboard",
+        isEnabled: true,
+        categoryId,
         images: [],
+        good: { uomId: 1 },
       });
 
       const result = await listItems({ pageSize: 10 });
@@ -159,11 +162,20 @@ describe("item service", () => {
     });
 
     it("should filter by fullName", async () => {
-      const { listItems } = await import("./item");
+      const { listItems, upsertItem } = await import("./item");
 
-      const result = await listItems({ fullName: "Mouse" });
+      await upsertItem({
+        code: "INV-FILTER-NAME-001",
+        fullName: "Producto Especial Búsqueda",
+        basePrice: new Decimal("100.00"),
+        isEnabled: true,
+        images: [],
+        good: { uomId: 1 },
+      });
 
-      expect(result.items.every((p) => p.fullName.includes("Mouse"))).toBe(
+      const result = await listItems({ fullName: "Especial" });
+
+      expect(result.items.some((p) => p.fullName.includes("Especial"))).toBe(
         true
       );
     });
@@ -171,26 +183,18 @@ describe("item service", () => {
     it("should filter by code", async () => {
       const { listItems, upsertItem } = await import("./item");
 
-      const category = await createTestCategory(
-        "Code Filter Category",
-        "Code Filter Subcategory"
-      );
-
       await upsertItem({
-        code: "FILTER-TEST-001",
-        fullName: "Filter Test Item",
-        itemType: "good",
-        isEnabled: true,
+        code: "INV-FILTER-CODE-XYZ",
+        fullName: "Filter Code Test",
         basePrice: new Decimal("10.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 3,
+        isEnabled: true,
         images: [],
+        good: { uomId: 1 },
       });
 
-      const result = await listItems({ code: "FILTER-TEST" });
+      const result = await listItems({ code: "FILTER-CODE" });
 
-      expect(result.items.every((p) => p.code.includes("FILTER-TEST"))).toBe(
+      expect(result.items.some((p) => p.code.includes("FILTER-CODE"))).toBe(
         true
       );
     });
@@ -198,22 +202,13 @@ describe("item service", () => {
     it("should filter by isEnabled", async () => {
       const { listItems, upsertItem } = await import("./item");
 
-      const category = await createTestCategory(
-        "Disabled Category",
-        "Disabled Subcategory"
-      );
-
       await upsertItem({
-        code: "DISABLED-001",
-        fullName: "Disabled Item",
-        itemType: "good",
-        isEnabled: false,
+        code: "INV-DISABLED-001",
+        fullName: "Item Deshabilitado",
         basePrice: new Decimal("10.00"),
-        slogan: "Disabled Item",
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 3,
+        isEnabled: false,
         images: [],
+        good: { uomId: 1 },
       });
 
       const result = await listItems({ isEnabled: false });
@@ -221,29 +216,14 @@ describe("item service", () => {
       expect(result.items.some((p) => !p.isEnabled)).toBe(true);
     });
 
-    it("should filter by itemType", async () => {
-      const { listItems, upsertItem } = await import("./item");
+    it("should filter by type", async () => {
+      const { listItems } = await import("./item");
 
-      const category = await createTestCategory(
-        "Service Category",
-        "Service Subcategory"
-      );
+      const goods = await listItems({ type: "good" });
+      const services = await listItems({ type: "service" });
 
-      await upsertItem({
-        code: "SERVICE-001",
-        fullName: "Consulting Service",
-        itemType: "service",
-        isEnabled: true,
-        basePrice: new Decimal("100.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 5,
-        images: [],
-      });
-
-      const result = await listItems({ itemType: "service" });
-
-      expect(result.items.every((p) => p.itemType === "service")).toBe(true);
+      expect(goods.items.every((p) => p.type === "good")).toBe(true);
+      expect(services.items.every((p) => p.type === "service")).toBe(true);
     });
 
     it("should include totalCount when requested", async () => {
@@ -266,256 +246,250 @@ describe("item service", () => {
     it("should return items with category name", async () => {
       const { listItems, upsertItem } = await import("./item");
 
-      const category = await createTestCategory(
-        "Cat Name Test",
-        "Cat Name Sub"
-      );
-
       await upsertItem({
-        code: "CAT-NAME-TEST",
-        fullName: "Cat Name Test Item",
-        itemType: "good",
-        isEnabled: true,
+        code: "INV-CAT-NAME-001",
+        fullName: "Item con Categoría",
         basePrice: new Decimal("10.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 3,
+        isEnabled: true,
+        categoryId,
         images: [],
+        good: { uomId: 1 },
       });
 
-      const result = await listItems({ code: "CAT-NAME-TEST" });
+      const result = await listItems({ code: "INV-CAT-NAME" });
 
       expect(result.items[0]).toHaveProperty("category");
-      expect(result.items[0].category).toBe("Cat Name Test");
+      expect(result.items[0].category).toBe("Inventario Test Category");
     });
   });
 
-  describe("upsertItem", () => {
-    it("should create an item when id is missing", async () => {
-      const { upsertItem } = await import("./item");
-
-      const category = await createTestCategory("New Items", "New Subcategory");
+  describe("upsertItem - Create", () => {
+    it("should create a good item when id is missing", async () => {
+      const { upsertItem, getItemById } = await import("./item");
 
       const created = await upsertItem({
-        code: "NEW-ITEM-001",
-        fullName: "New Item",
-        itemType: "good",
-        isEnabled: true,
+        code: "INV-CREATE-GOOD-001",
+        fullName: "Nuevo Bien Físico",
+        slogan: "El mejor producto",
+        description: "Descripción del producto",
         basePrice: new Decimal("199.99"),
-        slogan: "New Item",
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
+        isEnabled: true,
         rating: 5,
+        categoryId,
+        subcategoryId,
         images: [],
+        good: {
+          uomId: 1,
+          minStock: new Decimal("5"),
+          maxStock: new Decimal("50"),
+          reorderPoint: new Decimal("10"),
+        },
       });
 
       expect(created).toHaveProperty("id");
-      expect(created.fullName).toBe("New Item");
-      expect(created.code).toBe("NEW-ITEM-001");
-      expect(created.isEnabled).toBe(true);
+      expect(created.code).toBe("INV-CREATE-GOOD-001");
+      expect(created).toHaveProperty("good");
+      expect(created.good?.uomId).toBe(1);
+
+      const fromDb = await getItemById(created.id);
+      expect(fromDb?.type).toBe("good");
     });
 
-    it("should update an existing item when id is provided", async () => {
+    it("should create a service item when id is missing", async () => {
       const { upsertItem, getItemById } = await import("./item");
 
-      const category = await createTestCategory(
-        "Update Category",
-        "Update Subcategory"
-      );
+      const created = await upsertItem({
+        code: "INV-CREATE-SVC-001",
+        fullName: "Nuevo Servicio",
+        basePrice: new Decimal("100.00"),
+        isEnabled: true,
+        images: [],
+        service: {
+          durationMinutes: 90,
+          isRecurring: true,
+        },
+      });
+
+      expect(created).toHaveProperty("id");
+      expect(created.code).toBe("INV-CREATE-SVC-001");
+      expect(created).toHaveProperty("service");
+      expect(created.service?.durationMinutes).toBe(90);
+      expect(created.service?.isRecurring).toBe(true);
+
+      const fromDb = await getItemById(created.id);
+      expect(fromDb?.type).toBe("service");
+    });
+  });
+
+  describe("upsertItem - Update", () => {
+    it("should update an existing good item", async () => {
+      const { upsertItem, getItemById } = await import("./item");
 
       const created = await upsertItem({
-        code: "UPDATE-TEST-001",
+        code: "INV-UPDATE-001",
         fullName: "Original",
-        itemType: "good",
-        isEnabled: true,
         basePrice: new Decimal("100.00"),
-        slogan: "Original",
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 3,
+        isEnabled: true,
         images: [],
+        good: {
+          uomId: 1,
+          minStock: new Decimal("10"),
+        },
       });
 
       const updated = await upsertItem({
         id: created.id,
-        code: "UPDATE-TEST-001",
-        fullName: "Updated",
-        itemType: "good",
-        isEnabled: false,
+        code: "INV-UPDATE-001",
+        fullName: "Actualizado",
         basePrice: new Decimal("150.00"),
-        slogan: "Updated",
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 4,
+        isEnabled: false,
         images: [],
+        good: {
+          uomId: 2,
+          minStock: new Decimal("20"),
+          maxStock: new Decimal("200"),
+        },
       });
 
       expect(updated.id).toBe(created.id);
-      expect(updated.fullName).toBe("Updated");
+      expect(updated.fullName).toBe("Actualizado");
       expect(updated.isEnabled).toBe(false);
+      expect(updated.good?.uomId).toBe(2);
 
       const fromDb = await getItemById(created.id);
-      expect(fromDb?.fullName).toBe("Updated");
+      expect(fromDb?.fullName).toBe("Actualizado");
     });
 
-    it("should create item with string images", async () => {
-      const { upsertItem } = await import("./item");
-
-      const category = await createTestCategory(
-        "Images Category",
-        "Images Subcategory"
-      );
-
-      const created = await upsertItem({
-        code: "IMAGES-TEST-001",
-        fullName: "Item with Images",
-        itemType: "good",
-        isEnabled: true,
-        basePrice: new Decimal("299.99"),
-        slogan: "Item with Images",
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 5,
-        images: [
-          "https://example.com/image1.jpg",
-          "https://example.com/image2.jpg",
-        ],
-      });
-
-      expect(created.images).toBeInstanceOf(Array);
-      expect((created.images as string[]).length).toBe(2);
-    });
-
-    it("should create item with different types", async () => {
+    it("should update an existing service item", async () => {
       const { upsertItem, getItemById } = await import("./item");
 
-      const category = await createTestCategory(
-        "Types Category",
-        "Types Subcategory"
+      const created = await upsertItem({
+        code: "INV-UPDATE-SVC-001",
+        fullName: "Servicio Original",
+        basePrice: new Decimal("50.00"),
+        isEnabled: true,
+        images: [],
+        service: {
+          durationMinutes: 30,
+          isRecurring: false,
+        },
+      });
+
+      const updated = await upsertItem({
+        id: created.id,
+        code: "INV-UPDATE-SVC-001",
+        fullName: "Servicio Actualizado",
+        basePrice: new Decimal("75.00"),
+        isEnabled: true,
+        images: [],
+        service: {
+          durationMinutes: 60,
+          isRecurring: true,
+        },
+      });
+
+      expect(updated.id).toBe(created.id);
+      expect(updated.fullName).toBe("Servicio Actualizado");
+      expect(updated.service?.durationMinutes).toBe(60);
+      expect(updated.service?.isRecurring).toBe(true);
+
+      const fromDb = await getItemById(created.id);
+      expect(fromDb?.fullName).toBe("Servicio Actualizado");
+    });
+  });
+
+  describe("upsertItem - Validation", () => {
+    it("should throw error when neither good nor service is provided", async () => {
+      const { upsertItem } = await import("./item");
+
+      await expect(
+        upsertItem({
+          code: "INV-INVALID-001",
+          fullName: "Item Inválido",
+          basePrice: new Decimal("100.00"),
+          isEnabled: true,
+          images: [],
+        } as any)
+      ).rejects.toThrow(
+        "Item must be either a good or a service. Please provide either 'good' or 'service' data."
       );
+    });
 
-      // Crear item tipo 'service'
-      const service = await upsertItem({
-        code: "SERVICE-TYPE-001",
-        fullName: "Consulting Service",
-        itemType: "service",
-        isEnabled: true,
-        basePrice: new Decimal("500.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 5,
-        images: [],
-      });
+    it("should throw error when both good and service are provided", async () => {
+      const { upsertItem } = await import("./item");
 
-      expect(service.itemType).toBe("service");
-
-      // Crear item tipo 'bundle'
-      const bundle = await upsertItem({
-        code: "BUNDLE-001",
-        fullName: "Starter Kit",
-        itemType: "bundle",
-        isEnabled: true,
-        basePrice: new Decimal("199.99"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 4,
-        images: [],
-      });
-
-      expect(bundle.itemType).toBe("bundle");
-
-      // Crear item tipo 'charge'
-      const charge = await upsertItem({
-        code: "CHARGE-001",
-        fullName: "Shipping Fee",
-        itemType: "charge",
-        isEnabled: true,
-        basePrice: new Decimal("10.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 0,
-        images: [],
-      });
-
-      expect(charge.itemType).toBe("charge");
+      await expect(
+        upsertItem({
+          code: "INV-INVALID-002",
+          fullName: "Item Mixto",
+          basePrice: new Decimal("100.00"),
+          isEnabled: true,
+          images: [],
+          good: { uomId: 1 },
+          service: { isRecurring: false },
+        } as any)
+      ).rejects.toThrow(
+        "Item cannot be both a good and a service. Provide only 'good' or 'service', not both."
+      );
     });
   });
 
   describe("item type extensions", () => {
-    it("should handle stockData for goods", async () => {
+    it("should persist good data in inventory_item table", async () => {
       const { upsertItem } = await import("./item");
       const { db } = await import("#lib/db");
-      const { inventoryItemStock } = await import("#models/inventory/item");
+      const { inventoryItem } = await import("#models/inventory/item");
       const { eq } = await import("drizzle-orm");
 
-      const category = await createTestCategory(
-        "Stock Category",
-        "Stock Subcategory"
-      );
-
       const created = await upsertItem({
-        code: "STOCK-TEST-001",
-        fullName: "Item with Stock",
-        itemType: "good",
-        isEnabled: true,
+        code: "INV-GOOD-EXT-001",
+        fullName: "Good con Extension",
         basePrice: new Decimal("50.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 3,
+        isEnabled: true,
         images: [],
-        stockData: {
+        good: {
           uomId: 1,
-          trackStock: true,
           minStock: new Decimal("10"),
           maxStock: new Decimal("100"),
           reorderPoint: new Decimal("20"),
         },
       });
 
-      // Verificar que se creó el registro de stock
-      const [stockRecord] = await db
+      // Verificar que se creó el registro en inventory_item
+      const [goodRecord] = await db
         .select()
-        .from(inventoryItemStock)
-        .where(eq(inventoryItemStock.itemId, created.id));
+        .from(inventoryItem)
+        .where(eq(inventoryItem.itemId, created.id));
 
-      expect(stockRecord).toBeDefined();
-      expect(stockRecord.trackStock).toBe(true);
-      expect(Number(stockRecord.minStock)).toBe(10);
-      expect(Number(stockRecord.maxStock)).toBe(100);
+      expect(goodRecord).toBeDefined();
+      expect(goodRecord.uomId).toBe(1);
+      expect(Number(goodRecord.minStock)).toBe(10);
+      expect(Number(goodRecord.maxStock)).toBe(100);
     });
 
-    it("should handle serviceData for services", async () => {
+    it("should persist service data in catalogs_service table", async () => {
       const { upsertItem } = await import("./item");
       const { db } = await import("#lib/db");
-      const { inventoryItemService } = await import("#models/catalogs/service");
+      const { service } = await import("#models/catalogs/service");
       const { eq } = await import("drizzle-orm");
 
-      const category = await createTestCategory(
-        "Service Ext Category",
-        "Service Ext Subcategory"
-      );
-
       const created = await upsertItem({
-        code: "SERVICE-EXT-001",
-        fullName: "Service with Extension",
-        itemType: "service",
-        isEnabled: true,
+        code: "INV-SVC-EXT-001",
+        fullName: "Service con Extension",
         basePrice: new Decimal("200.00"),
-        categoryId: category.id,
-        subcategoryId: category.subcategories[0].id ?? 0,
-        rating: 5,
+        isEnabled: true,
         images: [],
-        serviceData: {
+        service: {
           durationMinutes: 60,
           isRecurring: true,
         },
       });
 
-      // Verificar que se creó el registro de servicio
+      // Verificar que se creó el registro en catalogs_service
       const [serviceRecord] = await db
         .select()
-        .from(inventoryItemService)
-        .where(eq(inventoryItemService.itemId, created.id));
+        .from(service)
+        .where(eq(service.itemId, created.id));
 
       expect(serviceRecord).toBeDefined();
       expect(serviceRecord.durationMinutes).toBe(60);

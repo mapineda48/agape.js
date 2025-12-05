@@ -67,26 +67,30 @@ beforeAll(async () => {
     code: `ITEM-ACTIVE-${uuid.slice(0, 6)}`,
     fullName: "Ítem de Compra",
     slogan: "Ítem para órdenes",
-    itemType: "good",
     isEnabled: true,
     basePrice: new Decimal("50.00"),
     categoryId: category.id,
     subcategoryId,
     rating: 5,
     images: [],
+    good: {
+      uomId: 1,
+    },
   });
 
   const disabledItem = await upsertItem({
     code: `ITEM-DISABLED-${uuid.slice(0, 6)}`,
     fullName: "Ítem Deshabilitado",
     slogan: "No debe usarse",
-    itemType: "good",
     isEnabled: false,
     basePrice: new Decimal("75.00"),
     categoryId: category.id,
     subcategoryId,
     rating: 3,
     images: [],
+    good: {
+      uomId: 1,
+    },
   });
 
   supplierId = activeSupplier.id;

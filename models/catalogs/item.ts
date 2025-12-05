@@ -13,7 +13,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { category } from "./category";
 import { subcategory } from "./subcategory";
 import { decimal } from "../../lib/db/custom-types";
-import { itemTypeEnum } from "./emuns";
+import { itemTypeEnum } from "./enums";
 
 /**
  * Maestro de ítems (Item)
@@ -74,3 +74,8 @@ export const item = schema.table(
 
 export type Item = InferSelectModel<typeof item>;
 export type NewItem = InferInsertModel<typeof item>;
+
+// Re-exportar el enum de tipo de ítem para facilitar el acceso
+export { type ItemType, ITEM_TYPE_VALUES } from "./enums";
+
+export default item;
