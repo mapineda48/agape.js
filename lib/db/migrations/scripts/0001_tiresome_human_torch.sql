@@ -1,0 +1,2 @@
+DROP INDEX "agape_app_development_demo"."ux_inventory_item_code";--> statement-breakpoint
+CREATE UNIQUE INDEX "ux_catalogs_item_code" ON "agape_app_development_demo"."catalogs_item" USING btree ("code");

@@ -1,4 +1,3 @@
-// inventory/item.ts
 import { schema } from "../agape";
 import {
   serial,
@@ -68,7 +67,7 @@ export const item = schema.table(
   },
   (table) => [
     /** Código único de ítem */
-    uniqueIndex("ux_inventory_item_code").on(table.code),
+    uniqueIndex("ux_catalogs_item_code").on(table.code),
   ]
 );
 

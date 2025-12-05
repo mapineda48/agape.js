@@ -4,12 +4,13 @@ import { schema } from "../agape";
 /**
  * Enum para los tipos de usuario/entidad en el sistema.
  *
- * Este enum define los tipos de entidades soportadas en el modelo de "Item Master":
+ * Este enum define los tipos de entidades soportadas en el modelo de "Party/Identity":
  * - `person`: Representa una persona física (natural person)
  * - `company`: Representa una persona jurídica (legal entity)
  *
  * Se utiliza en el modelo `user` para determinar el tipo de entidad
- * y garantizar la integridad referencial con las tablas de detalle.
+ * y garantizar la integridad referencial con las tablas de detalle
+ * (`core_person` o `core_company`).
  *
  * @example
  * ```ts

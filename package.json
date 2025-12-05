@@ -15,7 +15,7 @@
     "build": "tsx bin/build.ts",
     "generate": "drizzle-kit generate",
     "test": "vitest",
-    "test:backend": "vitest --project backend"
+    "test:backend": "drizzle-kit generate && vitest --project backend"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.29.1",
