@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { Inventory } from "../index";
 import { useRouter } from "@/components/router/router-hook";
-import { getProductById, type Product } from "@agape/inventory/product";
+import { getItemById, type IItem } from "@agape/catalogs/item";
 import { useNotificacion } from "@/components/ui/notification";
 
 export default function EditProductPage() {
   const { params, navigate } = useRouter();
   const notify = useNotificacion();
-  const [product, setProduct] = useState<Product | undefined>(undefined);
+  const [item, setItem] = useState<IItem | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (params.id) {
       const id = parseInt(params.id, 10);
-      getProductById(id)
+      getItemById(id)
         .then((record) => {
-          setProduct(record);
+          setItem(record);
         })
         .catch((error) => {
           notify({ payload: error });
@@ -34,7 +34,7 @@ export default function EditProductPage() {
     );
   }
 
-  if (!product) {
+  if (!item) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold text-gray-900">
@@ -61,10 +61,7 @@ export default function EditProductPage() {
           Ver Lista de Productos
         </button>
       </div>
-      <Inventory
-        product={product}
-        onSuccess={() => navigate("../../products")}
-      />
+      <Inventory product={item} onSuccess={() => navigate("../../products")} />
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useState } from "react";
 import {
-  listProducts,
-  type ListProductsParams as GetProductsParams,
-  type ListProductItem as GetProduct,
-  type ListProductsResult as GetProductsResult,
-} from "@agape/inventory/product";
+  listItems,
+  type ListItemsParams as GetItemsParams,
+  type ListItemItem as GetItem,
+  type ListItemsResult as GetItemsResult,
+} from "@agape/catalogs/item";
 
 import { listCategories as findAll } from "@agape/inventory/category";
 import { useSharedState } from "@/components/util/event-emitter";
@@ -18,13 +18,13 @@ const PAGE_SIZE = 12; // Increased page size for grid view
 
 type CategoryWithSubs = Awaited<ReturnType<typeof findAll>>[number];
 
-interface Props extends GetProductsResult {
+interface Props extends GetItemsResult {
   categories: CategoryWithSubs[];
 }
 
 export async function onInit() {
-  const [productsResult, categories] = await Promise.all([
-    listProducts({
+  const [itemsResult, categories] = await Promise.all([
+    listItems({
       pageIndex: 0,
       pageSize: PAGE_SIZE,
       includeTotalCount: true,
@@ -33,7 +33,7 @@ export async function onInit() {
   ]);
 
   return {
-    ...productsResult,
+    ...itemsResult,
     categories,
   };
 }
@@ -42,7 +42,7 @@ export default function Inventory(props: Props) {
   const notify = useNotificacion();
   const { navigate } = useRouter();
 
-  const [{ filters, totalCount, products, fetch }, setState] =
+  const [{ filters, totalCount, items, fetch }, setState] =
     useSharedState<IState>(() => {
       return {
         filters: {
@@ -51,7 +51,7 @@ export default function Inventory(props: Props) {
           includeTotalCount: true,
         },
         fetch: false,
-        products: props.products,
+        items: props.items,
         totalCount: props.totalCount || 0,
       };
     });
@@ -62,9 +62,9 @@ export default function Inventory(props: Props) {
     max: "",
   });
 
-  const updateFilter = (newFilters: Partial<GetProductsParams>) => {
+  const updateFilter = (newFilters: Partial<GetItemsParams>) => {
     setState({
-      products,
+      items,
       totalCount,
       fetch: true,
       filters: {
@@ -92,7 +92,7 @@ export default function Inventory(props: Props) {
       return;
     }
 
-    listProducts(filters)
+    listItems(filters)
       .then((response) => {
         setState({
           fetch: false,
@@ -100,7 +100,7 @@ export default function Inventory(props: Props) {
             ...filters,
             includeTotalCount: false,
           },
-          products: response.products,
+          items: response.items,
           totalCount: response.totalCount ?? totalCount,
         });
       })
@@ -300,10 +300,10 @@ export default function Inventory(props: Props) {
                     <input
                       type="checkbox"
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      checked={filters.isActive === true}
+                      checked={filters.isEnabled === true}
                       onChange={(e) =>
                         updateFilter({
-                          isActive: e.target.checked ? true : undefined,
+                          isEnabled: e.target.checked ? true : undefined,
                         })
                       }
                     />
@@ -313,10 +313,10 @@ export default function Inventory(props: Props) {
                     <input
                       type="checkbox"
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      checked={filters.isActive === false}
+                      checked={filters.isEnabled === false}
                       onChange={(e) =>
                         updateFilter({
-                          isActive: e.target.checked ? false : undefined,
+                          isEnabled: e.target.checked ? false : undefined,
                         })
                       }
                     />
@@ -328,7 +328,7 @@ export default function Inventory(props: Props) {
 
             {/* Product Grid */}
             <div className="flex-1">
-              {products.length === 0 ? (
+              {items.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
                   <svg
                     className="mx-auto h-12 w-12 text-gray-400"
@@ -354,12 +354,12 @@ export default function Inventory(props: Props) {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                  {products.map((product) => (
+                  {items.map((item) => (
                     <ProductCard
-                      key={product.id}
-                      product={product}
+                      key={item.id}
+                      item={item}
                       onEdit={() => {
-                        navigate(`../product/${product.id}`);
+                        navigate(`../product/${item.id}`);
                       }}
                     />
                   ))}
@@ -374,7 +374,7 @@ export default function Inventory(props: Props) {
                   onChange={(pageIndex) => {
                     if (fetch) return;
                     setState({
-                      products,
+                      items,
                       totalCount,
                       fetch: true,
                       filters: {
@@ -393,14 +393,8 @@ export default function Inventory(props: Props) {
   );
 }
 
-function ProductCard({
-  product,
-  onEdit,
-}: {
-  product: GetProduct;
-  onEdit: () => void;
-}) {
-  const images = product.images as string[];
+function ProductCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
+  const images = item.images as string[];
   const image = images && images.length > 0 ? images[0] : null;
 
   return (
@@ -413,7 +407,7 @@ function ProductCard({
         {image ? (
           <img
             src={image}
-            alt={product.fullName}
+            alt={item.fullName}
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
@@ -436,12 +430,12 @@ function ProductCard({
         <div className="absolute top-3 right-3">
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-md ${
-              product.isActive
+              item.isEnabled
                 ? "bg-green-100/90 text-green-800"
                 : "bg-gray-100/90 text-gray-800"
             }`}
           >
-            {product.isActive ? "Activo" : "Inactivo"}
+            {item.isEnabled ? "Activo" : "Inactivo"}
           </span>
         </div>
       </div>
@@ -450,7 +444,7 @@ function ProductCard({
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-2">
           <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">
-            {product.category}
+            {item.category}
           </p>
           <div className="flex items-center">
             <svg
@@ -462,16 +456,16 @@ function ProductCard({
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
             <span className="ml-1 text-sm text-gray-600 font-medium">
-              {product.rating || "-"}
+              {item.rating || "-"}
             </span>
           </div>
         </div>
         <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-          {product.fullName}
+          {item.fullName}
         </h3>
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
           <span className="text-xl font-bold text-gray-900">
-            ${product.price.toFixed(2)}
+            ${item.basePrice.toString()}
           </span>
           <button
             className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
@@ -490,7 +484,7 @@ function ProductCard({
 
 interface IState {
   fetch: boolean;
-  filters: GetProductsParams;
-  products: GetProduct[];
+  filters: GetItemsParams;
+  items: GetItem[];
   totalCount: number;
 }

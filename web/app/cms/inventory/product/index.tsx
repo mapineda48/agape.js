@@ -2,17 +2,15 @@ import { useEffect, useMemo } from "react";
 import FormProvider, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
-import { upsertProduct, type Product } from "@agape/inventory/product";
+import { upsertItem, type IItem, type IItemGood } from "@agape/catalogs/item";
+import Decimal from "@utils/data/Decimal";
 import InputImages from "./Images";
 import Categories from "./Categories";
 import { SubCategories } from "./SubCategories";
 import { useEventEmitter } from "@/components/util/event-emitter";
 import Submit from "@/components/ui/submit";
 
-export function Inventory(props: {
-  product?: Product;
-  onSuccess?: () => void;
-}) {
+export function Inventory(props: { product?: IItem; onSuccess?: () => void }) {
   return (
     <FormProvider state={props.product} className="max-w-7xl mx-auto space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -98,11 +96,11 @@ export function Inventory(props: {
                   <Checkbox
                     materialize
                     checked
-                    path="isActive"
+                    path="isEnabled"
                     className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                   />
                   <label
-                    htmlFor="isActive"
+                    htmlFor="isEnabled"
                     className="ml-3 block text-sm font-medium text-gray-900"
                   >
                     Producto Habilitado
@@ -119,7 +117,7 @@ export function Inventory(props: {
                     <span className="text-gray-500 sm:text-sm">$</span>
                   </div>
                   <Input.Decimal
-                    path="price"
+                    path="basePrice"
                     required
                     className="w-full rounded-lg border-gray-300 pl-7 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="0.00"
@@ -182,7 +180,7 @@ function InsertUpdate(props: { onSuccess?: () => void }) {
   const updateFormEvent = useMemo(() => Symbol("updateForm"), []);
 
   useEffect(() => {
-    return emitter.on(updateFormEvent, ((record: Product) => {
+    return emitter.on(updateFormEvent, ((record: IItem) => {
       dispatch(setAtPath({ path: [], value: record }));
     }) as any);
   }, [emitter, updateFormEvent, dispatch]);
@@ -190,7 +188,15 @@ function InsertUpdate(props: { onSuccess?: () => void }) {
   return (
     <Submit
       onSubmit={async (state: any) => {
-        const record = await upsertProduct(state);
+        const payload: IItemGood = {
+          ...state,
+          code: state.code || "ITM-" + Date.now(),
+          basePrice: new Decimal(state.basePrice ?? 0),
+          good: {
+            uomId: 1,
+          },
+        };
+        const record = await upsertItem(payload);
         props.onSuccess?.();
         return record;
       }}
