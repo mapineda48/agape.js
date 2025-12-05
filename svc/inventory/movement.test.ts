@@ -30,7 +30,7 @@ beforeAll(async () => {
   });
 
   // 1. Crear tipo de documento de negocio para movimientos
-  const { upsertDocumentType } = await import("#svc/numeration/documentType");
+  const { upsertDocumentType } = await import("#svc/numbering/documentType");
   const docType = await upsertDocumentType({
     code: "INV_MOV",
     name: "Movimiento de Inventario",
@@ -40,7 +40,7 @@ beforeAll(async () => {
 
   // 2. Crear serie de numeración
   const { upsertDocumentSeries } = await import(
-    "#svc/numeration/documentSeries"
+    "#svc/numbering/documentSeries"
   );
   const series = await upsertDocumentSeries({
     documentTypeId: inventoryDocTypeId,
@@ -186,7 +186,7 @@ beforeAll(async () => {
     .returning();
 
   // Crear empleado
-  const { default: employee } = await import("#models/staff/employee");
+  const { default: employee } = await import("#models/hr/employee");
   const { default: person } = await import("#models/core/person");
 
   await db.insert(person).values({
@@ -408,7 +408,7 @@ describe("createInventoryMovement service", () => {
       const { db } = await import("#lib/db");
       const { inventoryMovement } = await import("#models/inventory/movement");
       const { upsertDocumentType } = await import(
-        "#svc/numeration/documentType"
+        "#svc/numbering/documentType"
       );
       const { upsertMovementType } = await import(
         "#svc/inventory/movementType"
@@ -470,7 +470,7 @@ describe("createInventoryMovement service", () => {
       const { createInventoryMovement } = await import("./movement");
       const { db } = await import("#lib/db");
       const { documentSequence } = await import(
-        "#models/numeration/document_sequence"
+        "#models/numbering/document_sequence"
       );
       const { desc } = await import("drizzle-orm");
 
@@ -505,7 +505,7 @@ describe("createInventoryMovement service", () => {
       const { db } = await import("#lib/db");
       const { inventoryMovement } = await import("#models/inventory/movement");
       const { documentSeries } = await import(
-        "#models/numeration/document_series"
+        "#models/numbering/document_series"
       );
       const { eq } = await import("drizzle-orm");
 
@@ -543,10 +543,10 @@ describe("createInventoryMovement service", () => {
       const { db } = await import("#lib/db");
       const { inventoryMovement } = await import("#models/inventory/movement");
       const { documentSeries } = await import(
-        "#models/numeration/document_series"
+        "#models/numbering/document_series"
       );
       const { documentSequence } = await import(
-        "#models/numeration/document_sequence"
+        "#models/numbering/document_sequence"
       );
       const { count, eq } = await import("drizzle-orm");
 
@@ -979,10 +979,10 @@ describe("createInventoryMovement service", () => {
         "#models/inventory/movement_detail"
       );
       const { documentSeries } = await import(
-        "#models/numeration/document_series"
+        "#models/numbering/document_series"
       );
       const { documentSequence } = await import(
-        "#models/numeration/document_sequence"
+        "#models/numbering/document_sequence"
       );
       const { count, eq } = await import("drizzle-orm");
 
@@ -1047,7 +1047,7 @@ describe("createInventoryMovement service", () => {
         "#models/inventory/movement_detail"
       );
       const { upsertDocumentType } = await import(
-        "#svc/numeration/documentType"
+        "#svc/numbering/documentType"
       );
       const { upsertMovementType } = await import(
         "#svc/inventory/movementType"

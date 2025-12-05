@@ -9,19 +9,19 @@ import {
 import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { schema } from "../agape";
-import employee from "../staff/employee";
+import employee from "../hr/employee";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 
 /**
- * Modelo de usuario de acceso (AccessUser)
+ * Modelo de usuario de acceso al sistema (SecurityUser)
  * Representa las credenciales y estado de acceso de un empleado.
  *
  * Relación 1:1 con employee: cada empleado puede tener máximo un usuario de acceso.
  * Si necesitas multi-login por empleado, elimina el uniqueIndex sobre employeeId.
  */
-export const accessUser = schema.table(
-  "access_employee",
+export const securityUser = schema.table(
+  "security_user",
   {
     /** Identificador único del usuario de acceso */
     id: serial("id").primaryKey(),
@@ -59,17 +59,17 @@ export const accessUser = schema.table(
   (table) => [
     /**
      * Restricción de unicidad: un empleado solo puede tener un usuario de acceso.
-     * Esto implementa la relación 1:1 Employee ↔ AccessUser.
+     * Esto implementa la relación 1:1 Employee ↔ SecurityUser.
      */
-    uniqueIndex("ux_access_employee_employee_id").on(table.employeeId),
+    uniqueIndex("ux_security_user_employee_id").on(table.employeeId),
   ]
 );
 
-export const accessUserRelations = relations(accessUser, ({ one }) => ({
+export const securityUserRelations = relations(securityUser, ({ one }) => ({
   employee: one(employee, {
-    fields: [accessUser.employeeId],
+    fields: [securityUser.employeeId],
     references: [employee.id],
   }),
 }));
 
-export default accessUser;
+export default securityUser;

@@ -6,7 +6,7 @@ beforeAll(async () => {
   const uuid = crypto.randomUUID();
 
   await initDatabase("postgresql://postgres:mypassword@localhost", {
-    tenant: `vitest_numeration_main_${uuid}`,
+    tenant: `vitest_numbering_main_${uuid}`,
     dev: false,
     skipSeeds: true,
   });
@@ -388,7 +388,7 @@ describe("getNextDocumentNumber service", () => {
       const { getNextDocumentNumber } = await import("./getNextDocumentNumber");
       const { db } = await import("#lib/db");
       const { documentSequence } = await import(
-        "#models/numeration/document_sequence"
+        "#models/numbering/document_sequence"
       );
       const { eq, and } = await import("drizzle-orm");
 
@@ -428,7 +428,7 @@ describe("getNextDocumentNumber service", () => {
     it("should enforce uniqueness of (seriesId, assignedNumber)", async () => {
       const { db } = await import("#lib/db");
       const { documentSequence } = await import(
-        "#models/numeration/document_sequence"
+        "#models/numbering/document_sequence"
       );
 
       const docType = await createDocumentType("D25");

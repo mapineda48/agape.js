@@ -5,9 +5,12 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 /**
  * Tipos de documento de negocio (ventas, facturas, movimientos de inventario, etc.)
  * Ejemplos: INV_ENT, INV_SAL, VTA, FAC, NC, REC, etc.
+ *
+ * Nota: Esta tabla es distinta de core_identity_document_type que maneja
+ * documentos de identificación personal (CC, NIT, PAS, etc.).
  */
 export const documentType = schema.table(
-  "numeration_document_type",
+  "numbering_document_type",
   {
     /** Identificador interno del tipo de documento */
     id: serial("id").primaryKey(),
@@ -36,7 +39,7 @@ export const documentType = schema.table(
   },
   (table) => [
     /** Evitamos tipos de documento duplicados por código */
-    uniqueIndex("ux_business_document_type_code").on(table.code),
+    uniqueIndex("ux_numbering_document_type_code").on(table.code),
   ]
 );
 

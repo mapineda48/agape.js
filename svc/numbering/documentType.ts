@@ -3,7 +3,7 @@ import {
   documentType,
   type NewDocumentType,
   type DocumentType,
-} from "#models/numeration/document_type";
+} from "#models/numbering/document_type";
 import { eq } from "drizzle-orm";
 
 /**

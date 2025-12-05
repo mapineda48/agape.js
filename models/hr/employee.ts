@@ -15,11 +15,11 @@ import DateTime from "../../lib/utils/data/DateTime";
 
 /**
  * Modelo de empleado (Employee)
- * Representa un empleado dentro del staff de la organización.
+ * Representa un empleado dentro de la organización.
  * Implementa Class Table Inheritance (CTI): PK = FK a person.id.
  * El id NO es serial porque se hereda del registro padre en person.
  */
-const employee = schema.table("staff_employee", {
+const employee = schema.table("hr_employee", {
   /**
    * Identificador único del empleado.
    * Es FK a person.id (un empleado ES una persona).
@@ -33,25 +33,33 @@ const employee = schema.table("staff_employee", {
   hireDate: dateTime("hire_date")
     .default(sql`now()`)
     .notNull(),
+
   /** Indica si el empleado está activo */
   isActive: boolean("is_active").default(true).notNull(),
+
   /** Metadatos adicionales del empleado */
   metadata: jsonb("metadata"),
+
   /** URL del avatar del empleado */
   avatarUrl: varchar("avatar_url", { length: 255 }).notNull(),
+
   /** Fecha de creación del registro */
   createdAt: dateTime("created_at")
     .default(sql`now()`)
     .notNull(),
+
   /** Fecha de última actualización del registro */
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
 });
 
-// Pivot table for many-to-many relationship between employees and roles
+/**
+ * Tabla pivote para relación many-to-many entre empleados y roles.
+ * PK compuesta (employeeId, roleId).
+ */
 export const employeeRole = schema.table(
-  "staff_employee_roles",
+  "hr_employee_roles",
   {
     employeeId: integer("employee_id")
       .notNull()

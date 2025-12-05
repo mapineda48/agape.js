@@ -7,7 +7,7 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
-import { documentType } from "../numeration/document_type";
+import { documentType } from "../numbering/document_type";
 
 export const inventoryMovementType = schema.table("inventory_movement_type", {
   id: serial("id").primaryKey(),

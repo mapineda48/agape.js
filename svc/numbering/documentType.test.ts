@@ -10,7 +10,7 @@ beforeAll(async () => {
   const uuid = crypto.randomUUID();
 
   await initDatabase("postgresql://postgres:mypassword@localhost", {
-    tenant: `vitest_numeration_doctype_${uuid}`,
+    tenant: `vitest_numbering_doctype_${uuid}`,
     dev: false,
     skipSeeds: true,
   });
@@ -25,7 +25,7 @@ afterAll(async () => {
   await db.$client.end();
 });
 
-describe("documentType service (numeration)", () => {
+describe("documentType service (numbering)", () => {
   /**
    * A.1: Crear tipo de documento válido
    */

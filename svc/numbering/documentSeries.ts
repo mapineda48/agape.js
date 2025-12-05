@@ -3,7 +3,7 @@ import {
   documentSeries,
   type NewDocumentSeries,
   type DocumentSeries,
-} from "#models/numeration/document_series";
+} from "#models/numbering/document_series";
 import DateTime from "#utils/data/DateTime";
 import { and, eq, sql } from "drizzle-orm";
 

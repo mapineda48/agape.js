@@ -2,9 +2,9 @@ import { schema } from "../agape";
 import { serial, integer, varchar, uniqueIndex } from "drizzle-orm/pg-core";
 import { inventoryMovementType } from "./movement_type";
 import { dateTime } from "../../lib/db/custom-types";
-import employee from "../staff/employee";
+import employee from "../hr/employee";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
-import { documentSeries } from "../numeration/document_series";
+import { documentSeries } from "../numbering/document_series";
 
 export const inventoryMovement = schema.table(
   "inventory_movement",

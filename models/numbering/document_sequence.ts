@@ -2,7 +2,6 @@ import { schema } from "../agape";
 import {
   integer,
   bigint,
-  date,
   varchar,
   serial,
   uniqueIndex,
@@ -17,7 +16,7 @@ import { dateTime } from "../../lib/db/custom-types";
  * Permite auditoría y evitar duplicados en (serie, número).
  */
 export const documentSequence = schema.table(
-  "numeration_document_sequence",
+  "numbering_document_sequence",
   {
     /** Identificador interno de la fila */
     id: serial("id").primaryKey(),
@@ -48,24 +47,24 @@ export const documentSequence = schema.table(
       length: 50,
     }).notNull(),
 
-    /** Fecha (solo día) de asignación – si quieres algo más preciso, cámbialo a timestamp */
+    /** Fecha de asignación del número */
     assignedDate: dateTime("assigned_date").notNull(),
   },
   (table) => [
     /** Garantiza que no haya dos documentos diferentes con el mismo número en la misma serie */
-    uniqueIndex("ux_document_sequence_series_number").on(
+    uniqueIndex("ux_numbering_sequence_series_number").on(
       table.seriesId,
       table.assignedNumber
     ),
 
     /** Búsquedas típicas por documento externo */
-    index("ix_document_sequence_external").on(
+    index("ix_numbering_sequence_external").on(
       table.externalDocumentType,
       table.externalDocumentId
     ),
 
     /** Búsquedas típicas por serie */
-    index("ix_document_sequence_series").on(table.seriesId),
+    index("ix_numbering_sequence_series").on(table.seriesId),
   ]
 );
 

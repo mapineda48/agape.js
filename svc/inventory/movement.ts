@@ -2,8 +2,8 @@ import { db } from "#lib/db";
 import { inventoryMovement } from "#models/inventory/movement";
 import { inventoryMovementDetail } from "#models/inventory/movement_detail";
 import { inventoryMovementType } from "#models/inventory/movement_type";
-import { documentType } from "#models/numeration/document_type";
-import { getNextDocumentNumberTx } from "#svc/numeration/getNextDocumentNumber";
+import { documentType } from "#models/numbering/document_type";
+import { getNextDocumentNumberTx } from "#svc/numbering/getNextDocumentNumber";
 import type DateTime from "#utils/data/DateTime";
 import { eq } from "drizzle-orm";
 import type Decimal from "decimal.js";
@@ -163,7 +163,7 @@ export async function createInventoryMovement(
 
     // 6. Actualizar el externalDocumentId en document_sequence con el ID real del movimiento
     const { documentSequence } = await import(
-      "#models/numeration/document_sequence"
+      "#models/numbering/document_sequence"
     );
     const { and } = await import("drizzle-orm");
     await tx

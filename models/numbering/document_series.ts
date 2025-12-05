@@ -2,7 +2,6 @@ import { schema } from "../agape";
 import {
   integer,
   bigint,
-  date,
   boolean,
   varchar,
   serial,
@@ -18,7 +17,7 @@ import { dateTime } from "../../lib/db/custom-types";
  * Aquí se define el rango de numeración, la vigencia y el número actual.
  */
 export const documentSeries = schema.table(
-  "numeration_document_series",
+  "numbering_document_series",
   {
     /** Identificador interno de la serie */
     id: serial("id").primaryKey(),
@@ -70,14 +69,14 @@ export const documentSeries = schema.table(
   },
   (table) => [
     /** Evitamos series duplicadas por tipo de documento y código */
-    uniqueIndex("ux_document_series_type_series_code").on(
+    uniqueIndex("ux_numbering_series_type_code").on(
       table.documentTypeId,
       table.seriesCode
     ),
 
     /** Índices útiles para búsquedas y filtros habituales */
-    index("ix_document_series_type").on(table.documentTypeId),
-    index("ix_document_series_active").on(table.isActive),
+    index("ix_numbering_series_type").on(table.documentTypeId),
+    index("ix_numbering_series_active").on(table.isActive),
   ]
 );
 

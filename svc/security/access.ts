@@ -1,26 +1,33 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "#lib/db";
-import accessUser from "#models/access/employee";
+import securityUser from "#models/security/user";
 import { verifyPassword } from "#lib/access/password";
-import employee from "#models/staff/employee";
+import employee from "#models/hr/employee";
 import person from "#models/core/person";
 import type { IWebSession } from "#lib/access/session";
 
+/**
+ * Busca un usuario por credenciales y retorna la sesión si es válida.
+ *
+ * @param username - Nombre de usuario
+ * @param password - Contraseña en texto plano
+ * @returns Sesión del usuario o null si las credenciales son inválidas
+ */
 export async function findUser(
   username: string,
   password: string
 ): Promise<IWebSession | null> {
   const [record] = await db
     .select({
-      id: accessUser.id,
-      passwordHash: accessUser.password,
+      id: securityUser.id,
+      passwordHash: securityUser.password,
       avatarUrl: employee.avatarUrl,
       fullName: sql<string>`${person.firstName} || ' ' || ${person.lastName}`,
     })
-    .from(accessUser)
-    .innerJoin(employee, eq(employee.id, accessUser.employeeId))
+    .from(securityUser)
+    .innerJoin(employee, eq(employee.id, securityUser.employeeId))
     .innerJoin(person, eq(person.id, employee.id))
-    .where(eq(accessUser.username, username));
+    .where(eq(securityUser.username, username));
 
   if (!record) return null;
 

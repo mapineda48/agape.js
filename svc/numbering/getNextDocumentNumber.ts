@@ -1,7 +1,7 @@
 import { db } from "#lib/db";
-import { documentType } from "#models/numeration/document_type";
-import { documentSeries } from "#models/numeration/document_series";
-import { documentSequence } from "#models/numeration/document_sequence";
+import { documentType } from "#models/numbering/document_type";
+import { documentSeries } from "#models/numbering/document_series";
+import { documentSequence } from "#models/numbering/document_sequence";
 import { and, eq, lt, lte, gte, isNull, or, sql } from "drizzle-orm";
 import DateTime from "#utils/data/DateTime";
 

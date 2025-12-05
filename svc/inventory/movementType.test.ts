@@ -19,7 +19,7 @@ beforeAll(async () => {
   });
 
   // Crear un tipo de documento de negocio para los tests
-  const { upsertDocumentType } = await import("#svc/numeration/documentType");
+  const { upsertDocumentType } = await import("#svc/numbering/documentType");
   const docType = await upsertDocumentType({
     code: "INV_MOV_TEST",
     name: "Movimiento Inventario Test",
