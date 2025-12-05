@@ -24,6 +24,13 @@ export function Submit({
       try {
         await onSubmit(payload);
         emitter.emit(event.SUBMIT_SUCCESS, payload);
+      } catch (error) {
+        // Error is caught to prevent unhandled rejection.
+        // The component recovers silently - SUBMIT_SUCCESS is not emitted.
+        // Consumer can handle the error in onSubmit if needed.
+        if (process.env.NODE_ENV === "development") {
+          console.error("Submit error:", error);
+        }
       } finally {
         setLoading(false);
       }

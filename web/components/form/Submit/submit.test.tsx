@@ -56,6 +56,9 @@ describe("Submit component", () => {
     const onLoadingChange = vi.fn();
     const onSuccess = vi.fn();
 
+    // Suppress console.error for this test since we're testing error handling
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const SuccessListener = () => {
       const emitter = useEventEmitter();
       const event = useEvent();
@@ -93,5 +96,7 @@ describe("Submit component", () => {
     await user.click(button);
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledTimes(2);
+
+    consoleSpy.mockRestore();
   });
 });

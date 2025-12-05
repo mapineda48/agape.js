@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { join } from "pathe";
 import { RouterPathContext } from "./path-context";
 import { useHistory } from "./router";
-import type { RouteParams } from "./types";
+import type { RouteParams, INavigateTo } from "./types";
 
 /**
  * Converts an absolute path to a relative path based on a base path context.
@@ -43,11 +43,6 @@ function toRelativeLayoutPathHelper(
   return relativePart.startsWith("/")
     ? relativePart.slice(1)
     : relativePart || "/"; // Return "/" if we're exactly at the base path
-}
-
-interface INavigateTo {
-  replace?: boolean;
-  state?: Record<string, unknown>;
 }
 
 interface RouterHookAPI {

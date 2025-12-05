@@ -126,23 +126,23 @@ export class HistoryManager {
         await page();
       }
 
-      // 4) Lazy-load de todos los layouts requeridos por el path
-      const needed = this.registry.getLayoutPaths(pathname);
-      for (const p of needed) {
-        const layout = this.registry.getLayout(p);
+      // 4) Lazy-load all required layouts for the path
+      const layoutMatches = this.registry.getLayoutPaths(pathname);
+      for (const { pattern } of layoutMatches) {
+        const layout = this.registry.getLayout(pattern);
         if (layout && !layout.Component) {
           await layout();
         }
       }
 
-      // 5) Ejecutar onInit del primero que lo defina si no hay state:
-      //    prioridad página > layout más interno > ... > root
+      // 5) Execute onInit from the first one that defines it (no state provided):
+      //    priority: page > innermost layout > ... > root
       if (!ctx.state) {
         if (page.onInit) {
           ctx.state = await page.onInit({ params });
         } else {
-          for (let i = needed.length - 1; i >= 0; i--) {
-            const l = this.registry.getLayout(needed[i]);
+          for (let i = layoutMatches.length - 1; i >= 0; i--) {
+            const l = this.registry.getLayout(layoutMatches[i].pattern);
             if (l?.onInit) {
               ctx.state = await l.onInit({ params });
               break;
@@ -154,7 +154,7 @@ export class HistoryManager {
       // 6) Update current params before history update
       this.currentParams = params;
 
-      // 7) Empuja/reemplaza history (el listener renderiza sincrónicamente)
+      // 7) Push/replace history (the listener renders synchronously)
       this.navigator.updateHistory(pathname, ctx);
     })()
       .catch((error) => {
@@ -168,18 +168,25 @@ export class HistoryManager {
       });
   }
 
-  /** Envuelve un elemento de página con layouts (root -> más interno) */
+  /**
+   * Wraps a page element with layout components (root -> innermost).
+   * Uses concretePath for RouterPathProvider to enable proper relative navigation
+   * even for dynamic layouts with parameters.
+   */
   private wrapWithLayouts(pathname: string, element: JSX.Element): JSX.Element {
-    const paths = this.registry.getLayoutPaths(pathname);
+    const layoutMatches = this.registry.getLayoutPaths(pathname);
     let wrapped = element;
-    for (let i = paths.length - 1; i >= 0; i--) {
-      const L = this.registry.getLayout(paths[i]);
+    for (let i = layoutMatches.length - 1; i >= 0; i--) {
+      const { pattern, concretePath } = layoutMatches[i];
+      const L = this.registry.getLayout(pattern);
       if (L?.Component) {
         // Wrap the layout component with RouterPathProvider
+        // Use concretePath (e.g., "/users/123") not pattern (e.g., "/users/:id")
+        // This ensures relative navigation works correctly in dynamic layouts
         const layoutElement = createElement(L.Component, null, wrapped);
         wrapped = createElement(
           RouterPathProvider,
-          { path: paths[i] },
+          { path: concretePath },
           layoutElement
         );
       }

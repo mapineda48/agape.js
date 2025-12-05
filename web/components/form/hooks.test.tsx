@@ -901,7 +901,7 @@ describe("form hooks", () => {
   });
 
   describe("Stability", () => {
-    it.skip("should generate stable keys across renders", () => {
+    it("should generate stable keys across renders", () => {
       const { result } = renderHook(() => useInputArray<string[]>(["items"]), {
         wrapper: ({ children }: { children: React.ReactNode }) => {
           const store = createStore({ items: ["a", "b", "c"] });
@@ -919,8 +919,29 @@ describe("form hooks", () => {
       const elements2 = result.current.map((_item, _index) => <div />);
       const key2 = elements2[0].key;
 
-      // This expectation fails with current implementation (bug reproduction)
       expect(key1).toBe(key2);
+    });
+
+    it("should keep keys stable when removing items", () => {
+      const { result } = renderHook(() => useInputArray<string[]>(["items"]), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ items: ["a", "b", "c"] });
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      const initialElements = result.current.map((_item, _index) => <div />);
+      const keyOfB = initialElements[1].key;
+      const keyOfC = initialElements[2].key;
+
+      act(() => {
+        result.current.removeItem(0);
+      });
+
+      const afterRemoval = result.current.map((_item, _index) => <div />);
+
+      expect(afterRemoval[0].key).toBe(keyOfB);
+      expect(afterRemoval[1].key).toBe(keyOfC);
     });
   });
 

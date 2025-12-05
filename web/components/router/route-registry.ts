@@ -1,6 +1,6 @@
 import { type JSX, createElement } from "react";
 import NoFoundPage from "../../app/NotFound";
-import type { RouteParams, MatchResult } from "./types";
+import type { RouteParams, MatchResult, LayoutMatch } from "./types";
 
 export type ModuleType = Record<string, () => Promise<unknown>>;
 
@@ -114,31 +114,51 @@ export class RouteRegistry {
     return this.layouts[pathname];
   }
 
-  /** Devuelve rutas de layouts padre de un path: '/', '/a', '/a/b', ... (si existen) */
-  public getLayoutPaths(pathname: string): string[] {
+  /**
+   * Finds all parent layouts for a given pathname.
+   * Returns both the pattern (to look up the layout) and the concrete path
+   * (to set as context for relative navigation).
+   *
+   * @example
+   * // For pathname "/users/123/profile"
+   * getLayoutPaths("/users/123/profile")
+   * // Returns:
+   * // [
+   * //   { pattern: "/", concretePath: "/" },
+   * //   { pattern: "/users/:id", concretePath: "/users/123" },
+   * //   { pattern: "/users/:id/profile", concretePath: "/users/123/profile" }
+   * // ]
+   */
+  public getLayoutPaths(pathname: string): LayoutMatch[] {
     const parts = pathname.split("/").filter(Boolean);
-    const acc: string[] = ["/"]; // raíz siempre considerada
+    const acc: string[] = ["/"]; // root is always considered
     let curr = "";
     for (const p of parts) {
       curr += "/" + p;
       acc.push(curr);
     }
 
-    const foundLayouts: string[] = [];
+    const foundLayouts: LayoutMatch[] = [];
 
     for (const pathToCheck of acc) {
-      // 1. Exact match
+      // 1. Exact match - pattern and concretePath are the same
       if (this.layouts[pathToCheck]) {
-        foundLayouts.push(pathToCheck);
+        foundLayouts.push({
+          pattern: pathToCheck,
+          concretePath: pathToCheck,
+        });
         continue;
       }
 
-      // 2. Parameterized match
+      // 2. Parameterized match - pattern differs from concretePath
       for (const layoutPattern of Object.keys(this.layouts)) {
         if (layoutPattern.includes(":")) {
           const match = matchPath(layoutPattern, pathToCheck);
           if (match) {
-            foundLayouts.push(layoutPattern);
+            foundLayouts.push({
+              pattern: layoutPattern,
+              concretePath: pathToCheck, // Use the actual path, not the pattern!
+            });
             break;
           }
         }
@@ -181,7 +201,7 @@ export class RouteRegistry {
     return wrapper as IPage;
   }
 
-  /** Crea un ILayout lazy que guarda Component/onInit la primera vez */
+  /** Creates a lazy ILayout that stores Component/onInit on first load */
   private toLayout(loader: () => Promise<unknown>): ILayout {
     const wrapper: any = async () => {
       const module: any = await loader();
@@ -195,27 +215,63 @@ export class RouteRegistry {
   }
 
   /**
-   * Convierte './foo/bar/page.tsx' -> '/foo/bar' (ruta de la página)
-   * Convierte './users/[id]/page.tsx' -> '/users/:id' (ruta con parámetros)
+   * Normalizes a path segment: lowercases static segments but preserves
+   * parameter names with their original casing.
+   *
+   * @example
+   * normalizeSegment("Users") // "users"
+   * normalizeSegment(":postId") // ":postId" (preserved!)
+   */
+  private normalizeSegment(segment: string): string {
+    if (segment.startsWith(":")) {
+      return segment; // Keep param names as-is
+    }
+    return segment.toLowerCase();
+  }
+
+  /**
+   * Converts './foo/bar/page.tsx' -> '/foo/bar' (page route)
+   * Converts './users/[id]/page.tsx' -> '/users/:id' (parameterized route)
+   *
+   * Static segments are lowercased for case-insensitive matching.
+   * Parameter names preserve their original casing for better DX.
    */
   private toPathnameFromPage(filename: string): string {
     const path = filename
       .replace(/^\.\//, "/")
       .replace(/\/page\.tsx?$/, "")
-      // Convert [param] to :param
-      .replace(/\[([^\]]+)\]/g, ":$1")
-      .toLowerCase();
-    return path === "" ? "/" : path;
+      // Convert [param] to :param (preserving param name casing)
+      .replace(/\[([^\]]+)\]/g, ":$1");
+
+    if (path === "") return "/";
+
+    // Normalize each segment independently
+    return path
+      .split("/")
+      .map((seg) => this.normalizeSegment(seg))
+      .join("/");
   }
 
-  /** Convierte './foo/_layout.tsx' -> '/foo' (carpeta del layout) */
+  /**
+   * Converts './foo/_layout.tsx' -> '/foo' (layout folder)
+   * Converts './users/[id]/_layout.tsx' -> '/users/:id' (parameterized layout)
+   *
+   * Static segments are lowercased for case-insensitive matching.
+   * Parameter names preserve their original casing for better DX.
+   */
   private toPathnameFromLayout(filename: string): string {
     const path = filename
       .replace(/^\.\//, "/")
       .replace(/\/_layout\.tsx?$/, "")
-      // Convert [param] to :param
-      .replace(/\[([^\]]+)\]/g, ":$1")
-      .toLowerCase();
-    return path === "" ? "/" : path;
+      // Convert [param] to :param (preserving param name casing)
+      .replace(/\[([^\]]+)\]/g, ":$1");
+
+    if (path === "") return "/";
+
+    // Normalize each segment independently
+    return path
+      .split("/")
+      .map((seg) => this.normalizeSegment(seg))
+      .join("/");
   }
 }

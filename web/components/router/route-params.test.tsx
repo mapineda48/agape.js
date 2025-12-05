@@ -34,7 +34,7 @@ describe("RouteRegistry - Pattern Matching", () => {
       registry = new RouteRegistry(modules, {});
       const result = (registry as any).routes;
 
-      expect(result).toHaveProperty("/posts/:postid/comments/:commentid");
+      expect(result).toHaveProperty("/posts/:postId/comments/:commentId");
     });
 
     it("should handle mixed static and dynamic segments", () => {
@@ -110,10 +110,10 @@ describe("RouteRegistry - Pattern Matching", () => {
 
       expect(result).not.toBeNull();
       expect(result?.params).toEqual({
-        postid: "42",
-        commentid: "99",
+        postId: "42",
+        commentId: "99",
       });
-      expect(result?.pattern).toBe("/posts/:postid/comments/:commentid");
+      expect(result?.pattern).toBe("/posts/:postId/comments/:commentId");
     });
 
     it("should match route with param followed by static segment", () => {

@@ -123,7 +123,7 @@ describe("Router onInit Params", () => {
     await waitFor(
       () => {
         expect(onInitSpy).toHaveBeenCalledWith({
-          params: { postid: "10", commentid: "20" },
+          params: { postId: "10", commentId: "20" },
         });
       },
       { timeout: 3000 }
