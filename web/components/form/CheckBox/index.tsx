@@ -1,6 +1,16 @@
 import { type JSX } from "react";
 import useInput from "../Input/useInput";
 
+/**
+ * Checkbox form input component.
+ *
+ * @note About `materialize` prop:
+ * By default, the checkbox value is NOT written to the store until the user interacts with it.
+ * This means if the user never touches the checkbox, the property will NOT appear in the
+ * submit payload. Use `materialize: true` if you need the default value to always be present
+ * in the form data (e.g., for validation that runs on mount or to ensure the field is always
+ * included in the submission).
+ */
 export default function Checkbox(props: Props) {
   const { path, checked = false, materialize, ...core } = props;
 

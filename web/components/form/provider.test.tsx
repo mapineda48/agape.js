@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FormProvider from "./index";
 import * as Input from "./Input";
@@ -142,8 +142,6 @@ describe("FormProvider", () => {
     });
 
     it("should handle negative numbers", async () => {
-      const user = userEvent.setup();
-
       render(
         <FormProvider state={{ temperature: 0 }}>
           <Input.Int path="temperature" data-testid="input" />
@@ -152,8 +150,10 @@ describe("FormProvider", () => {
 
       const input = screen.getByTestId("input") as HTMLInputElement;
 
-      await user.clear(input);
-      await user.type(input, "-10");
+      // Use fireEvent.change for number inputs with negative values
+      // userEvent.type types character by character, which doesn't work well
+      // with type="number" inputs and the minus sign
+      fireEvent.change(input, { target: { value: "-10" } });
       expect(input.value).toBe("-10");
     });
 

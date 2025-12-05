@@ -27,19 +27,25 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
       },
 
       map(cb: IMap<T>) {
+        // Normalize path to array for concatenation
+        const normalizedPath =
+          path === undefined ? [] : Array.isArray(path) ? path : [path];
+
         return state.map((payload: any, index: number) => {
+          const fullPath = [...paths, index];
+          // Pass the relative path (from useInputArray call) plus index to PathProvider
+          // PathProvider will concatenate with its parent context
+          const relativePath = [...normalizedPath, index];
           return createElement(PathProvider, {
-            key: index,
-            value: [
-              ...(Array.isArray(path) ? path : path ? [path] : []),
-              index,
-            ],
-            children: cb(payload, index, [...paths, index]),
+            // Use full path as key for stability when items are added/removed
+            key: fullPath.join("|"),
+            value: relativePath,
+            children: cb(payload, index, fullPath),
           });
         });
       },
 
-      addItem(...items: T) {
+      addItem(...items: T[number][]) {
         items.forEach((item) => {
           dispatch(pushAtPath({ path: paths, value: item }));
         });
@@ -56,17 +62,27 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
   }, [state, path, paths, dispatch]);
 }
 
+/**
+ * Interface for the return type of useInputArray hook.
+ * Provides methods to manipulate arrays in the form store.
+ */
 export interface IInputArray<T extends unknown[]> {
+  /** Map over array items, wrapping each in a PathProvider context */
   readonly map: (
     cb: (payload: T[number], index: number, paths: Path) => JSX.Element
   ) => JSX.Element[];
 
-  readonly get: () => T;
+  /** Replace the entire array with a new value */
   readonly set: (state: T) => void;
-  readonly addItem: (...items: T) => void;
+
+  /** Add one or more items to the end of the array */
+  readonly addItem: (...items: T[number][]) => void;
+
+  /** Remove items at the specified indices */
   readonly removeItem: (...index: number[]) => void;
+
+  /** Current length of the array */
   readonly length: number;
-  readonly forceUpdate: () => void;
 }
 
 type IMap<T extends unknown[]> = (

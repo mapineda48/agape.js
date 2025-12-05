@@ -270,4 +270,63 @@ describe("dictSlice", () => {
       expect(actual.data.items).toEqual(["text", 42, true, null]);
     });
   });
+
+  describe("pushAtPath array materialization", () => {
+    it("should create and materialize array when path does not exist", () => {
+      const state = { data: {} };
+      const actual = dictReducer(
+        state,
+        pushAtPath({ path: ["items"], value: "first" })
+      );
+      expect(actual.data).toEqual({ items: ["first"] });
+    });
+
+    it("should create nested path and array when deeply nested path does not exist", () => {
+      const state = { data: {} };
+      const actual = dictReducer(
+        state,
+        pushAtPath({ path: ["user", "tags"], value: "tag1" })
+      );
+      expect(actual.data).toEqual({ user: { tags: ["tag1"] } });
+    });
+
+    it("should push multiple items to non-existent array path", () => {
+      const state = { data: {} };
+      let actual = dictReducer(
+        state,
+        pushAtPath({ path: ["items"], value: "first" })
+      );
+      actual = dictReducer(
+        actual,
+        pushAtPath({ path: ["items"], value: "second" })
+      );
+      expect(actual.data).toEqual({ items: ["first", "second"] });
+    });
+
+    it("should work with mixed existing and new paths", () => {
+      const state = { data: { user: { name: "John" } } };
+      const actual = dictReducer(
+        state,
+        pushAtPath({ path: ["user", "roles"], value: "admin" })
+      );
+      expect(actual.data).toEqual({
+        user: {
+          name: "John",
+          roles: ["admin"],
+        },
+      });
+    });
+
+    it("should convert non-root data to array and push when root is not an array", () => {
+      // This tests the empty path case with non-array root
+      const state = { data: { obj: "value" } };
+      const actual = dictReducer(
+        state,
+        pushAtPath({ path: [], value: "item" })
+      );
+      // When path is empty and root is not array, it should convert to array
+      expect(Array.isArray(actual.data)).toBe(true);
+      expect(actual.data).toEqual(["item"]);
+    });
+  });
 });

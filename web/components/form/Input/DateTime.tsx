@@ -11,13 +11,9 @@ export default function InputDateTime(props: Props) {
     materialize: true,
   });
 
+  // Use instanceof for type checking - more robust than duck-typing
   const displayValue =
-    state &&
-    typeof state === "object" &&
-    "addHours" in state &&
-    typeof (state as any).addHours === "function"
-      ? format(state as Date, "yyyy-MM-dd'T'HH:mm")
-      : "";
+    state instanceof DateTime ? format(state, "yyyy-MM-dd'T'HH:mm") : "";
 
   return (
     <input

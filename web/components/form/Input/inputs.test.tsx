@@ -201,4 +201,144 @@ describe("Extended Inputs", () => {
       expect(capturedState.document).toBe(file);
     });
   });
+
+  describe("Float Input - NaN handling", () => {
+    it("should initialize with 0 as default value", () => {
+      render(
+        <FormProvider state={{}}>
+          <Input.Float path="value" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      expect(input.value).toBe("0");
+    });
+
+    it("should handle empty input by storing 0 instead of NaN", async () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ value: 10 }}>
+          <StateSpy />
+          <Input.Float path="value" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "" } });
+
+      // Should store 0 instead of NaN
+      expect(capturedState.value).toBe(0);
+      expect(Number.isNaN(capturedState.value)).toBe(false);
+    });
+
+    it("should handle valid float input correctly", async () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ value: 0 }}>
+          <StateSpy />
+          <Input.Float path="value" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "19.99" } });
+
+      expect(capturedState.value).toBe(19.99);
+    });
+  });
+
+  describe("Int Input - NaN handling", () => {
+    it("should initialize with 0 as default value", () => {
+      render(
+        <FormProvider state={{}}>
+          <Input.Int path="count" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      expect(input.value).toBe("0");
+    });
+
+    it("should handle empty input by storing 0 instead of NaN", async () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ count: 10 }}>
+          <StateSpy />
+          <Input.Int path="count" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "" } });
+
+      // Should store 0 instead of NaN
+      expect(capturedState.count).toBe(0);
+      expect(Number.isNaN(capturedState.count)).toBe(false);
+    });
+
+    it("should handle valid int input correctly", async () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ count: 0 }}>
+          <StateSpy />
+          <Input.Int path="count" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "42" } });
+
+      expect(capturedState.count).toBe(42);
+    });
+
+    it("should truncate decimal input to integer", async () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ count: 0 }}>
+          <StateSpy />
+          <Input.Int path="count" data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "42.7" } });
+
+      expect(capturedState.count).toBe(42);
+    });
+  });
 });

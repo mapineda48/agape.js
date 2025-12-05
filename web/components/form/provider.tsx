@@ -14,8 +14,11 @@ const Context = createContext<EventForm>({
  *
  * Este componente encapsula la lógica de gestión del estado del formulario,
  * control de inputs y eventos `merge` y `submit` mediante un EventEmitter.
+ *
+ * @note El prop `state` se usa para inicializar el store y se pasa a StoreProvider,
+ * no se utiliza internamente aquí.
  */
-export default function FormProvider({ state = {}, ...core }: Props) {
+export default function FormProvider({ state: _initialState, ...core }: Props) {
   const store = useStore<RootState>();
   const emitter = useEventEmitter();
 
@@ -53,7 +56,9 @@ export function useEvent() {
 }
 
 /**
- * Types
+ * Props for Form and FormProvider components.
+ *
+ * @property state - Initial state for the form store. Only used on first render.
  */
 export interface Props<T extends object | any[] = object> extends Core {
   state?: T;

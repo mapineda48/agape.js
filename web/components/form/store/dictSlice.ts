@@ -43,14 +43,27 @@ const dictSlice = createSlice({
       }
     },
     pushAtPath(state, action: PayloadAction<{ path: Path; value: any }>) {
+      const { path, value } = action.payload;
+
       // Handle empty path - work on root array
-      const arr =
-        action.payload.path.length === 0
-          ? state.data
-          : getByPath(state.data, action.payload.path, []);
-      if (Array.isArray(arr)) {
-        arr.push(action.payload.value);
+      if (path.length === 0) {
+        if (!Array.isArray(state.data)) {
+          state.data = [];
+        }
+        (state.data as any[]).push(value);
+        return;
       }
+
+      // Check if array exists at path
+      let arr = getByPath<any>(state.data, path, undefined);
+
+      // If array doesn't exist, create and store it
+      if (!Array.isArray(arr)) {
+        arr = [];
+        setByPath(state.data, path, arr);
+      }
+
+      arr.push(value);
     },
     removeAtPath(
       state,

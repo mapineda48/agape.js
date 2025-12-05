@@ -7,19 +7,16 @@ export default function InputDecimal(props: Props) {
 
   const [state, setState] = useInput<Decimal>(path, new Decimal(0));
 
+  // Use instanceof for type checking - more robust than duck-typing
+  const displayValue =
+    state instanceof Decimal ? state.toString() : state ?? "";
+
   return (
     <input
       {...core}
       type="number"
       step="0.01"
-      value={
-        state &&
-        typeof state === "object" &&
-        "isDecimal" in state &&
-        typeof (state as any).isDecimal === "function"
-          ? (state as any).toString()
-          : state
-      }
+      value={displayValue}
       onChange={({ currentTarget }) => {
         try {
           const val = new Decimal(currentTarget.value || 0);
