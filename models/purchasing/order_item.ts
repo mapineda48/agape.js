@@ -1,7 +1,7 @@
 import { serial, integer } from "drizzle-orm/pg-core";
 import { schema } from "../agape";
 import purchase_order from "./purchase_order";
-import product from "../inventory/product";
+import { item } from "../inventory/item";
 import { decimal } from "../../lib/db/custom-types";
 
 /**
@@ -15,10 +15,10 @@ const order_item = schema.table("purchasing_order_item", {
   purchaseOrderId: integer("purchase_order_id")
     .notNull()
     .references(() => purchase_order.id),
-  /** Identificador del producto del catálogo de inventario */
-  productId: integer("product_id")
+  /** Identificador del ítem del catálogo de inventario */
+  itemId: integer("item_id")
     .notNull()
-    .references(() => product.id),
+    .references(() => item.id),
   /** Cantidad ordenada */
   quantity: integer("quantity").notNull(),
   /** Precio unitario del producto */

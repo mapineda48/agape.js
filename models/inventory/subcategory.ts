@@ -12,11 +12,11 @@ export const subcategory = schema.table("inventory_subcategories", {
   /** Identificador único de la subcategoría */
   id: serial("id").primaryKey(),
   /** Nombre completo de la subcategoría */
-  fullName: varchar("fullName", { length: 50 }).notNull(),
+  fullName: varchar("full_name", { length: 50 }).notNull(),
   /** Indica si la subcategoría está habilitada */
-  isEnabled: boolean("isEnabled").notNull(),
+  isEnabled: boolean("is_enabled").notNull(),
   /** Identificador de la categoría asociada */
-  categoryId: integer("categoryId")
+  categoryId: integer("category_id")
     .notNull()
     .references(() => category.id, { onDelete: "restrict" }),
 });

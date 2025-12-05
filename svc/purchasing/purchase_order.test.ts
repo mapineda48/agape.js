@@ -4,8 +4,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 let supplierId: number;
 let inactiveSupplierId: number;
-let productId: number;
-let inactiveProductId: number;
+let itemId: number;
+let disabledItemId: number;
 
 beforeAll(async () => {
   const { default: initDatabase } = await import("#lib/db");
@@ -21,7 +21,7 @@ beforeAll(async () => {
   const { upsertSupplierType } = await import("./supplier_type");
   const { upsertSupplier } = await import("./supplier");
   const { upsertCategory } = await import("#svc/inventory/category");
-  const { upsertProduct } = await import("#svc/inventory/product");
+  const { upsertItem } = await import("#svc/inventory/item");
 
   const [documentType] = await upsertDocumentType({
     name: `CC-${uuid.slice(0, 6)}`,
@@ -63,22 +63,26 @@ beforeAll(async () => {
 
   const subcategoryId = category.subcategories[0].id ?? 0;
 
-  const activeProduct = await upsertProduct({
-    fullName: "Producto Compra",
-    slogan: "Producto para ordenes",
-    isActive: true,
-    price: new Decimal("50.00"),
+  const activeItem = await upsertItem({
+    code: `ITEM-ACTIVE-${uuid.slice(0, 6)}`,
+    fullName: "Ítem de Compra",
+    slogan: "Ítem para órdenes",
+    itemType: "good",
+    isEnabled: true,
+    basePrice: new Decimal("50.00"),
     categoryId: category.id,
     subcategoryId,
     rating: 5,
     images: [],
   });
 
-  const disabledProduct = await upsertProduct({
-    fullName: "Producto Inactivo",
+  const disabledItem = await upsertItem({
+    code: `ITEM-DISABLED-${uuid.slice(0, 6)}`,
+    fullName: "Ítem Deshabilitado",
     slogan: "No debe usarse",
-    isActive: false,
-    price: new Decimal("75.00"),
+    itemType: "good",
+    isEnabled: false,
+    basePrice: new Decimal("75.00"),
     categoryId: category.id,
     subcategoryId,
     rating: 3,
@@ -87,8 +91,8 @@ beforeAll(async () => {
 
   supplierId = activeSupplier.id;
   inactiveSupplierId = inactiveSupplier.id;
-  productId = activeProduct.id;
-  inactiveProductId = disabledProduct.id;
+  itemId = activeItem.id;
+  disabledItemId = disabledItem.id;
 });
 
 afterAll(async () => {
@@ -108,8 +112,8 @@ describe("createPurchaseOrder service", () => {
       supplierId,
       orderDate: new DateTime("2024-01-15"),
       items: [
-        { productId, quantity: 2, unitPrice: new Decimal("50.00") },
-        { productId, quantity: 1, unitPrice: new Decimal("50.00") },
+        { itemId, quantity: 2, unitPrice: new Decimal("50.00") },
+        { itemId, quantity: 1, unitPrice: new Decimal("50.00") },
       ],
     });
 
@@ -127,7 +131,7 @@ describe("createPurchaseOrder service", () => {
     const order = await createPurchaseOrder({
       supplierId,
       status: "approved",
-      items: [{ productId, quantity: 3, unitPrice: "99.99" }],
+      items: [{ itemId, quantity: 3, unitPrice: "99.99" }],
     });
 
     expect(order.status).toBe("approved");
@@ -141,7 +145,7 @@ describe("createPurchaseOrder service", () => {
       createPurchaseOrder({
         supplierId,
         status: "invalid" as any,
-        items: [{ productId, quantity: 1, unitPrice: "10.00" }],
+        items: [{ itemId, quantity: 1, unitPrice: "10.00" }],
       })
     ).rejects.toThrow("Estado de la orden de compra inválido");
   });
@@ -152,36 +156,34 @@ describe("createPurchaseOrder service", () => {
     await expect(
       createPurchaseOrder({
         supplierId: inactiveSupplierId,
-        items: [{ productId, quantity: 1, unitPrice: "25.00" }],
+        items: [{ itemId, quantity: 1, unitPrice: "25.00" }],
       })
     ).rejects.toThrow("El proveedor está inactivo");
 
     await expect(
       createPurchaseOrder({
         supplierId: 999999,
-        items: [{ productId, quantity: 1, unitPrice: "25.00" }],
+        items: [{ itemId, quantity: 1, unitPrice: "25.00" }],
       })
     ).rejects.toThrow("El proveedor no existe");
   });
 
-  it("valida productos requeridos y activos", async () => {
+  it("valida ítems requeridos y habilitados", async () => {
     const { createPurchaseOrder } = await import("./purchase_order");
 
     await expect(
       createPurchaseOrder({
         supplierId,
-        items: [{ productId: 999999, quantity: 1, unitPrice: "25.00" }],
+        items: [{ itemId: 999999, quantity: 1, unitPrice: "25.00" }],
       })
-    ).rejects.toThrow("Uno o más productos no existen");
+    ).rejects.toThrow("Uno o más ítems no existen");
 
     await expect(
       createPurchaseOrder({
         supplierId,
-        items: [
-          { productId: inactiveProductId, quantity: 1, unitPrice: "25.00" },
-        ],
+        items: [{ itemId: disabledItemId, quantity: 1, unitPrice: "25.00" }],
       })
-    ).rejects.toThrow(`El producto ${inactiveProductId} está inactivo`);
+    ).rejects.toThrow(`El ítem ${disabledItemId} está deshabilitado`);
   });
 
   it("exige ítems y cantidades/precios mayores a cero", async () => {
@@ -197,14 +199,14 @@ describe("createPurchaseOrder service", () => {
     await expect(
       createPurchaseOrder({
         supplierId,
-        items: [{ productId, quantity: 0, unitPrice: "10.00" }],
+        items: [{ itemId, quantity: 0, unitPrice: "10.00" }],
       })
     ).rejects.toThrow("La cantidad de cada ítem debe ser mayor a cero");
 
     await expect(
       createPurchaseOrder({
         supplierId,
-        items: [{ productId, quantity: 1, unitPrice: "0" }],
+        items: [{ itemId, quantity: 1, unitPrice: "0" }],
       })
     ).rejects.toThrow("El precio unitario de cada ítem debe ser mayor a cero");
   });

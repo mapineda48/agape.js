@@ -1,30 +1,34 @@
 import { schema } from "../agape";
 import { serial, integer } from "drizzle-orm/pg-core";
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { inventoryMovement } from "./movement";
-import { product } from "./product";
+import { item } from "./item";
 import { location } from "./location";
 import { decimal } from "../../lib/db/custom-types";
-import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 export const inventoryMovementDetail = schema.table(
   "inventory_movement_detail",
   {
     id: serial("id").primaryKey(),
+
     movementId: integer("movement_id")
       .notNull()
       .references(() => inventoryMovement.id, { onDelete: "cascade" }),
 
-    productId: integer("product_id")
+    /** Ítem afectado (debe ser inventariable según reglas de negocio) */
+    itemId: integer("item_id")
       .notNull()
-      .references(() => product.id, { onDelete: "restrict" }),
+      .references(() => item.id, { onDelete: "restrict" }),
 
-    // si manejas stock por ubicación:
+    /** Ubicación (bodega) */
     locationId: integer("location_id").references(() => location.id, {
       onDelete: "restrict",
     }),
 
+    /** Cantidad */
     quantity: integer("quantity").notNull(),
-    // Opcional: costo o precio al momento del movimiento
+
+    /** Costo unitario en el momento del movimiento */
     unitCost: decimal("unit_cost"),
   }
 );
@@ -35,5 +39,3 @@ export type InventoryMovementDetail = InferSelectModel<
 export type NewInventoryMovementDetail = InferInsertModel<
   typeof inventoryMovementDetail
 >;
-
-export default inventoryMovementDetail;

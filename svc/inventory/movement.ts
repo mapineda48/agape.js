@@ -8,17 +8,31 @@ import type DateTime from "#utils/data/DateTime";
 import { eq } from "drizzle-orm";
 import type Decimal from "decimal.js";
 
+/**
+ * Input para crear un movimiento de inventario.
+ */
 interface CreateInventoryMovementInput {
+  /** ID del tipo de movimiento */
   movementTypeId: number;
+  /** Fecha del movimiento */
   movementDate: DateTime;
+  /** Observación opcional */
   observation?: string | null;
+  /** ID del usuario que realiza el movimiento */
   userId: number;
+  /** Tipo de documento origen (opcional) */
   sourceDocumentType?: string | null;
+  /** ID del documento origen (opcional) */
   sourceDocumentId?: number | null;
+  /** Detalles del movimiento */
   details: Array<{
-    productId: number;
+    /** ID del ítem (debe existir en inventory_item) */
+    itemId: number;
+    /** ID de la ubicación (opcional) */
     locationId?: number | null;
+    /** Cantidad del movimiento (debe ser positiva) */
     quantity: number;
+    /** Costo unitario en el momento del movimiento (opcional) */
     unitCost?: Decimal | null;
   }>;
 }
@@ -33,6 +47,13 @@ interface CreateInventoryMovementInput {
  * 3. Insertar movimiento con la numeración asignada
  * 4. Insertar detalles
  * 5. Actualizar el externalDocumentId en document_sequence con el ID real
+ *
+ * @param input Datos para crear el movimiento
+ * @returns El movimiento creado con su numeración
+ * @throws Error si el tipo de movimiento no existe o está deshabilitado
+ * @throws Error si no hay detalles o las cantidades son inválidas
+ * @throws Error si la fecha es futura
+ * @throws Error si hay stock insuficiente para movimientos de salida
  */
 export async function createInventoryMovement(
   input: CreateInventoryMovementInput
@@ -77,13 +98,13 @@ export async function createInventoryMovement(
       const { and, sql } = await import("drizzle-orm");
 
       for (const detail of input.details) {
-        // Buscar stock disponible para este producto y ubicación
+        // Buscar stock disponible para este ítem y ubicación
         const [currentStock] = await tx
           .select({ quantity: stock.quantity })
           .from(stock)
           .where(
             and(
-              eq(stock.productId, detail.productId),
+              eq(stock.itemId, detail.itemId),
               detail.locationId
                 ? eq(stock.locationId, detail.locationId)
                 : sql`${stock.locationId} IS NULL`
@@ -94,7 +115,7 @@ export async function createInventoryMovement(
 
         if (availableQty < detail.quantity) {
           throw new Error(
-            `Stock insuficiente para el producto ${detail.productId}. Disponible: ${availableQty}, Requerido: ${detail.quantity}`
+            `Stock insuficiente para el ítem ${detail.itemId}. Disponible: ${availableQty}, Requerido: ${detail.quantity}`
           );
         }
       }
@@ -159,7 +180,7 @@ export async function createInventoryMovement(
     await tx.insert(inventoryMovementDetail).values(
       input.details.map((d) => ({
         movementId: movement.id,
-        productId: d.productId,
+        itemId: d.itemId,
         locationId: d.locationId,
         quantity: d.quantity,
         unitCost: d.unitCost,

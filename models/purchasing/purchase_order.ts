@@ -2,7 +2,7 @@ import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { serial, integer, date } from "drizzle-orm/pg-core";
 import { schema } from "../agape";
 import supplier from "./supplier";
-import { dateTime } from "#lib/db/custom-types";
+import { dateTime } from "../../lib/db/custom-types";
 
 export const purchaseOrderStatusEnum = schema.enum(
   "purchasing_purchase_order_status",

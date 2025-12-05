@@ -10,9 +10,9 @@ export const category = schema.table("inventory_categories", {
   /** Identificador único de la categoría */
   id: serial("id").primaryKey(),
   /** Nombre completo de la categoría */
-  fullName: varchar("fullName", { length: 50 }).notNull(),
+  fullName: varchar("full_name", { length: 50 }).notNull(),
   /** Indica si la categoría está habilitada */
-  isEnabled: boolean("isEnabled").notNull(),
+  isEnabled: boolean("is_enabled").notNull(),
 });
 
 export type Category = InferSelectModel<typeof category>;

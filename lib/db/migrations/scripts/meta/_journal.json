@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1764797710788,
-      "tag": "0000_futuristic_echo",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1764865081797,
-      "tag": "0001_careful_baron_zemo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1764868115942,
-      "tag": "0002_little_magik",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1764877602521,
-      "tag": "0003_early_blue_marvel",
+      "when": 1764950424311,
+      "tag": "0000_hot_invaders",
       "breakpoints": true
     }
   ]

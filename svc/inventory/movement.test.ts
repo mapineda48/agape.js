@@ -12,8 +12,8 @@ let inventoryDocTypeId: number;
 let movementTypeEntryId: number;
 let movementTypeExitId: number;
 let disabledMovementTypeId: number;
-let productId: number;
-let productId2: number;
+let itemId: number;
+let itemId2: number;
 let categoryId: number;
 let locationId: number;
 let userId: number;
@@ -95,40 +95,44 @@ beforeAll(async () => {
   categoryId = cat.id;
   const subcatId = cat.subcategories[0].id ?? 0;
 
-  // 5. Crear productos directamente en DB (el modelo tiene campos diferentes al DTO de upsertProduct)
+  // 5. Crear ítems directamente en DB
   const { db } = await import("#lib/db");
-  const { product } = await import("#models/inventory/product");
-  const [createdProduct1] = await db
-    .insert(product)
+  const { item } = await import("#models/inventory/item");
+  const [createdItem1] = await db
+    .insert(item)
     .values({
-      fullName: "Producto Test 1",
+      code: "ITEM-TEST-001",
+      fullName: "Ítem Test 1",
       slogan: "Test Slogan 1",
-      description: "Producto para tests",
-      isActive: true,
+      description: "Ítem para tests",
+      itemType: "good",
+      isEnabled: true,
       rating: 5,
-      price: new Decimal("100.00"),
+      basePrice: new Decimal("100.00"),
       categoryId,
       subcategoryId: subcatId,
       images: [],
     })
     .returning();
-  productId = createdProduct1.id;
+  itemId = createdItem1.id;
 
-  const [createdProduct2] = await db
-    .insert(product)
+  const [createdItem2] = await db
+    .insert(item)
     .values({
-      fullName: "Producto Test 2",
+      code: "ITEM-TEST-002",
+      fullName: "Ítem Test 2",
       slogan: "Test Slogan 2",
-      description: "Producto para tests 2",
-      isActive: true,
+      description: "Ítem para tests 2",
+      itemType: "good",
+      isEnabled: true,
       rating: 4,
-      price: new Decimal("200.00"),
+      basePrice: new Decimal("200.00"),
       categoryId,
       subcategoryId: subcatId,
       images: [],
     })
     .returning();
-  productId2 = createdProduct2.id;
+  itemId2 = createdItem2.id;
 
   // 6. Crear ubicación
   const { upsertLocation } = await import("#svc/inventory/location");
@@ -215,7 +219,7 @@ describe("createInventoryMovement service", () => {
         userId,
         details: [
           {
-            productId,
+            itemId,
             locationId,
             quantity: 10,
             unitCost: new Decimal("100.00"),
@@ -237,7 +241,7 @@ describe("createInventoryMovement service", () => {
         .where(eq(inventoryMovementDetail.movementId, result.id));
 
       expect(details.length).toBe(1);
-      expect(details[0].productId).toBe(productId);
+      expect(details[0].itemId).toBe(itemId);
       expect(details[0].quantity).toBe(10);
     });
 
@@ -255,8 +259,8 @@ describe("createInventoryMovement service", () => {
         observation: "Entrada múltiple",
         userId,
         details: [
-          { productId, locationId, quantity: 5 },
-          { productId: productId2, locationId, quantity: 10 },
+          { itemId, locationId, quantity: 5 },
+          { itemId: itemId2, locationId, quantity: 10 },
         ],
       });
 
@@ -278,7 +282,7 @@ describe("createInventoryMovement service", () => {
         movementDate: new DateTime(),
         // observation not provided
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       expect(result.observation).toBeNull();
@@ -292,7 +296,7 @@ describe("createInventoryMovement service", () => {
         movementTypeId: movementTypeEntryId,
         movementDate: new DateTime(),
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       expect(result1.sourceDocumentType).toBeNull();
@@ -305,7 +309,7 @@ describe("createInventoryMovement service", () => {
         userId,
         sourceDocumentType: "purchase_order",
         sourceDocumentId: 12345,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       expect(result2.sourceDocumentType).toBe("purchase_order");
@@ -333,7 +337,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: 999999,
           movementDate: new DateTime(),
           userId,
-          details: [{ productId, locationId, quantity: 1 }],
+          details: [{ itemId, locationId, quantity: 1 }],
         })
       ).rejects.toThrow("Tipo de movimiento de inventario no encontrado");
 
@@ -361,7 +365,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: disabledMovementTypeId,
           movementDate: new DateTime(),
           userId,
-          details: [{ productId, locationId, quantity: 1 }],
+          details: [{ itemId, locationId, quantity: 1 }],
         })
       ).rejects.toThrow(
         "El tipo de movimiento de inventario está deshabilitado"
@@ -427,7 +431,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: mvtTypeWithDisabledDoc.id,
           movementDate: new DateTime(),
           userId,
-          details: [{ productId, locationId, quantity: 1 }],
+          details: [{ itemId, locationId, quantity: 1 }],
         })
       ).rejects.toThrow(); // DocumentTypeDisabledError propagado
 
@@ -462,7 +466,7 @@ describe("createInventoryMovement service", () => {
         movementTypeId: movementTypeEntryId,
         movementDate,
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       // Verificar que se creó un registro en document_sequence con los parámetros correctos
@@ -501,7 +505,7 @@ describe("createInventoryMovement service", () => {
         movementTypeId: movementTypeEntryId,
         movementDate: new DateTime(),
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       // Verificar que los valores de numeración están persistidos correctamente
@@ -546,7 +550,7 @@ describe("createInventoryMovement service", () => {
         .from(documentSeries)
         .where(eq(documentSeries.id, seriesId));
 
-      // Intentar crear movimiento con productId inválido (FK violation)
+      // Intentar crear movimiento con itemId inválido (FK violation)
       await expect(
         createInventoryMovement({
           movementTypeId: movementTypeEntryId,
@@ -554,7 +558,7 @@ describe("createInventoryMovement service", () => {
           userId,
           details: [
             {
-              productId: 999999, // <-- ID inválido, causará FK violation
+              itemId: 999999, // <-- ID inválido, causará FK violation
               locationId,
               quantity: 1,
             },
@@ -631,7 +635,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: movementTypeEntryId,
           movementDate: new DateTime(),
           userId,
-          details: [{ productId, locationId, quantity: 0 }], // <-- Cantidad cero
+          details: [{ itemId, locationId, quantity: 0 }], // <-- Cantidad cero
         })
       ).rejects.toThrow("La cantidad de cada detalle debe ser mayor a cero");
 
@@ -658,7 +662,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: movementTypeEntryId,
           movementDate: new DateTime(),
           userId,
-          details: [{ productId, locationId, quantity: -5 }], // <-- Cantidad negativa
+          details: [{ itemId, locationId, quantity: -5 }], // <-- Cantidad negativa
         })
       ).rejects.toThrow("La cantidad de cada detalle debe ser mayor a cero");
 
@@ -669,7 +673,7 @@ describe("createInventoryMovement service", () => {
       expect(totalAfter).toBe(totalBefore);
     });
 
-    it("should rollback when product does not exist (FK violation)", async () => {
+    it("should rollback when item does not exist (FK violation)", async () => {
       const { createInventoryMovement } = await import("./movement");
       const { db } = await import("#lib/db");
       const { inventoryMovement } = await import("#models/inventory/movement");
@@ -680,14 +684,14 @@ describe("createInventoryMovement service", () => {
         .select({ totalBefore: count() })
         .from(inventoryMovement);
 
-      // Intentar crear movimiento con productId inválido
+      // Intentar crear movimiento con itemId inválido
       await expect(
         createInventoryMovement({
           movementTypeId: movementTypeEntryId,
           movementDate: new DateTime(),
           userId,
           details: [
-            { productId: 999999, locationId, quantity: 1 }, // <-- Producto inexistente
+            { itemId: 999999, locationId, quantity: 1 }, // <-- Ítem inexistente
           ],
         })
       ).rejects.toThrow();
@@ -721,7 +725,7 @@ describe("createInventoryMovement service", () => {
         userId,
         details: [
           {
-            productId,
+            itemId,
             locationId,
             quantity: 5,
             unitCost: new Decimal("123.45"),
@@ -753,7 +757,7 @@ describe("createInventoryMovement service", () => {
         userId,
         details: [
           {
-            productId,
+            itemId,
             locationId,
             quantity: 5,
             // unitCost not provided
@@ -795,7 +799,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: movementTypeEntryId,
           movementDate: new DateTime(tomorrow),
           userId,
-          details: [{ productId, locationId, quantity: 1 }],
+          details: [{ itemId, locationId, quantity: 1 }],
         })
       ).rejects.toThrow("No se permiten movimientos con fecha futura");
 
@@ -816,7 +820,7 @@ describe("createInventoryMovement service", () => {
         movementTypeId: movementTypeEntryId,
         movementDate: today,
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       expect(result).toBeDefined();
@@ -834,7 +838,7 @@ describe("createInventoryMovement service", () => {
         movementTypeId: movementTypeEntryId,
         movementDate: new DateTime(pastDate),
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       expect(result).toBeDefined();
@@ -856,16 +860,14 @@ describe("createInventoryMovement service", () => {
       const { stock } = await import("#models/inventory/stock");
       const { count, eq, and } = await import("drizzle-orm");
 
-      // Limpiar stock previo para este producto/ubicación
+      // Limpiar stock previo para este ítem/ubicación
       await db
         .delete(stock)
-        .where(
-          and(eq(stock.productId, productId), eq(stock.locationId, locationId))
-        );
+        .where(and(eq(stock.itemId, itemId), eq(stock.locationId, locationId)));
 
       // Crear stock con cantidad insuficiente (5 unidades)
       await db.insert(stock).values({
-        productId,
+        itemId,
         locationId,
         quantity: 5,
       });
@@ -882,7 +884,7 @@ describe("createInventoryMovement service", () => {
           movementDate: new DateTime(),
           userId,
           details: [
-            { productId, locationId, quantity: 10 }, // Pide 10, solo hay 5
+            { itemId, locationId, quantity: 10 }, // Pide 10, solo hay 5
           ],
         })
       ).rejects.toThrow(/Stock insuficiente/);
@@ -903,12 +905,10 @@ describe("createInventoryMovement service", () => {
       // Limpiar y crear stock suficiente (100 unidades)
       await db
         .delete(stock)
-        .where(
-          and(eq(stock.productId, productId), eq(stock.locationId, locationId))
-        );
+        .where(and(eq(stock.itemId, itemId), eq(stock.locationId, locationId)));
 
       await db.insert(stock).values({
-        productId,
+        itemId,
         locationId,
         quantity: 100,
       });
@@ -919,7 +919,7 @@ describe("createInventoryMovement service", () => {
         movementDate: new DateTime(),
         userId,
         details: [
-          { productId, locationId, quantity: 50 }, // Pide 50, hay 100
+          { itemId, locationId, quantity: 50 }, // Pide 50, hay 100
         ],
       });
 
@@ -936,9 +936,7 @@ describe("createInventoryMovement service", () => {
       // Limpiar stock (sin stock existente)
       await db
         .delete(stock)
-        .where(
-          and(eq(stock.productId, productId), eq(stock.locationId, locationId))
-        );
+        .where(and(eq(stock.itemId, itemId), eq(stock.locationId, locationId)));
 
       // Crear movimiento de ENTRADA sin stock previo - debe funcionar
       const result = await createInventoryMovement({
@@ -946,7 +944,7 @@ describe("createInventoryMovement service", () => {
         movementDate: new DateTime(),
         userId,
         details: [
-          { productId, locationId, quantity: 100 }, // Entrada de 100 unidades
+          { itemId, locationId, quantity: 100 }, // Entrada de 100 unidades
         ],
       });
 
@@ -992,14 +990,14 @@ describe("createInventoryMovement service", () => {
         .from(documentSeries)
         .where(eq(documentSeries.id, seriesId));
 
-      // Intentar crear movimiento con productId inválido
+      // Intentar crear movimiento con itemId inválido
       await expect(
         createInventoryMovement({
           movementTypeId: movementTypeEntryId,
           movementDate: new DateTime(),
           userId,
           details: [
-            { productId: 999999, locationId, quantity: 1 }, // FK error
+            { itemId: 999999, locationId, quantity: 1 }, // FK error
           ],
         })
       ).rejects.toThrow();
@@ -1076,7 +1074,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: mvtTypeNoSeries.id,
           movementDate: new DateTime(),
           userId,
-          details: [{ productId, locationId, quantity: 1 }],
+          details: [{ itemId, locationId, quantity: 1 }],
         })
       ).rejects.toThrow(); // NoSeriesAvailableError
 
@@ -1104,14 +1102,14 @@ describe("createInventoryMovement service", () => {
         movementTypeId: movementTypeEntryId,
         movementDate: new DateTime(),
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       const result2 = await createInventoryMovement({
         movementTypeId: movementTypeEntryId,
         movementDate: new DateTime(),
         userId,
-        details: [{ productId, locationId, quantity: 1 }],
+        details: [{ itemId, locationId, quantity: 1 }],
       });
 
       expect(result1.documentNumber).not.toBe(result2.documentNumber);
@@ -1132,7 +1130,7 @@ describe("createInventoryMovement service", () => {
           movementTypeId: movementTypeEntryId,
           movementDate: new DateTime(),
           userId,
-          details: [{ productId, locationId, quantity: i + 1 }],
+          details: [{ itemId, locationId, quantity: i + 1 }],
         })
       );
 
