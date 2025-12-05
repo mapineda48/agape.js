@@ -31,6 +31,7 @@ export default defineConfig({
           environment: "jsdom",
           globals: true,
           setupFiles: "./web/test/setup.ts",
+          include: ["web/**/*.test.ts"],
         },
         plugins: [react()],
         resolve: {
