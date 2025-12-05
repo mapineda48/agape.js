@@ -94,7 +94,10 @@ describe("PathProvider Nested Paths", () => {
               />
             </div>
           ))}
-          <button data-testid="add" onClick={() => categories.addItem({ name: "New" })}>
+          <button
+            data-testid="add"
+            onClick={() => categories.addItem({ name: "New" })}
+          >
             Add category
           </button>
         </div>
@@ -126,11 +129,243 @@ describe("PathProvider Nested Paths", () => {
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith({
-        categories: [
-          { name: "A1" },
-          { name: "B" },
-          { name: "New Added" },
-        ],
+        categories: [{ name: "A1" }, { name: "B" }, { name: "New Added" }],
+      });
+    });
+  });
+
+  describe("PathProvider autoCleanup", () => {
+    it("should NOT remove values when PathProvider unmounts by default", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      let showSection = true;
+
+      const { rerender } = render(
+        <EventEmitter>
+          <FormProvider state={{ main: { value: "main" } }}>
+            {showSection && (
+              <PathProvider value="section">
+                <Input.Text
+                  path="field"
+                  value="test"
+                  materialize
+                  data-testid="field"
+                />
+              </PathProvider>
+            )}
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      // Submit to verify initial state
+      await user.click(screen.getByTestId("submit"));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          main: { value: "main" },
+          section: { field: "test" },
+        });
+      });
+
+      onSubmit.mockClear();
+      showSection = false;
+
+      // Rerender without the section
+      rerender(
+        <EventEmitter>
+          <FormProvider state={{ main: { value: "main" } }}>
+            {showSection && (
+              <PathProvider value="section">
+                <Input.Text
+                  path="field"
+                  value="test"
+                  materialize
+                  data-testid="field"
+                />
+              </PathProvider>
+            )}
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      // Section should STILL be in state (default behavior)
+      await user.click(screen.getByTestId("submit"));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          main: { value: "main" },
+          section: { field: "test" },
+        });
+      });
+    });
+
+    it("should remove entire subtree when PathProvider unmounts with autoCleanup", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      let showSection = true;
+
+      const { rerender } = render(
+        <EventEmitter>
+          <FormProvider state={{ main: { value: "main" } }}>
+            {showSection && (
+              <PathProvider value="section" autoCleanup>
+                <Input.Text
+                  path="field1"
+                  value="one"
+                  materialize
+                  data-testid="field1"
+                />
+                <Input.Text
+                  path="field2"
+                  value="two"
+                  materialize
+                  data-testid="field2"
+                />
+              </PathProvider>
+            )}
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      // Submit to verify initial state includes section
+      await user.click(screen.getByTestId("submit"));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          main: { value: "main" },
+          section: { field1: "one", field2: "two" },
+        });
+      });
+
+      onSubmit.mockClear();
+      showSection = false;
+
+      // Rerender without the section (with autoCleanup)
+      rerender(
+        <EventEmitter>
+          <FormProvider state={{ main: { value: "main" } }}>
+            {showSection && (
+              <PathProvider value="section" autoCleanup>
+                <Input.Text
+                  path="field1"
+                  value="one"
+                  materialize
+                  data-testid="field1"
+                />
+                <Input.Text
+                  path="field2"
+                  value="two"
+                  materialize
+                  data-testid="field2"
+                />
+              </PathProvider>
+            )}
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      // Section should be cleaned up
+      await user.click(screen.getByTestId("submit"));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          main: { value: "main" },
+        });
+      });
+    });
+
+    it("should handle nested PathProviders with autoCleanup", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      let showNested = true;
+
+      const { rerender } = render(
+        <EventEmitter>
+          <FormProvider>
+            <PathProvider value="parent">
+              <Input.Text
+                path="parentField"
+                value="parent"
+                materialize
+                data-testid="parent"
+              />
+              {showNested && (
+                <PathProvider value="child" autoCleanup>
+                  <Input.Text
+                    path="childField"
+                    value="child"
+                    materialize
+                    data-testid="child"
+                  />
+                </PathProvider>
+              )}
+            </PathProvider>
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      // Verify initial state
+      await user.click(screen.getByTestId("submit"));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          parent: {
+            parentField: "parent",
+            child: { childField: "child" },
+          },
+        });
+      });
+
+      onSubmit.mockClear();
+      showNested = false;
+
+      // Remove nested section
+      rerender(
+        <EventEmitter>
+          <FormProvider>
+            <PathProvider value="parent">
+              <Input.Text
+                path="parentField"
+                value="parent"
+                materialize
+                data-testid="parent"
+              />
+              {showNested && (
+                <PathProvider value="child" autoCleanup>
+                  <Input.Text
+                    path="childField"
+                    value="child"
+                    materialize
+                    data-testid="child"
+                  />
+                </PathProvider>
+              )}
+            </PathProvider>
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      // Child should be cleaned up, parent remains
+      await user.click(screen.getByTestId("submit"));
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({
+          parent: {
+            parentField: "parent",
+          },
+        });
       });
     });
   });

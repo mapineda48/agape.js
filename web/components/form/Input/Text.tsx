@@ -2,9 +2,17 @@ import { type JSX } from "react";
 import useInput from "./useInput";
 
 export default function InputText(props: Props) {
-  const { path, password, email, value = "", materialize, ...core } = props;
+  const {
+    path,
+    password,
+    email,
+    value = "",
+    materialize,
+    autoCleanup,
+    ...core
+  } = props;
 
-  const [state, setState] = useInput(path, value, { materialize });
+  const [state, setState] = useInput(path, value, { materialize, autoCleanup });
 
   return (
     <input
@@ -22,6 +30,8 @@ interface Props extends Core {
   email?: boolean;
   value?: string;
   materialize?: boolean;
+  /** If true, the value will be removed from the store when this input unmounts */
+  autoCleanup?: boolean;
 }
 
 type Core = Omit<

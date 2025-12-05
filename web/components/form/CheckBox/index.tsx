@@ -10,11 +10,17 @@ import useInput from "../Input/useInput";
  * submit payload. Use `materialize: true` if you need the default value to always be present
  * in the form data (e.g., for validation that runs on mount or to ensure the field is always
  * included in the submission).
+ *
+ * @note About `autoCleanup` prop:
+ * If true, the value will be removed from the store when this input unmounts.
  */
 export default function Checkbox(props: Props) {
-  const { path, checked = false, materialize, ...core } = props;
+  const { path, checked = false, materialize, autoCleanup, ...core } = props;
 
-  const [state, setState] = useInput(path, checked, { materialize });
+  const [state, setState] = useInput(path, checked, {
+    materialize,
+    autoCleanup,
+  });
 
   return (
     <input
@@ -29,6 +35,8 @@ export default function Checkbox(props: Props) {
 interface Props extends Core {
   path: string;
   materialize?: boolean;
+  /** If true, the value will be removed from the store when this input unmounts */
+  autoCleanup?: boolean;
 }
 
 type Core = Omit<

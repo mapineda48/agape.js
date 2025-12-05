@@ -998,4 +998,216 @@ describe("form hooks", () => {
       expect(screen.getByTestId("input-value").textContent).toBe("Sub 2-1");
     });
   });
+
+  describe("useInput with autoCleanup option", () => {
+    it("should NOT remove value when component unmounts by default", () => {
+      let storeRef: any;
+      const { unmount } = renderHook(() => useInput(["user", "name"], "John"), {
+        wrapper: ({ children }: { children: React.ReactNode }) => {
+          const store = createStore({ user: { name: "John" } });
+          storeRef = store;
+          return <Provider store={store}>{children}</Provider>;
+        },
+      });
+
+      // Value should be in store
+      expect(storeRef.getState().form.data).toEqual({ user: { name: "John" } });
+
+      // Unmount
+      unmount();
+
+      // Value should STILL be in store (default behavior)
+      expect(storeRef.getState().form.data).toEqual({ user: { name: "John" } });
+    });
+
+    it("should remove value when component unmounts with autoCleanup: true", () => {
+      let storeRef: any;
+      const { unmount } = renderHook(
+        () => useInput(["user", "name"], "John", { autoCleanup: true }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => {
+            const store = createStore({ user: { name: "John" } });
+            storeRef = store;
+            return <Provider store={store}>{children}</Provider>;
+          },
+        }
+      );
+
+      // Value should be in store
+      expect(storeRef.getState().form.data).toEqual({ user: { name: "John" } });
+
+      // Unmount
+      unmount();
+
+      // Value AND empty parent object should be cleaned up
+      expect(storeRef.getState().form.data).toEqual({});
+    });
+
+    it("should keep sibling values when cleaning up", () => {
+      let storeRef: any;
+      const { unmount } = renderHook(
+        () => useInput(["user", "name"], "John", { autoCleanup: true }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => {
+            const store = createStore({ user: { name: "John", age: 30 } });
+            storeRef = store;
+            return <Provider store={store}>{children}</Provider>;
+          },
+        }
+      );
+
+      // Value should be in store
+      expect(storeRef.getState().form.data).toEqual({
+        user: { name: "John", age: 30 },
+      });
+
+      // Unmount
+      unmount();
+
+      // Only name should be cleaned up, age remains => user remains
+      expect(storeRef.getState().form.data).toEqual({ user: { age: 30 } });
+    });
+
+    it("should handle deeply nested paths with autoCleanup", () => {
+      let storeRef: any;
+      const { unmount } = renderHook(
+        () => useInput(["a", "b", "c", "value"], "test", { autoCleanup: true }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => {
+            const store = createStore({ a: { b: { c: { value: "test" } } } });
+            storeRef = store;
+            return <Provider store={store}>{children}</Provider>;
+          },
+        }
+      );
+
+      // Unmount
+      unmount();
+
+      // All nested empty objects should be cleaned up
+      expect(storeRef.getState().form.data).toEqual({});
+    });
+
+    it("should work with boolean values and autoCleanup", () => {
+      let storeRef: any;
+      const { unmount } = renderHook(
+        () => useInput(["settings", "enabled"], true, { autoCleanup: true }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => {
+            const store = createStore({ settings: { enabled: true } });
+            storeRef = store;
+            return <Provider store={store}>{children}</Provider>;
+          },
+        }
+      );
+
+      // Unmount
+      unmount();
+
+      expect(storeRef.getState().form.data).toEqual({});
+    });
+
+    it("should work with materialize and autoCleanup together", () => {
+      let storeRef: any;
+      const { unmount } = renderHook(
+        () =>
+          useInput(["user", "role"], "guest", {
+            materialize: true,
+            autoCleanup: true,
+          }),
+        {
+          wrapper: ({ children }: { children: React.ReactNode }) => {
+            const store = createStore({});
+            storeRef = store;
+            return <Provider store={store}>{children}</Provider>;
+          },
+        }
+      );
+
+      // Value should be materialized
+      expect(storeRef.getState().form.data).toEqual({
+        user: { role: "guest" },
+      });
+
+      // Unmount
+      unmount();
+
+      // Value should be cleaned up
+      expect(storeRef.getState().form.data).toEqual({});
+    });
+
+    it("should handle conditional rendering with autoCleanup", () => {
+      let storeRef: any;
+      const store = createStore({ user: { name: "John" } });
+      storeRef = store;
+
+      const ConditionalInput = ({ show }: { show: boolean }) => {
+        return show ? <InputWithCleanup /> : null;
+      };
+
+      const InputWithCleanup = () => {
+        useInput(["advanced", "notes"], "default notes", {
+          autoCleanup: true,
+          materialize: true,
+        });
+        return <div data-testid="advanced-input">Advanced Input</div>;
+      };
+
+      const { rerender } = render(
+        <Provider store={store}>
+          <ConditionalInput show={true} />
+        </Provider>
+      );
+
+      // Advanced notes should be in the store
+      expect(storeRef.getState().form.data).toEqual({
+        user: { name: "John" },
+        advanced: { notes: "default notes" },
+      });
+
+      // Hide the input
+      rerender(
+        <Provider store={store}>
+          <ConditionalInput show={false} />
+        </Provider>
+      );
+
+      // Advanced notes should be cleaned up
+      expect(storeRef.getState().form.data).toEqual({
+        user: { name: "John" },
+      });
+    });
+
+    it("should clean up correctly when path changes before unmount", () => {
+      let storeRef: any;
+      const store = createStore({
+        fieldA: { value: "A" },
+        fieldB: { value: "B" },
+      });
+      storeRef = store;
+
+      // This tests that cleanup uses the current path, not a stale one
+      const { rerender, unmount } = renderHook(
+        ({ path }) =>
+          useInput([path, "value"], "default", { autoCleanup: true }),
+        {
+          initialProps: { path: "fieldA" },
+          wrapper: ({ children }: { children: React.ReactNode }) => (
+            <Provider store={store}>{children}</Provider>
+          ),
+        }
+      );
+
+      // Change the path
+      rerender({ path: "fieldB" });
+
+      // Unmount
+      unmount();
+
+      // Only fieldB should be cleaned up (the current path)
+      expect(storeRef.getState().form.data).toEqual({
+        fieldA: { value: "A" },
+      });
+    });
+  });
 });

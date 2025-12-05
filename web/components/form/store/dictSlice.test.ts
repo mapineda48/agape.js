@@ -1,4 +1,9 @@
-import dictReducer, { setAtPath, pushAtPath, removeAtPath } from "./dictSlice";
+import dictReducer, {
+  setAtPath,
+  pushAtPath,
+  removeAtPath,
+  deleteAtPath,
+} from "./dictSlice";
 
 describe("dictSlice", () => {
   const initialState = { data: {} };
@@ -327,6 +332,135 @@ describe("dictSlice", () => {
       // When path is empty and root is not array, it should convert to array
       expect(Array.isArray(actual.data)).toBe(true);
       expect(actual.data).toEqual(["item"]);
+    });
+  });
+
+  describe("deleteAtPath", () => {
+    it("should delete a simple property", () => {
+      const state = { data: { user: { name: "John", age: 25 } } };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["user", "name"] })
+      );
+      expect(actual.data).toEqual({ user: { age: 25 } });
+    });
+
+    it("should cleanup empty parent objects after deletion", () => {
+      const state = { data: { user: { name: "John" } } };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["user", "name"] })
+      );
+      // user object is now empty, should be cleaned up
+      expect(actual.data).toEqual({});
+    });
+
+    it("should only cleanup empty containers, not those with remaining children", () => {
+      const state = {
+        data: { user: { name: "John", profile: { bio: "Hello" } } },
+      };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["user", "profile", "bio"] })
+      );
+      // profile is empty, should be cleaned up, but user still has name
+      expect(actual.data).toEqual({ user: { name: "John" } });
+    });
+
+    it("should handle deeply nested paths", () => {
+      const state = { data: { a: { b: { c: { d: "value" } } } } };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["a", "b", "c", "d"] })
+      );
+      // All levels become empty and should be cleaned up
+      expect(actual.data).toEqual({});
+    });
+
+    it("should handle arrays - deleting item from array", () => {
+      const state = { data: { items: ["a", "b", "c"] } };
+      const actual = dictReducer(state, deleteAtPath({ path: ["items", 1] }));
+      expect(actual.data).toEqual({ items: ["a", "c"] });
+    });
+
+    it("should cleanup array if becomes empty after deletion", () => {
+      const state = { data: { user: { tags: ["only-tag"] } } };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["user", "tags", 0] })
+      );
+      // tags array is empty, should be cleaned up, user is also empty
+      expect(actual.data).toEqual({});
+    });
+
+    it("should keep array with remaining items", () => {
+      const state = { data: { tags: ["a", "b"] } };
+      const actual = dictReducer(state, deleteAtPath({ path: ["tags", 0] }));
+      expect(actual.data).toEqual({ tags: ["b"] });
+    });
+
+    it("should reset root to empty object when path is empty", () => {
+      const state = { data: { user: "John", count: 5 } };
+      const actual = dictReducer(state, deleteAtPath({ path: [] }));
+      expect(actual.data).toEqual({});
+    });
+
+    it("should handle non-existent path gracefully", () => {
+      const state = { data: { user: { name: "John" } } };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["user", "nonExistent"] })
+      );
+      // No change should occur
+      expect(actual.data).toEqual({ user: { name: "John" } });
+    });
+
+    it("should handle deletion on null/undefined intermediate path", () => {
+      const state = { data: {} };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["user", "name"] })
+      );
+      // No change, path doesn't exist
+      expect(actual.data).toEqual({});
+    });
+
+    it("should handle mixed object and array paths", () => {
+      const state = {
+        data: {
+          users: [{ name: "Alice" }, { name: "Bob", profile: { age: 30 } }],
+        },
+      };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["users", 1, "profile", "age"] })
+      );
+      // profile is empty, should be cleaned up
+      expect(actual.data).toEqual({
+        users: [{ name: "Alice" }, { name: "Bob" }],
+      });
+    });
+
+    it("should keep other siblings when deleting one property", () => {
+      const state = {
+        data: {
+          settings: {
+            theme: "dark",
+            notifications: true,
+            advanced: { debug: true },
+          },
+        },
+      };
+      const actual = dictReducer(
+        state,
+        deleteAtPath({ path: ["settings", "advanced", "debug"] })
+      );
+      expect(actual.data).toEqual({
+        settings: {
+          theme: "dark",
+          notifications: true,
+        },
+      });
     });
   });
 });

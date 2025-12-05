@@ -2,9 +2,9 @@ import { type JSX } from "react";
 import useInput from "./useInput";
 
 export default function InputInt(props: Props) {
-  const { path, ...core } = props;
+  const { path, materialize, autoCleanup, ...core } = props;
 
-  const [state, setState] = useInput(path, 0);
+  const [state, setState] = useInput(path, 0, { materialize, autoCleanup });
 
   return (
     <input
@@ -31,6 +31,9 @@ export default function InputInt(props: Props) {
 
 interface Props extends Core {
   path: string;
+  materialize?: boolean;
+  /** If true, the value will be removed from the store when this input unmounts */
+  autoCleanup?: boolean;
 }
 
 type Core = Omit<

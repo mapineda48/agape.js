@@ -3,9 +3,12 @@ import useInput from "./useInput";
 import Decimal from "@utils/data/Decimal";
 
 export default function InputDecimal(props: Props) {
-  const { path, ...core } = props;
+  const { path, materialize, autoCleanup, ...core } = props;
 
-  const [state, setState] = useInput<Decimal>(path, new Decimal(0));
+  const [state, setState] = useInput<Decimal>(path, new Decimal(0), {
+    materialize,
+    autoCleanup,
+  });
 
   // Use instanceof for type checking - more robust than duck-typing
   const displayValue =
@@ -31,6 +34,9 @@ export default function InputDecimal(props: Props) {
 
 interface Props extends Core {
   path: string;
+  materialize?: boolean;
+  /** If true, the value will be removed from the store when this input unmounts */
+  autoCleanup?: boolean;
 }
 
 type Core = Omit<

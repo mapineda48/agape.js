@@ -1,9 +1,3 @@
-Claro que sí 👋 Vamos a dejar una documentación lista para que otro dev pueda usar la API del form sin preguntarte nada.
-
-Te la dejo en formato Markdown para que puedas pegarla en el repo / Notion / README.
-
----
-
 # API de formulario (Form + Inputs + Select + Submit)
 
 Esta librería implementa un **estado de formulario controlado** usando un store de Redux interno y un sistema de paths para mapear inputs a un objeto JSON de datos. Está pensada solo para **estado de UI de formularios en el navegador** (no para un Redux global de la app).
@@ -23,6 +17,7 @@ Esta librería implementa un **estado de formulario controlado** usando un store
 
 - **`path`**: ruta al valor dentro del objeto de formulario (`"name"`, `"user.profile.name"`, `["user", "profile", "name"]`, etc).
 - **`materialize`**: si es `true`, el valor por defecto se escribe en el store **aunque el usuario no toque el input**. Útil cuando quieres que el campo exista siempre en el payload.
+- **`autoCleanup`**: si es `true`, el valor se **elimina automáticamente del store cuando el componente se desmonta**. Útil para secciones condicionales del formulario donde no quieres datos huérfanos.
 - **Store local**: el store se crea por formulario con `createStore` y vive solo en el navegador. Permite valores no 100% serializables (File, Decimal, DateTime, etc.).
 - **EventEmitter**: el submit se coordina con un EventEmitter (`SUBMIT`, `SUBMIT_SUCCESS`). Para usar `<Submit />` necesitas que haya un `EventEmitter` en el árbol.
 
@@ -106,13 +101,14 @@ Todos los inputs se apoyan en:
 const [value, setValue] = useInput<T>(
   path,
   defaultValue?,
-  { materialize?: boolean }?
+  { materialize?: boolean, autoCleanup?: boolean }?
 );
 ```
 
 - Lee el valor desde el store usando `path`.
 - Si no hay valor, usa `defaultValue`.
 - Si `materialize: true` y aún no existe valor, escribe `defaultValue` en el store al montar.
+- Si `autoCleanup: true`, elimina el valor del store cuando el componente se desmonta (incluyendo cleanup de objetos vacíos en niveles superiores).
 
 ---
 
@@ -130,6 +126,7 @@ import { Text } from "./Input";
 - `email?: boolean` → renderiza `type="email"`.
 - `value?: string` → valor inicial por defecto.
 - `materialize?: boolean` → si quieres que `value` se escriba en el store sin interacción.
+- `autoCleanup?: boolean` → si quieres que el valor se elimine del store al desmontar el input.
 
 ---
 
@@ -423,6 +420,24 @@ El submit devuelve:
 
 Esto está probado también en combinación con `useInputArray`.
 
+### `PathProvider` con `autoCleanup`
+
+Cuando `autoCleanup` es `true`, al desmontar el `PathProvider` se elimina **todo el subárbol** bajo ese path:
+
+```tsx
+{
+  showAdvanced && (
+    <PathProvider value="advanced" autoCleanup>
+      <Input.Text path="notes" materialize />
+      <Input.Int path="priority" />
+    </PathProvider>
+  );
+}
+```
+
+- Si `showAdvanced` pasa de `true` a `false`, todo el nodo `advanced` desaparece del estado.
+- Es más eficiente que poner `autoCleanup` en cada input individual cuando toda una sección es condicional.
+
 ---
 
 ## Utilidades expuestas
@@ -432,10 +447,115 @@ Desde el `index` del módulo:
 ```ts
 export { Path, useForm, useInputArray, useInput };
 export { useAppDispatch } from "./store/hooks";
-export { setAtPath } from "./store/dictSlice";
+export { setAtPath, deleteAtPath } from "./store/dictSlice";
 ```
 
 - `Path`: helper para paths (según implementación de `paths.ts`).
 - `useForm` (`useEvent`): hook para acceder a los eventos del formulario (`SUBMIT`, `SUBMIT_SUCCESS`) si necesitas escucharlos manualmente.
 - `useAppDispatch`: acceso al `dispatch` del store interno (casos avanzados).
 - `setAtPath`: acción redux para escribir directamente en `form.data`.
+- `deleteAtPath`: acción redux para eliminar un path y hacer cleanup de contenedores vacíos.
+
+---
+
+## Limpieza Automática con `autoCleanup`
+
+### Problema que resuelve
+
+Cuando un input asociado a un `path` se desmonta del árbol de componentes, por defecto el valor **permanece almacenado** en el estado del formulario. Esto puede causar:
+
+- Campos que ya no existen en pantalla sigan enviándose en el `submit`.
+- Valores obsoletos al cambiar vistas dinámicamente.
+- Datos huérfanos que complican la validación y lógica del formulario.
+
+### Solución: `autoCleanup`
+
+Con `autoCleanup: true`, cuando un componente se desmonta:
+
+1. Su valor se elimina del store.
+2. Si la eliminación deja objetos vacíos en niveles superiores, **también se eliminan recursivamente**.
+
+### Uso a nivel de Input
+
+```tsx
+// El valor de "advanced.notes" se elimina cuando el input se desmonta
+{
+  showAdvanced && <Input.Text path="advanced.notes" autoCleanup />;
+}
+```
+
+### Uso a nivel de `useInput` (custom inputs)
+
+```ts
+const [value, setValue] = useInput(path, defaultValue, {
+  materialize: true,
+  autoCleanup: true,
+});
+```
+
+### Uso a nivel de `PathProvider` (secciones completas)
+
+```tsx
+// Todo el subárbol "advanced" se elimina cuando la sección se oculta
+{
+  showAdvanced && (
+    <PathProvider value="advanced" autoCleanup>
+      <Input.Text path="notes" materialize />
+      <Input.Int path="priority" materialize />
+      <Input.Text path="metadata.source" materialize />
+    </PathProvider>
+  );
+}
+```
+
+> 💡 **Recomendación**: Usa `autoCleanup` en el `PathProvider` cuando una sección entera es condicional. Es más limpio y eficiente que añadirlo a cada input.
+
+### Ejemplo: Limpieza recursiva
+
+```tsx
+// Estado inicial después de renderizar
+{
+  user: { name: "John" },
+  advanced: { notes: "Some notes" }
+}
+
+// Después de ocultar la sección advanced (con autoCleanup)
+{
+  user: { name: "John" }
+}
+// El objeto "advanced" completo desaparece porque quedó vacío
+```
+
+### Comportamiento por defecto
+
+| Opción              | Valor por defecto | Comportamiento                                     |
+| ------------------- | ----------------- | -------------------------------------------------- |
+| `autoCleanup`       | `false`           | El valor persiste en el store después de desmontar |
+| `autoCleanup: true` | -                 | El valor se elimina del store al desmontar         |
+
+### Cuándo usar `autoCleanup`
+
+| Escenario                                          | Usar `autoCleanup` |
+| -------------------------------------------------- | ------------------ |
+| Secciones condicionales (tabs, accordions)         | ✅ Sí              |
+| Campos que aparecen/desaparecen según otros campos | ✅ Sí              |
+| Wizards multi-paso donde puedes volver atrás       | ❌ No              |
+| Formularios simples sin condiciones                | ❌ No necesario    |
+
+### Combinación con `materialize`
+
+Puedes usar ambas opciones juntas:
+
+```tsx
+<Input.Text
+  path="optional.field"
+  value="default"
+  materialize // Escribe el valor inicial al montar
+  autoCleanup // Elimina el valor al desmontar
+/>
+```
+
+Esto garantiza:
+
+1. El campo existe desde que se monta (gracias a `materialize`).
+2. El campo se limpia cuando ya no está visible (gracias a `autoCleanup`).

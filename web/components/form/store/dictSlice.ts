@@ -84,8 +84,68 @@ const dictSlice = createSlice({
         }
       }
     },
+    /**
+     * Deletes a value at a specific path and cleans up empty parent containers.
+     * This is useful for `autoCleanup` behavior where unmounting an input
+     * should remove its value and any resulting empty parent objects/arrays.
+     */
+    deleteAtPath(state, action: PayloadAction<{ path: Path }>) {
+      const { path } = action.payload;
+      if (path.length === 0) {
+        // Cannot delete root, reset to empty object instead
+        state.data = {};
+        return;
+      }
+      deleteByPathAndCleanup(state.data, path);
+    },
   },
 });
 
-export const { setAtPath, pushAtPath, removeAtPath } = dictSlice.actions;
+/**
+ * Recursively deletes a key at the given path and cleans up empty parent containers.
+ * Returns true if the container at the current level should be cleaned up (is empty).
+ */
+function deleteByPathAndCleanup(root: any, path: Path): boolean {
+  if (path.length === 0) return false;
+
+  const key = path[0];
+  const isLastKey = path.length === 1;
+
+  if (root == null || typeof root !== "object") {
+    return false;
+  }
+
+  if (!(key in root)) {
+    return false;
+  }
+
+  if (isLastKey) {
+    // Delete the key
+    if (Array.isArray(root) && typeof key === "number") {
+      root.splice(key, 1);
+    } else {
+      delete root[key];
+    }
+  } else {
+    // Recurse into the nested object/array
+    const shouldCleanup = deleteByPathAndCleanup(root[key], path.slice(1));
+    if (shouldCleanup) {
+      // Child is now empty, delete it
+      if (Array.isArray(root) && typeof key === "number") {
+        root.splice(key, 1);
+      } else {
+        delete root[key];
+      }
+    }
+  }
+
+  // Check if current container is now empty
+  if (Array.isArray(root)) {
+    return root.length === 0;
+  }
+  return Object.keys(root).length === 0;
+}
+
+export const { setAtPath, pushAtPath, removeAtPath, deleteAtPath } =
+  dictSlice.actions;
 export default dictSlice.reducer;

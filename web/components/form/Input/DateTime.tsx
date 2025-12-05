@@ -4,11 +4,12 @@ import DateTime from "@utils/data/DateTime";
 import { format } from "date-fns";
 
 export default function InputDateTime(props: Props) {
-  const { path, ...core } = props;
+  const { path, materialize = true, autoCleanup, ...core } = props;
 
   // Default to now if no value
   const [state, setState] = useInput<DateTime>(path, new DateTime(), {
-    materialize: true,
+    materialize,
+    autoCleanup,
   });
 
   // Use instanceof for type checking - more robust than duck-typing
@@ -32,6 +33,10 @@ export default function InputDateTime(props: Props) {
 
 interface Props extends Core {
   path: string;
+  /** Defaults to true for DateTime inputs */
+  materialize?: boolean;
+  /** If true, the value will be removed from the store when this input unmounts */
+  autoCleanup?: boolean;
 }
 
 type Core = Omit<
