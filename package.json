@@ -15,6 +15,7 @@
     "build": "tsx bin/build.ts",
     "generate": "drizzle-kit generate",
     "test": "vitest",
+    "test:frontend": "vitest --project frontend",
     "test:backend": "drizzle-kit generate && vitest --project backend"
   },
   "dependencies": {
