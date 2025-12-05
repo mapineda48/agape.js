@@ -97,7 +97,7 @@ beforeAll(async () => {
 
   // 5. Crear ítems directamente en DB
   const { db } = await import("#lib/db");
-  const { item } = await import("#models/inventory/item");
+  const { item } = await import("#models/catalogs/item");
   const [createdItem1] = await db
     .insert(item)
     .values({
@@ -164,7 +164,7 @@ beforeAll(async () => {
   const [createdUser] = await db
     .insert(user)
     .values({
-      type: "P",
+      type: "person",
       documentTypeId: idDocType.id,
       documentNumber: "12345678",
       email: "test@example.com",

@@ -1,5 +1,6 @@
 CREATE SCHEMA "agape_app_development_demo";
 --> statement-breakpoint
+CREATE TYPE "agape_app_development_demo"."user_type_enum" AS ENUM('person', 'company');--> statement-breakpoint
 CREATE TYPE "agape_app_development_demo"."inventory_item_type" AS ENUM('good', 'service', 'bundle', 'charge');--> statement-breakpoint
 CREATE TYPE "agape_app_development_demo"."purchasing_purchase_order_status" AS ENUM('pending', 'approved', 'received', 'cancelled');--> statement-breakpoint
 CREATE TABLE "agape_app_development_demo"."access_employee" (
@@ -46,7 +47,7 @@ CREATE TABLE "agape_app_development_demo"."core_person" (
 --> statement-breakpoint
 CREATE TABLE "agape_app_development_demo"."user" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"user_type" varchar(20) NOT NULL,
+	"user_type" "agape_app_development_demo"."user_type_enum" NOT NULL,
 	"document_type_id" integer NOT NULL,
 	"document_number" varchar(30) NOT NULL,
 	"email" varchar(255),

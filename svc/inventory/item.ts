@@ -1,8 +1,8 @@
 import { db } from "#lib/db";
-import { item, type NewItem, type Item } from "#models/inventory/item";
-import { inventoryItemStock } from "#models/inventory/item_stock";
-import { inventoryItemService } from "#models/inventory/item_service";
-import { category } from "#models/inventory/category";
+import { item, type NewItem, type Item } from "#models/catalogs/item";
+import { inventoryItemStock } from "#models/inventory/item";
+import { inventoryItemService } from "#models/catalogs/service";
+import { category } from "#models/catalogs/category";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { and, count, eq, gte, lte, sql } from "drizzle-orm";
 import Decimal from "#utils/data/Decimal";

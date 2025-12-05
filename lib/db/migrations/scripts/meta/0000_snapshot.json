@@ -1,5 +1,5 @@
 {
-  "id": "7dbc6a1f-21b4-4daf-909c-f237d9fdf02c",
+  "id": "61c204fb-d4cf-4abf-946e-89b9b2c0dd9b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -312,7 +312,8 @@
         },
         "user_type": {
           "name": "user_type",
-          "type": "varchar(20)",
+          "type": "user_type_enum",
+          "typeSchema": "agape_app_development_demo",
           "primaryKey": false,
           "notNull": true
         },
@@ -2323,6 +2324,14 @@
     }
   },
   "enums": {
+    "agape_app_development_demo.user_type_enum": {
+      "name": "user_type_enum",
+      "schema": "agape_app_development_demo",
+      "values": [
+        "person",
+        "company"
+      ]
+    },
     "agape_app_development_demo.inventory_item_type": {
       "name": "inventory_item_type",
       "schema": "agape_app_development_demo",

@@ -1,10 +1,7 @@
 import { db } from "#lib/db";
 import { desc, eq } from "drizzle-orm";
-import { category, type NewCategory } from "#models/inventory/category";
-import {
-  subcategory,
-  type NewSubcategory,
-} from "#models/inventory/subcategory";
+import { category, type NewCategory } from "#models/catalogs/category";
+import { subcategory, type NewSubcategory } from "#models/catalogs/subcategory";
 
 export type CategoryRecord = typeof category.$inferSelect;
 export type CategoryId = CategoryRecord["id"];

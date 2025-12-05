@@ -1,6 +1,6 @@
 import { schema } from "../agape";
 import { serial, integer } from "drizzle-orm/pg-core";
-import { item } from "./item";
+import item from "./item";
 import { location } from "./location";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
@@ -14,7 +14,7 @@ export const stock = schema.table("inventory_stock", {
   /** Referencia al ítem maestro */
   itemId: integer("item_id")
     .notNull()
-    .references(() => item.id, { onDelete: "restrict" }),
+    .references(() => item.itemId, { onDelete: "restrict" }),
 
   /** Ubicación (bodega). Nullable para soportar stock sin ubicación específica */
   locationId: integer("location_id").references(() => location.id, {

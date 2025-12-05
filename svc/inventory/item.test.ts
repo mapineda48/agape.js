@@ -445,9 +445,7 @@ describe("item service", () => {
     it("should handle stockData for goods", async () => {
       const { upsertItem } = await import("./item");
       const { db } = await import("#lib/db");
-      const { inventoryItemStock } = await import(
-        "#models/inventory/item_stock"
-      );
+      const { inventoryItemStock } = await import("#models/inventory/item");
       const { eq } = await import("drizzle-orm");
 
       const category = await createTestCategory(
@@ -489,9 +487,7 @@ describe("item service", () => {
     it("should handle serviceData for services", async () => {
       const { upsertItem } = await import("./item");
       const { db } = await import("#lib/db");
-      const { inventoryItemService } = await import(
-        "#models/inventory/item_service"
-      );
+      const { inventoryItemService } = await import("#models/catalogs/service");
       const { eq } = await import("drizzle-orm");
 
       const category = await createTestCategory(

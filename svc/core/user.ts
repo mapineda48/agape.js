@@ -1,7 +1,13 @@
 import { db } from "#lib/db";
 import { company, type NewCompany } from "#models/core/company";
 import { person, type NewPerson } from "#models/core/person";
-import { user, type NewUser, type User } from "#models/core/user";
+import {
+  user,
+  type NewUser,
+  type User,
+  type UserType,
+  USER_TYPE_VALUES,
+} from "#models/core/user";
 import { eq } from "drizzle-orm";
 
 /**
@@ -29,12 +35,17 @@ export async function getUserById(id: number) {
  * Si el payload incluye `id`, actualiza el usuario existente.
  * Si no incluye `id`, crea un nuevo usuario.
  *
- * El usuario debe ser de tipo persona (con `person`) o compañía (con `company`),
- * pero no puede tener ambos ni ninguno.
+ * El tipo de usuario se infiere automáticamente de la propiedad presente en el payload:
+ * - Si contiene `person`, el tipo será "person"
+ * - Si contiene `company`, el tipo será "company"
+ *
+ * **Importante**: El cliente nunca debe enviar la propiedad `type`, esta se infiere
+ * automáticamente de la propiedad de entidad presente en el payload.
  *
  * @param payload - Datos del usuario a insertar o actualizar
  * @returns Usuario creado o actualizado con sus datos relacionados
- * @throws Error si no se proporciona ni `person` ni `company`
+ * @throws Error si se proporcionan ambas propiedades (person y company)
+ * @throws Error si no se proporciona ninguna propiedad de entidad
  *
  * @example
  * ```ts
@@ -49,15 +60,13 @@ export async function getUserById(id: number) {
  *   }
  * });
  *
- * // Actualizar usuario
- * const updated = await upsertUser({
- *   id: 1,
- *   documentTypeId: 1,
- *   documentNumber: "123456",
- *   email: "newemail@example.com",
- *   person: {
- *     firstName: "John",
- *     lastName: "Smith"
+ * // Crear usuario compañía
+ * const newCompany = await upsertUser({
+ *   documentTypeId: 2,
+ *   documentNumber: "900123",
+ *   company: {
+ *     legalName: "Acme Corp",
+ *     tradeName: "Acme"
  *   }
  * });
  * ```
@@ -72,56 +81,73 @@ export function upsertUser(payload: IUser): Promise<IUserRecord>;
 export async function upsertUser(payload: IUser): Promise<IUserRecord> {
   const { id, person: personDto, company: companyDto, ...userDto } = payload;
 
+  // Inferir el tipo de usuario basado en las propiedades presentes
+  const userType = inferUserType(personDto, companyDto);
+
+  // Construir el DTO con el tipo inferido
+  const dto: NewUser = {
+    ...userDto,
+    type: userType,
+  };
+
+  if (typeof id !== "number") {
+    return insertUser(dto, userType, personDto, companyDto);
+  }
+
+  return updateUser(id, dto, userType, personDto, companyDto);
+}
+
+/**
+ * Infiere el tipo de usuario basado en las propiedades de entidad presentes.
+ *
+ * @param personDto - Datos de persona (opcional)
+ * @param companyDto - Datos de compañía (opcional)
+ * @returns El tipo de usuario inferido ("person" | "company")
+ * @throws Error si ambas propiedades están presentes
+ * @throws Error si ninguna propiedad está presente
+ */
+function inferUserType(
+  personDto: IPerson | undefined,
+  companyDto: ICompany | undefined
+): UserType {
+  const hasPerson = personDto !== undefined && personDto !== null;
+  const hasCompany = companyDto !== undefined && companyDto !== null;
+
   // Validar que no vengan ambos
-  if (personDto && companyDto) {
+  if (hasPerson && hasCompany) {
     throw new Error(
       "User cannot be both a person and a company. Provide only 'person' or 'company', not both."
     );
   }
 
   // Validar que venga al menos uno
-  if (!personDto && !companyDto) {
+  if (!hasPerson && !hasCompany) {
     throw new Error(
       "User must be either a person or a company. Please provide either 'person' or 'company' data."
     );
   }
 
-  // Construir el tipo de usuario (kind)
-  let kind: UserKind;
-
-  if (personDto) {
-    kind = { kind: "person", person: personDto };
-  } else if (companyDto) {
-    kind = { kind: "company", company: companyDto };
-  } else {
-    // No deberíamos llegar aquí, pero TS es feliz con este guard
-    throw new Error(
-      "Invariant violation: neither person nor company provided."
-    );
-  }
-
-  // Determinar el tipo de usuario (P/C) basado en el kind
-  const dto: NewUser = {
-    ...userDto,
-    type: kind.kind === "person" ? "P" : "C",
-  };
-
-  if (typeof id !== "number") {
-    return insertUser(dto, kind);
-  }
-
-  return updateUser(id, dto, kind);
+  // Retornar el tipo inferido usando el enum
+  return hasPerson ? "person" : "company";
 }
 
 /**
  * Actualiza un usuario existente y sus datos relacionados (persona o compañía).
  *
  * @param id - ID del usuario a actualizar
- * @param userDto - Datos base del usuario (incluye type: "P" | "C")
- * @param kind - Tipo de usuario (persona o compañía) y sus datos específicos
+ * @param userDto - Datos base del usuario (incluye type)
+ * @param userType - Tipo de usuario ("person" | "company")
+ * @param personDto - Datos de persona (si aplica)
+ * @param companyDto - Datos de compañía (si aplica)
  * @returns Usuario actualizado con sus datos relacionados
  */
-async function updateUser(id: number, userDto: NewUser, kind: UserKind) {
+async function updateUser(
+  id: number,
+  userDto: NewUser,
+  userType: UserType,
+  personDto: IPerson | undefined,
+  companyDto: ICompany | undefined
+) {
   // Actualizar datos base del usuario
   const [record] = await db
     .update(user)
@@ -129,11 +155,11 @@ async function updateUser(id: number, userDto: NewUser, kind: UserKind) {
     .where(eq(user.id, id))
     .returning();
 
-  switch (kind.kind) {
+  switch (userType) {
     case "person": {
       const [personRecord] = await db
         .update(person)
-        .set(kind.person)
+        .set(personDto!)
         .where(eq(person.id, id))
         .returning({
           firstName: person.firstName,
@@ -147,7 +173,7 @@ async function updateUser(id: number, userDto: NewUser, kind: UserKind) {
     case "company": {
       const [companyRecord] = await db
         .update(company)
-        .set(kind.company)
+        .set(companyDto!)
         .where(eq(company.id, id))
         .returning({
           legalName: company.legalName,
@@ -159,7 +185,8 @@ async function updateUser(id: number, userDto: NewUser, kind: UserKind) {
 
     default: {
       // Exhaustividad a nivel de tipos
-      throw new Error("Unsupported user kind in updateUser");
+      const _exhaustive: never = userType;
+      throw new Error(`Unsupported user type: ${_exhaustive}`);
     }
   }
 }
@@ -167,19 +194,26 @@ async function updateUser(id: number, userDto: NewUser, kind: UserKind) {
 /**
  * Inserta un nuevo usuario y sus datos relacionados (persona o compañía).
  *
- * @param userDto - Datos base del usuario (incluye type: "P" | "C")
- * @param kind - Tipo de usuario (persona o compañía) y sus datos específicos
+ * @param userDto - Datos base del usuario (incluye type)
+ * @param userType - Tipo de usuario ("person" | "company")
+ * @param personDto - Datos de persona (si aplica)
+ * @param companyDto - Datos de compañía (si aplica)
  * @returns Usuario creado con sus datos relacionados
  */
-async function insertUser(userDto: NewUser, kind: UserKind) {
+async function insertUser(
+  userDto: NewUser,
+  userType: UserType,
+  personDto: IPerson | undefined,
+  companyDto: ICompany | undefined
+) {
   // Insertar datos base del usuario
   const [record] = await db.insert(user).values(userDto).returning();
 
-  switch (kind.kind) {
+  switch (userType) {
     case "person": {
       const [personRecord] = await db
         .insert(person)
-        .values({ id: record.id, ...kind.person })
+        .values({ id: record.id, ...personDto! })
         .returning({
           firstName: person.firstName,
           lastName: person.lastName,
@@ -192,7 +226,7 @@ async function insertUser(userDto: NewUser, kind: UserKind) {
     case "company": {
       const [companyRecord] = await db
         .insert(company)
-        .values({ id: record.id, ...kind.company })
+        .values({ id: record.id, ...companyDto! })
         .returning({
           legalName: company.legalName,
           tradeName: company.tradeName,
@@ -203,7 +237,8 @@ async function insertUser(userDto: NewUser, kind: UserKind) {
 
     default: {
       // Exhaustividad a nivel de tipos
-      throw new Error("Unsupported user kind in insertUser");
+      const _exhaustive: never = userType;
+      throw new Error(`Unsupported user type: ${_exhaustive}`);
     }
   }
 }
@@ -219,7 +254,7 @@ type IPerson = Omit<NewPerson, "id">;
 type ICompany = Omit<NewCompany, "id">;
 
 /**
- * Base de usuario sin el tipo "type" (P/C).
+ * Base de usuario sin el tipo "type" (se infiere automáticamente).
  */
 type UserBase = Omit<NewUser, "type">;
 
@@ -259,10 +294,3 @@ export interface IUserRecord extends Omit<User, "type"> {}
  * Tipo inferido del resultado de upsertUser.
  */
 export type IUpsertUser = Awaited<ReturnType<typeof upsertUser>>;
-
-/**
- * Union de tipos para representar un usuario con datos de persona o compañía.
- */
-type UserKind =
-  | { kind: "person"; person: IPerson }
-  | { kind: "company"; company: ICompany };

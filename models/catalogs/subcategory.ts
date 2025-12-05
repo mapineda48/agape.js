@@ -5,10 +5,10 @@ import { relations } from "drizzle-orm";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**
- * Modelo de subcategoría de inventario (Subcategory)
- * Representa una subcategoría asociada a una categoría de inventario.
+ * Modelo de subcategoría de catálogo (Subcategory)
+ * Representa una subcategoría asociada a una categoría de catálogo.
  */
-export const subcategory = schema.table("inventory_subcategories", {
+export const subcategory = schema.table("catalogs_subcategories", {
   /** Identificador único de la subcategoría */
   id: serial("id").primaryKey(),
   /** Nombre completo de la subcategoría */

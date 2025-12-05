@@ -63,7 +63,8 @@ describe("user service", () => {
       expect(result.id).toBe(created.id);
       expect(result.documentNumber).toBe("123456789");
       expect(result.email).toBe("john@example.com");
-      expect(result.type).toBe("P");
+      // El tipo ahora es el valor del enum ("person") en lugar de "P"
+      expect(result.type).toBe("person");
     });
 
     it("should return a user company by id", async () => {
@@ -99,7 +100,8 @@ describe("user service", () => {
       expect(result).toBeDefined();
       expect(result.id).toBe(created.id);
       expect(result.documentNumber).toBe("900123456");
-      expect(result.type).toBe("C");
+      // El tipo ahora es el valor del enum ("company") en lugar de "C"
+      expect(result.type).toBe("company");
     });
 
     it("should return undefined when user does not exist", async () => {
@@ -223,6 +225,87 @@ describe("user service", () => {
       ).rejects.toThrow(
         "User must be either a person or a company. Please provide either 'person' or 'company' data."
       );
+    });
+
+    it("should throw error when both person and company are provided", async () => {
+      const { upsertUser } = await import("./user");
+      const { upsertDocumentType } = await import("./documentType");
+
+      const [docType] = await upsertDocumentType({
+        name: "Documento Mixto",
+        code: "MX",
+        isEnabled: true,
+        appliesToPerson: true,
+        appliesToCompany: true,
+      });
+
+      await expect(
+        upsertUser({
+          documentTypeId: docType.id,
+          documentNumber: "MX123456",
+          person: {
+            firstName: "John",
+            lastName: "Doe",
+          },
+          company: {
+            legalName: "Acme Corp",
+          },
+        } as any)
+      ).rejects.toThrow(
+        "User cannot be both a person and a company. Provide only 'person' or 'company', not both."
+      );
+    });
+
+    it("should infer type as 'person' when person property is present", async () => {
+      const { upsertUser, getUserById } = await import("./user");
+      const { upsertDocumentType } = await import("./documentType");
+
+      const [docType] = await upsertDocumentType({
+        name: "Cedula Extranjera",
+        code: "CE",
+        isEnabled: true,
+        appliesToPerson: true,
+        appliesToCompany: false,
+      });
+
+      const result = await upsertUser({
+        documentTypeId: docType.id,
+        documentNumber: "CE123456",
+        person: {
+          firstName: "Maria",
+          lastName: "Garcia",
+        },
+      });
+
+      // Verificar que el tipo fue inferido correctamente
+      const fromDb = await getUserById(result.id);
+      expect(fromDb?.type).toBe("person");
+    });
+
+    it("should infer type as 'company' when company property is present", async () => {
+      const { upsertUser, getUserById } = await import("./user");
+      const { upsertDocumentType } = await import("./documentType");
+
+      const [docType] = await upsertDocumentType({
+        name: "NIT Empresarial",
+        code: "NE",
+        isEnabled: true,
+        appliesToPerson: false,
+        appliesToCompany: true,
+      });
+
+      const result = await upsertUser({
+        documentTypeId: docType.id,
+        documentNumber: "900999888",
+        company: {
+          legalName: "Tech Solutions SAS",
+          tradeName: "TechSol",
+        },
+      });
+
+      // Verificar que el tipo fue inferido correctamente
+      const fromDb = await getUserById(result.id);
+      expect(fromDb?.type).toBe("company");
     });
   });
 
@@ -379,6 +462,133 @@ describe("user service", () => {
 
       expect(fromDb).toBeDefined();
       expect(fromDb.isActive).toBe(false);
+    });
+
+    it("should maintain correct type after update", async () => {
+      const { upsertUser, getUserById } = await import("./user");
+      const { upsertDocumentType } = await import("./documentType");
+
+      const [docType] = await upsertDocumentType({
+        name: "CURP",
+        code: "CURP",
+        isEnabled: true,
+        appliesToPerson: true,
+        appliesToCompany: false,
+      });
+
+      // Crear usuario persona
+      const created = await upsertUser({
+        documentTypeId: docType.id,
+        documentNumber: "CURP123456",
+        person: {
+          firstName: "Carlos",
+          lastName: "Rodriguez",
+        },
+      });
+
+      // Verificar tipo inicial
+      let fromDb = await getUserById(created.id);
+      expect(fromDb?.type).toBe("person");
+
+      // Actualizar usuario (el tipo debe mantenerse como person)
+      await upsertUser({
+        id: created.id,
+        documentTypeId: docType.id,
+        documentNumber: "CURP123456",
+        email: "carlos@example.com",
+        person: {
+          firstName: "Carlos Alberto",
+          lastName: "Rodriguez",
+        },
+      });
+
+      // Verificar que el tipo se mantiene
+      fromDb = await getUserById(created.id);
+      expect(fromDb?.type).toBe("person");
+    });
+  });
+
+  describe("UserType enum validation", () => {
+    it("should only allow valid enum values from USER_TYPE_VALUES", async () => {
+      const { USER_TYPE_VALUES } = await import("#models/core/user");
+
+      expect(USER_TYPE_VALUES).toContain("person");
+      expect(USER_TYPE_VALUES).toContain("company");
+      expect(USER_TYPE_VALUES).toHaveLength(2);
+    });
+
+    it("should store the exact enum value in the database", async () => {
+      const { upsertUser, getUserById } = await import("./user");
+      const { upsertDocumentType } = await import("./documentType");
+
+      const [docType] = await upsertDocumentType({
+        name: "RFC",
+        code: "RFC",
+        isEnabled: true,
+        appliesToPerson: true,
+        appliesToCompany: true,
+      });
+
+      // Crear persona
+      const personUser = await upsertUser({
+        documentTypeId: docType.id,
+        documentNumber: "RFC001",
+        person: {
+          firstName: "Ana",
+          lastName: "Martinez",
+        },
+      });
+
+      // Crear compañía
+      const companyUser = await upsertUser({
+        documentTypeId: docType.id,
+        documentNumber: "RFC002",
+        company: {
+          legalName: "Empresa SA",
+        },
+      });
+
+      // Verificar valores exactos almacenados
+      const personFromDb = await getUserById(personUser.id);
+      const companyFromDb = await getUserById(companyUser.id);
+
+      expect(personFromDb?.type).toBe("person");
+      expect(companyFromDb?.type).toBe("company");
+    });
+
+    it("should not allow null values for entity properties when creating", async () => {
+      const { upsertUser } = await import("./user");
+      const { upsertDocumentType } = await import("./documentType");
+
+      const [docType] = await upsertDocumentType({
+        name: "SSN",
+        code: "SSN",
+        isEnabled: true,
+        appliesToPerson: true,
+        appliesToCompany: true,
+      });
+
+      // Intentar con person: null
+      await expect(
+        upsertUser({
+          documentTypeId: docType.id,
+          documentNumber: "SSN123",
+          person: null,
+        } as any)
+      ).rejects.toThrow(
+        "User must be either a person or a company. Please provide either 'person' or 'company' data."
+      );
+
+      // Intentar con company: null
+      await expect(
+        upsertUser({
+          documentTypeId: docType.id,
+          documentNumber: "SSN456",
+          company: null,
+        } as any)
+      ).rejects.toThrow(
+        "User must be either a person or a company. Please provide either 'person' or 'company' data."
+      );
     });
   });
 });

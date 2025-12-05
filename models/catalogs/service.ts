@@ -1,4 +1,3 @@
-// inventory/item_service.ts
 import { schema } from "../agape";
 import { integer, boolean, smallint } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
@@ -7,7 +6,7 @@ import { item } from "./item";
 /**
  * Detalle sólo para ítems de tipo servicio.
  */
-export const inventoryItemService = schema.table("inventory_item_service", {
+export const service = schema.table("catalogs_service", {
   /** FK al ítem maestro (1:1) */
   itemId: integer("item_id")
     .primaryKey()
@@ -20,9 +19,5 @@ export const inventoryItemService = schema.table("inventory_item_service", {
   isRecurring: boolean("is_recurring").notNull().default(false),
 });
 
-export type InventoryItemService = InferSelectModel<
-  typeof inventoryItemService
->;
-export type NewInventoryItemService = InferInsertModel<
-  typeof inventoryItemService
->;
+export type Service = InferSelectModel<typeof service>;
+export type NewService = InferInsertModel<typeof service>;

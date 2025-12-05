@@ -2,7 +2,7 @@ import { schema } from "../agape";
 import { serial, integer } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { inventoryMovement } from "./movement";
-import { item } from "./item";
+import { item } from "../catalogs/item";
 import { location } from "./location";
 import { decimal } from "../../lib/db/custom-types";
 

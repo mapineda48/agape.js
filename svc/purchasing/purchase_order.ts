@@ -1,5 +1,5 @@
 import { db } from "#lib/db";
-import { item } from "#models/inventory/item";
+import { item } from "#models/catalogs/item";
 import orderItem from "#models/purchasing/order_item";
 import purchaseOrder, {
   purchaseOrderStatusEnum,

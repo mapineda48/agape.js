@@ -17,11 +17,15 @@ import DateTime from "../../lib/utils/data/DateTime";
 import documentType from "./documentType";
 import person from "./person";
 import company from "./company";
+import { userTypeEnum, type UserType } from "./enums";
 
 /**
  * User (entidad genérica)
  * Representa una entidad que puede ser persona o empresa.
  * Centraliza la identidad y los datos de contacto básicos.
+ *
+ * Implementa el patrón Class Table Inheritance donde `user` es la tabla
+ * maestra y `person`/`company` son tablas de detalle especializadas.
  */
 export const user = schema.table(
   "user",
@@ -29,8 +33,11 @@ export const user = schema.table(
     /** Identificador único de la entidad */
     id: serial("id").primaryKey(),
 
-    /** Tipo de entidad: P | C (o valores similares) */
-    type: varchar("user_type", { length: 20 }).notNull(),
+    /**
+     * Tipo de entidad: "person" | "company"
+     * Determina qué tabla de detalle contiene la información específica.
+     */
+    type: userTypeEnum("user_type").notNull(),
 
     /** Tipo de documento asociado */
     documentTypeId: integer("document_type_id")
@@ -103,5 +110,8 @@ export const userRelations = relations(user, ({ one }) => ({
 
 export type User = InferSelectModel<typeof user>;
 export type NewUser = InferInsertModel<typeof user>;
+
+// Re-exportar el enum de tipo de usuario para facilitar el acceso
+export { type UserType, USER_TYPE_VALUES } from "./enums";
 
 export default user;
