@@ -194,5 +194,42 @@ describe("Select Components", () => {
         expect(onSubmit).toHaveBeenCalledWith({ count: 0 });
       });
     });
+
+    it("should fallback to 0 when option value is not a number", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <FormProvider state={{ count: 5 }}>
+          <Select.Int path="count" data-testid="select">
+            <option value="0">Zero</option>
+            <option value="abc">Invalid</option>
+          </Select.Int>
+        </FormProvider>
+      );
+
+      const select = screen.getByTestId("select") as HTMLSelectElement;
+      await user.selectOptions(select, "abc");
+
+      expect(select.value).toBe("0");
+    });
+
+    it("should call onChange with parsed number and option index", async () => {
+      const user = userEvent.setup();
+      const handleChange = vi.fn();
+
+      render(
+        <FormProvider state={{ count: 0 }}>
+          <Select.Int path="count" onChange={handleChange} data-testid="select">
+            <option value="0">Zero</option>
+            <option value="10">Ten</option>
+          </Select.Int>
+        </FormProvider>
+      );
+
+      const select = screen.getByTestId("select") as HTMLSelectElement;
+      await user.selectOptions(select, "10");
+
+      expect(handleChange).toHaveBeenCalledWith(10, 1);
+    });
   });
 });

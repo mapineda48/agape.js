@@ -4,6 +4,7 @@ import FormProvider from "./index";
 import PathProvider from "./paths";
 import * as Input from "./Input";
 import { Submit } from "./Submit";
+import { useInputArray } from "./hooks";
 import EventEmitter from "@/components/util/event-emitter";
 
 describe("PathProvider Nested Paths", () => {
@@ -71,6 +72,65 @@ describe("PathProvider Nested Paths", () => {
             name: "Alice",
           },
         },
+      });
+    });
+  });
+
+  it("should compose PathProvider with useInputArray and submit values", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    const Categories = () => {
+      const categories = useInputArray<{ name: string }[]>();
+
+      return (
+        <div>
+          {categories.map((_item, index) => (
+            <div key={index}>
+              <Input.Text
+                path="name"
+                data-testid={`category-${index}`}
+                aria-label={`Category ${index}`}
+              />
+            </div>
+          ))}
+          <button data-testid="add" onClick={() => categories.addItem({ name: "New" })}>
+            Add category
+          </button>
+        </div>
+      );
+    };
+
+    render(
+      <EventEmitter>
+        <FormProvider state={{ categories: [{ name: "A" }, { name: "B" }] }}>
+          <PathProvider value="categories">
+            <Categories />
+          </PathProvider>
+          <Submit onSubmit={onSubmit} data-testid="submit">
+            Submit
+          </Submit>
+        </FormProvider>
+      </EventEmitter>
+    );
+
+    const firstInput = screen.getByTestId("category-0") as HTMLInputElement;
+    await user.type(firstInput, "1");
+
+    await user.click(screen.getByTestId("add"));
+
+    const newInput = await screen.findByTestId("category-2");
+    await user.type(newInput as HTMLInputElement, " Added");
+
+    await user.click(screen.getByTestId("submit"));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({
+        categories: [
+          { name: "A1" },
+          { name: "B" },
+          { name: "New Added" },
+        ],
       });
     });
   });

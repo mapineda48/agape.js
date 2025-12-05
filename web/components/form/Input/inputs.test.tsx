@@ -341,4 +341,53 @@ describe("Extended Inputs", () => {
       expect(capturedState.count).toBe(42);
     });
   });
+
+  describe("Text Input flags", () => {
+    it("should render password input when password prop is true", () => {
+      render(
+        <FormProvider state={{ secret: "" }}>
+          <Input.Text path="secret" password data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      expect(input.type).toBe("password");
+    });
+
+    it("should render email input when email prop is true", () => {
+      render(
+        <FormProvider state={{ email: "" }}>
+          <Input.Text path="email" email data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      expect(input.type).toBe("email");
+    });
+
+    it("should materialize default value without user interaction", () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        capturedState = useAppSelector((state) => state.form.data);
+        return null;
+      };
+
+      render(
+        <FormProvider state={{}}>
+          <StateSpy />
+          <Input.Text
+            path="title"
+            value="Hello World"
+            materialize
+            data-testid="input"
+          />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      expect(input.value).toBe("Hello World");
+      expect(capturedState.title).toBe("Hello World");
+    });
+  });
 });

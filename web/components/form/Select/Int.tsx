@@ -13,7 +13,8 @@ export default function SelectInt(props: Props) {
       value={state as number}
       onChange={({ currentTarget }) => {
         const index = currentTarget.selectedIndex;
-        const value = parseInt(currentTarget.value) ?? 0;
+        const parsed = parseInt(currentTarget.value, 10);
+        const value = Number.isNaN(parsed) ? 0 : parsed;
 
         setState(value);
 
