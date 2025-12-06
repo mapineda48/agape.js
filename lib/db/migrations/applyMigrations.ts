@@ -192,13 +192,14 @@ async function loadMigrations(schemaName: string, skipSeeds = false) {
   // Build regex to replace placeholder schema for tenant
   const schemaRegex = toRegExp(schema);
 
-  const sqlFiles = await Array.fromAsync(
+  const allSqlFiles = await Array.fromAsync(
     glob("**/*.sql", { cwd: migrationsDir })
   );
 
-  if (skipSeeds) {
-    sqlFiles.filter((fileName) => !fileName.includes("_seed_"));
-  }
+  // Filter out seed files if skipSeeds is enabled
+  const sqlFiles = skipSeeds
+    ? allSqlFiles.filter((fileName) => !fileName.includes("_seed_"))
+    : allSqlFiles;
 
   // Map each file to a loader function
   const tasks = sqlFiles.sort().map((fileName) => {

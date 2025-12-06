@@ -46,9 +46,12 @@ describe("clientType service", () => {
       const result = await listClientTypes(true);
 
       expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBe(1);
-      expect(result[0].name).toBe("VIP");
-      expect(result[0].isEnabled).toBe(true);
+      // Ensure all results are enabled
+      expect(result.every((ct) => ct.isEnabled === true)).toBe(true);
+      // Ensure VIP (which is enabled) is in results
+      expect(result.some((ct) => ct.name === "VIP")).toBe(true);
+      // Ensure Regular (which is disabled) is NOT in results
+      expect(result.some((ct) => ct.name === "Regular")).toBe(false);
     });
 
     it("should return all client types when activeOnly is false", async () => {
