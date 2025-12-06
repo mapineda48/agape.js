@@ -15,12 +15,10 @@ export async function syncRootUserPg(
     return;
   }
 
-  const client = await pool.connect();
-
   try {
     const passwordHash = await hashPassword(password);
 
-    await client.query(`SELECT "${schemaName}"."sync_root_user"($1, $2);`, [
+    await pool.query(`SELECT "${schemaName}"."sync_root_user"($1, $2);`, [
       username,
       passwordHash,
     ]);
