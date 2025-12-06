@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import clsx from "clsx";
-import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+  BuildingOfficeIcon,
+} from "@heroicons/react/24/outline";
 import {
   listSuppliers,
   upsertSupplier,
@@ -10,6 +16,7 @@ import {
 import { listSupplierTypes } from "@agape/purchasing/supplier_type";
 import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
+import useInput from "@/components/form/Input/useInput";
 import * as Select from "@/components/form/Select";
 import CheckBox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
@@ -25,15 +32,18 @@ interface SupplierType {
 
 interface SupplierRow {
   id: number;
-  personId: number;
+  personId?: number | null;
+  companyId?: number | null;
   supplierTypeId: number;
   supplierTypeName?: string | null;
-  firstName: string;
-  lastName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  legalName?: string | null;
+  tradeName?: string | null;
   email: string;
   phone?: string | null;
   address?: string | null;
-  birthdate: DateTime | string;
+  birthdate?: DateTime | string | null;
   active: boolean;
 }
 
@@ -103,13 +113,13 @@ export default function SuppliersConfigurationPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">
             Proveedores
           </p>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
+          <h1 className="text-2xl font-semibold text-gray-900 mt-1">
             Catálogo de proveedores
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
+          <p className="text-sm text-gray-600 max-w-2xl">
             Crea, edita o desactiva proveedores. Se usan en órdenes de compra y
             negociaciones.
           </p>
@@ -158,66 +168,100 @@ export default function SuppliersConfigurationPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {suppliers.map((supplier) => (
-                  <tr
-                    key={supplier.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
-                  >
-                    <Td>
-                      <div className="font-semibold text-gray-900 dark:text-white">
-                        {supplier.firstName} {supplier.lastName}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        ID {supplier.id}
-                      </div>
-                    </Td>
-                    <Td>
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {supplier.email}
-                      </div>
-                      {supplier.phone ? (
-                        <div className="text-xs text-gray-500">
-                          {supplier.phone}
+                {suppliers.map((supplier) => {
+                  const isPerson = !!supplier.personId || !!supplier.firstName;
+                  const name = isPerson
+                    ? `${supplier.firstName} ${supplier.lastName}`
+                    : supplier.legalName || supplier.tradeName || "N/A";
+                  const subName =
+                    !isPerson && supplier.tradeName !== name
+                      ? supplier.tradeName
+                      : null;
+
+                  return (
+                    <tr
+                      key={supplier.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+                    >
+                      <Td>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={clsx(
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                              isPerson
+                                ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
+                                : "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300"
+                            )}
+                          >
+                            {isPerson ? (
+                              <UserIcon className="h-5 w-5" />
+                            ) : (
+                              <BuildingOfficeIcon className="h-5 w-5" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-white">
+                              {name}
+                            </div>
+                            {subName && (
+                              <div className="text-xs text-gray-500">
+                                {subName}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-500">
+                              ID {supplier.id}
+                            </div>
+                          </div>
                         </div>
-                      ) : null}
-                    </Td>
-                    <Td>
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
-                        {supplier.supplierTypeName || "Sin tipo"}
-                      </span>
-                    </Td>
-                    <Td>
-                      <span
-                        className={clsx(
-                          "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
-                          supplier.active
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
-                        )}
-                      >
-                        {supplier.active ? "Activo" : "Inactivo"}
-                      </span>
-                    </Td>
-                    <Td align="right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openEdit(supplier)}
-                          className="rounded-md p-2 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/40 transition-colors"
-                          title="Editar"
+                      </Td>
+                      <Td>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {supplier.email}
+                        </div>
+                        {supplier.phone ? (
+                          <div className="text-xs text-gray-500">
+                            {supplier.phone}
+                          </div>
+                        ) : null}
+                      </Td>
+                      <Td>
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
+                          {supplier.supplierTypeName || "Sin tipo"}
+                        </span>
+                      </Td>
+                      <Td>
+                        <span
+                          className={clsx(
+                            "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+                            supplier.active
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                              : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+                          )}
                         >
-                          <PencilIcon className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => confirmDelete(supplier)}
-                          className="rounded-md p-2 text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/40 transition-colors"
-                          title="Eliminar"
-                        >
-                          <TrashIcon className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </Td>
-                  </tr>
-                ))}
+                          {supplier.active ? "Activo" : "Inactivo"}
+                        </span>
+                      </Td>
+                      <Td align="right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openEdit(supplier)}
+                            className="rounded-md p-2 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/40 transition-colors"
+                            title="Editar"
+                          >
+                            <PencilIcon className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(supplier)}
+                            className="rounded-md p-2 text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/40 transition-colors"
+                            title="Eliminar"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </Td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -245,7 +289,11 @@ export default function SuppliersConfigurationPage() {
         title="Eliminar proveedor"
         message={
           confirmSupplier
-            ? `¿Deseas eliminar a ${confirmSupplier.firstName} ${confirmSupplier.lastName}?`
+            ? `¿Deseas eliminar a ${
+                confirmSupplier.firstName ||
+                confirmSupplier.legalName ||
+                "este proveedor"
+              }?`
             : ""
         }
         confirmText="Eliminar"
@@ -266,11 +314,16 @@ function SupplierForm({
   onClose: () => void;
   onSave: () => void;
 }) {
-  //const notification = useNotification();
-
-  const isEditing = !!supplier;
+  const isEditing = !!supplier?.id;
   const defaultType = supplierTypes[0]?.id ?? 0;
   const hasTypes = supplierTypes.length > 0;
+
+  // Inference logic
+  const isPerson = supplier
+    ? !!supplier.personId || !!supplier.firstName
+    : true;
+  const initialType = isPerson ? "person" : "company";
+
   const birthdateValue = supplier?.birthdate
     ? new DateTime(new Date(supplier.birthdate as any))
     : new DateTime();
@@ -279,33 +332,53 @@ function SupplierForm({
     id: supplier?.id,
     supplierTypeId: supplier?.supplierTypeId ?? defaultType,
     active: supplier?.active ?? true,
-    person: {
-      id: supplier?.personId,
-      firstName: supplier?.firstName ?? "",
-      lastName: supplier?.lastName ?? "",
-      email: supplier?.email ?? "",
-      phone: supplier?.phone ?? "",
-      address: supplier?.address ?? "",
-      birthdate: birthdateValue,
-    },
+    email: supplier?.email ?? "",
+    phone: supplier?.phone ?? "",
+    address: supplier?.address ?? "",
+    type: initialType,
+    // Conditional initial data
+    person:
+      initialType === "person"
+        ? {
+            firstName: supplier?.firstName ?? "",
+            lastName: supplier?.lastName ?? "",
+            birthdate: birthdateValue,
+          }
+        : undefined,
+    company:
+      initialType === "company"
+        ? {
+            legalName: supplier?.legalName ?? "",
+            tradeName: supplier?.tradeName ?? "",
+          }
+        : undefined,
   };
 
   async function handleSubmit(data: any) {
     try {
+      const isPersonType = data.type === "person";
       await upsertSupplier({
         id: data.id,
         supplierTypeId: Number(data.supplierTypeId),
         active: data.active,
         user: {
-          email: data.person.email,
-          phone: data.person.phone,
-          address: data.person.address,
-          person: {
-            ...data.person,
-            id: data.person.id ?? supplier?.personId,
-            birthdate: data.person.birthdate,
-          },
-        } as any,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          ...(isPersonType
+            ? {
+                person: {
+                  ...data.person,
+                  id: supplier?.personId, // Keep existing ID if updating
+                },
+              }
+            : {
+                company: {
+                  ...data.company,
+                  id: supplier?.companyId, // Keep existing ID if updating
+                },
+              }),
+        } as any, // Cast as any to satisfy compiler if types aren't perfectly aligned
       });
       await onSave();
       onClose();
@@ -317,30 +390,18 @@ function SupplierForm({
 
   return (
     <Form state={initialState}>
-      <div className="grid gap-4 p-6 md:grid-cols-2">
-        <PathProvider value="person">
-          <Field label="Nombre" description="Nombre legal del proveedor.">
-            <Input.Text
-              path="firstName"
-              required
-              placeholder="Ej: Juan"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-          </Field>
-          <Field label="Apellido">
-            <Input.Text
-              path="lastName"
-              required
-              placeholder="Ej: Pérez"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-          </Field>
-          <Field label="Correo">
+      <div className="grid gap-6 p-6">
+        {/* Type Switcher */}
+        <TypeSwitcher />
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Common Fields */}
+          <Field label="Correo electrónico">
             <Input.Text
               path="email"
               email
               required
-              placeholder="correo@proveedor.com"
+              placeholder="contacto@ejemplo.com"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </Field>
@@ -351,6 +412,10 @@ function SupplierForm({
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </Field>
+
+          {/* Conditional Fields */}
+          <ConditionalFields />
+
           <Field label="Dirección" className="md:col-span-2">
             <Input.Text
               path="address"
@@ -358,41 +423,38 @@ function SupplierForm({
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </Field>
-          <Field label="Fecha de nacimiento">
-            <Input.DateTime
-              path="birthdate"
+
+          <hr className="md:col-span-2 border-gray-200 dark:border-gray-700 my-2" />
+
+          <Field label="Tipo de clasificación">
+            <Select.Int
+              path="supplierTypeId"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
+              disabled={!hasTypes}
+            >
+              {hasTypes ? (
+                supplierTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))
+              ) : (
+                <option value="">Crea tipos en Configuración General</option>
+              )}
+            </Select.Int>
           </Field>
-        </PathProvider>
-        <Field label="Tipo de proveedor">
-          <Select.Int
-            path="supplierTypeId"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            disabled={!hasTypes}
-          >
-            {hasTypes ? (
-              supplierTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))
-            ) : (
-              <option value="">Crea tipos en Configuración General</option>
-            )}
-          </Select.Int>
-        </Field>
-        <Field label="Estado">
-          <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
-            <CheckBox
-              path="active"
-              className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-            />
-            <span className="text-sm text-gray-800 dark:text-gray-200">
-              Activo
-            </span>
-          </div>
-        </Field>
+          <Field label="Estado">
+            <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
+              <CheckBox
+                path="active"
+                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+              />
+              <span className="text-sm text-gray-800 dark:text-gray-200">
+                Activo
+              </span>
+            </div>
+          </Field>
+        </div>
       </div>
       <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 rounded-b-xl">
         <button
@@ -419,6 +481,98 @@ function SupplierForm({
   );
 }
 
+function TypeSwitcher() {
+  const [type, setType] = useInput("type", "person");
+
+  return (
+    <div className="flex justify-center pb-4">
+      <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+        <button
+          type="button"
+          onClick={() => setType("person")}
+          className={clsx(
+            "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",
+            type === "person"
+              ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
+          )}
+        >
+          <UserIcon className="w-4 h-4" />
+          Persona
+        </button>
+        <button
+          type="button"
+          onClick={() => setType("company")}
+          className={clsx(
+            "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",
+            type === "company"
+              ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
+          )}
+        >
+          <BuildingOfficeIcon className="w-4 h-4" />
+          Empresa
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConditionalFields() {
+  const [type] = useInput("type");
+
+  if (type === "company") {
+    // Company Fields
+    return (
+      <PathProvider value="company" autoCleanup>
+        <Field label="Razón Social">
+          <Input.Text
+            path="legalName"
+            required
+            placeholder="Ej: Soluciones Tecnológicas S.A. de C.V."
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          />
+        </Field>
+        <Field label="Nombre Comercial">
+          <Input.Text
+            path="tradeName"
+            placeholder="Ej: Soluciones Tech"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          />
+        </Field>
+      </PathProvider>
+    );
+  }
+
+  // Person Fields
+  return (
+    <PathProvider value="person" autoCleanup>
+      <Field label="Nombre">
+        <Input.Text
+          path="firstName"
+          required
+          placeholder="Ej: Juan"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </Field>
+      <Field label="Apellido">
+        <Input.Text
+          path="lastName"
+          required
+          placeholder="Ej: Pérez"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </Field>
+      <Field label="Fecha de nacimiento" className="md:col-span-2">
+        <Input.DateTime
+          path="birthdate"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </Field>
+    </PathProvider>
+  );
+}
+
 function Stat({
   label,
   value,
@@ -429,10 +583,8 @@ function Stat({
   tone: "indigo" | "green";
 }) {
   const tones: Record<"indigo" | "green", string> = {
-    indigo:
-      "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-800",
-    green:
-      "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-800",
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-100",
   };
   return (
     <div
