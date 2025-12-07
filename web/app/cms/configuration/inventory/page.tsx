@@ -20,7 +20,7 @@ import {
   listMovementTypes,
   upsertMovementType,
 } from "@agape/inventory/movementType";
-import Form from "@/components/form";
+import Form, { useInputArray } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import * as Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
@@ -555,6 +555,72 @@ function Field({
   );
 }
 
+function SubCategoriesManager() {
+  const subcategories = useInputArray<{
+    id?: number;
+    fullName: string;
+    isEnabled: boolean;
+  }>("subcategories");
+
+  return (
+    <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-900 dark:text-white">
+          Subcategorías
+        </label>
+        <button
+          type="button"
+          onClick={() =>
+            subcategories.addItem({
+              fullName: "",
+              isEnabled: true,
+            })
+          }
+          className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+        >
+          + Agregar subcategoría
+        </button>
+      </div>
+
+      <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+        {subcategories.map((item, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+          >
+            <div className="flex-1">
+              <Input.Text
+                path="fullName"
+                placeholder="Nombre de subcategoría"
+                className="w-full bg-transparent border-none text-sm focus:ring-0 p-0 text-gray-900 dark:text-white placeholder-gray-400"
+              />
+            </div>
+            <div className="flex items-center gap-2 border-l border-gray-200 dark:border-gray-700 pl-3">
+              <Checkbox
+                path="isEnabled"
+                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+              />
+              <button
+                type="button"
+                onClick={() => subcategories.removeItem(index)}
+                className="text-gray-400 hover:text-red-500 transition-colors"
+                title="Eliminar subcategoría"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+        {subcategories.length === 0 && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 italic text-center py-4 bg-gray-50 dark:bg-gray-800/20 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
+            No hay subcategorías asignadas
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function CategoryForm({
   category,
   onClose,
@@ -578,27 +644,31 @@ function CategoryForm({
 
   return (
     <Form state={initialState}>
-      <div className="space-y-4 p-5">
-        <label className="space-y-1.5 block">
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            Nombre de categoría
-          </span>
-          <Input.Text
-            path="fullName"
-            required
-            placeholder="Ej: Electrónica"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          />
-        </label>
-        <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
-          <Checkbox
-            path="isEnabled"
-            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-          />
-          <span className="text-sm text-gray-800 dark:text-gray-200">
-            Activa
-          </span>
+      <div className="space-y-5 p-5">
+        <div className="space-y-4">
+          <label className="space-y-1.5 block">
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              Nombre de categoría
+            </span>
+            <Input.Text
+              path="fullName"
+              required
+              placeholder="Ej: Electrónica"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </label>
+          <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
+            <Checkbox
+              path="isEnabled"
+              className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-800 dark:text-gray-200">
+              Activa
+            </span>
+          </div>
         </div>
+
+        <SubCategoriesManager />
       </div>
       <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 rounded-b-xl">
         <button
