@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type JSX,
   type ReactNode,
@@ -10,16 +11,16 @@ import React, {
 import ReactDOM from "react-dom";
 
 /**
- * Props "inyectadas" automáticamente.
+ * ----------------------------------------------------------------------
+ * TYPES
+ * ----------------------------------------------------------------------
  */
 export interface PortalInjectedProps {
   style?: React.CSSProperties;
   remove: () => void;
+  zIndex: number;
 }
 
-/**
- * Describir mejor que es el contenido de un portal.
- */
 export type PortalContentComponent<
   T extends PortalInjectedProps = PortalInjectedProps
 > = (props: T) => JSX.Element;
@@ -31,26 +32,37 @@ interface PortalItemEntry {
   key: string;
 }
 
-const PortalDispatchContext = React.createContext<PortalDispatcher>(() => {
-  console.warn(
-    "PortalDispatchContext not found. Ensure PortalProvider is higher up in the tree."
-  );
-});
+// Interfaz para comunicar el Provider con el Renderer sin causar re-renders
+interface PortalStore {
+  subscribe: (callback: () => void) => () => void;
+  getItems: () => PortalItemEntry[];
+  remove: (key: string) => void;
+}
 
 /**
- * Factory function to create a hook for a specific component.
- *
- * @example
- * const useModal = createPortalHook(MyModal);
- * // Dentro del componente:
- * const openModal = useModal();
- * openModal({ someProp: "value" });
+ * ----------------------------------------------------------------------
+ * CONTEXT & HOOKS
+ * ----------------------------------------------------------------------
+ */
+
+const PortalDispatchContext = React.createContext<PortalDispatcher | null>(
+  null
+);
+
+/**
+ * Crea un hook personalizado para abrir un componente específico en el portal.
  */
 export function createPortalHook<P extends object>(
   Component: React.ComponentType<P & PortalInjectedProps>
 ) {
   return function usePortalTrigger() {
     const spawn = useContext(PortalDispatchContext);
+
+    if (!spawn) {
+      throw new Error(
+        "Portal Context not found. Wrap your app in <PortalProvider>"
+      );
+    }
 
     return useCallback(
       (props: Omit<P, keyof PortalInjectedProps>) => {
@@ -63,43 +75,109 @@ export function createPortalHook<P extends object>(
   };
 }
 
+/**
+ * ----------------------------------------------------------------------
+ * PROVIDER (Optimized)
+ * ----------------------------------------------------------------------
+ */
+
 export default function PortalProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<PortalItemEntry[]>([]);
+  // 1. PERFORMANCE: Usamos useRef para mantener el estado.
+  // Cambiar 'itemsRef' no provoca re-renderizado de este Provider ni de sus 'children'.
+  const itemsRef = useRef<PortalItemEntry[]>([]);
 
-  // 'spawn' es más descriptivo que 'push' para UI (generar/engendrar una instancia)
-  const spawn: PortalDispatcher = useCallback((Component) => {
-    setItems((prev) => [...prev, { Component, key: crypto.randomUUID() }]);
+  // Mantenemos una lista de suscriptores (el Renderer)
+  const listenersRef = useRef<Set<() => void>>(new Set());
+
+  // Notifica a los suscriptores (el Renderer) que algo cambió
+  const notify = useCallback(() => {
+    listenersRef.current.forEach((cb) => cb());
   }, []);
 
-  const remove = useCallback((key: string) => {
-    setItems((prev) => prev.filter((item) => item.key !== key));
-  }, []);
+  // Función estable para eliminar items
+  const remove = useCallback(
+    (key: string) => {
+      itemsRef.current = itemsRef.current.filter((item) => item.key !== key);
+      notify();
+    },
+    [notify]
+  );
+
+  // Función estable para crear items (expuesta al contexto)
+  const spawn: PortalDispatcher = useCallback(
+    (Component) => {
+      const key = crypto.randomUUID();
+      itemsRef.current = [...itemsRef.current, { Component, key }];
+      notify();
+    },
+    [notify]
+  );
+
+  // Objeto de comunicación interna (no se expone al contexto público)
+  // Usamos useRef para que la referencia del objeto store sea estable entre renders
+  const store = useRef<PortalStore>({
+    subscribe: (cb) => {
+      listenersRef.current.add(cb);
+      return () => listenersRef.current.delete(cb);
+    },
+    getItems: () => itemsRef.current,
+    remove,
+  }).current;
 
   return (
     <PortalDispatchContext.Provider value={spawn}>
       {children}
-      <PortalRenderer items={items} remove={remove} />
+      {/* El Renderer es el único que se enterará de los cambios */}
+      <PortalRenderer store={store} />
     </PortalDispatchContext.Provider>
   );
 }
 
 /**
- * Renombrado a 'Renderer' ya que es el encargado
- * de pintar la lista en el DOM real.
+ * ----------------------------------------------------------------------
+ * RENDERER (Isolated)
+ * ----------------------------------------------------------------------
  */
-function PortalRenderer({
-  items,
-  remove,
-}: {
-  items: PortalItemEntry[];
-  remove: (key: string) => void;
-}) {
+
+function PortalRenderer({ store }: { store: PortalStore }) {
+  // Estado local SOLO para este componente.
+  // Cuando se actualiza, solo se repinta este fragmento, no toda la App.
+  const [items, setItems] = useState<PortalItemEntry[]>(store.getItems());
   const [mounted, setMounted] = useState(false);
 
+  // Efecto 1: Suscripción al Store
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
-  }, []);
+    // Nos suscribimos a cambios en el ref del Provider
+    const unsubscribe = store.subscribe(() => {
+      // Sincronizamos el estado local con el ref
+      setItems(store.getItems());
+    });
+    return () => {
+      setMounted(false);
+      unsubscribe();
+    };
+  }, [store]);
+
+  // Efecto 2: SUGERENCIA - Scroll Lock
+  // Bloquea el scroll del body cuando hay items abiertos
+  useEffect(() => {
+    if (!mounted || typeof document === "undefined") return;
+
+    const body = document.body;
+    const hasItems = items.length > 0;
+
+    if (hasItems) {
+      // Guardamos el estilo original si es necesario,
+      // o simplemente forzamos hidden
+      const originalOverflow = body.style.overflow;
+      body.style.overflow = "hidden";
+
+      return () => {
+        body.style.overflow = originalOverflow;
+      };
+    }
+  }, [items.length, mounted]);
 
   if (!mounted || typeof document === "undefined") return null;
   if (items.length === 0) return null;
@@ -109,8 +187,9 @@ function PortalRenderer({
       {items.map(({ Component, key }, index) => (
         <Component
           key={key}
-          style={{ zIndex: 1500 + index * 100 }}
-          remove={() => remove(key)}
+          zIndex={1500 + index * 100} // Pasamos zIndex explícito
+          style={{ zIndex: 1500 + index * 100 }} // Opcional: mantén compatibilidad
+          remove={() => store.remove(key)}
         />
       ))}
     </Fragment>,
