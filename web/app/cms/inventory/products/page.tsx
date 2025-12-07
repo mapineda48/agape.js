@@ -4,6 +4,7 @@ import {
   type ListItemsParams as GetItemsParams,
   type ListItemItem as GetItem,
   type ListItemsResult as GetItemsResult,
+  type ItemType,
 } from "@agape/catalogs/item";
 
 import { listCategories as findAll } from "@agape/inventory/category";
@@ -14,7 +15,7 @@ import { debounce } from "@/utils/debounce";
 import { Pagination } from "../Pagination";
 import Decimal from "@utils/data/Decimal";
 
-const PAGE_SIZE = 12; // Increased page size for grid view
+const PAGE_SIZE = 12;
 
 type CategoryWithSubs = Awaited<ReturnType<typeof findAll>>[number];
 
@@ -38,7 +39,7 @@ export async function onInit() {
   };
 }
 
-export default function Inventory(props: Props) {
+export default function CatalogPage(props: Props) {
   const notify = useNotificacion();
   const { navigate } = useRouter();
 
@@ -56,7 +57,6 @@ export default function Inventory(props: Props) {
       };
     });
 
-  // Local state for price inputs to avoid excessive updates
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({
     min: "",
     max: "",
@@ -70,7 +70,7 @@ export default function Inventory(props: Props) {
       filters: {
         ...filters,
         ...newFilters,
-        pageIndex: 0, // Reset to first page on filter change
+        pageIndex: 0,
         includeTotalCount: true,
       },
     });
@@ -119,10 +119,10 @@ export default function Inventory(props: Props) {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                Inventario
+                Catalogo
               </h1>
               <p className="text-gray-500 mt-1">
-                Gestiona tus productos, precios y existencias.
+                Gestiona tus productos y servicios.
               </p>
             </div>
             <button
@@ -141,7 +141,7 @@ export default function Inventory(props: Props) {
                   clipRule="evenodd"
                 />
               </svg>
-              Nuevo Producto
+              Nuevo Item
             </button>
           </div>
 
@@ -166,16 +166,53 @@ export default function Inventory(props: Props) {
                 </div>
                 <input
                   type="text"
-                  placeholder="Buscar productos..."
+                  placeholder="Buscar en catalogo..."
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition shadow-sm"
                   onChange={(e) => debouncedSearch(e.target.value)}
                 />
               </div>
 
+              {/* Item Type Filter */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                  Tipo
+                </h3>
+                <div className="space-y-2">
+                  <TypeFilterButton
+                    label="Todos"
+                    icon={null}
+                    isActive={filters.type === undefined}
+                    onClick={() => updateFilter({ type: undefined })}
+                  />
+                  <TypeFilterButton
+                    label="Productos"
+                    icon={
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    }
+                    isActive={filters.type === "good"}
+                    onClick={() => updateFilter({ type: "good" })}
+                    color="blue"
+                  />
+                  <TypeFilterButton
+                    label="Servicios"
+                    icon={
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    }
+                    isActive={filters.type === "service"}
+                    onClick={() => updateFilter({ type: "service" })}
+                    color="purple"
+                  />
+                </div>
+              </div>
+
               {/* Categories */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                  Categorías
+                  Categorias
                 </h3>
                 <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
                   <div
@@ -199,9 +236,7 @@ export default function Inventory(props: Props) {
                         onClick={() => updateFilter({ categoryId: cat.id })}
                       >
                         <span>{cat.fullName}</span>
-                        {/* Optional: Show count if available */}
                       </div>
-                      {/* Subcategories could be nested here if needed */}
                     </div>
                   ))}
                 </div>
@@ -250,7 +285,7 @@ export default function Inventory(props: Props) {
               {/* Rating */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                  Calificación
+                  Calificacion
                 </h3>
                 <div className="space-y-1">
                   {[5, 4, 3, 2, 1].map((star) => (
@@ -283,7 +318,7 @@ export default function Inventory(props: Props) {
                         ))}
                       </div>
                       <span className="ml-2 text-sm text-gray-600">
-                        {star === 5 ? "" : "& más"}
+                        {star === 5 ? "" : "& mas"}
                       </span>
                     </div>
                   ))}
@@ -326,7 +361,7 @@ export default function Inventory(props: Props) {
               </div>
             </aside>
 
-            {/* Product Grid */}
+            {/* Item Grid */}
             <div className="flex-1">
               {items.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
@@ -346,16 +381,16 @@ export default function Inventory(props: Props) {
                     />
                   </svg>
                   <h3 className="mt-2 text-sm font-medium text-gray-900">
-                    No se encontraron productos
+                    No se encontraron items
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Intenta ajustar los filtros o tu búsqueda.
+                    Intenta ajustar los filtros o tu busqueda.
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                   {items.map((item) => (
-                    <ProductCard
+                    <ItemCard
                       key={item.id}
                       item={item}
                       onEdit={() => {
@@ -393,9 +428,37 @@ export default function Inventory(props: Props) {
   );
 }
 
-function ProductCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
+function TypeFilterButton(props: {
+  label: string;
+  icon: React.ReactNode;
+  isActive: boolean;
+  onClick: () => void;
+  color?: "blue" | "purple";
+}) {
+  const activeClass = props.color === "purple"
+    ? "bg-purple-50 text-purple-700 border-purple-200"
+    : "bg-blue-50 text-blue-700 border-blue-200";
+
+  return (
+    <button
+      type="button"
+      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
+        props.isActive
+          ? activeClass
+          : "text-gray-600 hover:bg-gray-100 border-transparent"
+      }`}
+      onClick={props.onClick}
+    >
+      {props.icon}
+      <span>{props.label}</span>
+    </button>
+  );
+}
+
+function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
   const images = item.images as string[];
   const image = images && images.length > 0 ? images[0] : null;
+  const isService = item.type === "service";
 
   return (
     <div
@@ -412,21 +475,42 @@ function ProductCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <svg
-              className="h-12 w-12"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            {isService ? (
+              <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            )}
           </div>
         )}
+        <div className="absolute top-3 left-3">
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-md ${
+              isService
+                ? "bg-purple-100/90 text-purple-800"
+                : "bg-blue-100/90 text-blue-800"
+            }`}
+          >
+            {isService ? (
+              <>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Servicio
+              </>
+            ) : (
+              <>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                Producto
+              </>
+            )}
+          </span>
+        </div>
         <div className="absolute top-3 right-3">
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-md ${
@@ -443,8 +527,10 @@ function ProductCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-2">
-          <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">
-            {item.category}
+          <p className={`text-xs font-medium uppercase tracking-wide ${
+            isService ? "text-purple-600" : "text-blue-600"
+          }`}>
+            {item.category || (isService ? "Servicio" : "Producto")}
           </p>
           <div className="flex items-center">
             <svg
@@ -460,7 +546,9 @@ function ProductCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
             </span>
           </div>
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+        <h3 className={`text-lg font-bold text-gray-900 mb-2 line-clamp-2 transition-colors ${
+          isService ? "group-hover:text-purple-600" : "group-hover:text-blue-600"
+        }`}>
           {item.fullName}
         </h3>
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
@@ -468,7 +556,11 @@ function ProductCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
             ${item.basePrice.toString()}
           </span>
           <button
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+            className={`text-sm font-medium transition-colors ${
+              isService
+                ? "text-purple-600 hover:text-purple-800"
+                : "text-blue-600 hover:text-blue-800"
+            }`}
             onClick={(e) => {
               e.stopPropagation();
               onEdit();

@@ -4,7 +4,6 @@ import {
   type NewItem,
   type Item,
   type ItemType,
-  ITEM_TYPE_VALUES,
 } from "#models/catalogs/item";
 import { inventoryItem, type NewInventoryItem } from "#models/inventory/item";
 import { service, type NewService } from "#models/catalogs/service";
@@ -14,22 +13,57 @@ import { and, count, eq, gte, lte, sql } from "drizzle-orm";
 import Decimal from "#utils/data/Decimal";
 
 /**
- * Obtiene un ítem por su ID.
+ * Obtiene un ítem por su ID, incluyendo los detalles según su tipo (good o service).
  *
  * @param id - Identificador único del ítem
- * @returns Ítem encontrado o undefined si no existe
+ * @returns Ítem encontrado con sus detalles o undefined si no existe
  *
  * @example
  * ```ts
  * const item = await getItemById(1);
  * if (item) {
- *   console.log(item.code);
+ *   if (item.good) {
+ *     console.log("Es un producto:", item.good.uomId);
+ *   } else if (item.service) {
+ *     console.log("Es un servicio:", item.service.durationMinutes);
+ *   }
  * }
  * ```
  */
-export async function getItemById(id: number) {
+export async function getItemById(id: number): Promise<IItemRecord | undefined> {
   const [record] = await db.select().from(item).where(eq(item.id, id));
-  return record;
+
+  if (!record) {
+    return undefined;
+  }
+
+  if (record.type === "good") {
+    const [goodRecord] = await db
+      .select({
+        uomId: inventoryItem.uomId,
+        minStock: inventoryItem.minStock,
+        maxStock: inventoryItem.maxStock,
+        reorderPoint: inventoryItem.reorderPoint,
+      })
+      .from(inventoryItem)
+      .where(eq(inventoryItem.itemId, id));
+
+    return { ...record, good: goodRecord } as IItemRecord;
+  }
+
+  if (record.type === "service") {
+    const [serviceRecord] = await db
+      .select({
+        durationMinutes: service.durationMinutes,
+        isRecurring: service.isRecurring,
+      })
+      .from(service)
+      .where(eq(service.itemId, id));
+
+    return { ...record, service: serviceRecord } as IItemRecord;
+  }
+
+  return record as IItemRecord;
 }
 
 /**
@@ -519,10 +553,14 @@ export interface IItemService extends ItemBase {
 export type IItem = IItemGood | IItemService;
 
 /**
- * Interfaz para un registro de ítem leído de la BD.
- * (usa `Item` en vez de `NewItem`)
+ * Interfaz para un registro de ítem leído de la BD con sus detalles.
+ * Incluye good O service según el tipo del ítem.
  */
-export interface IItemRecord extends Omit<Item, "type"> {}
+export type IItemRecord = Item & (
+  | { good: IGood; service?: never }
+  | { service: IService; good?: never }
+  | { good?: never; service?: never }
+);
 
 /**
  * Tipo inferido del resultado de upsertItem.
