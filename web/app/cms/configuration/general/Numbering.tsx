@@ -83,19 +83,15 @@ function SeriesForm({
     startNumber: series?.startNumber ?? 1,
     endNumber: series?.endNumber ?? 999999,
     currentNumber: series?.currentNumber, // Optional in UI, handled by backend on create
-    validFrom: series?.validFrom ? new Date(series.validFrom) : new Date(),
-    validTo: series?.validTo ? new Date(series.validTo) : undefined,
+    validFrom: series?.validFrom,
+    validTo: series?.validTo,
     isActive: series?.isActive ?? true,
     isDefault: series?.isDefault ?? false,
   };
 
   async function handleSubmit(data: typeof initialState) {
     try {
-      await upsertDocumentSeries({
-        ...data,
-        validFrom: data.validFrom.toISOString() as any, // Cast for simplicity with DateTime handling
-        validTo: data.validTo ? (data.validTo.toISOString() as any) : undefined,
-      } as any);
+      await upsertDocumentSeries(data);
       await onSave();
       onClose();
     } catch (error) {
@@ -159,7 +155,7 @@ function SeriesForm({
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               Válido desde
             </span>
-            <Input.Date
+            <Input.DateTime
               path="validFrom"
               required
               className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
@@ -169,7 +165,7 @@ function SeriesForm({
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               Válido hasta
             </span>
-            <Input.Date
+            <Input.DateTime
               path="validTo"
               className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
             />
@@ -237,7 +233,7 @@ function DocumentTypeModalWrapper(
       <DocumentTypeForm
         item={props.item}
         onSave={props.onSave}
-        onClose={() => props.close()}
+        onClose={() => {}}
       />
     </PortalModal>
   );
@@ -505,7 +501,7 @@ function FilterModalWrapper(
       <FilterForm
         search={props.search}
         onApply={props.onApply}
-        onClose={() => props.close()}
+        onClose={() => {}}
       />
     </PortalModal>
   );
