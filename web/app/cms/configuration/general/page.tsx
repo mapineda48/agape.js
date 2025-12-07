@@ -18,6 +18,7 @@ import {
 } from "@/components/util/portal";
 import PortalModal from "@/components/ui/PortalModal";
 import { useConfirmModal } from "@/components/ui/PortalConfirm";
+import NumberingMethods from "./Numbering";
 
 interface ClientType {
   id: number;
@@ -110,8 +111,9 @@ export default function GeneralConfigurationPage(props: {
               Catálogo maestro de CRM
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 max-w-2xl">
-              Administra los tipos de cliente. Los cambios se reflejan en
-              formularios y flujos de alta de manera inmediata.
+              Administra los tipos de cliente y métodos de numeración. Los
+              cambios se reflejan en formularios y flujos de alta de manera
+              inmediata.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -131,7 +133,7 @@ export default function GeneralConfigurationPage(props: {
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 xl:grid-cols-2">
         <TypePanel
           title="Tipos de Cliente"
           description="Estados que se usan en formularios y embudos de CRM."
@@ -155,6 +157,8 @@ export default function GeneralConfigurationPage(props: {
             ))}
           </div>
         </TypePanel>
+
+        <NumberingMethods />
       </div>
     </div>
   );
