@@ -443,7 +443,7 @@ describe("FormProvider", () => {
     it("should use default checkbox value when state is empty", () => {
       render(
         <FormProvider>
-          <Checkbox path="enabled" checked={true} data-testid="checkbox" />
+          <Checkbox path="enabled" defaultChecked={true} data-testid="checkbox" />
         </FormProvider>
       );
 

@@ -2,20 +2,23 @@ import { type JSX } from "react";
 import useInput from "./useInput";
 
 export default function InputInt(props: Props) {
-  const { path, materialize, autoCleanup, ...core } = props;
+  const { path, materialize, autoCleanup, nullable, ...core } = props;
 
-  const [state, setState] = useInput(path, 0, { materialize, autoCleanup });
+  const defaultValue = nullable ? null : 0;
+  const [state, setState] = useInput(path, defaultValue, { materialize, autoCleanup });
+
+  const displayValue = state === null || Number.isNaN(state as number) ? "" : (state as number);
 
   return (
     <input
       {...core}
       type="number"
-      value={Number.isNaN(state as number) ? "" : (state as number)}
+      value={displayValue}
       onChange={({ currentTarget }) => {
         const raw = currentTarget.value;
-        // Empty string means cleared, reset to 0
+        // Empty string means cleared
         if (raw === "") {
-          setState(0);
+          setState(nullable ? null : 0);
           return;
         }
         // Allow intermediate states like "-" while typing by checking if it's a valid number
@@ -34,6 +37,8 @@ interface Props extends Core {
   materialize?: boolean;
   /** If true, the value will be removed from the store when this input unmounts */
   autoCleanup?: boolean;
+  /** If true, empty input will set null instead of 0 */
+  nullable?: boolean;
 }
 
 type Core = Omit<

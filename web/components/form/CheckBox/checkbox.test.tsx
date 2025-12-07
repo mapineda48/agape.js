@@ -106,7 +106,7 @@ describe("Checkbox Component", () => {
       <SubmitWrapper>
         <Checkbox
           path="isActive"
-          checked={true}
+          defaultChecked={true}
           materialize
           data-testid="checkbox"
         />
@@ -121,6 +121,53 @@ describe("Checkbox Component", () => {
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith({ isActive: true });
+    });
+  });
+
+  it("should exclude untouched field without materialize from submit payload", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <SubmitWrapper>
+        <Checkbox path="untouchedField" data-testid="checkbox" />
+        <Submit onSubmit={onSubmit} data-testid="submit">
+          Submit
+        </Submit>
+      </SubmitWrapper>
+    );
+
+    const submit = screen.getByTestId("submit");
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({});
+      expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("untouchedField");
+    });
+  });
+
+  it("should include touched field without materialize in submit payload", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <SubmitWrapper>
+        <Checkbox path="touchedField" data-testid="checkbox" />
+        <Submit onSubmit={onSubmit} data-testid="submit">
+          Submit
+        </Submit>
+      </SubmitWrapper>
+    );
+
+    const checkbox = screen.getByTestId("checkbox");
+    const submit = screen.getByTestId("submit");
+
+    // Touch the checkbox (toggle it)
+    await user.click(checkbox);
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ touchedField: true });
     });
   });
 });

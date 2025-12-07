@@ -216,14 +216,14 @@ Los tests confirman que el estado en Redux contiene instancias reales de `File`.
 import Checkbox from "./CheckBox";
 
 <Checkbox path="enabled" />
-<Checkbox path="termsAccepted" checked={true} materialize />
+<Checkbox path="termsAccepted" defaultChecked={true} materialize />
 ```
 
 - Usa `type="checkbox"`.
 - Props:
 
   - `path: string | Path`
-  - `checked?: boolean` → valor inicial por defecto (`false` si no se pasa).
+  - `defaultChecked?: boolean` → valor inicial por defecto (`false` si no se pasa).
   - `materialize?: boolean` → si quieres que el valor por defecto se incluya siempre en el payload, incluso si el usuario no toca el checkbox.
 
 ---

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FormProvider from "../index";
 import * as Input from "./index";
@@ -214,6 +214,17 @@ describe("Extended Inputs", () => {
       expect(input.value).toBe("0");
     });
 
+    it("should initialize with empty string when nullable", () => {
+      render(
+        <FormProvider state={{}}>
+          <Input.Float path="value" nullable data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      expect(input.value).toBe("");
+    });
+
     it("should handle empty input by storing 0 instead of NaN", async () => {
       let capturedState: any;
 
@@ -236,6 +247,29 @@ describe("Extended Inputs", () => {
       // Should store 0 instead of NaN
       expect(capturedState.value).toBe(0);
       expect(Number.isNaN(capturedState.value)).toBe(false);
+    });
+
+    it("should handle empty input by storing null when nullable", async () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ value: 10 }}>
+          <StateSpy />
+          <Input.Float path="value" nullable data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "" } });
+
+      // Should store null instead of 0
+      expect(capturedState.value).toBe(null);
     });
 
     it("should handle valid float input correctly", async () => {
@@ -273,6 +307,17 @@ describe("Extended Inputs", () => {
       expect(input.value).toBe("0");
     });
 
+    it("should initialize with empty string when nullable", () => {
+      render(
+        <FormProvider state={{}}>
+          <Input.Int path="count" nullable data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      expect(input.value).toBe("");
+    });
+
     it("should handle empty input by storing 0 instead of NaN", async () => {
       let capturedState: any;
 
@@ -295,6 +340,29 @@ describe("Extended Inputs", () => {
       // Should store 0 instead of NaN
       expect(capturedState.count).toBe(0);
       expect(Number.isNaN(capturedState.count)).toBe(false);
+    });
+
+    it("should handle empty input by storing null when nullable", async () => {
+      let capturedState: any;
+
+      const StateSpy = () => {
+        const formData = useAppSelector((state) => state.form.data);
+        capturedState = formData;
+        return null;
+      };
+
+      render(
+        <FormProvider state={{ count: 10 }}>
+          <StateSpy />
+          <Input.Int path="count" nullable data-testid="input" />
+        </FormProvider>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "" } });
+
+      // Should store null instead of 0
+      expect(capturedState.count).toBe(null);
     });
 
     it("should handle valid int input correctly", async () => {
@@ -388,6 +456,139 @@ describe("Extended Inputs", () => {
       const input = screen.getByTestId("input") as HTMLInputElement;
       expect(input.value).toBe("Hello World");
       expect(capturedState.title).toBe("Hello World");
+    });
+  });
+
+  describe("Untouched fields without materialize", () => {
+    it("should exclude untouched Int field without materialize from submit payload", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const { Submit } = await import("../Submit");
+
+      render(
+        <EventEmitter>
+          <FormProvider>
+            <Input.Int path="untouchedCount" data-testid="input" />
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      const submit = screen.getByTestId("submit");
+      await user.click(submit);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({});
+        expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("untouchedCount");
+      });
+    });
+
+    it("should include touched Int field without materialize in submit payload", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const { Submit } = await import("../Submit");
+
+      render(
+        <EventEmitter>
+          <FormProvider>
+            <Input.Int path="touchedCount" data-testid="input" />
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      const input = screen.getByTestId("input") as HTMLInputElement;
+      const submit = screen.getByTestId("submit");
+
+      fireEvent.change(input, { target: { value: "42" } });
+      await user.click(submit);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({ touchedCount: 42 });
+      });
+    });
+
+    it("should exclude untouched Float field without materialize from submit payload", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const { Submit } = await import("../Submit");
+
+      render(
+        <EventEmitter>
+          <FormProvider>
+            <Input.Float path="untouchedPrice" data-testid="input" />
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      const submit = screen.getByTestId("submit");
+      await user.click(submit);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({});
+        expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("untouchedPrice");
+      });
+    });
+
+    it("should exclude untouched Text field without materialize from submit payload", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const { Submit } = await import("../Submit");
+
+      render(
+        <EventEmitter>
+          <FormProvider>
+            <Input.Text path="untouchedName" data-testid="input" />
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      const submit = screen.getByTestId("submit");
+      await user.click(submit);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({});
+        expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("untouchedName");
+      });
+    });
+
+    it("should include Int field with materialize in submit payload even when untouched", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const { Submit } = await import("../Submit");
+
+      render(
+        <EventEmitter>
+          <FormProvider>
+            <Input.Int path="count" materialize data-testid="input" />
+            <Submit onSubmit={onSubmit} data-testid="submit">
+              Submit
+            </Submit>
+          </FormProvider>
+        </EventEmitter>
+      );
+
+      const submit = screen.getByTestId("submit");
+      await user.click(submit);
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({ count: 0 });
+      });
     });
   });
 });

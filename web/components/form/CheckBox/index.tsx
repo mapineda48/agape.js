@@ -15,9 +15,9 @@ import useInput from "../Input/useInput";
  * If true, the value will be removed from the store when this input unmounts.
  */
 export default function Checkbox(props: Props) {
-  const { path, checked = false, materialize, autoCleanup, ...core } = props;
+  const { path, defaultChecked = false, materialize, autoCleanup, ...core } = props;
 
-  const [state, setState] = useInput(path, checked, {
+  const [state, setState] = useInput(path, defaultChecked, {
     materialize,
     autoCleanup,
   });
@@ -34,6 +34,8 @@ export default function Checkbox(props: Props) {
 
 interface Props extends Core {
   path: string;
+  /** Default checked state when no value exists in the store */
+  defaultChecked?: boolean;
   materialize?: boolean;
   /** If true, the value will be removed from the store when this input unmounts */
   autoCleanup?: boolean;
@@ -41,5 +43,5 @@ interface Props extends Core {
 
 type Core = Omit<
   JSX.IntrinsicElements["input"],
-  "value" | "name" | "onChange" | "type"
+  "value" | "name" | "onChange" | "type" | "checked" | "defaultChecked"
 >;
