@@ -51,7 +51,7 @@ export default function Notification(props: NotificationProps) {
     // Small delay to allow mounting before animating in
     const enterTimeout = setTimeout(() => setVisible(true), 50);
 
-    let exitTimeout: NodeJS.Timeout | undefined;
+    let exitTimeout: number | undefined;
     if (duration && duration > 0) {
       exitTimeout = setTimeout(() => handleClose(), duration);
     }

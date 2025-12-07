@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNotificacion } from "@/components/ui/notification";
 import type { ReactNode } from "react";
 import clsx from "clsx";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -57,6 +58,7 @@ export default function GeneralConfigurationPage(props: {
   clientTypes: ClientType[];
   supplierTypes: SupplierType[];
 }) {
+  const notify = useNotificacion();
   const [clientTypes, setClientTypes] = useState<ClientType[]>(
     props.clientTypes
   );
@@ -127,7 +129,7 @@ export default function GeneralConfigurationPage(props: {
       setConfirmState(null);
     } catch (error) {
       console.error("Error deleting type:", error);
-      alert("Error al eliminar el registro");
+      notify({ payload: "Error al eliminar el registro", type: "error" });
     }
   }
 
@@ -278,6 +280,7 @@ interface ClientTypeFormProps {
 }
 
 function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
+  const notify = useNotificacion();
   const isEditing = !!item;
   const initialState = item || { name: "", isEnabled: false };
 
@@ -292,7 +295,7 @@ function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
       onClose();
     } catch (error) {
       console.error("Error saving client type:", error);
-      alert("Error al guardar el tipo de cliente");
+      notify({ payload: "Error al guardar el tipo de cliente", type: "error" });
     }
   }
 
@@ -353,6 +356,7 @@ interface SupplierTypeFormProps {
 }
 
 function SupplierTypeForm({ item, onClose, onSave }: SupplierTypeFormProps) {
+  const notify = useNotificacion();
   const isEditing = !!item;
   const initialState = item || { name: "" };
 
@@ -367,7 +371,10 @@ function SupplierTypeForm({ item, onClose, onSave }: SupplierTypeFormProps) {
       onClose();
     } catch (error) {
       console.error("Error saving supplier type:", error);
-      alert("Error al guardar el tipo de proveedor");
+      notify({
+        payload: "Error al guardar el tipo de proveedor",
+        type: "error",
+      });
     }
   }
 

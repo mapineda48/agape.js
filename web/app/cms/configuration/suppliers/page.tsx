@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNotificacion } from "@/components/ui/notification";
 import type { ReactNode } from "react";
 import clsx from "clsx";
 import {
@@ -79,6 +80,7 @@ export default function SuppliersConfigurationPage(props: {
   types: SupplierType[];
   documentTypes: DocumentType[];
 }) {
+  const notify = useNotificacion();
   const [suppliers, setSuppliers] = useState<SupplierRow[]>(props.suppliers);
   const [types, setTypes] = useState<SupplierType[]>(props.types);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>(
@@ -132,7 +134,7 @@ export default function SuppliersConfigurationPage(props: {
       setConfirmSupplier(null);
     } catch (error) {
       console.error("Error al eliminar proveedor:", error);
-      alert("No se pudo eliminar el proveedor.");
+      notify({ payload: "No se pudo eliminar el proveedor.", type: "error" });
     }
   }
 
@@ -349,6 +351,7 @@ function SupplierForm({
   onClose: () => void;
   onSave: () => void;
 }) {
+  const notify = useNotificacion();
   const isEditing = !!supplier?.id;
   const defaultType = supplierTypes[0]?.id ?? 0;
   const hasTypes = supplierTypes.length > 0;
@@ -414,9 +417,11 @@ function SupplierForm({
       const targetDocTypeId = isPersonType ? personDocTypeId : companyDocTypeId;
 
       if (!targetDocTypeId) {
-        alert(
-          "No se encontró un tipo de documento válido para este tipo de proveedor."
-        );
+        notify({
+          payload:
+            "No se encontró un tipo de documento válido para este tipo de proveedor.",
+          type: "error",
+        });
         return;
       }
 
@@ -445,11 +450,12 @@ function SupplierForm({
               }),
         } as any, // Cast as any to satisfy compiler if types aren't perfectly aligned
       });
+      console.log("Proveedor guardado exitosamente.");
       await onSave();
       onClose();
     } catch (error) {
       console.error("Error al guardar proveedor:", error);
-      alert("No se pudo guardar el proveedor.");
+      notify({ payload: "No se pudo guardar el proveedor.", type: "error" });
     }
   }
 

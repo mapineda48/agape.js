@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNotificacion } from "@/components/ui/notification";
 import type { ReactNode } from "react";
 import clsx from "clsx";
 import {
@@ -64,6 +65,7 @@ export default function InventoryPage(props: {
   locations: Location[];
   movementTypes: MovementType[];
 }) {
+  const notify = useNotificacion();
   const [locations, setLocations] = useState<Location[]>(props.locations);
   const [movementTypes, setMovementTypes] = useState<MovementType[]>(
     props.movementTypes
@@ -126,7 +128,7 @@ export default function InventoryPage(props: {
       setConfirmDelete(null);
     } catch (error) {
       console.error("Error al eliminar:", error);
-      alert("No se pudo eliminar el registro");
+      notify({ payload: "No se pudo eliminar el registro", type: "error" });
     }
   }
 
