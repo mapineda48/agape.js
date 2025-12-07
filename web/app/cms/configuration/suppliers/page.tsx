@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNotificacion } from "@/components/ui/notification";
 import type { ReactNode } from "react";
 import clsx from "clsx";
@@ -16,7 +16,8 @@ import {
 } from "@agape/purchasing/supplier";
 import { listSupplierTypes } from "@agape/purchasing/supplier_type";
 import { listDocumentTypes } from "@agape/core/documentType";
-import Form from "@/components/form";
+import { getUserByDocument } from "@agape/core/user";
+import Form, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import useInput from "@/components/form/Input/useInput";
 import * as Select from "@/components/form/Select";
@@ -350,8 +351,10 @@ function SupplierForm({
   onClose: () => void;
   onSave: () => void;
 }) {
-  const notify = useNotificacion();
-  const isEditing = !!supplier?.id;
+  /*
+   * Logic to determine correct documentTypeId based on person/company rule.
+   * "siempre intenta obtener cada uno ordenado de forma descendente con un take one"
+   */
   const defaultType = supplierTypes[0]?.id ?? 0;
   const hasTypes = supplierTypes.length > 0;
 
@@ -412,9 +415,138 @@ function SupplierForm({
 
   return (
     <Form state={initialState}>
+      <SupplierFormContent
+        supplier={supplier}
+        onClose={onClose}
+        onSave={onSave}
+        supplierTypes={supplierTypes}
+        personDocTypeId={personDocTypeId}
+        companyDocTypeId={companyDocTypeId}
+        hasTypes={hasTypes}
+      />
+    </Form>
+  );
+}
+
+function SupplierFormContent({
+  supplier,
+  onClose,
+  onSave,
+  supplierTypes,
+  personDocTypeId,
+  companyDocTypeId,
+  hasTypes,
+}: {
+  supplier: SupplierRow | null;
+  supplierTypes: SupplierType[];
+  onClose: () => void;
+  onSave: () => void;
+  personDocTypeId: number;
+  companyDocTypeId: number;
+  hasTypes: boolean;
+}) {
+  const notify = useNotificacion();
+  const dispatch = useAppDispatch();
+  const isEditing = !!supplier?.id;
+
+  const [type] = useInput("type");
+  const [documentNumber] = useInput("documentNumber");
+
+  useEffect(() => {
+    const timeOutId = setTimeout(async () => {
+      const targetDocTypeId =
+        type === "person" ? personDocTypeId : companyDocTypeId;
+
+      if (!documentNumber || !targetDocTypeId) return;
+
+      try {
+        const user = await getUserByDocument(targetDocTypeId, documentNumber);
+
+        if (user) {
+          // Preload information
+          if (user.email)
+            dispatch(setAtPath({ path: ["email"], value: user.email }));
+          if (user.phone)
+            dispatch(setAtPath({ path: ["phone"], value: user.phone }));
+          if (user.address)
+            dispatch(setAtPath({ path: ["address"], value: user.address }));
+
+          // If Person
+          if (type === "person" && user.person) {
+            dispatch(
+              setAtPath({
+                path: ["person", "firstName"],
+                value: user.person.firstName,
+              })
+            );
+            dispatch(
+              setAtPath({
+                path: ["person", "lastName"],
+                value: user.person.lastName,
+              })
+            );
+            if (user.person.birthdate) {
+              dispatch(
+                setAtPath({
+                  path: ["person", "birthdate"],
+                  value: new DateTime(new Date(user.person.birthdate as any)),
+                })
+              );
+            }
+          }
+
+          // If Company
+          if (type === "company" && user.company) {
+            dispatch(
+              setAtPath({
+                path: ["company", "legalName"],
+                value: user.company.legalName,
+              })
+            );
+            dispatch(
+              setAtPath({
+                path: ["company", "tradeName"],
+                value: user.company.tradeName,
+              })
+            );
+          }
+
+          console.log("User found:", user);
+
+          notify({
+            payload: "Se ha cargado la información existente.",
+            type: "success",
+          });
+        }
+      } catch (error) {
+        console.error("Error searching user:", error);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeOutId);
+  }, [
+    documentNumber,
+    type,
+    personDocTypeId,
+    companyDocTypeId,
+    dispatch,
+    notify,
+  ]);
+
+  return (
+    <>
       <div className="grid gap-6 p-6">
         {/* Type Switcher */}
         <TypeSwitcher />
+
+        <Field label="Número de documento">
+          <Input.Text
+            path="documentNumber"
+            required
+            placeholder="CC o NIT sin dígito de verificación"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          />
+        </Field>
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* Common Fields */}
@@ -442,15 +574,6 @@ function SupplierForm({
             <Input.Text
               path="address"
               placeholder="Calle, número, ciudad"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-          </Field>
-
-          <Field label="Número de documento">
-            <Input.Text
-              path="documentNumber"
-              required
-              placeholder="CC o NIT sin dígito de verificación"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </Field>
@@ -551,7 +674,7 @@ function SupplierForm({
           {isEditing ? "Guardar cambios" : "Crear proveedor"}
         </Submit>
       </div>
-    </Form>
+    </>
   );
 }
 

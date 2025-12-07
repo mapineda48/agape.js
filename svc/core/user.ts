@@ -8,7 +8,7 @@ import {
   type UserType,
   USER_TYPE_VALUES,
 } from "#models/core/user";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 /**
  * Obtiene un usuario por su ID.
@@ -27,6 +27,41 @@ import { eq } from "drizzle-orm";
 export async function getUserById(id: number) {
   const [record] = await db.select().from(user).where(eq(user.id, id));
   return record;
+}
+
+/**
+ * Busca un usuario por tipo y número de documento.
+ * Incluye los datos relacionados (persona o compañía).
+ */
+export async function getUserByDocument(
+  documentTypeId: number,
+  documentNumber: string
+) {
+  const [record] = await db
+    .select()
+    .from(user)
+    .leftJoin(person, eq(user.id, person.id))
+    .leftJoin(company, eq(user.id, company.id))
+    .where(
+      and(
+        eq(user.documentTypeId, documentTypeId),
+        eq(user.documentNumber, documentNumber)
+      )
+    );
+
+  if (!record) return null;
+
+  const {
+    user: userData,
+    core_person: personData,
+    core_company: companyData,
+  } = record;
+
+  return {
+    ...userData,
+    person: personData || undefined,
+    company: companyData || undefined,
+  };
 }
 
 /**
