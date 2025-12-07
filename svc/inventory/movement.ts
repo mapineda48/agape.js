@@ -5,8 +5,10 @@ import { inventoryMovementType } from "#models/inventory/movement_type";
 import { documentType } from "#models/numbering/document_type";
 import { getNextDocumentNumberTx } from "#svc/numbering/getNextDocumentNumber";
 import type DateTime from "#utils/data/DateTime";
-import { eq } from "drizzle-orm";
+import { eq, desc, and, gte, lte, like, count, sql } from "drizzle-orm";
 import type Decimal from "decimal.js";
+import { item } from "#models/catalogs/item";
+import { location } from "#models/inventory/location";
 
 /**
  * Input para crear un movimiento de inventario.
@@ -189,4 +191,131 @@ export async function createInventoryMovement(
 
     return movement;
   });
+}
+
+/**
+ * Parámetros para listar movimientos de inventario
+ */
+export interface ListInventoryMovementsParams {
+  pageIndex: number;
+  pageSize: number;
+  movementTypeId?: number;
+  startDate?: DateTime;
+  endDate?: DateTime;
+  documentNumber?: string;
+  includeTotalCount?: boolean;
+}
+
+/**
+ * Lista movimientos de inventario con paginación y filtros
+ */
+export async function listInventoryMovements(
+  params: ListInventoryMovementsParams
+) {
+  const conditions = [];
+
+  if (params.movementTypeId) {
+    conditions.push(
+      eq(inventoryMovement.movementTypeId, params.movementTypeId)
+    );
+  }
+
+  if (params.startDate) {
+    conditions.push(gte(inventoryMovement.movementDate, params.startDate));
+  }
+
+  if (params.endDate) {
+    conditions.push(lte(inventoryMovement.movementDate, params.endDate));
+  }
+
+  if (params.documentNumber) {
+    conditions.push(
+      like(inventoryMovement.documentNumberFull, `%${params.documentNumber}%`)
+    );
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const items = await db
+    .select({
+      id: inventoryMovement.id,
+      movementDate: inventoryMovement.movementDate,
+      documentNumberFull: inventoryMovement.documentNumberFull,
+      observation: inventoryMovement.observation,
+      movementType: inventoryMovementType.name,
+    })
+    .from(inventoryMovement)
+    .innerJoin(
+      inventoryMovementType,
+      eq(inventoryMovement.movementTypeId, inventoryMovementType.id)
+    )
+    .where(where)
+    .orderBy(desc(inventoryMovement.movementDate), desc(inventoryMovement.id))
+    .limit(params.pageSize)
+    .offset(params.pageIndex * params.pageSize);
+
+  let totalCount = 0;
+  if (params.includeTotalCount) {
+    const [result] = await db
+      .select({ count: count() })
+      .from(inventoryMovement)
+      .where(where);
+    totalCount = result?.count ?? 0;
+  }
+
+  return {
+    items,
+    totalCount,
+  };
+}
+
+/**
+ * Obtiene un movimiento de inventario por ID con sus detalles
+ */
+export async function getInventoryMovement(id: number) {
+  const [movement] = await db
+    .select({
+      id: inventoryMovement.id,
+      movementTypeId: inventoryMovement.movementTypeId,
+      movementDate: inventoryMovement.movementDate,
+      observation: inventoryMovement.observation,
+      userId: inventoryMovement.userId,
+      documentNumberFull: inventoryMovement.documentNumberFull,
+      documentSeriesId: inventoryMovement.documentSeriesId,
+      documentNumber: inventoryMovement.documentNumber,
+      // Include type info if needed
+      movementTypeName: inventoryMovementType.name,
+      movementTypeFactor: inventoryMovementType.factor,
+    })
+    .from(inventoryMovement)
+    .innerJoin(
+      inventoryMovementType,
+      eq(inventoryMovement.movementTypeId, inventoryMovementType.id)
+    )
+    .where(eq(inventoryMovement.id, id));
+
+  if (!movement) {
+    return null;
+  }
+
+  const details = await db
+    .select({
+      id: inventoryMovementDetail.id,
+      itemId: inventoryMovementDetail.itemId,
+      locationId: inventoryMovementDetail.locationId,
+      quantity: inventoryMovementDetail.quantity,
+      unitCost: inventoryMovementDetail.unitCost,
+      itemName: item.fullName,
+      itemCode: item.code,
+      locationName: location.name,
+    })
+    .from(inventoryMovementDetail)
+    .innerJoin(item, eq(inventoryMovementDetail.itemId, item.id))
+    .leftJoin(location, eq(inventoryMovementDetail.locationId, location.id))
+    .where(eq(inventoryMovementDetail.movementId, id));
+
+  return {
+    ...movement,
+    details,
+  };
 }
