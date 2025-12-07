@@ -213,7 +213,7 @@ async function insertUser(
     case "person": {
       const [personRecord] = await db
         .insert(person)
-        .values({ id: record.id, ...personDto! })
+        .values({ ...personDto!, id: record.id })
         .returning({
           firstName: person.firstName,
           lastName: person.lastName,
@@ -226,7 +226,7 @@ async function insertUser(
     case "company": {
       const [companyRecord] = await db
         .insert(company)
-        .values({ id: record.id, ...companyDto! })
+        .values({ ...companyDto!, id: record.id })
         .returning({
           legalName: company.legalName,
           tradeName: company.tradeName,
