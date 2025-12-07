@@ -65,8 +65,8 @@ export default function InventoryPage(props: {
         </div>
 
         <div className="2xl:col-span-2 space-y-4">
-          <LocationList locations={props.locations} />
           <MovementTypeList movementTypes={props.movementTypes} />
+          <LocationList locations={props.locations} />
         </div>
       </div>
     </div>
