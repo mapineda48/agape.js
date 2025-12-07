@@ -359,4 +359,188 @@ describe("parseError", () => {
       expect(result.message).toContain("Nit Number");
     });
   });
+
+  describe("Drizzle ORM wrapped errors", () => {
+    describe("Error in cause property (as Error instance)", () => {
+      it("should normalize unique violation from Drizzle error cause", () => {
+        // Simulate a Drizzle-wrapped error where cause is a PostgreSQL error
+        const pgError = Object.assign(
+          new Error("duplicate key value violates unique constraint"),
+          {
+            code: "23505",
+            detail: "Key (document_number)=(12345678) already exists.",
+            constraint: "user_document_number_key",
+            table: "user",
+          }
+        );
+
+        const drizzleError = new Error(
+          "DrizzleError: Query failed"
+        ) as Error & { cause: Error };
+        drizzleError.cause = pgError;
+
+        const result = parseError(drizzleError);
+
+        expect(result).toBeInstanceOf(Error);
+        expect(result.message).toContain("already exists");
+        expect(result.message).toContain("Document Number");
+      });
+
+      it("should normalize not null violation from Drizzle error cause", () => {
+        const pgError = Object.assign(
+          new Error('null value in column "name" violates not-null constraint'),
+          {
+            code: "23502",
+            column: "name",
+            table: "supplier",
+          }
+        );
+
+        const drizzleError = new Error("Query failed") as Error & {
+          cause: Error;
+        };
+        drizzleError.cause = pgError;
+
+        const result = parseError(drizzleError);
+
+        expect(result).toBeInstanceOf(Error);
+        expect(result.message).toContain("required");
+        expect(result.message).toContain("Name");
+      });
+
+      it("should normalize foreign key violation from Drizzle error cause", () => {
+        const pgError = Object.assign(
+          new Error("insert or update violates foreign key constraint"),
+          {
+            code: "23503",
+            detail:
+              'Key (supplier_type_id)=(999) is not present in table "supplier_type".',
+            constraint: "supplier_supplier_type_id_fkey",
+          }
+        );
+
+        const drizzleError = new Error("Query failed") as Error & {
+          cause: Error;
+        };
+        drizzleError.cause = pgError;
+
+        const result = parseError(drizzleError);
+
+        expect(result).toBeInstanceOf(Error);
+        expect(result.message).toContain("does not exist");
+      });
+    });
+
+    describe("Error in cause property (as plain object)", () => {
+      it("should normalize error when cause is a plain object with database error properties", () => {
+        // Some drivers might expose cause as a plain object instead of Error instance
+        const drizzleError = new Error("Query failed") as Error & {
+          cause: Record<string, unknown>;
+        };
+        drizzleError.cause = {
+          code: "23505",
+          message: "duplicate key value violates unique constraint",
+          detail: "Key (email)=(test@example.com) already exists.",
+          constraint: "user_email_key",
+          table: "user",
+        };
+
+        const result = parseError(drizzleError);
+
+        expect(result).toBeInstanceOf(Error);
+        expect(result.message).toContain("already exists");
+        expect(result.message).toContain("Email");
+      });
+
+      it("should normalize not null violation when cause is a plain object", () => {
+        const drizzleError = new Error("Query failed") as Error & {
+          cause: Record<string, unknown>;
+        };
+        drizzleError.cause = {
+          code: "23502",
+          message: "null value violates not-null constraint",
+          column: "phone",
+        };
+
+        const result = parseError(drizzleError);
+
+        expect(result).toBeInstanceOf(Error);
+        expect(result.message).toContain("required");
+        expect(result.message).toContain("Phone");
+      });
+    });
+
+    describe("Nested cause chain", () => {
+      it("should find database error in deeply nested cause chain", () => {
+        const pgError = Object.assign(new Error("unique violation"), {
+          code: "23505",
+          column: "nit",
+        });
+
+        // Simulate multiple layers of wrapping
+        const innerWrapper = new Error("Inner wrapper") as Error & {
+          cause: Error;
+        };
+        innerWrapper.cause = pgError;
+
+        const outerWrapper = new Error("Outer wrapper") as Error & {
+          cause: Error;
+        };
+        outerWrapper.cause = innerWrapper;
+
+        const result = parseError(outerWrapper);
+
+        expect(result).toBeInstanceOf(Error);
+        expect(result.message).toContain("already exists");
+        expect(result.message).toContain("Nit");
+      });
+
+      it("should respect max depth and not loop infinitely", () => {
+        // Create a very deep chain (more than maxDepth)
+        let currentError: Error = new Error("Regular error");
+
+        // Create 10 levels of nesting (more than the default maxDepth of 5)
+        for (let i = 0; i < 10; i++) {
+          const wrapper = new Error(`Level ${i}`) as Error & { cause: Error };
+          wrapper.cause = currentError;
+          currentError = wrapper;
+        }
+
+        const result = parseError(currentError);
+
+        // Should fall back to the original behavior (pass through the Error)
+        expect(result).toBeInstanceOf(Error);
+        // It should be one of the wrapper errors, not crash
+      });
+    });
+
+    describe("Mixed scenarios", () => {
+      it("should prefer direct database error over wrapped one", () => {
+        // Direct database error takes precedence
+        const directDbError = Object.assign(new Error("Direct DB error"), {
+          code: "23505",
+          column: "email",
+        });
+
+        const result = parseError(directDbError);
+
+        expect(result).toBeInstanceOf(Error);
+        expect(result.message).toContain("Email");
+      });
+
+      it("should handle Drizzle error without database error in cause", () => {
+        // A Drizzle error that doesn't have a PG error in cause
+        const drizzleError = new Error("Something else went wrong") as Error & {
+          cause: Error;
+        };
+        drizzleError.cause = new Error("Network timeout");
+
+        const result = parseError(drizzleError);
+
+        expect(result).toBeInstanceOf(Error);
+        // Should pass through the original Drizzle error message
+        expect(result.message).toBe("Something else went wrong");
+      });
+    });
+  });
 });

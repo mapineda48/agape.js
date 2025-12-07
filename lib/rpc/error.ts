@@ -45,7 +45,7 @@ interface DatabaseError extends Error {
 }
 
 /**
- * Checks if the given error is a PostgreSQL database error.
+ * Checks if the given error object has properties matching a PostgreSQL database error.
  * Database errors have a `code` property that matches PostgreSQL SQLSTATE format.
  */
 function isDatabaseError(error: unknown): error is DatabaseError {
@@ -56,6 +56,70 @@ function isDatabaseError(error: unknown): error is DatabaseError {
   return (
     typeof dbError.code === "string" && /^[0-9A-Z]{5}$/i.test(dbError.code)
   );
+}
+
+/**
+ * Checks if an object has the structure of a PostgreSQL database error.
+ * This is used to check the `cause` property which may not be an Error instance.
+ */
+function hasDatabaseErrorShape(obj: unknown): obj is DatabaseError {
+  if (obj === null || typeof obj !== "object") return false;
+
+  const maybeDbError = obj as Record<string, unknown>;
+  // PostgreSQL SQLSTATE codes are always 5 alphanumeric characters
+  return (
+    typeof maybeDbError.code === "string" &&
+    /^[0-9A-Z]{5}$/i.test(maybeDbError.code)
+  );
+}
+
+/**
+ * Extracts the PostgreSQL database error from an error chain.
+ * Drizzle ORM wraps the original pg error in the `cause` property.
+ * This function searches recursively through the error chain.
+ *
+ * @param error - The error to extract the database error from
+ * @param maxDepth - Maximum depth to search (prevents infinite loops)
+ * @returns The PostgreSQL database error if found, null otherwise
+ */
+function extractDatabaseError(
+  error: unknown,
+  maxDepth = 5
+): DatabaseError | null {
+  if (maxDepth <= 0) return null;
+
+  // Check if the error itself is a database error
+  if (isDatabaseError(error)) {
+    return error;
+  }
+
+  // Check if it's an Error with a cause property
+  if (error instanceof Error) {
+    const cause = (error as Error & { cause?: unknown }).cause;
+
+    // The cause might be a plain object with database error properties
+    if (hasDatabaseErrorShape(cause)) {
+      // Convert to DatabaseError-like structure if it's a plain object
+      const dbError = Object.assign(new Error(cause.message || ""), {
+        code: cause.code,
+        detail: cause.detail,
+        constraint: cause.constraint,
+        table: cause.table,
+        column: cause.column,
+        schema: cause.schema,
+        severity: cause.severity,
+        hint: cause.hint,
+      }) as DatabaseError;
+      return dbError;
+    }
+
+    // Recursively check the cause
+    if (cause !== undefined) {
+      return extractDatabaseError(cause, maxDepth - 1);
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -236,7 +300,8 @@ function normalizeDatabaseError(error: DatabaseError): Error {
  * Parses and normalizes errors before sending them to the client.
  *
  * This function handles:
- * - PostgreSQL/Drizzle database errors (constraint violations, etc.)
+ * - PostgreSQL database errors (direct from pg driver)
+ * - Drizzle ORM errors (which wrap pg errors in the `cause` property)
  * - Application errors with specific messages
  * - Unknown errors
  *
@@ -246,9 +311,11 @@ function normalizeDatabaseError(error: DatabaseError): Error {
 export default function parseError(error: unknown): Error {
   console.error(error);
 
-  // Handle PostgreSQL database errors
-  if (isDatabaseError(error)) {
-    return normalizeDatabaseError(error);
+  // Try to extract a PostgreSQL database error from the error chain
+  // This handles both direct pg errors and Drizzle-wrapped errors
+  const dbError = extractDatabaseError(error);
+  if (dbError) {
+    return normalizeDatabaseError(dbError);
   }
 
   // Pass through application errors that already have meaningful messages
