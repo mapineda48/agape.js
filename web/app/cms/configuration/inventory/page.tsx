@@ -48,10 +48,27 @@ interface MovementType {
   documentTypeId: number;
 }
 
-export default function InventoryPage() {
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [movementTypes, setMovementTypes] = useState<MovementType[]>([]);
-  const [loading, setLoading] = useState(true);
+export async function onInit() {
+  const [locations, movementTypes] = await Promise.all([
+    listLocations(),
+    listMovementTypes(),
+  ]);
+
+  return {
+    locations,
+    movementTypes,
+  };
+}
+
+export default function InventoryPage(props: {
+  locations: Location[];
+  movementTypes: MovementType[];
+}) {
+  const [locations, setLocations] = useState<Location[]>(props.locations);
+  const [movementTypes, setMovementTypes] = useState<MovementType[]>(
+    props.movementTypes
+  );
+  const [loading, setLoading] = useState(false);
   const [locationModal, setLocationModal] = useState<Location | null>(null);
   const [movementModal, setMovementModal] = useState<MovementType | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<
@@ -59,10 +76,6 @@ export default function InventoryPage() {
     | { type: "movement"; item: MovementType }
     | null
   >(null);
-
-  useEffect(() => {
-    loadAncillary();
-  }, []);
 
   async function loadAncillary() {
     try {

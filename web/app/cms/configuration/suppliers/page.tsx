@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import clsx from "clsx";
 import {
@@ -47,18 +47,29 @@ interface SupplierRow {
   active: boolean;
 }
 
-export default function SuppliersConfigurationPage() {
-  const [suppliers, setSuppliers] = useState<SupplierRow[]>([]);
-  const [types, setTypes] = useState<SupplierType[]>([]);
-  const [loading, setLoading] = useState(true);
+export async function onInit() {
+  const [supplierData, typeData] = await Promise.all([
+    listSuppliers(),
+    listSupplierTypes(),
+  ]);
+
+  return {
+    suppliers: supplierData.suppliers,
+    types: typeData,
+  };
+}
+
+export default function SuppliersConfigurationPage(props: {
+  suppliers: SupplierRow[];
+  types: SupplierType[];
+}) {
+  const [suppliers, setSuppliers] = useState<SupplierRow[]>(props.suppliers);
+  const [types, setTypes] = useState<SupplierType[]>(props.types);
+  const [loading, setLoading] = useState(false);
   const [modalSupplier, setModalSupplier] = useState<SupplierRow | null>(null);
   const [confirmSupplier, setConfirmSupplier] = useState<SupplierRow | null>(
     null
   );
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   async function loadData() {
     try {

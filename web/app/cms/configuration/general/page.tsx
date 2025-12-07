@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import clsx from "clsx";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -41,41 +41,44 @@ type ConfirmState =
   | { type: "supplier"; item: SupplierType }
   | null;
 
-export default function GeneralConfigurationPage() {
-  const [clientTypes, setClientTypes] = useState<ClientType[]>([]);
-  const [supplierTypes, setSupplierTypes] = useState<SupplierType[]>([]);
-  const [loading, setLoading] = useState(true);
+export async function onInit() {
+  const [clientTypes, supplierTypes] = await Promise.all([
+    listClientTypes(),
+    listSupplierTypes(),
+  ]);
+
+  return {
+    clientTypes,
+    supplierTypes,
+  };
+}
+
+export default function GeneralConfigurationPage(props: {
+  clientTypes: ClientType[];
+  supplierTypes: SupplierType[];
+}) {
+  const [clientTypes, setClientTypes] = useState<ClientType[]>(
+    props.clientTypes
+  );
+  const [supplierTypes, setSupplierTypes] = useState<SupplierType[]>(
+    props.supplierTypes
+  );
+  const [loading, setLoading] = useState(false);
   const [modalState, setModalState] = useState<ModalState>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  async function loadInitialData() {
-    try {
-      setLoading(true);
-      const [clients, suppliers] = await Promise.all([
-        listClientTypes(),
-        listSupplierTypes(),
-      ]);
-      setClientTypes(clients);
-      setSupplierTypes(suppliers);
-    } catch (error) {
-      console.error("Error loading configuration data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function reloadClients() {
+    setLoading(true);
     const data = await listClientTypes();
     setClientTypes(data);
+    setLoading(false);
   }
 
   async function reloadSuppliers() {
+    setLoading(true);
     const data = await listSupplierTypes();
     setSupplierTypes(data);
+    setLoading(false);
   }
 
   function openCreate(type: "client" | "supplier") {
