@@ -381,7 +381,7 @@ export function Categories() {
           >
             <Checkbox
               path={`isEnabled`}
-              checked={cat.isEnabled}
+              defaultChecked={cat.isEnabled}
               className="mr-3"
             />
 

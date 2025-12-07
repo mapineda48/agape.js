@@ -52,12 +52,10 @@ export default function Submit({
 
       return result;
     } catch (error) {
-      console.error(error);
       notify({
         type: "error",
         payload: error instanceof Error ? error : "Error al guardar",
       });
-      throw error;
     }
   };
 

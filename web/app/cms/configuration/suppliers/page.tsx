@@ -132,9 +132,8 @@ export default function SuppliersConfigurationPage(props: {
       await deleteSupplier(confirmSupplier.id);
       await loadData();
       setConfirmSupplier(null);
-    } catch (error) {
-      console.error("Error al eliminar proveedor:", error);
-      notify({ payload: "No se pudo eliminar el proveedor.", type: "error" });
+    } catch (error: any) {
+      notify({ payload: error });
     }
   }
 
@@ -411,54 +410,6 @@ function SupplierForm({
         : undefined,
   };
 
-  async function handleSubmit(data: any) {
-    try {
-      const isPersonType = data.type === "person";
-      const targetDocTypeId = isPersonType ? personDocTypeId : companyDocTypeId;
-
-      if (!targetDocTypeId) {
-        notify({
-          payload:
-            "No se encontró un tipo de documento válido para este tipo de proveedor.",
-          type: "error",
-        });
-        return;
-      }
-
-      await upsertSupplier({
-        id: data.id,
-        supplierTypeId: Number(data.supplierTypeId),
-        active: data.active,
-        user: {
-          email: data.email,
-          phone: data.phone,
-          address: data.address,
-          documentNumber: data.documentNumber,
-          documentTypeId: targetDocTypeId,
-          ...(isPersonType
-            ? {
-                person: {
-                  ...data.person,
-                  id: supplier?.personId, // Keep existing ID if updating
-                },
-              }
-            : {
-                company: {
-                  ...data.company,
-                  id: supplier?.companyId, // Keep existing ID if updating
-                },
-              }),
-        } as any, // Cast as any to satisfy compiler if types aren't perfectly aligned
-      });
-      console.log("Proveedor guardado exitosamente.");
-      await onSave();
-      onClose();
-    } catch (error) {
-      console.error("Error al guardar proveedor:", error);
-      notify({ payload: "No se pudo guardar el proveedor.", type: "error" });
-    }
-  }
-
   return (
     <Form state={initialState}>
       <div className="grid gap-6 p-6">
@@ -545,7 +496,50 @@ function SupplierForm({
           Cancelar
         </button>
         <Submit
-          onSubmit={handleSubmit}
+          onSubmit={async (data) => {
+            const isPersonType = data.type === "person";
+            const targetDocTypeId = isPersonType
+              ? personDocTypeId
+              : companyDocTypeId;
+
+            if (!targetDocTypeId) {
+              notify({
+                payload:
+                  "No se encontró un tipo de documento válido para este tipo de proveedor.",
+                type: "error",
+              });
+              return;
+            }
+
+            await upsertSupplier({
+              id: data.id,
+              supplierTypeId: Number(data.supplierTypeId),
+              active: data.active,
+              user: {
+                email: data.email,
+                phone: data.phone,
+                address: data.address,
+                documentNumber: data.documentNumber,
+                documentTypeId: targetDocTypeId,
+                ...(isPersonType
+                  ? {
+                      person: {
+                        ...data.person,
+                        id: supplier?.personId, // Keep existing ID if updating
+                      },
+                    }
+                  : {
+                      company: {
+                        ...data.company,
+                        id: supplier?.companyId, // Keep existing ID if updating
+                      },
+                    }),
+              } as any, // Cast as any to satisfy compiler if types aren't perfectly aligned
+            });
+
+            onSave();
+            onClose();
+          }}
           className={clsx(
             "px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors shadow-sm",
             hasTypes
