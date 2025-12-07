@@ -7,7 +7,10 @@ import {
   Info,
   type LucideIcon,
 } from "lucide-react";
-import { withPortalToRoot, type PropsPortal } from "@/components/util/portal";
+import {
+  createPortalHook,
+  type PortalInjectedProps,
+} from "@/components/util/portal";
 
 type NotificationType = "success" | "warning" | "error" | "info";
 
@@ -112,9 +115,9 @@ export default function Notification(props: NotificationProps) {
   );
 }
 
-export const useNotificacion = withPortalToRoot(Notification);
+export const useNotificacion = createPortalHook(Notification);
 
-interface NotificationProps extends PropsPortal {
+interface NotificationProps extends PortalInjectedProps {
   payload: string | Error;
   type?: NotificationType;
   duration?: number;

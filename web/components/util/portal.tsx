@@ -10,63 +10,65 @@ import React, {
 import ReactDOM from "react-dom";
 
 /**
- * Types
+ * Props "inyectadas" automáticamente.
  */
-export interface PropsPortal {
+export interface PortalInjectedProps {
   style?: React.CSSProperties;
   remove: () => void;
 }
 
-export type FunctionComponent<T extends PropsPortal = PropsPortal> = (
-  props: T
-) => JSX.Element;
+/**
+ * Describir mejor que es el contenido de un portal.
+ */
+export type PortalContentComponent<
+  T extends PortalInjectedProps = PortalInjectedProps
+> = (props: T) => JSX.Element;
 
-type PushToPortal = (Element: FunctionComponent) => void;
+type PortalDispatcher = (Element: PortalContentComponent) => void;
 
-interface PortalItem {
-  Item: FunctionComponent;
+interface PortalItemEntry {
+  Component: PortalContentComponent;
   key: string;
 }
 
-const Context = React.createContext<PushToPortal>(() => {
-  console.warn("Portal Context not found");
+const PortalDispatchContext = React.createContext<PortalDispatcher>(() => {
+  console.warn(
+    "PortalDispatchContext not found. Ensure PortalProvider is higher up in the tree."
+  );
 });
 
 /**
- * Higher-order component to push a component to the portal root.
+ * Factory function to create a hook for a specific component.
  *
  * @example
- * const showModal = withPortalToRoot(MyModal);
- * showModal({ someProp: "value" });
+ * const useModal = createPortalHook(MyModal);
+ * // Dentro del componente:
+ * const openModal = useModal();
+ * openModal({ someProp: "value" });
  */
-export function withPortalToRoot<P extends object>(
-  Element: React.ComponentType<P & PropsPortal>
+export function createPortalHook<P extends object>(
+  Component: React.ComponentType<P & PortalInjectedProps>
 ) {
-  return function useShow() {
-    const pushToBody = useContext(Context);
+  return function usePortalTrigger() {
+    const spawn = useContext(PortalDispatchContext);
 
     return useCallback(
-      (props: Omit<P, keyof PropsPortal>) => {
-        pushToBody((portalProps) => (
-          <Element {...(props as P)} {...portalProps} />
+      (props: Omit<P, keyof PortalInjectedProps>) => {
+        spawn((injectedProps) => (
+          <Component {...(props as P)} {...injectedProps} />
         ));
       },
-      [pushToBody]
+      [spawn]
     );
   };
 }
 
 export default function PortalProvider({ children }: { children: ReactNode }) {
-  // We use a ref or just a state that is stable.
-  // Actually, we need the `push` function to be stable and available to consumers.
-  // The `PortalFactory` needs to register itself to receive the updates,
-  // OR we can lift the state up here.
-  // Lifting state up is cleaner than the previous "setPush" callback pattern.
+  const [items, setItems] = useState<PortalItemEntry[]>([]);
 
-  const [items, setItems] = useState<PortalItem[]>([]);
-
-  const push: PushToPortal = useCallback((Item) => {
-    setItems((prev) => [...prev, { Item, key: crypto.randomUUID() }]);
+  // 'spawn' es más descriptivo que 'push' para UI (generar/engendrar una instancia)
+  const spawn: PortalDispatcher = useCallback((Component) => {
+    setItems((prev) => [...prev, { Component, key: crypto.randomUUID() }]);
   }, []);
 
   const remove = useCallback((key: string) => {
@@ -74,21 +76,22 @@ export default function PortalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Context.Provider value={push}>
+    <PortalDispatchContext.Provider value={spawn}>
       {children}
-      <PortalRoot items={items} remove={remove} />
-    </Context.Provider>
+      <PortalRenderer items={items} remove={remove} />
+    </PortalDispatchContext.Provider>
   );
 }
 
 /**
- * The actual portal root that renders the items into document.body
+ * Renombrado a 'Renderer' ya que es el encargado
+ * de pintar la lista en el DOM real.
  */
-function PortalRoot({
+function PortalRenderer({
   items,
   remove,
 }: {
-  items: PortalItem[];
+  items: PortalItemEntry[];
   remove: (key: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -98,18 +101,13 @@ function PortalRoot({
     return () => setMounted(false);
   }, []);
 
-  if (!mounted || typeof document === "undefined") {
-    return null;
-  }
-
-  if (items.length === 0) {
-    return null;
-  }
+  if (!mounted || typeof document === "undefined") return null;
+  if (items.length === 0) return null;
 
   return ReactDOM.createPortal(
     <Fragment>
-      {items.map(({ Item, key }, index) => (
-        <Item
+      {items.map(({ Component, key }, index) => (
+        <Component
           key={key}
           style={{ zIndex: 1500 + index * 100 }}
           remove={() => remove(key)}
