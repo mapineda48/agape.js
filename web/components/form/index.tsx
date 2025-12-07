@@ -3,6 +3,7 @@ import StoreProvider from "./store/provider";
 import Path from "./paths";
 import useInput from "./Input/useInput";
 import { useInputArray } from "./hooks";
+import { useFormReset } from "./useFormReset";
 
 export default function Form(props: Props) {
   return (
@@ -12,6 +13,6 @@ export default function Form(props: Props) {
   );
 }
 
-export { Path, useForm, useInputArray, useInput };
+export { Path, useForm, useInputArray, useInput, useFormReset };
 export { useAppDispatch } from "./store/hooks";
-export { setAtPath } from "./store/dictSlice";
+export { setAtPath, resetState } from "./store/dictSlice";

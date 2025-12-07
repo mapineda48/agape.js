@@ -98,6 +98,21 @@ const dictSlice = createSlice({
       }
       deleteByPathAndCleanup(state.data, path);
     },
+    /**
+     * Resets the entire form state to a new value.
+     * This is useful when you need to refresh the entire form based on an external event,
+     * such as pre-loading data from an existing user or resetting to initial values.
+     *
+     * @example
+     * // Reset to a completely new state
+     * dispatch(resetState({ state: { name: "John", email: "john@example.com" } }));
+     *
+     * // Reset to empty object
+     * dispatch(resetState({ state: {} }));
+     */
+    resetState(state, action: PayloadAction<{ state: any }>) {
+      state.data = action.payload.state;
+    },
   },
 });
 
@@ -146,6 +161,6 @@ function deleteByPathAndCleanup(root: any, path: Path): boolean {
   return Object.keys(root).length === 0;
 }
 
-export const { setAtPath, pushAtPath, removeAtPath, deleteAtPath } =
+export const { setAtPath, pushAtPath, removeAtPath, deleteAtPath, resetState } =
   dictSlice.actions;
 export default dictSlice.reducer;

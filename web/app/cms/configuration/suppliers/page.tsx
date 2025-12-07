@@ -17,7 +17,7 @@ import {
 import { listSupplierTypes } from "@agape/purchasing/supplier_type";
 import { listDocumentTypes } from "@agape/core/documentType";
 import { getUserByDocument } from "@agape/core/user";
-import Form, { useAppDispatch, setAtPath } from "@/components/form";
+import Form, { useFormReset } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import useInput from "@/components/form/Input/useInput";
 import * as Select from "@/components/form/Select";
@@ -446,7 +446,7 @@ function SupplierFormContent({
   hasTypes: boolean;
 }) {
   const notify = useNotificacion();
-  const dispatch = useAppDispatch();
+  const { merge, setAt } = useFormReset();
   const isEditing = !!supplier?.id;
 
   const [type] = useInput("type");
@@ -463,52 +463,29 @@ function SupplierFormContent({
         const user = await getUserByDocument(targetDocTypeId, documentNumber);
 
         if (user) {
-          // Preload information
-          if (user.email)
-            dispatch(setAtPath({ path: ["email"], value: user.email }));
-          if (user.phone)
-            dispatch(setAtPath({ path: ["phone"], value: user.phone }));
-          if (user.address)
-            dispatch(setAtPath({ path: ["address"], value: user.address }));
+          // Preload common information using merge
+          merge({
+            email: user.email || undefined,
+            phone: user.phone || undefined,
+            address: user.address || undefined,
+          });
 
-          // If Person
+          // Preload type-specific information using setAt
           if (type === "person" && user.person) {
-            dispatch(
-              setAtPath({
-                path: ["person", "firstName"],
-                value: user.person.firstName,
-              })
-            );
-            dispatch(
-              setAtPath({
-                path: ["person", "lastName"],
-                value: user.person.lastName,
-              })
-            );
-            if (user.person.birthdate) {
-              dispatch(
-                setAtPath({
-                  path: ["person", "birthdate"],
-                  value: new DateTime(new Date(user.person.birthdate as any)),
-                })
-              );
-            }
+            setAt(["person"], {
+              firstName: user.person.firstName,
+              lastName: user.person.lastName,
+              birthdate: user.person.birthdate
+                ? new DateTime(new Date(user.person.birthdate as any))
+                : undefined,
+            });
           }
 
-          // If Company
           if (type === "company" && user.company) {
-            dispatch(
-              setAtPath({
-                path: ["company", "legalName"],
-                value: user.company.legalName,
-              })
-            );
-            dispatch(
-              setAtPath({
-                path: ["company", "tradeName"],
-                value: user.company.tradeName,
-              })
-            );
+            setAt(["company"], {
+              legalName: user.company.legalName,
+              tradeName: user.company.tradeName,
+            });
           }
 
           console.log("User found:", user);
@@ -529,7 +506,8 @@ function SupplierFormContent({
     type,
     personDocTypeId,
     companyDocTypeId,
-    dispatch,
+    merge,
+    setAt,
     notify,
   ]);
 

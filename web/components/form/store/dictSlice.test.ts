@@ -3,6 +3,7 @@ import dictReducer, {
   pushAtPath,
   removeAtPath,
   deleteAtPath,
+  resetState,
 } from "./dictSlice";
 
 describe("dictSlice", () => {
@@ -461,6 +462,73 @@ describe("dictSlice", () => {
           notifications: true,
         },
       });
+    });
+  });
+
+  describe("resetState", () => {
+    it("should completely replace state with new object", () => {
+      const state = { data: { user: "John", count: 5 } };
+      const actual = dictReducer(
+        state,
+        resetState({ state: { name: "Alice", age: 30 } })
+      );
+      expect(actual.data).toEqual({ name: "Alice", age: 30 });
+    });
+
+    it("should reset to empty object", () => {
+      const state = {
+        data: { user: { name: "John", profile: { bio: "Hello" } } },
+      };
+      const actual = dictReducer(state, resetState({ state: {} }));
+      expect(actual.data).toEqual({});
+    });
+
+    it("should reset to array", () => {
+      const state = { data: { user: "John" } };
+      const actual = dictReducer(state, resetState({ state: ["a", "b", "c"] }));
+      expect(actual.data).toEqual(["a", "b", "c"]);
+    });
+
+    it("should reset from array to object", () => {
+      const state = { data: ["a", "b", "c"] };
+      const actual = dictReducer(
+        state,
+        resetState({ state: { key: "value" } })
+      );
+      expect(actual.data).toEqual({ key: "value" });
+    });
+
+    it("should reset to complex nested structure", () => {
+      const state = { data: { old: "data" } };
+      const newState = {
+        user: {
+          profile: { name: "John", age: 25 },
+          settings: { theme: "dark", notifications: true },
+        },
+        items: [1, 2, 3],
+      };
+      const actual = dictReducer(state, resetState({ state: newState }));
+      expect(actual.data).toEqual(newState);
+    });
+
+    it("should reset to null", () => {
+      const state = { data: { user: "John" } };
+      const actual = dictReducer(state, resetState({ state: null }));
+      expect(actual.data).toBe(null);
+    });
+
+    it("should reset to primitive value", () => {
+      const state = { data: { user: "John" } };
+      const actual = dictReducer(state, resetState({ state: "just a string" }));
+      expect(actual.data).toBe("just a string");
+    });
+
+    it("should preserve object reference semantics", () => {
+      const state = { data: {} };
+      const newData = { nested: { deep: "value" } };
+      const actual = dictReducer(state, resetState({ state: newData }));
+      // After reset, data should have the new structure
+      expect(actual.data.nested.deep).toBe("value");
     });
   });
 });
