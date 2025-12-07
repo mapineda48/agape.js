@@ -4,7 +4,12 @@
 INSERT INTO "agape_app_development_demo"."core_identity_document_type"
     ("code", "name", "is_enabled", "applies_to_person", "applies_to_company")
 VALUES
-    ('CC', 'Cédula de ciudadanía', true, true, false)
+    ('CC', 'Cédula de ciudadanía', true, true, false),
+    ('NIT', 'Número de Identificación Tributaria', true, false, true),
+    ('CE', 'Cédula de extranjería', true, true, false),
+    ('TI', 'Tarjeta de identidad', true, true, false),
+    ('PA', 'Pasaporte', true, true, false),
+    ('RC', 'Registro civil', true, true, false)
 ON CONFLICT ("code") DO NOTHING;
 
 
