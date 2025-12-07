@@ -37,6 +37,10 @@ export default function Submit({
   // Wrap onSubmit with notification handling
   const handleSubmit = async (payload: any) => {
     try {
+      if (process.env.NODE_ENV === "development") {
+        console.log("payload", { onSubmit, payload });
+      }
+
       const result = await onSubmit(payload);
 
       if (!disableSuccessNotification) {
