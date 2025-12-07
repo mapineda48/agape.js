@@ -10,6 +10,8 @@ interface ModalProps {
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   className?: string;
+  onAfterClose?: () => void;
+  style?: React.CSSProperties;
 }
 
 const sizes = {
@@ -28,12 +30,13 @@ export default function Modal({
   children,
   size = "md",
   className,
+  ...props
 }: ModalProps) {
   // Use portal to render modal at the end of the document body
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={props.onAfterClose}>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden p-4 sm:p-6">
           {/* Backdrop */}
@@ -58,6 +61,7 @@ export default function Modal({
               sizes[size],
               className
             )}
+            style={{ zIndex: props.style?.zIndex }}
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">

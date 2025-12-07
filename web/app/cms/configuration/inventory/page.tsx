@@ -29,8 +29,12 @@ import * as Input from "@/components/form/Input";
 import * as Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
-import Modal from "@/components/ui/Modal";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import {
+  createPortalHook,
+  type PortalInjectedProps,
+} from "@/components/util/portal";
+import PortalModal from "@/components/ui/PortalModal";
+import { useConfirmModal } from "@/components/ui/PortalConfirm";
 
 const state: Category[] = [];
 
@@ -61,6 +65,55 @@ export async function onInit() {
   };
 }
 
+function LocationModalWrapper(
+  props: {
+    location: Location;
+    onSave: (data: Location) => Promise<void>;
+  } & PortalInjectedProps
+) {
+  return (
+    <PortalModal
+      {...props}
+      title={props.location.id ? "Editar ubicación" : "Nueva ubicación"}
+      size="md"
+    >
+      <LocationForm
+        location={props.location}
+        onSave={props.onSave}
+        onClose={() => {}}
+      />
+    </PortalModal>
+  );
+}
+
+function MovementModalWrapper(
+  props: {
+    movement: MovementType;
+    onSave: (data: MovementType) => Promise<void>;
+  } & PortalInjectedProps
+) {
+  return (
+    <PortalModal
+      {...props}
+      title={
+        props.movement.id
+          ? "Editar tipo de movimiento"
+          : "Nuevo tipo de movimiento"
+      }
+      size="md"
+    >
+      <MovementForm
+        movement={props.movement}
+        onSave={props.onSave}
+        onClose={() => {}}
+      />
+    </PortalModal>
+  );
+}
+
+const useLocationModal = createPortalHook(LocationModalWrapper);
+const useMovementModal = createPortalHook(MovementModalWrapper);
+
 export default function InventoryPage(props: {
   locations: Location[];
   movementTypes: MovementType[];
@@ -71,13 +124,10 @@ export default function InventoryPage(props: {
     props.movementTypes
   );
   const [loading, setLoading] = useState(false);
-  const [locationModal, setLocationModal] = useState<Location | null>(null);
-  const [movementModal, setMovementModal] = useState<MovementType | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<
-    | { type: "location"; item: Location }
-    | { type: "movement"; item: MovementType }
-    | null
-  >(null);
+
+  const showLocation = useLocationModal();
+  const showMovement = useMovementModal();
+  const showConfirm = useConfirmModal();
 
   async function loadAncillary() {
     try {
@@ -116,20 +166,40 @@ export default function InventoryPage(props: {
     await loadAncillary();
   }
 
-  async function handleDelete() {
-    if (!confirmDelete || !confirmDelete.item.id) return;
-    try {
-      if (confirmDelete.type === "location") {
-        await upsertLocation({ ...confirmDelete.item, isEnabled: false });
-      } else {
-        await upsertMovementType({ ...confirmDelete.item, isEnabled: false });
-      }
-      await loadAncillary();
-      setConfirmDelete(null);
-    } catch (error) {
-      console.error("Error al eliminar:", error);
-      notify({ payload: "No se pudo eliminar el registro", type: "error" });
-    }
+  async function confirmDeleteLocation(item: Location) {
+    showConfirm({
+      title: "Eliminar registro",
+      message: `¿Seguro que deseas eliminar "${item.name}"?`,
+      confirmText: "Eliminar",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await upsertLocation({ ...item, isEnabled: false });
+          await loadAncillary();
+        } catch (error) {
+          console.error("Error al eliminar:", error);
+          notify({ payload: "No se pudo eliminar el registro", type: "error" });
+        }
+      },
+    });
+  }
+
+  async function confirmDeleteMovement(item: MovementType) {
+    showConfirm({
+      title: "Eliminar registro",
+      message: `¿Seguro que deseas eliminar "${item.name}"?`,
+      confirmText: "Eliminar",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await upsertMovementType({ ...item, isEnabled: false });
+          await loadAncillary();
+        } catch (error) {
+          console.error("Error al eliminar:", error);
+          notify({ payload: "No se pudo eliminar el registro", type: "error" });
+        }
+      },
+    });
   }
 
   return (
@@ -176,7 +246,10 @@ export default function InventoryPage(props: {
                 <button
                   type="button"
                   onClick={() =>
-                    setLocationModal({ name: "", isEnabled: true })
+                    showLocation({
+                      location: { name: "", isEnabled: true },
+                      onSave: saveLocation,
+                    })
                   }
                   className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
                 >
@@ -194,8 +267,9 @@ export default function InventoryPage(props: {
                   subtitle: `ID ${item.id}`,
                   badge: item.isEnabled ? "Activa" : "Inactiva",
                   badgeTone: item.isEnabled ? "green" : "amber",
-                  onEdit: () => setLocationModal(item),
-                  onDelete: () => setConfirmDelete({ type: "location", item }),
+                  onEdit: () =>
+                    showLocation({ location: item, onSave: saveLocation }),
+                  onDelete: () => confirmDeleteLocation(item),
                 })}
               />
             </Card>
@@ -207,12 +281,15 @@ export default function InventoryPage(props: {
                 <button
                   type="button"
                   onClick={() =>
-                    setMovementModal({
-                      name: "",
-                      factor: 1,
-                      affectsStock: true,
-                      isEnabled: true,
-                      documentTypeId: 0,
+                    showMovement({
+                      movement: {
+                        name: "",
+                        factor: 1,
+                        affectsStock: true,
+                        isEnabled: true,
+                        documentTypeId: 0,
+                      },
+                      onSave: saveMovement,
                     })
                   }
                   className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
@@ -235,59 +312,14 @@ export default function InventoryPage(props: {
                   badgeTone: item.affectsStock ? "blue" : "gray",
                   extraChip: item.isEnabled ? "Activo" : "Inactivo",
                   extraTone: item.isEnabled ? "green" : "amber",
-                  onEdit: () => setMovementModal(item),
-                  onDelete: () => setConfirmDelete({ type: "movement", item }),
+                  onEdit: () =>
+                    showMovement({ movement: item, onSave: saveMovement }),
+                  onDelete: () => confirmDeleteMovement(item),
                 })}
               />
             </Card>
           </div>
         </div>
-
-        <Modal
-          isOpen={locationModal !== null}
-          onClose={() => setLocationModal(null)}
-          title={locationModal?.id ? "Editar ubicación" : "Nueva ubicación"}
-        >
-          {locationModal ? (
-            <LocationForm
-              location={locationModal}
-              onClose={() => setLocationModal(null)}
-              onSave={saveLocation}
-            />
-          ) : null}
-        </Modal>
-
-        <Modal
-          isOpen={movementModal !== null}
-          onClose={() => setMovementModal(null)}
-          title={
-            movementModal?.id
-              ? "Editar tipo de movimiento"
-              : "Nuevo tipo de movimiento"
-          }
-        >
-          {movementModal ? (
-            <MovementForm
-              movement={movementModal}
-              onClose={() => setMovementModal(null)}
-              onSave={saveMovement}
-            />
-          ) : null}
-        </Modal>
-
-        <ConfirmModal
-          isOpen={!!confirmDelete}
-          onClose={() => setConfirmDelete(null)}
-          onConfirm={handleDelete}
-          title="Eliminar registro"
-          message={
-            confirmDelete
-              ? `¿Seguro que deseas eliminar "${confirmDelete.item.name}"?`
-              : ""
-          }
-          confirmText="Eliminar"
-          variant="danger"
-        />
       </div>
     </Form>
   );

@@ -18,8 +18,12 @@ import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
 import CheckBox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
-import Modal from "@/components/ui/Modal";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import {
+  createPortalHook,
+  type PortalInjectedProps,
+} from "@/components/util/portal";
+import PortalModal from "@/components/ui/PortalModal";
+import { useConfirmModal } from "@/components/ui/PortalConfirm";
 
 interface ClientType {
   id: number;
@@ -31,16 +35,6 @@ interface SupplierType {
   id: number;
   name: string;
 }
-
-type ModalState =
-  | { type: "client"; item: ClientType | null }
-  | { type: "supplier"; item: SupplierType | null }
-  | null;
-
-type ConfirmState =
-  | { type: "client"; item: ClientType }
-  | { type: "supplier"; item: SupplierType }
-  | null;
 
 export async function onInit() {
   const [clientTypes, supplierTypes] = await Promise.all([
@@ -54,6 +48,47 @@ export async function onInit() {
   };
 }
 
+function ClientTypeModalWrapper(
+  props: { item: ClientType | null; onSave: () => void } & PortalInjectedProps
+) {
+  return (
+    <PortalModal
+      {...props}
+      title={props.item ? "Editar tipo de cliente" : "Nuevo tipo de cliente"}
+      size="md"
+    >
+      <ClientTypeForm
+        item={props.item}
+        onSave={props.onSave}
+        onClose={() => {}}
+      />
+    </PortalModal>
+  );
+}
+
+function SupplierTypeModalWrapper(
+  props: { item: SupplierType | null; onSave: () => void } & PortalInjectedProps
+) {
+  return (
+    <PortalModal
+      {...props}
+      title={
+        props.item ? "Editar tipo de proveedor" : "Nuevo tipo de proveedor"
+      }
+      size="md"
+    >
+      <SupplierTypeForm
+        item={props.item}
+        onSave={props.onSave}
+        onClose={() => {}}
+      />
+    </PortalModal>
+  );
+}
+
+const useClientTypeModal = createPortalHook(ClientTypeModalWrapper);
+const useSupplierTypeModal = createPortalHook(SupplierTypeModalWrapper);
+
 export default function GeneralConfigurationPage(props: {
   clientTypes: ClientType[];
   supplierTypes: SupplierType[];
@@ -66,8 +101,10 @@ export default function GeneralConfigurationPage(props: {
     props.supplierTypes
   );
   const [loading, setLoading] = useState(false);
-  const [modalState, setModalState] = useState<ModalState>(null);
-  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+
+  const showClientModal = useClientTypeModal();
+  const showSupplierModal = useSupplierTypeModal();
+  const showConfirm = useConfirmModal();
 
   async function reloadClients() {
     setLoading(true);
@@ -84,7 +121,11 @@ export default function GeneralConfigurationPage(props: {
   }
 
   function openCreate(type: "client" | "supplier") {
-    setModalState({ type, item: null });
+    if (type === "client") {
+      showClientModal({ item: null, onSave: reloadClients });
+    } else {
+      showSupplierModal({ item: null, onSave: reloadSuppliers });
+    }
   }
 
   function openEdit(type: "client", item: ClientType): void;
@@ -94,43 +135,42 @@ export default function GeneralConfigurationPage(props: {
     item: ClientType | SupplierType
   ) {
     if (type === "client") {
-      setModalState({ type, item: item as ClientType });
-      return;
+      showClientModal({ item: item as ClientType, onSave: reloadClients });
+    } else {
+      showSupplierModal({
+        item: item as SupplierType,
+        onSave: reloadSuppliers,
+      });
     }
-    setModalState({ type: "supplier", item: item as SupplierType });
-  }
-
-  function closeModal() {
-    setModalState(null);
   }
 
   function confirmDelete(
     type: "client" | "supplier",
     item: ClientType | SupplierType
   ) {
-    if (type === "client") {
-      setConfirmState({ type, item: item as ClientType });
-      return;
-    }
-    setConfirmState({ type, item: item as SupplierType });
-  }
-
-  async function handleDelete() {
-    if (!confirmState) return;
-
-    try {
-      if (confirmState.type === "client") {
-        await deleteClientType(confirmState.item.id);
-        await reloadClients();
-      } else {
-        await deleteSupplierType(confirmState.item.id);
-        await reloadSuppliers();
-      }
-      setConfirmState(null);
-    } catch (error) {
-      console.error("Error deleting type:", error);
-      notify({ payload: "Error al eliminar el registro", type: "error" });
-    }
+    showConfirm({
+      title:
+        type === "client"
+          ? "Eliminar tipo de cliente"
+          : "Eliminar tipo de proveedor",
+      message: `¿Estás seguro de que deseas eliminar "${item.name}"? Esta acción no se puede deshacer.`,
+      confirmText: "Eliminar",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          if (type === "client") {
+            await deleteClientType(item.id);
+            await reloadClients();
+          } else {
+            await deleteSupplierType(item.id);
+            await reloadSuppliers();
+          }
+        } catch (error) {
+          console.error("Error deleting type:", error);
+          notify({ payload: "Error al eliminar el registro", type: "error" });
+        }
+      },
+    });
   }
 
   return (
@@ -222,53 +262,6 @@ export default function GeneralConfigurationPage(props: {
           </div>
         </TypePanel>
       </div>
-
-      <Modal
-        isOpen={!!modalState}
-        onClose={closeModal}
-        title={
-          modalState?.type === "client"
-            ? modalState.item
-              ? "Editar tipo de cliente"
-              : "Nuevo tipo de cliente"
-            : modalState?.item
-            ? "Editar tipo de proveedor"
-            : "Nuevo tipo de proveedor"
-        }
-        size="md"
-      >
-        {modalState?.type === "client" ? (
-          <ClientTypeForm
-            item={modalState.item}
-            onClose={closeModal}
-            onSave={reloadClients}
-          />
-        ) : modalState?.type === "supplier" ? (
-          <SupplierTypeForm
-            item={modalState.item}
-            onClose={closeModal}
-            onSave={reloadSuppliers}
-          />
-        ) : null}
-      </Modal>
-
-      <ConfirmModal
-        isOpen={!!confirmState}
-        onClose={() => setConfirmState(null)}
-        onConfirm={handleDelete}
-        title={
-          confirmState?.type === "client"
-            ? "Eliminar tipo de cliente"
-            : "Eliminar tipo de proveedor"
-        }
-        message={
-          confirmState
-            ? `¿Estás seguro de que deseas eliminar "${confirmState.item.name}"? Esta acción no se puede deshacer.`
-            : ""
-        }
-        confirmText="Eliminar"
-        variant="danger"
-      />
     </div>
   );
 }

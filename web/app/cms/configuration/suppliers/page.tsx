@@ -23,10 +23,14 @@ import useInput from "@/components/form/Input/useInput";
 import * as Select from "@/components/form/Select";
 import CheckBox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
-import Modal from "@/components/ui/Modal";
-import ConfirmModal from "@/components/ui/ConfirmModal";
 import DateTime from "@utils/data/DateTime";
 import PathProvider from "@/components/form/paths";
+import {
+  createPortalHook,
+  type PortalInjectedProps,
+} from "@/components/util/portal";
+import PortalModal from "@/components/ui/PortalModal";
+import { useConfirmModal } from "@/components/ui/PortalConfirm";
 
 interface SupplierType {
   id: number;
@@ -76,6 +80,33 @@ export async function onInit() {
   };
 }
 
+function SupplierModalWrapper(
+  props: {
+    supplier: SupplierRow | null;
+    supplierTypes: SupplierType[];
+    documentTypes: DocumentType[];
+    onSave: () => void;
+  } & PortalInjectedProps
+) {
+  return (
+    <PortalModal
+      {...props}
+      title={props.supplier?.id ? "Editar proveedor" : "Nuevo proveedor"}
+      size="lg"
+    >
+      <SupplierForm
+        supplier={props.supplier}
+        supplierTypes={props.supplierTypes}
+        documentTypes={props.documentTypes}
+        onSave={props.onSave}
+        onClose={() => {}} // Will be overridden by PortalModal cloneElement
+      />
+    </PortalModal>
+  );
+}
+
+const useSupplierModal = createPortalHook(SupplierModalWrapper);
+
 export default function SuppliersConfigurationPage(props: {
   suppliers: SupplierRow[];
   types: SupplierType[];
@@ -88,10 +119,9 @@ export default function SuppliersConfigurationPage(props: {
     props.documentTypes
   );
   const [loading, setLoading] = useState(false);
-  const [modalSupplier, setModalSupplier] = useState<SupplierRow | null>(null);
-  const [confirmSupplier, setConfirmSupplier] = useState<SupplierRow | null>(
-    null
-  );
+
+  const showSupplier = useSupplierModal();
+  const showConfirm = useConfirmModal();
 
   async function loadData() {
     try {
@@ -112,30 +142,40 @@ export default function SuppliersConfigurationPage(props: {
   }
 
   function openCreate() {
-    setModalSupplier({} as any);
+    showSupplier({
+      supplier: {} as any,
+      supplierTypes: types,
+      documentTypes: documentTypes,
+      onSave: loadData,
+    });
   }
 
   function openEdit(supplier: SupplierRow) {
-    setModalSupplier(supplier);
-  }
-
-  function closeModal() {
-    setModalSupplier(null);
+    showSupplier({
+      supplier,
+      supplierTypes: types,
+      documentTypes: documentTypes,
+      onSave: loadData,
+    });
   }
 
   function confirmDelete(supplier: SupplierRow) {
-    setConfirmSupplier(supplier);
-  }
-
-  async function handleDelete() {
-    if (!confirmSupplier) return;
-    try {
-      await deleteSupplier(confirmSupplier.id);
-      await loadData();
-      setConfirmSupplier(null);
-    } catch (error: any) {
-      notify({ payload: error });
-    }
+    showConfirm({
+      title: "Eliminar proveedor",
+      message: `¿Deseas eliminar a ${
+        supplier.firstName || supplier.legalName || "este proveedor"
+      }?`,
+      confirmText: "Eliminar",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await deleteSupplier(supplier.id);
+          await loadData();
+        } catch (error: any) {
+          notify({ payload: error });
+        }
+      },
+    });
   }
 
   const activeSuppliers = useMemo(
@@ -301,39 +341,6 @@ export default function SuppliersConfigurationPage(props: {
           </div>
         )}
       </div>
-
-      <Modal
-        isOpen={modalSupplier !== null}
-        onClose={closeModal}
-        title={modalSupplier ? "Editar proveedor" : "Nuevo proveedor"}
-        size="lg"
-      >
-        <SupplierForm
-          supplier={modalSupplier}
-          supplierTypes={types}
-          documentTypes={documentTypes}
-          onClose={closeModal}
-          onSave={loadData}
-        />
-      </Modal>
-
-      <ConfirmModal
-        isOpen={!!confirmSupplier}
-        onClose={() => setConfirmSupplier(null)}
-        onConfirm={handleDelete}
-        title="Eliminar proveedor"
-        message={
-          confirmSupplier
-            ? `¿Deseas eliminar a ${
-                confirmSupplier.firstName ||
-                confirmSupplier.legalName ||
-                "este proveedor"
-              }?`
-            : ""
-        }
-        confirmText="Eliminar"
-        variant="danger"
-      />
     </div>
   );
 }
