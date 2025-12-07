@@ -14,6 +14,7 @@ import {
   deleteSupplier,
 } from "@agape/purchasing/supplier";
 import { listSupplierTypes } from "@agape/purchasing/supplier_type";
+import { listDocumentTypes } from "@agape/core/documentType";
 import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
 import useInput from "@/components/form/Input/useInput";
@@ -45,26 +46,44 @@ interface SupplierRow {
   address?: string | null;
   birthdate?: DateTime | string | null;
   active: boolean;
+  // Identity fields
+  documentTypeId?: number | null;
+  documentNumber?: string | null;
+}
+
+interface DocumentType {
+  id: number;
+  name: string;
+  code: string;
+  isEnabled: boolean;
+  appliesToPerson: boolean;
+  appliesToCompany: boolean;
 }
 
 export async function onInit() {
-  const [supplierData, typeData] = await Promise.all([
+  const [supplierData, typeData, documentTypes] = await Promise.all([
     listSuppliers(),
     listSupplierTypes(),
+    listDocumentTypes(),
   ]);
 
   return {
     suppliers: supplierData.suppliers,
     types: typeData,
+    documentTypes: documentTypes,
   };
 }
 
 export default function SuppliersConfigurationPage(props: {
   suppliers: SupplierRow[];
   types: SupplierType[];
+  documentTypes: DocumentType[];
 }) {
   const [suppliers, setSuppliers] = useState<SupplierRow[]>(props.suppliers);
   const [types, setTypes] = useState<SupplierType[]>(props.types);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>(
+    props.documentTypes
+  );
   const [loading, setLoading] = useState(false);
   const [modalSupplier, setModalSupplier] = useState<SupplierRow | null>(null);
   const [confirmSupplier, setConfirmSupplier] = useState<SupplierRow | null>(
@@ -74,12 +93,14 @@ export default function SuppliersConfigurationPage(props: {
   async function loadData() {
     try {
       setLoading(true);
-      const [supplierData, typeData] = await Promise.all([
+      const [supplierData, typeData, docTypesData] = await Promise.all([
         listSuppliers(),
         listSupplierTypes(),
+        listDocumentTypes(),
       ]);
       setSuppliers(supplierData.suppliers as any);
       setTypes(typeData);
+      setDocumentTypes(docTypesData as any);
     } catch (error) {
       console.error("Error al cargar proveedores:", error);
     } finally {
@@ -288,6 +309,7 @@ export default function SuppliersConfigurationPage(props: {
         <SupplierForm
           supplier={modalSupplier}
           supplierTypes={types}
+          documentTypes={documentTypes}
           onClose={closeModal}
           onSave={loadData}
         />
@@ -317,11 +339,13 @@ export default function SuppliersConfigurationPage(props: {
 function SupplierForm({
   supplier,
   supplierTypes,
+  documentTypes,
   onClose,
   onSave,
 }: {
   supplier: SupplierRow | null;
   supplierTypes: SupplierType[];
+  documentTypes: DocumentType[];
   onClose: () => void;
   onSave: () => void;
 }) {
@@ -339,6 +363,24 @@ function SupplierForm({
     ? new DateTime(new Date(supplier.birthdate as any))
     : new DateTime();
 
+  /*
+   * Logic to determine correct documentTypeId based on person/company rule.
+   * "siempre intenta obtener cada uno ordenado de forma descendente con un take one"
+   */
+  const personDocTypeId = useMemo(() => {
+    const list = documentTypes
+      .filter((d) => d.appliesToPerson && d.isEnabled)
+      .sort((a, b) => b.id - a.id);
+    return list[0]?.id;
+  }, [documentTypes]);
+
+  const companyDocTypeId = useMemo(() => {
+    const list = documentTypes
+      .filter((d) => d.appliesToCompany && d.isEnabled)
+      .sort((a, b) => b.id - a.id);
+    return list[0]?.id;
+  }, [documentTypes]);
+
   const initialState = {
     id: supplier?.id,
     supplierTypeId: supplier?.supplierTypeId ?? defaultType,
@@ -347,6 +389,7 @@ function SupplierForm({
     phone: supplier?.phone ?? "",
     address: supplier?.address ?? "",
     type: initialType,
+    documentNumber: supplier?.documentNumber ?? "",
     // Conditional initial data
     person:
       initialType === "person"
@@ -368,6 +411,15 @@ function SupplierForm({
   async function handleSubmit(data: any) {
     try {
       const isPersonType = data.type === "person";
+      const targetDocTypeId = isPersonType ? personDocTypeId : companyDocTypeId;
+
+      if (!targetDocTypeId) {
+        alert(
+          "No se encontró un tipo de documento válido para este tipo de proveedor."
+        );
+        return;
+      }
+
       await upsertSupplier({
         id: data.id,
         supplierTypeId: Number(data.supplierTypeId),
@@ -376,6 +428,8 @@ function SupplierForm({
           email: data.email,
           phone: data.phone,
           address: data.address,
+          documentNumber: data.documentNumber,
+          documentTypeId: targetDocTypeId,
           ...(isPersonType
             ? {
                 person: {
@@ -431,6 +485,15 @@ function SupplierForm({
             <Input.Text
               path="address"
               placeholder="Calle, número, ciudad"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </Field>
+
+          <Field label="Número de documento">
+            <Input.Text
+              path="documentNumber"
+              required
+              placeholder="CC o NIT sin dígito de verificación"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </Field>

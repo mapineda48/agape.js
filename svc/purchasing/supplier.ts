@@ -89,6 +89,8 @@ export async function listSuppliers(
       supplierTypeName: supplierType.name,
       registrationDate: supplier.registrationDate,
       active: supplier.active,
+      documentTypeId: user.documentTypeId,
+      documentNumber: user.documentNumber,
     })
     .from(supplier)
     .innerJoin(user, eq(supplier.id, user.id))
@@ -201,6 +203,8 @@ export interface SupplierListItem {
   supplierTypeName: string | null;
   registrationDate: DateTime;
   active: boolean;
+  documentTypeId: number;
+  documentNumber: string;
 }
 
 export interface UpsertSupplierPayload {
