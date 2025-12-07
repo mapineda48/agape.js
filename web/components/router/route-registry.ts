@@ -194,9 +194,9 @@ export class RouteRegistry {
   /** Crea un IPage lazy que guarda Component/onInit la primera vez */
   private toPage(loader: () => Promise<unknown>): IPage {
     const wrapper: any = async () => {
-      const module: any = await loader();
-      wrapper.Component = module.default ?? NoFoundPage;
-      wrapper.onInit = module.onInit;
+      const { default: Component = NoFoundPage, onInit }: any = await loader();
+      wrapper.Component = Component;
+      wrapper.onInit = onInit;
     };
     return wrapper as IPage;
   }
