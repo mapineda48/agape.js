@@ -8,12 +8,6 @@ import {
   upsertClientType,
   deleteClientType,
 } from "@agape/crm/clientType";
-import {
-  listSupplierTypes,
-  createSupplierType,
-  updateSupplierType,
-  deleteSupplierType,
-} from "@agape/purchasing/supplier_type";
 import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
 import CheckBox from "@/components/form/CheckBox";
@@ -31,20 +25,11 @@ interface ClientType {
   isEnabled: boolean;
 }
 
-interface SupplierType {
-  id: number;
-  name: string;
-}
-
 export async function onInit() {
-  const [clientTypes, supplierTypes] = await Promise.all([
-    listClientTypes(),
-    listSupplierTypes(),
-  ]);
+  const [clientTypes] = await Promise.all([listClientTypes()]);
 
   return {
     clientTypes,
-    supplierTypes,
   };
 }
 
@@ -66,44 +51,18 @@ function ClientTypeModalWrapper(
   );
 }
 
-function SupplierTypeModalWrapper(
-  props: { item: SupplierType | null; onSave: () => void } & PortalInjectedProps
-) {
-  return (
-    <PortalModal
-      {...props}
-      title={
-        props.item ? "Editar tipo de proveedor" : "Nuevo tipo de proveedor"
-      }
-      size="md"
-    >
-      <SupplierTypeForm
-        item={props.item}
-        onSave={props.onSave}
-        onClose={() => {}}
-      />
-    </PortalModal>
-  );
-}
-
 const useClientTypeModal = createPortalHook(ClientTypeModalWrapper);
-const useSupplierTypeModal = createPortalHook(SupplierTypeModalWrapper);
 
 export default function GeneralConfigurationPage(props: {
   clientTypes: ClientType[];
-  supplierTypes: SupplierType[];
 }) {
   const notify = useNotificacion();
   const [clientTypes, setClientTypes] = useState<ClientType[]>(
     props.clientTypes
   );
-  const [supplierTypes, setSupplierTypes] = useState<SupplierType[]>(
-    props.supplierTypes
-  );
   const [loading, setLoading] = useState(false);
 
   const showClientModal = useClientTypeModal();
-  const showSupplierModal = useSupplierTypeModal();
   const showConfirm = useConfirmModal();
 
   async function reloadClients() {
@@ -113,58 +72,24 @@ export default function GeneralConfigurationPage(props: {
     setLoading(false);
   }
 
-  async function reloadSuppliers() {
-    setLoading(true);
-    const data = await listSupplierTypes();
-    setSupplierTypes(data);
-    setLoading(false);
+  function openCreate() {
+    showClientModal({ item: null, onSave: reloadClients });
   }
 
-  function openCreate(type: "client" | "supplier") {
-    if (type === "client") {
-      showClientModal({ item: null, onSave: reloadClients });
-    } else {
-      showSupplierModal({ item: null, onSave: reloadSuppliers });
-    }
+  function openEdit(item: ClientType) {
+    showClientModal({ item: item, onSave: reloadClients });
   }
 
-  function openEdit(type: "client", item: ClientType): void;
-  function openEdit(type: "supplier", item: SupplierType): void;
-  function openEdit(
-    type: "client" | "supplier",
-    item: ClientType | SupplierType
-  ) {
-    if (type === "client") {
-      showClientModal({ item: item as ClientType, onSave: reloadClients });
-    } else {
-      showSupplierModal({
-        item: item as SupplierType,
-        onSave: reloadSuppliers,
-      });
-    }
-  }
-
-  function confirmDelete(
-    type: "client" | "supplier",
-    item: ClientType | SupplierType
-  ) {
+  function confirmDelete(item: ClientType) {
     showConfirm({
-      title:
-        type === "client"
-          ? "Eliminar tipo de cliente"
-          : "Eliminar tipo de proveedor",
+      title: "Eliminar tipo de cliente",
       message: `¿Estás seguro de que deseas eliminar "${item.name}"? Esta acción no se puede deshacer.`,
       confirmText: "Eliminar",
       variant: "danger",
       onConfirm: async () => {
         try {
-          if (type === "client") {
-            await deleteClientType(item.id);
-            await reloadClients();
-          } else {
-            await deleteSupplierType(item.id);
-            await reloadSuppliers();
-          }
+          await deleteClientType(item.id);
+          await reloadClients();
         } catch (error) {
           console.error("Error deleting type:", error);
           notify({ payload: "Error al eliminar el registro", type: "error" });
@@ -182,12 +107,11 @@ export default function GeneralConfigurationPage(props: {
               Configuración General
             </p>
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
-              Catálogos maestros de CRM y Compras
+              Catálogo maestro de CRM
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 max-w-2xl">
-              Administra los tipos de cliente y proveedor desde un mismo panel.
-              Los cambios se reflejan en formularios y flujos de alta de manera
-              inmediata.
+              Administra los tipos de cliente. Los cambios se reflejan en
+              formularios y flujos de alta de manera inmediata.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -195,12 +119,6 @@ export default function GeneralConfigurationPage(props: {
               label="Tipos de cliente"
               value={clientTypes.length}
               tone="indigo"
-              muted={loading}
-            />
-            <StatChip
-              label="Tipos de proveedor"
-              value={supplierTypes.length}
-              tone="emerald"
               muted={loading}
             />
             <StatChip
@@ -213,13 +131,13 @@ export default function GeneralConfigurationPage(props: {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6">
         <TypePanel
           title="Tipos de Cliente"
           description="Estados que se usan en formularios y embudos de CRM."
           tone="indigo"
           loading={loading}
-          onCreate={() => openCreate("client")}
+          onCreate={() => openCreate()}
           isEmpty={clientTypes.length === 0}
           emptyMessage="Aún no has creado tipos de cliente."
         >
@@ -231,32 +149,8 @@ export default function GeneralConfigurationPage(props: {
                 subtitle={`ID ${item.id}`}
                 badgeLabel={item.isEnabled ? "Activo" : "Deshabilitado"}
                 badgeTone={item.isEnabled ? "green" : "red"}
-                onEdit={() => openEdit("client", item)}
-                onDelete={() => confirmDelete("client", item)}
-              />
-            ))}
-          </div>
-        </TypePanel>
-
-        <TypePanel
-          title="Tipos de Proveedor"
-          description="Clasifica proveedores para compras y negociaciones."
-          tone="emerald"
-          loading={loading}
-          onCreate={() => openCreate("supplier")}
-          isEmpty={supplierTypes.length === 0}
-          emptyMessage="Aún no has creado tipos de proveedor."
-        >
-          <div className="space-y-3">
-            {supplierTypes.map((item) => (
-              <RowCard
-                key={item.id}
-                title={item.name}
-                subtitle={`ID ${item.id}`}
-                badgeLabel="Catálogo"
-                badgeTone="amber"
-                onEdit={() => openEdit("supplier", item)}
-                onDelete={() => confirmDelete("supplier", item)}
+                onEdit={() => openEdit(item)}
+                onDelete={() => confirmDelete(item)}
               />
             ))}
           </div>
@@ -342,70 +236,6 @@ function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
   );
 }
 
-interface SupplierTypeFormProps {
-  item: SupplierType | null;
-  onClose: () => void;
-  onSave: () => void;
-}
-
-function SupplierTypeForm({ item, onClose, onSave }: SupplierTypeFormProps) {
-  const notify = useNotificacion();
-  const isEditing = !!item;
-  const initialState = item || { name: "" };
-
-  async function handleSubmit(data: { name: string }) {
-    try {
-      if (isEditing && item) {
-        await updateSupplierType(item.id, data);
-      } else {
-        await createSupplierType(data);
-      }
-      await onSave();
-      onClose();
-    } catch (error) {
-      console.error("Error saving supplier type:", error);
-      notify({
-        payload: "Error al guardar el tipo de proveedor",
-        type: "error",
-      });
-    }
-  }
-
-  return (
-    <Form state={initialState}>
-      <div className="p-6 space-y-5">
-        <FieldLabel
-          title="Nombre"
-          description="Usa nombres cortos y claros; aparecerán en compras y órdenes."
-        >
-          <Input.Text
-            path="name"
-            required
-            placeholder="Ej: Logística, Materias primas"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          />
-        </FieldLabel>
-      </div>
-
-      <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 rounded-b-xl">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          Cancelar
-        </button>
-        <Submit
-          onSubmit={handleSubmit}
-          className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm hover:shadow-md"
-        >
-          {isEditing ? "Guardar cambios" : "Crear tipo"}
-        </Submit>
-      </div>
-    </Form>
-  );
-}
-
 function TypePanel({
   title,
   description,
@@ -418,17 +248,14 @@ function TypePanel({
 }: {
   title: string;
   description: string;
-  tone: "indigo" | "emerald";
+  tone: "indigo";
   loading: boolean;
   onCreate: () => void;
   emptyMessage: string;
   isEmpty: boolean;
   children: ReactNode;
 }) {
-  const accent =
-    tone === "indigo"
-      ? "from-indigo-50/70 dark:from-indigo-900/20"
-      : "from-emerald-50/70 dark:from-emerald-900/20";
+  const accent = "from-indigo-50/70 dark:from-indigo-900/20";
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
@@ -450,9 +277,7 @@ function TypePanel({
           onClick={onCreate}
           className={clsx(
             "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white shadow-sm transition-transform hover:-translate-y-0.5",
-            tone === "indigo"
-              ? "bg-indigo-600 hover:bg-indigo-700"
-              : "bg-emerald-600 hover:bg-emerald-700"
+            "bg-indigo-600 hover:bg-indigo-700"
           )}
         >
           <PlusIcon className="w-5 h-5" />
@@ -570,14 +395,12 @@ function StatChip({
 }: {
   label: string;
   value: number;
-  tone: "indigo" | "emerald" | "blue";
+  tone: "indigo" | "blue";
   muted?: boolean;
 }) {
-  const tones: Record<"indigo" | "emerald" | "blue", string> = {
+  const tones: Record<"indigo" | "blue", string> = {
     indigo:
       "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200",
-    emerald:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
     blue: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200",
   };
 

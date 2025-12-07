@@ -8,6 +8,7 @@ import {
   TrashIcon,
   UserIcon,
   BuildingOfficeIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline";
 import {
   listSuppliers,
@@ -31,6 +32,7 @@ import {
 } from "@/components/util/portal";
 import PortalModal from "@/components/ui/PortalModal";
 import { useConfirmModal } from "@/components/ui/PortalConfirm";
+import SupplierTypeManager from "./SupplierTypeManager";
 
 interface SupplierType {
   id: number;
@@ -105,7 +107,19 @@ function SupplierModalWrapper(
   );
 }
 
+function SupplierTypeManagerModalWrapper(props: PortalInjectedProps) {
+  return (
+    <PortalModal {...props} title="Gestionar tipos de proveedor" size="lg">
+      {/* onClose will be injected by PortalModal */}
+      <SupplierTypeManager onClose={() => {}} />
+    </PortalModal>
+  );
+}
+
 const useSupplierModal = createPortalHook(SupplierModalWrapper);
+const useSupplierTypeManagerModal = createPortalHook(
+  SupplierTypeManagerModalWrapper
+);
 
 export default function SuppliersConfigurationPage(props: {
   suppliers: SupplierRow[];
@@ -121,6 +135,7 @@ export default function SuppliersConfigurationPage(props: {
   const [loading, setLoading] = useState(false);
 
   const showSupplier = useSupplierModal();
+  const showTypeManager = useSupplierTypeManagerModal();
   const showConfirm = useConfirmModal();
 
   async function loadData() {
@@ -156,6 +171,12 @@ export default function SuppliersConfigurationPage(props: {
       supplierTypes: types,
       documentTypes: documentTypes,
       onSave: loadData,
+    });
+  }
+
+  function openTypeManager() {
+    showTypeManager({
+      onClose: loadData, // Updates types list when manager closes
     });
   }
 
@@ -198,16 +219,25 @@ export default function SuppliersConfigurationPage(props: {
             negociaciones.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Stat label="Activos" value={activeSuppliers} tone="green" />
           <Stat label="Total" value={suppliers.length} tone="indigo" />
-          <button
-            onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm"
-          >
-            <PlusIcon className="w-5 h-5" />
-            Nuevo proveedor
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={openTypeManager}
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              <TagIcon className="w-5 h-5" />
+              Tipos
+            </button>
+            <button
+              onClick={openCreate}
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm"
+            >
+              <PlusIcon className="w-5 h-5" />
+              Nuevo proveedor
+            </button>
+          </div>
         </div>
       </div>
 
@@ -495,8 +525,6 @@ function SupplierFormContent({
             });
           }
 
-          console.log("User found:", user);
-
           notify({
             payload: "Se ha cargado la información existente.",
             type: "success",
@@ -578,7 +606,7 @@ function SupplierFormContent({
                   </option>
                 ))
               ) : (
-                <option value="">Crea tipos en Configuración General</option>
+                <option value="">Crea tipos en la gestión de tipos</option>
               )}
             </Select.Int>
           </Field>
@@ -765,8 +793,10 @@ function Stat({
   tone: "indigo" | "green";
 }) {
   const tones: Record<"indigo" | "green", string> = {
-    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
-    green: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    indigo:
+      "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-800",
+    green:
+      "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-800",
   };
   return (
     <div
@@ -777,6 +807,19 @@ function Stat({
     >
       {label}: {value}
     </div>
+  );
+}
+
+function Td({ children, align }: { children: ReactNode; align?: "right" }) {
+  return (
+    <td
+      className={clsx(
+        "whitespace-nowrap px-6 py-4",
+        align === "right" ? "text-right" : ""
+      )}
+    >
+      {children}
+    </td>
   );
 }
 
@@ -799,46 +842,20 @@ function Th({
   );
 }
 
-function Td({
-  children,
-  align = "left",
-}: {
-  children: ReactNode;
-  align?: "left" | "right";
-}) {
-  return (
-    <td
-      className={clsx(
-        "px-6 py-4 text-sm text-gray-800 dark:text-gray-200",
-        align === "right" ? "text-right" : "text-left"
-      )}
-    >
-      {children}
-    </td>
-  );
-}
-
 function Field({
   label,
-  description,
   children,
   className,
 }: {
   label: string;
-  description?: string;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <label className={clsx("space-y-1.5", className)}>
+    <label className={clsx("block space-y-1.5", className)}>
       <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
         {label}
       </span>
-      {description ? (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {description}
-        </p>
-      ) : null}
       {children}
     </label>
   );
