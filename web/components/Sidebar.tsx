@@ -32,8 +32,9 @@ const NAV_ITEMS = [
 
 const useBreakpointValue = factoryHook({
   xs: true,
-  sm: false,
+  xl: false,
 });
+1;
 
 export default function Sidebar() {
   const router = useHistory();
