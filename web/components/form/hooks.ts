@@ -15,12 +15,21 @@ export function useSelector<S, T>(selector: (state: S) => T) {
   return selector(revivedData);
 }
 
+// Unique ID for each useInputArray instance to ensure key uniqueness
+let instanceId = 0;
+
 export function useInputArray<T extends unknown[]>(path?: Path) {
   const paths = usePaths(path);
   const state = useSelectPath<T>(paths, [] as unknown as T);
   const dispatch = useAppDispatch();
   const keysRef = useRef<string[]>([]);
   const keyCounter = useRef(0);
+  // Each instance gets a unique ID to prevent key collisions across instances
+  const instanceIdRef = useRef(instanceId++);
+
+  // Generate a unique key prefix - use instance ID when paths is empty
+  const keyPrefix =
+    paths.length > 0 ? paths.join("|") : `_root_${instanceIdRef.current}`;
 
   // Keep internal keys array aligned with current state length
   useEffect(() => {
@@ -28,7 +37,7 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
     if (state.length > keysRef.current.length) {
       const diff = state.length - keysRef.current.length;
       const newKeys = Array.from({ length: diff }, () => {
-        return `${paths.join("|")}|${keyCounter.current++}`;
+        return `${keyPrefix}|${keyCounter.current++}`;
       });
       keysRef.current = [...keysRef.current, ...newKeys];
     }
@@ -37,14 +46,25 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
     if (state.length < keysRef.current.length) {
       keysRef.current = keysRef.current.slice(0, state.length);
     }
-  }, [state.length, paths]);
+  }, [state.length, keyPrefix]);
 
   return useMemo(() => {
+    // Ensure keys are initialized on first render (before useEffect runs)
+    if (keysRef.current.length < state.length) {
+      const diff = state.length - keysRef.current.length;
+      const newKeys = Array.from({ length: diff }, () => {
+        return `${keyPrefix}|${keyCounter.current++}`;
+      });
+      keysRef.current = [...keysRef.current, ...newKeys];
+    }
+
     return {
       set(value: T) {
         dispatch(setAtPath({ path: paths, value }));
         // Reset keys to match the new array shape
-        keysRef.current = value.map(() => `${paths.join("|")}|${keyCounter.current++}`);
+        keysRef.current = value.map(
+          () => `${keyPrefix}|${keyCounter.current++}`
+        );
       },
 
       map(cb: IMap<T>) {
@@ -54,8 +74,8 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
 
         return state.map((payload: any, index: number) => {
           const fullPath = [...paths, index];
-          const key = keysRef.current[index] ?? `${paths.join("|")}|${index}`;
-          keysRef.current[index] = key;
+          // Always use keysRef - it's guaranteed to be populated by the useMemo initialization above
+          const key = keysRef.current[index];
           // Pass the relative path (from useInputArray call) plus index to PathProvider
           // PathProvider will concatenate with its parent context
           const relativePath = [...normalizedPath, index];
@@ -71,7 +91,7 @@ export function useInputArray<T extends unknown[]>(path?: Path) {
       addItem(...items: T[number][]) {
         items.forEach((item) => {
           dispatch(pushAtPath({ path: paths, value: item }));
-          keysRef.current.push(`${paths.join("|")}|${keyCounter.current++}`);
+          keysRef.current.push(`${keyPrefix}|${keyCounter.current++}`);
         });
       },
 
