@@ -1,6 +1,7 @@
 import { db } from "#lib/db";
 import client from "#models/crm/client";
 import person from "#models/core/person";
+import company from "#models/core/company";
 import { user } from "#models/core/user";
 import clientType from "#models/crm/client_type";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
@@ -29,6 +30,8 @@ export async function getClientById(id: number) {
       userId: client.id,
       firstName: person.firstName,
       lastName: person.lastName,
+      legalName: company.legalName,
+      tradeName: company.tradeName,
       email: user.email,
       phone: user.phone,
       address: user.address,
@@ -45,7 +48,8 @@ export async function getClientById(id: number) {
     })
     .from(client)
     .innerJoin(user, eq(client.id, user.id))
-    .innerJoin(person, eq(client.id, person.id))
+    .leftJoin(person, eq(client.id, person.id))
+    .leftJoin(company, eq(client.id, company.id))
     .leftJoin(clientType, eq(client.typeId, clientType.id))
     .where(eq(client.id, id));
 
@@ -89,11 +93,15 @@ export async function listClients(
   const conditions = [];
 
   if (fullName) {
-    // Buscar en nombre y apellido de persona
+    // Buscar en nombre y apellido de persona o razón social/nombre comercial de empresa
     conditions.push(
-      sql`CONCAT(${person.firstName}, ' ', ${
+      sql`(
+        CONCAT(${person.firstName}, ' ', ${
         person.lastName
-      }) ILIKE ${`%${fullName}%`}`
+      }) ILIKE ${`%${fullName}%`} OR
+        ${company.legalName} ILIKE ${`%${fullName}%`} OR
+        ${company.tradeName} ILIKE ${`%${fullName}%`}
+      )`
     );
   }
 
@@ -114,6 +122,8 @@ export async function listClients(
       userId: client.id,
       firstName: person.firstName,
       lastName: person.lastName,
+      legalName: company.legalName,
+      tradeName: company.tradeName,
       email: user.email,
       phone: user.phone,
       address: user.address,
@@ -127,7 +137,8 @@ export async function listClients(
     })
     .from(client)
     .innerJoin(user, eq(client.id, user.id))
-    .innerJoin(person, eq(client.id, person.id))
+    .leftJoin(person, eq(client.id, person.id))
+    .leftJoin(company, eq(client.id, company.id))
     .leftJoin(clientType, eq(client.typeId, clientType.id))
     .where(whereClause)
     .orderBy(desc(client.id))
@@ -145,7 +156,8 @@ export async function listClients(
     .select({ totalCount: count() })
     .from(client)
     .innerJoin(user, eq(client.id, user.id))
-    .innerJoin(person, eq(client.id, person.id))
+    .leftJoin(person, eq(client.id, person.id))
+    .leftJoin(company, eq(client.id, company.id))
     .where(whereClause);
 
   // Ejecutar ambas consultas en paralelo
@@ -288,8 +300,10 @@ export interface ListClientsResult {
 export interface ClientListItem {
   id: number;
   userId: number;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
+  legalName: string | null;
+  tradeName: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;

@@ -57,19 +57,34 @@ export default function EditClientPage(props: Props) {
   // Prepare initial form data
   const initialData = {
     id: props.client.id,
-    person: {
-      firstName: props.client.firstName,
-      lastName: props.client.lastName,
-      email: props.client.email,
-      phone: props.client.phone || "",
-      address: props.client.address || "",
-      birthdate: props.client.birthdate,
-    },
     documentTypeId: props.client.documentTypeId,
     documentNumber: props.client.documentNumber,
     typeId: props.client.typeId || 0,
     active: props.client.active,
     photo: props.client.photoUrl || undefined,
+    ...(props.client.firstName
+      ? {
+          person: {
+            firstName: props.client.firstName,
+            lastName: props.client.lastName,
+            email: props.client.email,
+            phone: props.client.phone || "",
+            address: props.client.address || "",
+            birthdate: props.client.birthdate,
+          },
+        }
+      : {}),
+    ...(props.client.legalName
+      ? {
+          company: {
+            legalName: props.client.legalName,
+            tradeName: props.client.tradeName,
+            email: props.client.email,
+            phone: props.client.phone || "",
+            address: props.client.address || "",
+          },
+        }
+      : {}),
   };
 
   return (
@@ -166,6 +181,14 @@ function ClientForm({
             });
           }
 
+          // Preload company information
+          if (user.company) {
+            setAt(["company"], {
+              legalName: user.company.legalName,
+              tradeName: user.company.tradeName,
+            });
+          }
+
           notify({
             payload: "Se ha cargado la información existente.",
             type: "success",
@@ -179,9 +202,15 @@ function ClientForm({
     return () => clearTimeout(timeOutId);
   }, [documentTypeId, documentNumber, merge, setAt, notify]);
 
-  const personDocumentTypes = React.useMemo(() => {
-    return documentTypes.filter((d) => d.appliesToPerson && d.isEnabled);
+  // Filter enabled document types
+  const enabledDocumentTypes = React.useMemo(() => {
+    return documentTypes.filter((d) => d.isEnabled);
   }, [documentTypes]);
+
+  const isCompany = React.useMemo(() => {
+    const type = documentTypes.find((d) => d.id === Number(documentTypeId));
+    return type?.appliesToCompany;
+  }, [documentTypeId, documentTypes]);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -284,7 +313,7 @@ function ClientForm({
               className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             >
               <option value="">Seleccionar tipo...</option>
-              {personDocumentTypes.map((type) => (
+              {enabledDocumentTypes.map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.name}
                 </option>
@@ -299,62 +328,110 @@ function ClientForm({
           </div>
         </div>
 
-        {/* Personal Information */}
-        <PathProvider value="person">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg
-                className="h-5 w-5 mr-2 text-blue-600"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                  clipRule="evenodd"
+        {/* Dynamic Personal/Company Information */}
+        {isCompany ? (
+          <PathProvider value="company" autoCleanup>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg
+                  className="h-5 w-5 mr-2 text-blue-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M5.223 2.25c-.497 0-.974.198-1.322.55l-1.9 1.9a1.875 1.875 0 000 2.652l1.9 1.9c.348.352.825.55 1.322.55H6.5v3c0 .828.672 1.5 1.5 1.5h9c.828 0 1.5-.672 1.5-1.5v-3h1.277c.497 0 .974-.198 1.322-.55l1.9-1.9a1.875 1.875 0 000-2.652l-1.9-1.9A1.875 1.875 0 0019.777 2.25H5.223zM9 13.5v-2h6v2H9z" />
+                </svg>
+                Información de Empresa
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input.Text
+                  path="legalName"
+                  placeholder="Razón Social"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-              </svg>
-              Información Personal
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input.Text
-                path="firstName"
-                placeholder="Juan"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Input.Text
-                path="lastName"
-                placeholder="Pérez"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Input.Text
-                path="email"
-                email
-                placeholder="juan.perez@example.com"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Input.Text
-                path="phone"
-                placeholder="+1 234 567 8900"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Input.DateTime
-                path="birthdate"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Input.Text
-                path="address"
-                placeholder="Calle Principal 123"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
+                <Input.Text
+                  path="tradeName"
+                  placeholder="Nombre Comercial"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.Text
+                  path="email"
+                  email
+                  placeholder="contacto@empresa.com"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.Text
+                  path="phone"
+                  placeholder="+1 234 567 8900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.Text
+                  path="address"
+                  placeholder="Dirección Fiscal"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
             </div>
-          </div>
-        </PathProvider>
+          </PathProvider>
+        ) : (
+          <PathProvider value="person" autoCleanup>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg
+                  className="h-5 w-5 mr-2 text-blue-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Información Personal
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input.Text
+                  path="firstName"
+                  placeholder="Juan"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.Text
+                  path="lastName"
+                  placeholder="Pérez"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.Text
+                  path="email"
+                  email
+                  placeholder="juan.perez@example.com"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.Text
+                  path="phone"
+                  placeholder="+1 234 567 8900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.DateTime
+                  path="birthdate"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.Text
+                  path="address"
+                  placeholder="Calle Principal 123"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+            </div>
+          </PathProvider>
+        )}
 
         {/* Client Information */}
         <div>
@@ -428,16 +505,31 @@ function ClientForm({
                 active: data.active,
                 photo: data.photo,
                 user: {
-                  documentTypeId: Number(data.person.documentTypeId),
-                  documentNumber: String(data.person.documentNumber),
-                  email: data.person.email,
-                  phone: data.person.phone,
-                  address: data.person.address,
-                  person: {
-                    firstName: data.person.firstName,
-                    lastName: data.person.lastName,
-                    birthdate: new DateTime(data.person.birthdate),
-                  },
+                  documentTypeId: Number(data.documentTypeId),
+                  documentNumber: String(data.documentNumber),
+                  ...(data.person
+                    ? {
+                        email: data.person.email,
+                        phone: data.person.phone,
+                        address: data.person.address,
+                        person: {
+                          firstName: data.person.firstName,
+                          lastName: data.person.lastName,
+                          birthdate: new DateTime(data.person.birthdate),
+                        },
+                      }
+                    : {}),
+                  ...(data.company
+                    ? {
+                        email: data.company.email,
+                        phone: data.company.phone,
+                        address: data.company.address,
+                        company: {
+                          legalName: data.company.legalName,
+                          tradeName: data.company.tradeName,
+                        },
+                      }
+                    : {}),
                 } as any,
               });
               notify({
