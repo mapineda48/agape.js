@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import Form, { useAppDispatch, setAtPath } from "@/components/form";
+import Form, { useAppDispatch, setAtPath, useForm } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
 import useInput from "@/components/form/Input/useInput";
@@ -514,7 +514,7 @@ function StatusPriceCard() {
           <div className="flex items-center">
             <Checkbox
               materialize
-              checked
+              defaultChecked
               path="isEnabled"
               className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
             />
@@ -585,13 +585,13 @@ function CategorizationCard() {
 function InsertUpdate(props: { itemType: ItemType; onSuccess?: () => void }) {
   const dispatch = useAppDispatch();
   const emitter = useEventEmitter();
-  const updateFormEvent = useMemo(() => Symbol("updateForm"), []);
+  const evt = useForm();
 
   useEffect(() => {
-    return emitter.on(updateFormEvent, ((record: IItemRecord) => {
+    return emitter.on(evt.SUBMIT_SUCCESS, ((record: IItemRecord) => {
       dispatch(setAtPath({ path: [], value: record }));
     }) as any);
-  }, [emitter, updateFormEvent, dispatch]);
+  }, [emitter, evt.SUBMIT_SUCCESS, dispatch]);
 
   const buttonColor =
     props.itemType === "good"
@@ -650,7 +650,6 @@ function InsertUpdate(props: { itemType: ItemType; onSuccess?: () => void }) {
         props.onSuccess?.();
         return record;
       }}
-      event={updateFormEvent}
       className={`w-full py-3 px-4 text-white font-medium rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 ${buttonColor}`}
     >
       {buttonLabel}

@@ -4,9 +4,11 @@ import { useEventEmitter } from "@/components/util/event-emitter";
 
 export function Submit<T = unknown>({
   onSubmit,
+  onError,
+  onSuccess,
+  onLoadingChange,
   children,
   disabled,
-  onLoadingChange,
   ...core
 }: Props<T>) {
   const [loading, setLoading] = useState(false);
@@ -19,12 +21,19 @@ export function Submit<T = unknown>({
   }, [loading, onLoadingChange]);
 
   useEffect(() => {
-    const handler = async (payload: unknown) => {
+    const handler = async (formData: unknown) => {
+      if (process.env.NODE_ENV === "development") {
+        console.log("formData", formData);
+      }
+
       setLoading(true);
       try {
-        await onSubmit(payload as T);
+        const payload = await onSubmit(formData as T);
+        onSuccess?.(payload);
         emitter.emit(event.SUBMIT_SUCCESS, payload);
       } catch (error) {
+        onError?.(error);
+
         // Error is caught to prevent unhandled rejection.
         // The component recovers silently - SUBMIT_SUCCESS is not emitted.
         // Consumer can handle the error in onSubmit if needed.
@@ -52,7 +61,9 @@ export function Submit<T = unknown>({
 }
 
 export interface Props<T = unknown> extends Core {
-  onSubmit: (state: T) => Promise<void> | void;
+  onSubmit: (state: T) => Promise<unknown>;
+  onError?: (error: unknown) => void;
+  onSuccess?: <P>(payload: P) => void;
   onLoadingChange?: (loading: boolean) => void;
 }
 

@@ -23,10 +23,7 @@ export default function defineAuth(secret: string) {
 
   router.post("/security/access/login", async (req, res, next) => {
     try {
-      const [username, password] = decode(req.body) as [
-        username: string,
-        password: string
-      ];
+      const [{ username, password }] = decode(req.body) as [LoginRequest];
 
       const user = await findUser(username, password);
 
@@ -158,4 +155,9 @@ type Access = [username: string, password: string];
 
 export interface Options {
   secret: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
 }

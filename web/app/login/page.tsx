@@ -1,4 +1,4 @@
-import { login } from "@agape/security/access";
+import { login, type LoginRequest } from "@agape/security/access";
 import Form from "@/components/form";
 import Input from "@/components/form/Input";
 import Submit from "@/components/ui/submit";
@@ -41,7 +41,7 @@ export default function LoginForm() {
             </p>
           </div>
 
-          <Form<LoginFormState>>
+          <Form<LoginRequest>>
             <div className="space-y-6">
               {/* Username Field */}
               <div className="space-y-2">
@@ -89,12 +89,9 @@ export default function LoginForm() {
               </div>
 
               <div className="pt-2">
-                <Submit
-                  onSubmit={async (state: LoginFormState) => {
-                    await login(state.username, state.password);
-                    router.navigate("/cms", { replace: true });
-                  }}
-                  disableSuccessNotification
+                <Submit<LoginRequest>
+                  onSubmit={login}
+                  onSuccess={() => router.navigate("/cms", { replace: true })}
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
                 >
                   Iniciar Sesión
@@ -124,13 +121,4 @@ export default function LoginForm() {
       </motion.div>
     </div>
   );
-}
-
-/**
- * Types
- */
-
-interface LoginFormState {
-  username: string;
-  password: string;
 }
