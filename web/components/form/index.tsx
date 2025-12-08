@@ -5,10 +5,12 @@ import useInput from "./Input/useInput";
 import { useInputArray } from "./hooks";
 import { useFormReset } from "./useFormReset";
 
-export default function Form(props: Props) {
+export default function Form<T extends object | any[] = object>(
+  props: Props<T>
+) {
   return (
     <StoreProvider initialState={props.state}>
-      <FormProvider {...props} />
+      <FormProvider<T> {...props} />
     </StoreProvider>
   );
 }

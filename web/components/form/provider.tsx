@@ -18,7 +18,10 @@ const Context = createContext<EventForm>({
  * @note El prop `state` se usa para inicializar el store y se pasa a StoreProvider,
  * no se utiliza internamente aquí.
  */
-export default function FormProvider({ state: _initialState, ...core }: Props) {
+export default function FormProvider<T extends object | any[] = object>({
+  state: _initialState,
+  ...core
+}: Props<T>) {
   const store = useStore<RootState>();
   const emitter = useEventEmitter();
 
@@ -38,7 +41,7 @@ export default function FormProvider({ state: _initialState, ...core }: Props) {
 
           const state = store.getState();
 
-          const payload = deepCloneWithOutHelpers(state.form.data);
+          const payload = deepCloneWithOutHelpers(state.form.data) as T;
 
           if (process.env.NODE_ENV === "development") {
             console.log("[Form] Submit payload", payload);

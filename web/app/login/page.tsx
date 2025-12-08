@@ -41,7 +41,7 @@ export default function LoginForm() {
             </p>
           </div>
 
-          <Form>
+          <Form<LoginFormState>>
             <div className="space-y-6">
               {/* Username Field */}
               <div className="space-y-2">
@@ -90,7 +90,7 @@ export default function LoginForm() {
 
               <div className="pt-2">
                 <Submit
-                  onSubmit={async (state: any) => {
+                  onSubmit={async (state: LoginFormState) => {
                     await login(state.username, state.password);
                     router.navigate("/cms", { replace: true });
                   }}
@@ -124,4 +124,13 @@ export default function LoginForm() {
       </motion.div>
     </div>
   );
+}
+
+/**
+ * Types
+ */
+
+interface LoginFormState {
+  username: string;
+  password: string;
 }
