@@ -23,34 +23,60 @@ import { upsertUser, type IUpsertUser, type IUser } from "#svc/core/user";
  * }
  * ```
  */
-export async function getClientById(id: number) {
+interface ClientDto {
+  id: number;
+  typeId: number | null;
+  active: boolean;
+  photo: string | null;
+  user: {
+    id: number;
+    documentTypeId: number;
+    documentNumber: string;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+  };
+  person: {
+    firstName: string;
+    lastName: string;
+    birthdate: DateTime | null;
+  } | null;
+  company: {
+    legalName: string;
+    tradeName: string | null;
+  } | null;
+}
+export async function getClientById(id: number): Promise<ClientDto> {
   const [match] = await db
     .select({
       id: client.id,
-      userId: client.id,
-      firstName: person.firstName,
-      lastName: person.lastName,
-      legalName: company.legalName,
-      tradeName: company.tradeName,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
-      birthdate: person.birthdate,
       typeId: client.typeId,
-      typeName: clientType.name,
-      photoUrl: client.photoUrl,
       active: client.active,
-      createdAt: client.createdAt,
-      updatedAt: client.updatedAt,
-      // Identity fields
-      documentTypeId: user.documentTypeId,
-      documentNumber: user.documentNumber,
+      photo: client.photoUrl,
+
+      user: {
+        id: user.id,
+        documentTypeId: user.documentTypeId,
+        documentNumber: user.documentNumber,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+      },
+
+      person: {
+        firstName: person.firstName,
+        lastName: person.lastName,
+        birthdate: person.birthdate,
+      },
+      company: {
+        legalName: company.legalName,
+        tradeName: company.tradeName,
+      },
     })
     .from(client)
     .innerJoin(user, eq(client.id, user.id))
     .leftJoin(person, eq(client.id, person.id))
     .leftJoin(company, eq(client.id, company.id))
-    .leftJoin(clientType, eq(client.typeId, clientType.id))
     .where(eq(client.id, id));
 
   return match;

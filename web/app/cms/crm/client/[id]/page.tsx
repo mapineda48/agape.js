@@ -1,5 +1,5 @@
-import { Fragment, useState } from "react";
-import Form from "@/components/form";
+import { Fragment, useState, useMemo, useEffect } from "react";
+import Form, { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
 import { Submit } from "@/components/form/Submit";
 import { useRouter } from "@/components/router/router-hook";
@@ -7,13 +7,11 @@ import { useNotificacion } from "@/components/ui/notification";
 import { upsertClient, getClientById } from "@agape/crm/client";
 import { listClientTypes as findAll } from "@agape/crm/clientType";
 import DateTime from "@utils/data/DateTime";
-import React from "react";
 import { listDocumentTypes } from "@agape/core/documentType";
 import { getUserByDocument } from "@agape/core/user";
 import Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
-import { useFormReset } from "@/components/form";
 import useInput from "@/components/form/Input/useInput";
 
 type ClientType = Awaited<ReturnType<typeof findAll>>[number];
@@ -37,7 +35,7 @@ export async function onInit({ params }: { params: PageParams }) {
     findAll(),
     getClientById(clientId),
     listDocumentTypes(),
-  ]);
+  ] as const);
 
   if (!client) {
     throw new Error("Cliente no encontrado");
@@ -45,9 +43,9 @@ export async function onInit({ params }: { params: PageParams }) {
 
   return {
     clientTypes,
-    client,
+    client: client as ClientData,
     documentTypes,
-  };
+  } as Props;
 }
 
 /**
@@ -60,20 +58,18 @@ interface EditClientFormState {
   typeId: number;
   active: boolean;
   photo?: string;
+  // Common user data
+  email: string;
+  phone?: string;
+  address?: string;
   person?: {
     firstName: string;
     lastName: string;
-    email: string;
-    phone?: string;
-    address?: string;
     birthdate?: any;
   };
   company?: {
     legalName: string;
     tradeName?: string;
-    email: string;
-    phone?: string;
-    address?: string;
   };
 }
 
@@ -81,34 +77,32 @@ export default function EditClientPage(props: Props) {
   const { navigate } = useRouter();
 
   // Prepare initial form data
-  // Prepare initial form data
   const initialData = {
-    id: props.client.id,
-    documentTypeId: props.client.documentTypeId,
-    documentNumber: props.client.documentNumber,
     typeId: props.client.typeId || 0,
     active: props.client.active,
-    photo: props.client.photoUrl || undefined,
-    ...(props.client.firstName
+    photo: props.client.photo || undefined,
+    user: {
+      id: props.client.id,
+      documentTypeId: props.client.user.documentTypeId,
+      documentNumber: props.client.user.documentNumber,
+      email: props.client.user.email || "",
+      phone: props.client.user.phone || "",
+      address: props.client.user.address || "",
+    },
+    ...(props.client.person
       ? {
           person: {
-            firstName: props.client.firstName,
-            lastName: props.client.lastName,
-            email: props.client.email,
-            phone: props.client.phone || "",
-            address: props.client.address || "",
-            birthdate: props.client.birthdate,
+            firstName: props.client.person.firstName,
+            lastName: props.client.person.lastName,
+            birthdate: props.client.person.birthdate,
           },
         }
       : {}),
-    ...(props.client.legalName
+    ...(props.client.company
       ? {
           company: {
-            legalName: props.client.legalName,
-            tradeName: props.client.tradeName,
-            email: props.client.email,
-            phone: props.client.phone || "",
-            address: props.client.address || "",
+            legalName: props.client.company.legalName,
+            tradeName: props.client.company.tradeName,
           },
         }
       : {}),
@@ -147,11 +141,11 @@ export default function EditClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <Form<EditClientFormState> state={initialData as EditClientFormState}>
+          <Form<EditClientFormState> state={initialData}>
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
-              initialPhoto={props.client.photoUrl}
+              initialPhoto={props.client.photo}
             />
           </Form>
         </div>
@@ -179,7 +173,7 @@ function ClientForm({
   const [documentNumber] = useInput("documentNumber");
 
   // Document Validation Effect
-  React.useEffect(() => {
+  useEffect(() => {
     const timeOutId = setTimeout(async () => {
       if (!documentTypeId || !documentNumber) return;
 
@@ -230,11 +224,11 @@ function ClientForm({
   }, [documentTypeId, documentNumber, merge, setAt, notify]);
 
   // Filter enabled document types
-  const enabledDocumentTypes = React.useMemo(() => {
+  const enabledDocumentTypes = useMemo(() => {
     return documentTypes.filter((d) => d.isEnabled);
   }, [documentTypes]);
 
-  const isCompany = React.useMemo(() => {
+  const isCompany = useMemo(() => {
     const type = documentTypes.find((d) => d.id === Number(documentTypeId));
     return type?.appliesToCompany;
   }, [documentTypeId, documentTypes]);
@@ -256,15 +250,8 @@ function ClientForm({
                 <span className="text-white font-bold text-4xl">
                   {initialPhoto === null ? "?" : "VP"}
                 </span>
-                {/* Note: In edit mode usually we show initials, but we don't have first/last name easily here without props/watching */}
-                {/* However, photoPreview is initialized with URL. If null, showing placeholder.*/}
               </div>
             )}
-            {/* Note: The original 'initials' logic was props.client.firstName[0]. 
-                 We could watch firstName/lastName inputs to update this, or just show a generic icon if no photo.
-                 For now, let's restore the generic 'user' icon if no photo, like in Create page, or try to show initials if we can.
-                 Actually, let's just use the generic icon for consistency with Create Page if no photo is available, 
-                 or we can try to pass the name. Using generic icon. */}
             {!photoPreview && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <svg
@@ -355,6 +342,48 @@ function ClientForm({
           </div>
         </div>
 
+        {/* Common User Information */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg
+              className="h-5 w-5 mr-2 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            Datos Básicos
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <PathProvider value="user" autoCleanup>
+              <Input.Text
+                path="email"
+                email
+                placeholder="correo@ejemplo.com"
+                required
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+              <Input.Text
+                path="phone"
+                placeholder="+1 234 567 8900"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+              <Input.Text
+                path="address"
+                placeholder="Dirección Física"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </PathProvider>
+          </div>
+        </div>
+
         {/* Dynamic Personal/Company Information */}
         {isCompany ? (
           <PathProvider value="company" autoCleanup>
@@ -380,23 +409,6 @@ function ClientForm({
                 <Input.Text
                   path="tradeName"
                   placeholder="Nombre Comercial"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="email"
-                  email
-                  placeholder="contacto@empresa.com"
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="phone"
-                  placeholder="+1 234 567 8900"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="address"
-                  placeholder="Dirección Fiscal"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
@@ -433,26 +445,9 @@ function ClientForm({
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.Text
-                  path="email"
-                  email
-                  placeholder="juan.perez@example.com"
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="phone"
-                  placeholder="+1 234 567 8900"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
                 <Input.DateTime
                   path="birthdate"
                   required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="address"
-                  placeholder="Calle Principal 123"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
@@ -534,11 +529,11 @@ function ClientForm({
                 user: {
                   documentTypeId: Number(data.documentTypeId),
                   documentNumber: String(data.documentNumber),
+                  email: data.email,
+                  phone: data.phone,
+                  address: data.address,
                   ...(data.person
                     ? {
-                        email: data.person.email,
-                        phone: data.person.phone,
-                        address: data.person.address,
                         person: {
                           firstName: data.person.firstName,
                           lastName: data.person.lastName,
@@ -548,9 +543,6 @@ function ClientForm({
                     : {}),
                   ...(data.company
                     ? {
-                        email: data.company.email,
-                        phone: data.company.phone,
-                        address: data.company.address,
                         company: {
                           legalName: data.company.legalName,
                           tradeName: data.company.tradeName,

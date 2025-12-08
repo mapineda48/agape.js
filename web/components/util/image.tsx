@@ -2,7 +2,7 @@ import type { JSX } from "react";
 import { useEffect, useState } from "react";
 
 export default function Image(props: Props) {
-  const [src, setSrc] = useState("");
+  const [src, setSrc] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (typeof props.src === "string") {
