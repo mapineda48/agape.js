@@ -26,6 +26,14 @@ interface ClientType {
   isEnabled: boolean;
 }
 
+/**
+ * Form state interface for ClientType creation/editing.
+ */
+interface ClientTypeFormState {
+  name: string;
+  isEnabled: boolean;
+}
+
 export async function onInit() {
   const [clientTypes] = await Promise.all([listClientTypes()]);
 
@@ -173,9 +181,12 @@ interface ClientTypeFormProps {
 function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
   const notify = useNotificacion();
   const isEditing = !!item;
-  const initialState = item || { name: "", isEnabled: false };
+  const initialState: ClientTypeFormState = item || {
+    name: "",
+    isEnabled: false,
+  };
 
-  async function handleSubmit(data: { name: string; isEnabled: boolean }) {
+  async function handleSubmit(data: ClientTypeFormState) {
     try {
       if (isEditing && item) {
         await upsertClientType({ id: item.id, ...data });
@@ -191,7 +202,7 @@ function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
   }
 
   return (
-    <Form state={initialState}>
+    <Form<ClientTypeFormState> state={initialState}>
       <div className="p-6 space-y-5">
         <FieldLabel
           title="Nombre"
@@ -229,7 +240,7 @@ function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<ClientTypeFormState>
           onSubmit={handleSubmit}
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm hover:shadow-md"
         >

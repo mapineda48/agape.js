@@ -31,6 +31,36 @@ import {
 import PortalModal from "@/components/ui/PortalModal";
 import { useConfirmModal } from "@/components/ui/PortalConfirm";
 
+/**
+ * Form state interface for DocumentSeries creation/editing.
+ */
+interface SeriesFormState {
+  id?: number;
+  documentTypeId: number;
+  seriesCode: string;
+  prefix: string;
+  startNumber: number;
+  endNumber: number;
+  currentNumber?: number;
+  validFrom?: string;
+  validTo?: string;
+  isActive: boolean;
+  isDefault: boolean;
+}
+
+/**
+ * Form state interface for DocumentType creation/editing.
+ */
+interface DocumentTypeFormState {
+  code: string;
+  name: string;
+  module: string;
+  description: string;
+  isEnabled: boolean;
+  appliesToPerson?: boolean;
+  appliesToCompany?: boolean;
+}
+
 // -- Series Modal --
 function SeriesModalWrapper(
   props: {
@@ -75,7 +105,7 @@ function SeriesForm({
   const isEditing = !!series;
 
   // Initial state
-  const initialState = {
+  const initialState: SeriesFormState = {
     id: series?.id,
     documentTypeId: documentTypeId,
     seriesCode: series?.seriesCode ?? "",
@@ -89,7 +119,7 @@ function SeriesForm({
     isDefault: series?.isDefault ?? false,
   };
 
-  async function handleSubmit(data: typeof initialState) {
+  async function handleSubmit(data: SeriesFormState) {
     try {
       await upsertDocumentSeries(data);
       await onSave();
@@ -101,7 +131,7 @@ function SeriesForm({
   }
 
   return (
-    <Form state={initialState}>
+    <Form<SeriesFormState> state={initialState}>
       <div className="p-6 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <label className="block space-y-1.5">
@@ -201,7 +231,7 @@ function SeriesForm({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<SeriesFormState>
           onSubmit={handleSubmit}
           className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"
         >
@@ -252,7 +282,7 @@ function DocumentTypeForm({
   const isEditing = !!item;
   const [currentId, setCurrentId] = useState<number | undefined>(item?.id);
 
-  const initialState = item || {
+  const initialState: DocumentTypeFormState = item || {
     code: "",
     name: "",
     module: "",
@@ -287,7 +317,7 @@ function DocumentTypeForm({
     }
   }, [currentId]);
 
-  async function handleSubmit(data: typeof initialState) {
+  async function handleSubmit(data: DocumentTypeFormState) {
     try {
       const saved = await upsertDocumentType({
         id: currentId,
@@ -334,7 +364,7 @@ function DocumentTypeForm({
   }
 
   return (
-    <Form state={initialState}>
+    <Form<DocumentTypeFormState> state={initialState}>
       <div className="flex flex-col h-[70vh]">
         <div className="p-6 space-y-4 border-b border-gray-100 dark:border-gray-800">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
@@ -387,7 +417,7 @@ function DocumentTypeForm({
             </div>
           </div>
           <div className="flex justify-end pt-2">
-            <Submit
+            <Submit<DocumentTypeFormState>
               onSubmit={handleSubmit}
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
             >

@@ -1,6 +1,7 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import FormProvider from "./index";
+import Form from "./index";
+const FormProvider = Form; // Alias for backward compatibility in tests
 import * as Input from "./Input";
 import Checkbox from "./CheckBox";
 import { Submit } from "./Submit";
@@ -443,7 +444,11 @@ describe("FormProvider", () => {
     it("should use default checkbox value when state is empty", () => {
       render(
         <FormProvider>
-          <Checkbox path="enabled" defaultChecked={true} data-testid="checkbox" />
+          <Checkbox
+            path="enabled"
+            defaultChecked={true}
+            data-testid="checkbox"
+          />
         </FormProvider>
       );
 

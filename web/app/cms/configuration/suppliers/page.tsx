@@ -68,6 +68,30 @@ interface DocumentType {
   appliesToCompany: boolean;
 }
 
+/**
+ * Form state interface for Supplier creation/editing.
+ * Captures both person and company variants with conditional fields.
+ */
+interface SupplierFormState {
+  id?: number;
+  supplierTypeId: number;
+  active: boolean;
+  email: string;
+  phone: string;
+  address: string;
+  type: "person" | "company";
+  documentNumber: string;
+  person?: {
+    firstName: string;
+    lastName: string;
+    birthdate?: DateTime;
+  };
+  company?: {
+    legalName: string;
+    tradeName: string;
+  };
+}
+
 export async function onInit() {
   const [supplierData, typeData, documentTypes] = await Promise.all([
     listSuppliers(),
@@ -399,7 +423,7 @@ function SupplierForm({
   const isPerson = supplier
     ? !!supplier.personId || !!supplier.firstName
     : true;
-  const initialType = isPerson ? "person" : "company";
+  const initialType: "person" | "company" = isPerson ? "person" : "company";
 
   const birthdateValue = supplier?.birthdate
     ? new DateTime(new Date(supplier.birthdate as any))
@@ -451,7 +475,7 @@ function SupplierForm({
   };
 
   return (
-    <Form state={initialState}>
+    <Form<SupplierFormState> state={initialState}>
       <SupplierFormContent
         supplier={supplier}
         onClose={onClose}
@@ -631,7 +655,7 @@ function SupplierFormContent({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<SupplierFormState>
           onSubmit={async (data) => {
             const isPersonType = data.type === "person";
             const targetDocTypeId = isPersonType

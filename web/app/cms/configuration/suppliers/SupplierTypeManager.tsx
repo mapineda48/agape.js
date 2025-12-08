@@ -30,6 +30,13 @@ interface SupplierType {
   name: string;
 }
 
+/**
+ * Form state interface for SupplierType creation/editing.
+ */
+interface SupplierTypeFormState {
+  name: string;
+}
+
 interface SupplierTypeManagerProps {
   onClose: () => void;
 }
@@ -71,9 +78,9 @@ function SupplierTypeForm({
 }) {
   const notify = useNotificacion();
   const isEditing = !!item;
-  const initialState = item || { name: "" };
+  const initialState: SupplierTypeFormState = item || { name: "" };
 
-  async function handleSubmit(data: { name: string }) {
+  async function handleSubmit(data: SupplierTypeFormState) {
     try {
       if (isEditing && item) {
         await updateSupplierType(item.id, data);
@@ -92,7 +99,7 @@ function SupplierTypeForm({
   }
 
   return (
-    <Form state={initialState}>
+    <Form<SupplierTypeFormState> state={initialState}>
       <div className="p-6 space-y-5">
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -118,7 +125,7 @@ function SupplierTypeForm({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<SupplierTypeFormState>
           onSubmit={handleSubmit}
           className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm hover:shadow-md"
         >

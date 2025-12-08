@@ -39,6 +39,18 @@ interface MovementFilters {
   affectsStock: "all" | "yes" | "no";
 }
 
+/**
+ * Form state interface for MovementType creation/editing.
+ */
+interface MovementTypeFormState {
+  id?: number;
+  name: string;
+  factor: number;
+  affectsStock: boolean;
+  isEnabled: boolean;
+  documentTypeId: number;
+}
+
 function MovementModalWrapper(
   props: {
     movement: MovementType;
@@ -203,7 +215,7 @@ function MovementForm({
     documentTypeId: number;
   }) => Promise<void>;
 }) {
-  const initialState = {
+  const initialState: MovementTypeFormState = {
     id: movement.id || undefined,
     name: movement.name,
     factor: movement.factor ?? 1,
@@ -212,7 +224,7 @@ function MovementForm({
     documentTypeId: movement.documentTypeId ?? 0,
   };
 
-  async function handleSubmit(data: typeof initialState) {
+  async function handleSubmit(data: MovementTypeFormState) {
     await onSave({
       id: data.id,
       name: data.name,
@@ -225,7 +237,7 @@ function MovementForm({
   }
 
   return (
-    <Form state={initialState}>
+    <Form<MovementTypeFormState> state={initialState}>
       <div className="space-y-4 p-5">
         <Field label="Nombre">
           <Input.Text
@@ -276,7 +288,7 @@ function MovementForm({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<MovementTypeFormState>
           onSubmit={handleSubmit}
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
         >

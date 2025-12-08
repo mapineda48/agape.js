@@ -29,6 +29,20 @@ interface CategoryFilters {
   activeOnly: boolean;
 }
 
+/**
+ * Form state interface for Category creation/editing.
+ */
+interface CategoryFormState {
+  id?: number;
+  fullName: string;
+  isEnabled: boolean;
+  subcategories: Array<{
+    id?: number;
+    fullName: string;
+    isEnabled: boolean;
+  }>;
+}
+
 function CategoryModalWrapper(
   props: {
     category: Category;
@@ -147,20 +161,20 @@ function CategoryForm({
   onClose: () => void;
   onSave: (data: Category) => Promise<void>;
 }) {
-  const initialState = {
+  const initialState: CategoryFormState = {
     id: category.id || undefined,
     fullName: category.fullName,
     isEnabled: category.isEnabled ?? true,
     subcategories: category.subcategories || [],
   };
 
-  async function handleSubmit(data: typeof initialState) {
-    await onSave(data);
+  async function handleSubmit(data: CategoryFormState) {
+    await onSave(data as Category);
     onClose();
   }
 
   return (
-    <Form state={initialState}>
+    <Form<CategoryFormState> state={initialState}>
       <div className="space-y-5 p-5">
         <div className="space-y-4">
           <label className="space-y-1.5 block">
@@ -195,7 +209,7 @@ function CategoryForm({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<CategoryFormState>
           onSubmit={handleSubmit}
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
         >

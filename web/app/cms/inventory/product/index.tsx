@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import FormProvider, { useAppDispatch, setAtPath } from "@/components/form";
+import Form, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
 import useInput from "@/components/form/Input/useInput";
@@ -24,6 +24,11 @@ interface ItemFormProps {
   onSuccess?: () => void;
 }
 
+/**
+ * Form state interface for Item (product/service) creation/editing.
+ */
+type ItemFormState = IItemRecord;
+
 export function ItemForm(props: ItemFormProps) {
   const initialType: ItemType = props.item?.good
     ? "good"
@@ -32,13 +37,16 @@ export function ItemForm(props: ItemFormProps) {
     : "good";
 
   return (
-    <FormProvider state={props.item} className="max-w-7xl mx-auto space-y-6">
+    <Form<ItemFormState>
+      state={props.item as ItemFormState}
+      className="max-w-7xl mx-auto space-y-6"
+    >
       <ItemFormContent
         initialType={initialType}
         isEditing={!!props.item?.id}
         onSuccess={props.onSuccess}
       />
-    </FormProvider>
+    </Form>
   );
 }
 

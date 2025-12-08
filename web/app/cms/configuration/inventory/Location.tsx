@@ -30,6 +30,15 @@ interface LocationFilters {
   activeOnly: boolean;
 }
 
+/**
+ * Form state interface for Location creation/editing.
+ */
+interface LocationFormState {
+  id?: number;
+  name: string;
+  isEnabled: boolean;
+}
+
 function LocationModalWrapper(
   props: {
     location: Location;
@@ -152,17 +161,13 @@ function LocationForm({
     isEnabled: boolean;
   }) => Promise<void>;
 }) {
-  const initialState = {
+  const initialState: LocationFormState = {
     id: location.id || undefined,
     name: location.name,
     isEnabled: location.isEnabled ?? true,
   };
 
-  async function handleSubmit(data: {
-    id?: number;
-    name: string;
-    isEnabled: boolean;
-  }) {
+  async function handleSubmit(data: LocationFormState) {
     await onSave({
       id: data.id,
       name: data.name,
@@ -172,7 +177,7 @@ function LocationForm({
   }
 
   return (
-    <Form state={initialState}>
+    <Form<LocationFormState> state={initialState}>
       <div className="space-y-4 p-5">
         <label className="space-y-1.5 block">
           <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -203,7 +208,7 @@ function LocationForm({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<LocationFormState>
           onSubmit={handleSubmit}
           className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
         >

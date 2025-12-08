@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import FormProvider from "@/components/form";
+import Form from "@/components/form";
 import Input from "@/components/form/Input";
 import { Submit } from "@/components/form/Submit";
 import { useRouter } from "@/components/router/router-hook";
@@ -47,6 +47,33 @@ export async function onInit({ params }: { params: PageParams }) {
     clientTypes,
     client,
     documentTypes,
+  };
+}
+
+/**
+ * Form state interface for Client editing.
+ */
+interface EditClientFormState {
+  id: number;
+  documentTypeId: number;
+  documentNumber: string;
+  typeId: number;
+  active: boolean;
+  photo?: string;
+  person?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    birthdate?: any;
+  };
+  company?: {
+    legalName: string;
+    tradeName?: string;
+    email: string;
+    phone?: string;
+    address?: string;
   };
 }
 
@@ -120,13 +147,13 @@ export default function EditClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <FormProvider state={initialData}>
+          <Form<EditClientFormState> state={initialData as EditClientFormState}>
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
               initialPhoto={props.client.photoUrl}
             />
-          </FormProvider>
+          </Form>
         </div>
       </div>
     </Fragment>
@@ -496,7 +523,7 @@ function ClientForm({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<EditClientFormState>
           onSubmit={async (data) => {
             try {
               await upsertClient({

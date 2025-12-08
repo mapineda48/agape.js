@@ -1,5 +1,5 @@
 import React, { Fragment, useState } from "react";
-import FormProvider from "@/components/form";
+import Form from "@/components/form";
 import Input from "@/components/form/Input";
 import { Submit } from "@/components/form/Submit";
 import { useRouter } from "@/components/router/router-hook";
@@ -32,6 +32,32 @@ export async function onInit() {
   return {
     clientTypes,
     documentTypes,
+  };
+}
+
+/**
+ * Form state interface for Client creation.
+ */
+interface ClientFormState {
+  documentTypeId?: number;
+  documentNumber?: string;
+  typeId?: number;
+  active?: boolean;
+  photo?: File;
+  person?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    birthdate?: any;
+  };
+  company?: {
+    legalName: string;
+    tradeName?: string;
+    email: string;
+    phone?: string;
+    address?: string;
   };
 }
 
@@ -71,12 +97,12 @@ export default function NewClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <FormProvider>
+          <Form<ClientFormState>>
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
             />
-          </FormProvider>
+          </Form>
         </div>
       </div>
     </Fragment>
@@ -411,7 +437,7 @@ function ClientForm({
         >
           Cancelar
         </button>
-        <Submit
+        <Submit<ClientFormState>
           onSubmit={async (data) => {
             try {
               await upsertClient({

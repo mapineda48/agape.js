@@ -2,13 +2,13 @@ import { createElement, useEffect, useState, type JSX } from "react";
 import { useEvent } from "../provider";
 import { useEventEmitter } from "@/components/util/event-emitter";
 
-export function Submit({
+export function Submit<T = unknown>({
   onSubmit,
   children,
   disabled,
   onLoadingChange,
   ...core
-}: Props) {
+}: Props<T>) {
   const [loading, setLoading] = useState(false);
   const event = useEvent();
   const emitter = useEventEmitter();
@@ -19,10 +19,10 @@ export function Submit({
   }, [loading, onLoadingChange]);
 
   useEffect(() => {
-    const unsubscribe = emitter.on(event.SUBMIT, async (payload: any) => {
+    const handler = async (payload: unknown) => {
       setLoading(true);
       try {
-        await onSubmit(payload);
+        await onSubmit(payload as T);
         emitter.emit(event.SUBMIT_SUCCESS, payload);
       } catch (error) {
         // Error is caught to prevent unhandled rejection.
@@ -34,7 +34,9 @@ export function Submit({
       } finally {
         setLoading(false);
       }
-    });
+    };
+
+    const unsubscribe = emitter.on(event.SUBMIT, handler);
 
     return () => {
       unsubscribe();
@@ -49,9 +51,9 @@ export function Submit({
   });
 }
 
-export interface Props extends Core {
-  onSubmit: (state: any) => Promise<any>;
+export interface Props<T = unknown> extends Core {
+  onSubmit: (state: T) => Promise<void> | void;
   onLoadingChange?: (loading: boolean) => void;
 }
 
-type Core = Omit<JSX.IntrinsicElements["button"], "type">;
+type Core = Omit<JSX.IntrinsicElements["button"], "type" | "onSubmit">;

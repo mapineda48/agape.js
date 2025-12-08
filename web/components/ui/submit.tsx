@@ -3,8 +3,9 @@ import { Submit as BaseSubmit } from "../form/Submit";
 import { useNotificacion } from "./notification";
 import { useEventEmitter } from "../util/event-emitter";
 
-interface SubmitProps extends Omit<React.ComponentProps<"button">, "type"> {
-  onSubmit: (payload: any) => Promise<any>;
+interface SubmitProps<T = unknown>
+  extends Omit<React.ComponentProps<"button">, "type" | "onSubmit"> {
+  onSubmit: (payload: T) => Promise<void> | void;
   event?: symbol;
   disableSuccessNotification?: boolean;
 }
@@ -12,14 +13,16 @@ interface SubmitProps extends Omit<React.ComponentProps<"button">, "type"> {
 /**
  * Enhanced Submit button with notification handling and debounced loading state.
  * Built on top of the base Submit component from form/Submit.
+ *
+ * @template T - The type of the form state payload received in onSubmit
  */
-export default function Submit({
+export default function Submit<T = unknown>({
   onSubmit,
   event,
   disableSuccessNotification = false,
   children,
   ...props
-}: SubmitProps) {
+}: SubmitProps<T>) {
   const [showLoading, setShowLoading] = useState(false);
   const emitter = useEventEmitter();
   const notify = useNotificacion();
@@ -35,7 +38,7 @@ export default function Submit({
   };
 
   // Wrap onSubmit with notification handling
-  const handleSubmit = async (payload: any) => {
+  const handleSubmit = async (payload: T) => {
     try {
       if (process.env.NODE_ENV === "development") {
         console.log("payload", { onSubmit, payload });
@@ -64,7 +67,7 @@ export default function Submit({
   };
 
   return (
-    <BaseSubmit
+    <BaseSubmit<T>
       onSubmit={handleSubmit}
       onLoadingChange={handleLoadingChange}
       {...props}

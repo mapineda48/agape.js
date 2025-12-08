@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import FormProvider, { useAppDispatch, setAtPath } from "@/components/form";
+import Form, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import { useInputArray } from "@/components/form/hooks";
 import useInput from "@/components/form/Input/useInput";
@@ -25,14 +25,31 @@ interface Props {
   onSuccess?: () => void;
 }
 
+/**
+ * Form state interface for inventory movement.
+ */
+interface MovementFormState {
+  movementTypeId?: number;
+  movementDate?: DateTime;
+  observation?: string;
+  sourceDocumentType?: string;
+  sourceDocumentId?: number;
+  details: Array<{
+    itemId?: number;
+    quantity: number;
+    unitCost?: number;
+    locationId?: number;
+  }>;
+}
+
 export function MovementForm(props: Props) {
   return (
-    <FormProvider
-      state={props.initialData}
+    <Form<MovementFormState>
+      state={props.initialData as MovementFormState}
       className="max-w-7xl mx-auto space-y-6"
     >
       <MovementFormContent {...props} />
-    </FormProvider>
+    </Form>
   );
 }
 
@@ -66,8 +83,8 @@ function MovementFormContent(props: Props) {
         <div className="space-y-6">
           <SummaryCard />
           <div className="sticky bottom-6">
-            <Submit
-              onSubmit={async (state: any) => {
+            <Submit<MovementFormState>
+              onSubmit={async (state) => {
                 const payload = {
                   movementTypeId: state.movementTypeId,
                   movementDate:
