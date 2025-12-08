@@ -32,22 +32,33 @@ import Checkbox from "@/components/form/CheckBox";
 import { Submit } from "@/components/form/Submit";
 import EventEmitter from "@/components/util/event-emitter";
 
+// ✅ Define una interfaz para el estado del formulario
+interface UserFormState {
+  name: string;
+  age: number;
+  active: boolean;
+}
+
 function UserForm() {
-  const handleSubmit = async (state: any) => {
-    // state = { name: string, age: number, active: boolean }
+  const initialState: UserFormState = {
+    name: "John",
+    age: 30,
+    active: false,
+  };
+
+  const handleSubmit = async (state: UserFormState) => {
+    // state está correctamente tipado como UserFormState
     console.log("form data", state);
   };
 
   return (
     <EventEmitter>
-      <Form
-        state={{ name: "John", age: 30 }} // inicial opcional
-      >
+      <Form<UserFormState> state={initialState}>
         <Input.Text path="name" />
         <Input.Int path="age" />
         <Checkbox path="active" materialize />
 
-        <Submit onSubmit={handleSubmit}>Guardar</Submit>
+        <Submit<UserFormState> onSubmit={handleSubmit}>Guardar</Submit>
       </Form>
     </EventEmitter>
   );
@@ -55,6 +66,156 @@ function UserForm() {
 ```
 
 En los tests se validan exactamente estos comportamientos: inicialización desde `state`, actualización de inputs y envío del objeto completo en `onSubmit`.
+
+---
+
+## ⭐ Tipado del Estado del Formulario
+
+### ¿Por qué es importante?
+
+Tipar el estado del formulario proporciona múltiples beneficios:
+
+1. **IntelliSense/Autocompletado**: El editor muestra sugerencias precisas de las propiedades disponibles.
+2. **Detección de errores en tiempo de compilación**: TypeScript detecta errores antes de ejecutar el código.
+3. **Documentación implícita**: La interfaz documenta la estructura esperada del formulario.
+4. **Refactoring seguro**: Los cambios en la estructura del formulario se propagan automáticamente.
+5. **Mantenibilidad**: El código es más fácil de entender para otros desarrolladores.
+
+### ❌ Sin tipado (no recomendado)
+
+```tsx
+// Problema: 'data' tiene tipo 'unknown' en el callback
+function BadExample() {
+  return (
+    <Form state={{ name: "", age: 0 }}>
+      <Submit
+        onSubmit={async (data) => {
+          // ❌ Error: 'data' is of type 'unknown'
+          console.log(data.name);
+        }}
+      >
+        Guardar
+      </Submit>
+    </Form>
+  );
+}
+```
+
+### ✅ Con tipado (recomendado)
+
+```tsx
+// Paso 1: Define la interfaz del estado
+interface MyFormState {
+  name: string;
+  age: number;
+  email?: string; // campos opcionales también se soportan
+}
+
+function GoodExample() {
+  const initialState: MyFormState = {
+    name: "",
+    age: 0,
+  };
+
+  // Paso 2: Usa el tipo genérico en Form y Submit
+  return (
+    <Form<MyFormState> state={initialState}>
+      <Input.Text path="name" />
+      <Input.Int path="age" />
+      <Input.Text path="email" />
+
+      <Submit<MyFormState>
+        onSubmit={async (data) => {
+          // ✅ data está tipado como MyFormState
+          console.log(data.name); // ✅ Autocompletado funciona
+          console.log(data.age); // ✅ TypeScript conoce el tipo
+        }}
+      >
+        Guardar
+      </Submit>
+    </Form>
+  );
+}
+```
+
+### Casos de uso comunes
+
+#### Formulario con campos condicionales
+
+```tsx
+interface SupplierFormState {
+  type: "person" | "company";
+  documentNumber: string;
+  // Campos condicionales según el tipo
+  firstName?: string; // Solo para personas
+  lastName?: string; // Solo para personas
+  legalName?: string; // Solo para empresas
+  tradeName?: string; // Solo para empresas
+}
+```
+
+#### Formulario con arrays anidados
+
+```tsx
+interface CategoryFormState {
+  id?: number;
+  fullName: string;
+  isEnabled: boolean;
+  subcategories: Array<{
+    id?: number;
+    fullName: string;
+    isEnabled: boolean;
+  }>;
+}
+```
+
+#### Formulario con tipos especiales
+
+```tsx
+import DateTime from "@utils/data/DateTime";
+import Decimal from "@utils/data/Decimal";
+
+interface InvoiceFormState {
+  invoiceDate: DateTime;
+  amount: Decimal;
+  items: Array<{
+    itemId: number;
+    quantity: number;
+    unitPrice: Decimal;
+  }>;
+}
+```
+
+### Patrón recomendado
+
+Sigue este patrón para todos tus formularios:
+
+```tsx
+// 1. Define la interfaz al inicio del archivo o en un archivo de tipos
+interface XxxFormState {
+  // ... campos del formulario
+}
+
+function XxxForm() {
+  // 2. Crea el estado inicial con el tipo
+  const initialState: XxxFormState = {
+    // ... valores iniciales
+  };
+
+  // 3. El handler recibe el tipo correcto
+  async function handleSubmit(data: XxxFormState) {
+    // ... lógica de envío
+  }
+
+  // 4. Aplica el genérico al Form y Submit
+  return (
+    <Form<XxxFormState> state={initialState}>
+      {/* ... inputs ... */}
+      <Submit<XxxFormState> onSubmit={handleSubmit}>Guardar</Submit>
+    </Form>
+  );
+}
+```
 
 ---
 
@@ -72,16 +233,30 @@ Envuelve el formulario con:
 **Props:**
 
 ```ts
-type Props = {
-  state?: any; // estado inicial del formulario (objeto/array)
+// El componente Form es genérico
+interface Props<T extends object | unknown[] = object> {
+  state?: T; // estado inicial del formulario, tipado con T
   children: React.ReactNode;
-};
+}
 ```
 
-Uso:
+Uso básico:
 
 ```tsx
 <Form state={{ name: "Jane", age: 25 }}>{/* inputs */}</Form>
+```
+
+Uso con tipado (recomendado):
+
+```tsx
+interface PersonFormState {
+  name: string;
+  age: number;
+}
+
+const initialState: PersonFormState = { name: "Jane", age: 25 };
+
+<Form<PersonFormState> state={initialState}>{/* inputs */}</Form>;
 ```
 
 ---
@@ -279,10 +454,30 @@ import { Submit } from "./Submit";
 **Props:**
 
 ```ts
-interface Props extends Omit<JSX.IntrinsicElements["button"], "type"> {
-  onSubmit: (state: any) => Promise<any>;
+// El componente Submit también es genérico
+interface Props<T = unknown>
+  extends Omit<JSX.IntrinsicElements["button"], "type"> {
+  onSubmit: (state: T) => Promise<any>;
   onLoadingChange?: (loading: boolean) => void;
 }
+```
+
+Uso con tipado:
+
+```tsx
+interface MyFormState {
+  username: string;
+  password: string;
+}
+
+<Submit<MyFormState>
+  onSubmit={async (data) => {
+    // data está tipado como MyFormState
+    await login(data.username, data.password);
+  }}
+>
+  Iniciar sesión
+</Submit>;
 ```
 
 Comportamiento:
