@@ -100,3 +100,17 @@ export async function upsertClientType(payload: NewClientType) {
 export async function deleteClientType(id: number) {
   await db.delete(clientType).where(eq(clientType.id, id));
 }
+
+// ============================================================================
+// Types
+// ============================================================================
+
+/**
+ * Tipo de cliente individual del listado.
+ */
+export type ClientType = Awaited<ReturnType<typeof listClientTypes>>[number];
+
+/**
+ * Re-exportación del tipo para creación/actualización.
+ */
+export type { NewClientType };

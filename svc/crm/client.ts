@@ -23,7 +23,7 @@ import { upsertUser, type IUpsertUser, type IUser } from "#svc/core/user";
  * }
  * ```
  */
-interface ClientDto {
+export interface ClientDto {
   id: number;
   typeId: number | null;
   active: boolean;
@@ -46,6 +46,13 @@ interface ClientDto {
     tradeName: string | null;
   } | null;
 }
+
+/**
+ * Alias para el resultado de getClientById
+ */
+export type GetClientByIdResult = NonNullable<
+  Awaited<ReturnType<typeof getClientById>>
+>;
 export async function getClientById(id: number): Promise<ClientDto> {
   const [match] = await db
     .select({

@@ -16,10 +16,10 @@ function buildDocumentTypeQuery({
           eq(documentType.appliesToPerson, true)
         )
       : activeOnly
-        ? eq(documentType.isEnabled, true)
-        : personOnly
-          ? eq(documentType.appliesToPerson, true)
-          : undefined;
+      ? eq(documentType.isEnabled, true)
+      : personOnly
+      ? eq(documentType.appliesToPerson, true)
+      : undefined;
 
   const query = db.select().from(documentType);
 
@@ -73,3 +73,26 @@ export async function upsertDocumentType(payload: NewDocumentType) {
     .where(eq(documentType.id, id))
     .returning();
 }
+
+// ============================================================================
+// Types
+// ============================================================================
+
+/**
+ * Tipo de documento individual de la listado.
+ */
+export type DocumentType = Awaited<
+  ReturnType<typeof listDocumentTypes>
+>[number];
+
+/**
+ * Tipo de documento retornado por getDocumentTypeById.
+ */
+export type DocumentTypeRecord = NonNullable<
+  Awaited<ReturnType<typeof getDocumentTypeById>>
+>;
+
+/**
+ * Re-exportación del tipo para creación/actualización.
+ */
+export type { NewDocumentType };

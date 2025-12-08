@@ -68,10 +68,9 @@ describe("client service", () => {
 
       expect(result).toBeDefined();
       expect(result?.id).toBe(created.id);
-      expect(result?.firstName).toBe("John");
-      expect(result?.lastName).toBe("Doe");
-      expect(result?.email).toBe("john@example.com");
-      expect(result?.typeName).toBe("VIP");
+      expect(result?.person?.firstName).toBe("John");
+      expect(result?.person?.lastName).toBe("Doe");
+      expect(result?.user.email).toBe("john@example.com");
       expect(result?.active).toBe(true);
     });
 
@@ -311,7 +310,7 @@ describe("client service", () => {
       // Verificar en la base de datos
       const fromDb = await getClientById(created.id);
       expect(fromDb?.active).toBe(false);
-      expect(fromDb?.email).toBe("updated@example.com");
+      expect(fromDb?.user.email).toBe("updated@example.com");
     });
 
     it("should create client with default active status", async () => {

@@ -1,4 +1,4 @@
-import { Fragment, useState, useMemo, useEffect } from "react";
+import { Fragment, useMemo, useEffect } from "react";
 import Form, { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
 import { Submit } from "@/components/form/Submit";
@@ -7,26 +7,22 @@ import { useNotificacion } from "@/components/ui/notification";
 import {
   upsertClient,
   getClientById,
+  type GetClientByIdResult,
   type UpsertClientPayload,
 } from "@agape/crm/client";
-import { listClientTypes as findAll } from "@agape/crm/clientType";
+import { listClientTypes, type ClientType } from "@agape/crm/clientType";
 import DateTime from "@utils/data/DateTime";
-import { listDocumentTypes } from "@agape/core/documentType";
+import { listDocumentTypes, type DocumentType } from "@agape/core/documentType";
 import { getUserByDocument } from "@agape/core/user";
 import Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
-import useInput from "@/components/form/Input/useInput";
 import ImageClient from "./ImageClient";
 import { useSelector } from "@/components/form/hooks";
 
-type ClientType = Awaited<ReturnType<typeof findAll>>[number];
-type ClientData = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
-type DocumentType = Awaited<ReturnType<typeof listDocumentTypes>>[number];
-
 interface Props {
   clientTypes: ClientType[];
-  client: ClientData;
+  client: GetClientByIdResult;
   documentTypes: DocumentType[];
 }
 
@@ -38,7 +34,7 @@ export async function onInit({ params }: { params: PageParams }) {
   const clientId = Number(params.id);
 
   const [clientTypes, client, documentTypes] = await Promise.all([
-    findAll(),
+    listClientTypes(),
     getClientById(clientId),
     listDocumentTypes(),
   ] as const);
@@ -49,41 +45,8 @@ export async function onInit({ params }: { params: PageParams }) {
 
   return {
     clientTypes,
-    client: client as ClientData,
+    client,
     documentTypes,
-  } as Props;
-}
-
-/**
- * Form state interface for Client editing.
- */
-interface EditClientFormState {
-  id: number;
-  documentTypeId: number;
-  documentNumber: string;
-  typeId: number;
-  active: boolean;
-  photo?: string;
-  // Common user data
-  email: string;
-  phone?: string;
-  address?: string;
-
-  user: {
-    documentTypeId: number;
-    documentNumber: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    person?: {
-      firstName: string;
-      lastName: string;
-      birthdate?: any;
-    };
-    company?: {
-      legalName: string;
-      tradeName?: string;
-    };
   };
 }
 
@@ -115,7 +78,7 @@ export default function EditClientPage(props: Props) {
         ? {
             company: {
               legalName: props.client.company.legalName,
-              tradeName: props.client.company.tradeName,
+              tradeName: props.client.company.tradeName ?? undefined,
             },
           }
         : {}),
@@ -155,11 +118,10 @@ export default function EditClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <Form<EditClientFormState> state={initialData}>
+          <Form<UpsertClientPayload> state={initialData}>
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
-              initialPhoto={props.client.photo}
             />
           </Form>
         </div>
@@ -171,11 +133,9 @@ export default function EditClientPage(props: Props) {
 function ClientForm({
   clientTypes,
   documentTypes,
-  initialPhoto,
 }: {
   clientTypes: ClientType[];
   documentTypes: DocumentType[];
-  initialPhoto: string | null;
 }) {
   const { navigate } = useRouter();
   const notify = useNotificacion();
@@ -183,10 +143,10 @@ function ClientForm({
 
   // Watch fields for validation
   const documentTypeId = useSelector(
-    (state: EditClientFormState) => state.user.documentTypeId
+    (state: UpsertClientPayload) => state.user.documentTypeId
   );
   const documentNumber = useSelector(
-    (state: EditClientFormState) => state.user.documentNumber
+    (state: UpsertClientPayload) => state.user.documentNumber
   );
 
   // Document Validation Effect
@@ -214,7 +174,7 @@ function ClientForm({
               firstName: user.person.firstName,
               lastName: user.person.lastName,
               birthdate: user.person.birthdate
-                ? new DateTime(new Date(user.person.birthdate as any))
+                ? user.person.birthdate
                 : undefined,
             });
           }
@@ -478,10 +438,10 @@ function ClientForm({
         >
           Cancelar
         </button>
-        <Submit<EditClientFormState>
+        <Submit<UpsertClientPayload>
           onSubmit={async (data) => {
             try {
-              await upsertClient(data as any);
+              await upsertClient(data);
               notify({
                 payload: "Cliente actualizado exitosamente",
               });
