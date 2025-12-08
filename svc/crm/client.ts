@@ -39,6 +39,9 @@ export async function getClientById(id: number) {
       active: client.active,
       createdAt: client.createdAt,
       updatedAt: client.updatedAt,
+      // Identity fields
+      documentTypeId: user.documentTypeId,
+      documentNumber: user.documentNumber,
     })
     .from(client)
     .innerJoin(user, eq(client.id, user.id))
