@@ -186,7 +186,7 @@ SELECT
     p.full_name,
     p.slogan,
     p.description,
-    'good'::"agape_app_development_demo"."catalogs_item_type",   -- Enum ItemType
+    'good'::"agape_app_development_demo"."catalogs_item_type",
     true,
     p.rating,
     p.base_price,
@@ -405,6 +405,28 @@ JOIN subcategory_ids sc
 
 
 -- ============================================
+-- 4.1 Crear registros en inventory_item
+--     para todos los catalogs_item de tipo 'good'
+-- ============================================
+INSERT INTO "agape_app_development_demo"."inventory_item" (
+    "item_id",
+    "uom_id",
+    "min_stock",
+    "max_stock",
+    "reorder_point"
+)
+SELECT
+    ci.id        AS item_id,
+    1            AS uom_id,        -- UOM por defecto
+    0            AS min_stock,
+    0            AS max_stock,
+    0            AS reorder_point
+FROM "agape_app_development_demo"."catalogs_item" ci
+WHERE ci.type = 'good'
+ON CONFLICT ("item_id") DO NOTHING;
+
+
+-- ============================================
 -- 5. Tipos de cliente CRM
 -- ============================================
 INSERT INTO "agape_app_development_demo"."crm_client_type" ("name", "is_enabled")
@@ -439,6 +461,12 @@ INSERT INTO "agape_app_development_demo"."purchasing_supplier_type" ("name") VAL
 -- 7. Tipos de documento de numeración (numbering)
 --    para movimientos de inventario
 -- ============================================
+INSERT INTO "agape_app_development_demo"."numbering_document_type"
+    ("code", "name", "description", "module", "is_enabled")
+VALUES
+    ('INV_MOV', 'Movimiento de Inventario', 'Documentos de movimientos de inventario', 'inventory', true)
+ON CONFLICT ("code") DO NOTHING;
+
 -- ============================================
 -- Tipos de movimiento de inventario adicionales
 -- ============================================
@@ -498,8 +526,103 @@ ON CONFLICT ("document_type_id", "series_code") DO NOTHING;
 
 
 -- ============================================
+-- 8. Ubicación de inventario y tipos de movimiento (básicos)
+-- (ANTES del movimiento inicial)
+-- ============================================
+INSERT INTO "agape_app_development_demo"."inventory_location" ("name", "is_enabled")
+VALUES ('Principal', true)
+ON CONFLICT DO NOTHING;
+
+WITH inv_doc_type AS (
+    SELECT id
+    FROM "agape_app_development_demo"."numbering_document_type"
+    WHERE code = 'INV_MOV'
+)
+INSERT INTO "agape_app_development_demo"."inventory_movement_type"
+    ("name", "factor", "affects_stock", "is_enabled", "document_type_id")
+SELECT
+    v.name,
+    v.factor,
+    v.affects_stock,
+    v.is_enabled,
+    inv_doc_type.id
+FROM inv_doc_type,
+     (VALUES
+        ('Entrada', 1,  true, true),
+        ('Salida',  -1, true, true),
+        ('Transferencia', 1, true, true)
+     ) AS v(name, factor, affects_stock, is_enabled)
+ON CONFLICT DO NOTHING;
+
+
+-- ============================================
+-- 9. Aseguramos de nuevo tipo de documento persona
+-- ============================================
+INSERT INTO "agape_app_development_demo"."core_identity_document_type"
+    ("code", "name", "is_enabled", "applies_to_person", "applies_to_company")
+VALUES
+    ('CC', 'Cédula de ciudadanía', true, true, false)
+ON CONFLICT ("code") DO NOTHING;
+
+
+-- ============================================
+-- 10. Proveedores de demo (como personas)
+-- ============================================
+WITH person_doc_type2 AS (
+    SELECT id AS document_type_id
+    FROM "agape_app_development_demo"."core_identity_document_type"
+    WHERE code = 'CC'
+),
+supplier_data AS (
+    SELECT *
+    FROM (VALUES
+      ('Carlos',  'Ramírez',  '1985-03-10', 'contacto@papeleriaelmundial.com', '555-100-2000', 'Av. Central #123',        '900001', 'Papelería y material de oficina'),
+      ('María',   'González', '1979-07-22', 'ventas@escolaresluna.com',        '555-300-2200', 'Calle Estrella #45',      '900002', 'Proveedor de artículos escolares'),
+      ('Roberto', 'Santos',   '1988-11-12', 'info@compusur.com',               '555-900-4400', 'Blvd. Tecnológico #501', '900003', 'Distribuidor de tecnología y cómputo'),
+      ('Laura',   'Pineda',   '1990-02-05', 'servicios@impresionesmax.com',    '555-120-8899', 'Av. Hidalgo #88',        '900004', 'Impresión y copiado'),
+      ('Javier',  'Lopez',    '1982-10-30', 'contacto@artelite.com',           '555-800-1234', 'Calle Arte #12',         '900005', 'Suministros de arte y manualidades')
+    ) AS v(first_name, last_name, birthdate, email, phone, address, document_number, supplier_type_name)
+),
+new_users2 AS (
+    INSERT INTO "agape_app_development_demo"."user"
+        (user_type, document_type_id, document_number, email, phone, address)
+    SELECT
+        'person',
+        pdt.document_type_id,
+        sd.document_number,
+        sd.email,
+        sd.phone,
+        sd.address
+    FROM supplier_data sd
+    CROSS JOIN person_doc_type2 pdt
+    RETURNING id, document_number
+),
+new_core_person2 AS (
+    INSERT INTO "agape_app_development_demo"."core_person"
+        (id, first_name, last_name, birthdate)
+    SELECT
+        u.id,
+        sd.first_name,
+        sd.last_name,
+        sd.birthdate::timestamp with time zone
+    FROM new_users2 u
+    JOIN supplier_data sd ON sd.document_number = u.document_number
+    RETURNING id
+)
+INSERT INTO "agape_app_development_demo"."purchasing_supplier"
+    (id, supplier_type_id)
+SELECT
+    u.id,
+    st.id
+FROM new_users2 u
+JOIN supplier_data sd
+    ON sd.document_number = u.document_number
+JOIN "agape_app_development_demo"."purchasing_supplier_type" st
+    ON st."name" = sd.supplier_type_name;
+
+
+-- ============================================
 -- 13. Movimiento de Inventario Inicial (Entrada por Ajuste)
---     Se crean las entradas para todos los productos en la ubicación 'Principal'.
 -- ============================================
 DO $$
 DECLARE
@@ -509,7 +632,6 @@ DECLARE
     v_next_document_number BIGINT;
     v_employee_id INT;
 BEGIN
-
     -- 1. Obtener IDs necesarios
     SELECT id INTO v_movement_type_id
     FROM "agape_app_development_demo"."inventory_movement_type"
@@ -584,7 +706,7 @@ BEGIN
                 v_next_document_number,
                 item_id,
                 v_location_id,
-                FLOOR(random() * 100 + 10)::INT, -- Cantidad aleatoria entre 10 y 109
+                FLOOR(random() * 100 + 10)::INT,
                 base_price
             FROM item_data
             RETURNING item_id, quantity
@@ -608,7 +730,7 @@ END $$;
 -- ============================================
 -- 14. Insertar Clientes de Demo (como personas)
 -- ============================================
-WITH person_doc_type AS (
+WITH person_doc_type3 AS (
     SELECT id AS document_type_id
     FROM "agape_app_development_demo"."core_identity_document_type"
     WHERE code = 'CC'
@@ -627,7 +749,7 @@ client_data AS (
       ('Juan',    'Rodríguez','1975-12-10', 'juan.rodriguez@mail.com','301-555-6677', 'Diagonal 99 # 1-1A', '1040404040', 'Regular')
     ) AS v(first_name, last_name, birthdate, email, phone, address, document_number, client_type_name)
 ),
-new_users AS (
+new_users3 AS (
     INSERT INTO "agape_app_development_demo"."user"
         (user_type, document_type_id, document_number, email, phone, address)
     SELECT
@@ -638,11 +760,11 @@ new_users AS (
         cd.phone,
         cd.address
     FROM client_data cd
-    CROSS JOIN person_doc_type pdt
+    CROSS JOIN person_doc_type3 pdt
     ON CONFLICT ("document_type_id", "document_number") DO NOTHING
     RETURNING id, document_number
 ),
-new_core_person AS (
+new_core_person3 AS (
     INSERT INTO "agape_app_development_demo"."core_person"
         (id, first_name, last_name, birthdate)
     SELECT
@@ -650,7 +772,7 @@ new_core_person AS (
         cd.first_name,
         cd.last_name,
         cd.birthdate::timestamp with time zone
-    FROM new_users u
+    FROM new_users3 u
     JOIN client_data cd ON cd.document_number = u.document_number
     ON CONFLICT ("id") DO NOTHING
     RETURNING id
@@ -661,106 +783,9 @@ SELECT
     u.id,
     ct.id,
     true
-FROM new_users u
+FROM new_users3 u
 JOIN client_data cd
     ON cd.document_number = u.document_number
 JOIN "agape_app_development_demo"."crm_client_type" ct
     ON ct."name" = cd.client_type_name
 ON CONFLICT ("id") DO NOTHING;
-
-
--- ============================================
--- 8. Ubicación de inventario y tipos de movimiento
--- ============================================
-INSERT INTO "agape_app_development_demo"."inventory_location" ("name", "is_enabled")
-VALUES ('Principal', true)
-ON CONFLICT DO NOTHING;
-
-WITH inv_doc_type AS (
-    SELECT id
-    FROM "agape_app_development_demo"."numbering_document_type"
-    WHERE code = 'INV_MOV'
-)
-INSERT INTO "agape_app_development_demo"."inventory_movement_type"
-    ("name", "factor", "affects_stock", "is_enabled", "document_type_id")
-SELECT
-    v.name,
-    v.factor,
-    v.affects_stock,
-    v.is_enabled,
-    inv_doc_type.id
-FROM inv_doc_type,
-     (VALUES
-        ('Entrada', 1,  true, true),
-        ('Salida',  -1, true, true),
-        ('Transferencia', 1, true, true)
-     ) AS v(name, factor, affects_stock, is_enabled)
-ON CONFLICT DO NOTHING;
-
-
--- ============================================
--- 9. Aseguramos de nuevo tipo de documento persona
---    (por si el script se corre aisladamente)
--- ============================================
-INSERT INTO "agape_app_development_demo"."core_identity_document_type"
-    ("code", "name", "is_enabled", "applies_to_person", "applies_to_company")
-VALUES
-    ('CC', 'Cédula de ciudadanía', true, true, false)
-ON CONFLICT ("code") DO NOTHING;
-
-
--- ============================================
--- 10. Proveedores de demo (como personas)
---     user.type = 'person'
--- ============================================
-WITH person_doc_type AS (
-    SELECT id AS document_type_id
-    FROM "agape_app_development_demo"."core_identity_document_type"
-    WHERE code = 'CC'
-),
-supplier_data AS (
-    SELECT *
-    FROM (VALUES
-      ('Carlos',  'Ramírez',  '1985-03-10', 'contacto@papeleriaelmundial.com', '555-100-2000', 'Av. Central #123',        '900001', 'Papelería y material de oficina'),
-      ('María',   'González', '1979-07-22', 'ventas@escolaresluna.com',        '555-300-2200', 'Calle Estrella #45',      '900002', 'Proveedor de artículos escolares'),
-      ('Roberto', 'Santos',   '1988-11-12', 'info@compusur.com',               '555-900-4400', 'Blvd. Tecnológico #501', '900003', 'Distribuidor de tecnología y cómputo'),
-      ('Laura',   'Pineda',   '1990-02-05', 'servicios@impresionesmax.com',    '555-120-8899', 'Av. Hidalgo #88',        '900004', 'Impresión y copiado'),
-      ('Javier',  'Lopez',    '1982-10-30', 'contacto@artelite.com',           '555-800-1234', 'Calle Arte #12',         '900005', 'Suministros de arte y manualidades')
-    ) AS v(first_name, last_name, birthdate, email, phone, address, document_number, supplier_type_name)
-),
-new_users AS (
-    INSERT INTO "agape_app_development_demo"."user"
-        (user_type, document_type_id, document_number, email, phone, address)
-    SELECT
-        'person',                       -- antes 'supplier', ahora CTI person/company
-        pdt.document_type_id,
-        sd.document_number,
-        sd.email,
-        sd.phone,
-        sd.address
-    FROM supplier_data sd
-    CROSS JOIN person_doc_type pdt
-    RETURNING id, document_number
-),
-new_core_person AS (
-    INSERT INTO "agape_app_development_demo"."core_person"
-        (id, first_name, last_name, birthdate)
-    SELECT
-        u.id,
-        sd.first_name,
-        sd.last_name,
-        sd.birthdate::timestamp with time zone
-    FROM new_users u
-    JOIN supplier_data sd ON sd.document_number = u.document_number
-    RETURNING id
-)
-INSERT INTO "agape_app_development_demo"."purchasing_supplier"
-    (id, supplier_type_id)
-SELECT
-    u.id,
-    st.id
-FROM new_users u
-JOIN supplier_data sd
-    ON sd.document_number = u.document_number
-JOIN "agape_app_development_demo"."purchasing_supplier_type" st
-    ON st."name" = sd.supplier_type_name;
