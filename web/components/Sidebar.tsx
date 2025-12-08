@@ -24,7 +24,7 @@ import { factoryHook } from "../hook/useBreakpointValue";
 const NAV_ITEMS = [
   { path: "/cms", icon: HomeIcon, label: "Inicio" },
   { path: "/cms/report", icon: ChartBarIcon, label: "Reportes" },
-  { path: "/cms/user", icon: UserCircleIcon, label: "Colaboradores" },
+  { path: "/cms/hr", icon: UserCircleIcon, label: "Colaboradores" },
   { path: "/cms/crm/clients", icon: UsersIcon, label: "Clientes" },
   { path: "/cms/inventory/products", icon: CubeIcon, label: "Inventario" },
   { path: "/cms/configuration", icon: CogIcon, label: "Configuración" },
