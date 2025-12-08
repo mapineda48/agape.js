@@ -438,18 +438,12 @@ function ClientForm({
           Cancelar
         </button>
         <Submit<UpsertClientPayload>
-          onSubmit={async (data) => {
-            try {
-              await upsertClient(data);
-              notify({
-                payload: "Cliente actualizado exitosamente",
-              });
-              navigate("../../clients");
-            } catch (error) {
-              notify({
-                payload: error as Error,
-              });
-            }
+          onSubmit={upsertClient}
+          onSuccess={() => {
+            navigate("../../clients");
+            notify({
+              payload: "Cliente actualizado exitosamente",
+            });
           }}
           className="px-6 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
         >
