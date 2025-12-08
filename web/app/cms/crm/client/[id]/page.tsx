@@ -4,7 +4,11 @@ import Input from "@/components/form/Input";
 import { Submit } from "@/components/form/Submit";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
-import { upsertClient, getClientById } from "@agape/crm/client";
+import {
+  upsertClient,
+  getClientById,
+  type UpsertClientPayload,
+} from "@agape/crm/client";
 import { listClientTypes as findAll } from "@agape/crm/clientType";
 import DateTime from "@utils/data/DateTime";
 import { listDocumentTypes } from "@agape/core/documentType";
@@ -13,6 +17,7 @@ import Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
 import useInput from "@/components/form/Input/useInput";
+import ImageClient from "./ImageClient";
 
 type ClientType = Awaited<ReturnType<typeof findAll>>[number];
 type ClientData = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
@@ -88,24 +93,24 @@ export default function EditClientPage(props: Props) {
       email: props.client.user.email || "",
       phone: props.client.user.phone || "",
       address: props.client.user.address || "",
+      ...(props.client.person
+        ? {
+            person: {
+              firstName: props.client.person.firstName,
+              lastName: props.client.person.lastName,
+              birthdate: props.client.person.birthdate,
+            },
+          }
+        : {}),
+      ...(props.client.company
+        ? {
+            company: {
+              legalName: props.client.company.legalName,
+              tradeName: props.client.company.tradeName,
+            },
+          }
+        : {}),
     },
-    ...(props.client.person
-      ? {
-          person: {
-            firstName: props.client.person.firstName,
-            lastName: props.client.person.lastName,
-            birthdate: props.client.person.birthdate,
-          },
-        }
-      : {}),
-    ...(props.client.company
-      ? {
-          company: {
-            legalName: props.client.company.legalName,
-            tradeName: props.client.company.tradeName,
-          },
-        }
-      : {}),
   };
 
   return (
@@ -166,7 +171,6 @@ function ClientForm({
   const { navigate } = useRouter();
   const notify = useNotificacion();
   const { merge, setAt } = useFormReset();
-  const [photoPreview] = useState<string | null>(initialPhoto);
 
   // Watch fields for validation
   const [documentTypeId] = useInput("documentTypeId");
@@ -237,66 +241,7 @@ function ClientForm({
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       {/* Photo Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-12">
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            {photoPreview ? (
-              <img
-                src={photoPreview}
-                alt="Vista previa"
-                className="h-32 w-32 rounded-full object-cover ring-4 ring-white shadow-xl"
-              />
-            ) : (
-              <div className="h-32 w-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center ring-4 ring-white shadow-xl">
-                <span className="text-white font-bold text-4xl">
-                  {initialPhoto === null ? "?" : "VP"}
-                </span>
-              </div>
-            )}
-            {!photoPreview && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <svg
-                  className="h-16 w-16 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-            )}
-          </div>
-          <div className="mt-4">
-            <Input.File
-              path="photo"
-              accept="image/*"
-              className="hidden"
-              id="photo-upload"
-            />
-            <label
-              htmlFor="photo-upload"
-              className="cursor-pointer inline-flex items-center px-4 py-2 border border-white text-sm font-medium rounded-xl text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-all"
-            >
-              <svg
-                className="mr-2 h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Cambiar Foto
-            </label>
-          </div>
-        </div>
+        <ImageClient />
       </div>
 
       {/* Form Fields */}
@@ -388,7 +333,7 @@ function ClientForm({
 
         {/* Dynamic Personal/Company Information */}
         {isCompany ? (
-          <PathProvider value="company" autoCleanup>
+          <PathProvider value={["user", "company"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
@@ -417,7 +362,7 @@ function ClientForm({
             </div>
           </PathProvider>
         ) : (
-          <PathProvider value="person" autoCleanup>
+          <PathProvider value={["user", "person"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
@@ -523,36 +468,7 @@ function ClientForm({
         <Submit<EditClientFormState>
           onSubmit={async (data) => {
             try {
-              await upsertClient({
-                id: Number(data.id),
-                typeId: Number(data.typeId),
-                active: data.active,
-                photo: data.photo,
-                user: {
-                  documentTypeId: Number(data.documentTypeId),
-                  documentNumber: String(data.documentNumber),
-                  email: data.email,
-                  phone: data.phone,
-                  address: data.address,
-                  ...(data.person
-                    ? {
-                        person: {
-                          firstName: data.person.firstName,
-                          lastName: data.person.lastName,
-                          birthdate: new DateTime(data.person.birthdate),
-                        },
-                      }
-                    : {}),
-                  ...(data.company
-                    ? {
-                        company: {
-                          legalName: data.company.legalName,
-                          tradeName: data.company.tradeName,
-                        },
-                      }
-                    : {}),
-                } as any,
-              });
+              await upsertClient(data as any);
               notify({
                 payload: "Cliente actualizado exitosamente",
               });
