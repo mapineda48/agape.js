@@ -1,23 +1,19 @@
-import React, { Fragment, useState } from "react";
-import Form from "@/components/form";
+import { Fragment, useMemo, useEffect } from "react";
+import Form, { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
 import { Submit } from "@/components/form/Submit";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
-import { upsertClient } from "@agape/crm/client";
-import { listClientTypes as findAll } from "@agape/crm/clientType";
+import { upsertClient, type UpsertClientPayload } from "@agape/crm/client";
+import { listClientTypes, type ClientType } from "@agape/crm/clientType";
 import DateTime from "@utils/data/DateTime";
-import { listDocumentTypes } from "@agape/core/documentType";
+import { listDocumentTypes, type DocumentType } from "@agape/core/documentType";
 import { getUserByDocument } from "@agape/core/user";
 import Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
-import { useFormReset } from "@/components/form";
-import useInput from "@/components/form/Input/useInput";
-import Image from "@/components/util/image";
-
-type ClientType = Awaited<ReturnType<typeof findAll>>[number];
-type DocumentType = Awaited<ReturnType<typeof listDocumentTypes>>[number];
+import ImageClient from "./ImageClient";
+import { useSelector } from "@/components/form/hooks";
 
 interface Props {
   clientTypes: ClientType[];
@@ -26,7 +22,7 @@ interface Props {
 
 export async function onInit() {
   const [clientTypes, documentTypes] = await Promise.all([
-    findAll(),
+    listClientTypes(),
     listDocumentTypes(),
   ]);
 
@@ -36,34 +32,14 @@ export async function onInit() {
   };
 }
 
-/**
- * Form state interface for Client creation.
- */
-interface ClientFormState {
-  documentTypeId?: number;
-  documentNumber?: string;
-  typeId?: number;
-  active?: boolean;
-  photo?: File;
-  person?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    birthdate?: any;
-  };
-  company?: {
-    legalName: string;
-    tradeName?: string;
-    email: string;
-    phone?: string;
-    address?: string;
-  };
-}
-
 export default function NewClientPage(props: Props) {
   const { navigate } = useRouter();
+
+  // Initial state for the form
+  const initialData: Partial<UpsertClientPayload> = {
+    active: true,
+    user: {} as any, // Initialize user object to avoid crashes with nested paths
+  };
 
   return (
     <Fragment>
@@ -98,7 +74,7 @@ export default function NewClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <Form<ClientFormState>>
+          <Form<UpsertClientPayload> state={initialData as UpsertClientPayload}>
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
@@ -120,14 +96,17 @@ function ClientForm({
   const { navigate } = useRouter();
   const notify = useNotificacion();
   const { merge, setAt } = useFormReset();
-  const [photoPreview] = useState<string | null>(null);
 
   // Watch fields for validation
-  const [documentTypeId] = useInput("documentTypeId");
-  const [documentNumber] = useInput("documentNumber");
+  const documentTypeId = useSelector(
+    (state: UpsertClientPayload) => state.user?.documentTypeId
+  );
+  const documentNumber = useSelector(
+    (state: UpsertClientPayload) => state.user?.documentNumber
+  );
 
   // Document Validation Effect
-  React.useEffect(() => {
+  useEffect(() => {
     const timeOutId = setTimeout(async () => {
       if (!documentTypeId || !documentNumber) return;
 
@@ -140,14 +119,21 @@ function ClientForm({
         if (user) {
           // Preload common information
           merge({
-            email: user.email || undefined,
-            phone: user.phone || undefined,
-            address: user.address || undefined,
+            user: {
+              ...user,
+              documentTypeId: Number(documentTypeId),
+              documentNumber: String(documentNumber),
+              // We ensure we don't overwrite document ID/Number with potentially different values if they were just typed
+              // Actually merge will overwrite, but we want to load existing data
+              email: user.email || undefined,
+              phone: user.phone || undefined,
+              address: user.address || undefined,
+            } as any,
           });
 
           // Preload person information
           if (user.person) {
-            setAt(["person"], {
+            setAt(["user", "person"], {
               firstName: user.person.firstName,
               lastName: user.person.lastName,
               birthdate: user.person.birthdate
@@ -158,7 +144,7 @@ function ClientForm({
 
           // Preload company information
           if (user.company) {
-            setAt(["company"], {
+            setAt(["user", "company"], {
               legalName: user.company.legalName,
               tradeName: user.company.tradeName,
             });
@@ -178,11 +164,11 @@ function ClientForm({
   }, [documentTypeId, documentNumber, merge, setAt, notify]);
 
   // Filter enabled document types
-  const enabledDocumentTypes = React.useMemo(() => {
+  const enabledDocumentTypes = useMemo(() => {
     return documentTypes.filter((d) => d.isEnabled);
   }, [documentTypes]);
 
-  const isCompany = React.useMemo(() => {
+  const isCompany = useMemo(() => {
     const type = documentTypes.find((d) => d.id === Number(documentTypeId));
     return type?.appliesToCompany;
   }, [documentTypeId, documentTypes]);
@@ -191,64 +177,12 @@ function ClientForm({
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       {/* Photo Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-12">
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            {photoPreview ? (
-              <Image
-                src={photoPreview}
-                alt="Vista previa"
-                className="h-32 w-32 rounded-full object-cover ring-4 ring-white shadow-xl"
-              />
-            ) : (
-              <div className="h-32 w-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center ring-4 ring-white shadow-xl">
-                <svg
-                  className="h-16 w-16 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-            )}
-          </div>
-          <div className="mt-4">
-            <Input.File
-              path="photo"
-              accept="image/*"
-              className="hidden"
-              id="photo-upload"
-            />
-            <label
-              htmlFor="photo-upload"
-              className="cursor-pointer inline-flex items-center px-4 py-2 border border-white text-sm font-medium rounded-xl text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-all"
-            >
-              <svg
-                className="mr-2 h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Seleccionar Foto
-            </label>
-          </div>
-        </div>
+        <ImageClient />
       </div>
 
       {/* Form Fields */}
       <div className="px-8 py-6 space-y-6">
-        {/* Document Information (Top) */}
+        {/* Document Information */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <svg
@@ -268,30 +202,74 @@ function ClientForm({
             Identificación
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Select.Int
-              path="documentTypeId"
-              required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            <PathProvider value="user" autoCleanup>
+              <Select.Int
+                path="documentTypeId"
+                required
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              >
+                <option value="">Seleccionar tipo...</option>
+                {enabledDocumentTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </Select.Int>
+              <Input.Text
+                path="documentNumber"
+                placeholder="Número de documento"
+                required
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </PathProvider>
+          </div>
+        </div>
+
+        {/* Common User Information */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg
+              className="h-5 w-5 mr-2 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
             >
-              <option value="">Seleccionar tipo...</option>
-              {enabledDocumentTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </Select.Int>
-            <Input.Text
-              path="documentNumber"
-              placeholder="Número de documento"
-              required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            Datos Básicos
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <PathProvider value="user" autoCleanup>
+              <Input.Text
+                path="email"
+                email
+                placeholder="correo@ejemplo.com"
+                required
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+              <Input.Text
+                path="phone"
+                placeholder="+1 234 567 8900"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+              <Input.Text
+                path="address"
+                placeholder="Dirección Física"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </PathProvider>
           </div>
         </div>
 
         {/* Dynamic Personal/Company Information */}
         {isCompany ? (
-          <PathProvider value="company" autoCleanup>
+          <PathProvider value={["user", "company"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
@@ -316,28 +294,11 @@ function ClientForm({
                   placeholder="Nombre Comercial"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.Text
-                  path="email"
-                  email
-                  placeholder="contacto@empresa.com"
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="phone"
-                  placeholder="+1 234 567 8900"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="address"
-                  placeholder="Dirección Fiscal"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
               </div>
             </div>
           </PathProvider>
         ) : (
-          <PathProvider value="person" autoCleanup>
+          <PathProvider value={["user", "person"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
@@ -367,32 +328,16 @@ function ClientForm({
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.Text
-                  path="email"
-                  email
-                  placeholder="juan.perez@example.com"
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="phone"
-                  placeholder="+1 234 567 8900"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
                 <Input.DateTime
                   path="birthdate"
                   required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-                <Input.Text
-                  path="address"
-                  placeholder="Calle Principal 123"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
             </div>
           </PathProvider>
         )}
+
         {/* Client Information */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -407,23 +352,41 @@ function ClientForm({
             Información de Cliente
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Select.Int
-              path="typeId"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Seleccionar tipo...</option>
-              {clientTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Cliente
+              </label>
+              <Select.Int
+                path="typeId"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900 hover:border-gray-400"
+              >
+                <option value={0} className="text-gray-500 bg-white py-2">
+                  Seleccionar tipo...
                 </option>
-              ))}
-            </Select.Int>
-            <div className="flex items-center pt-8">
-              <Checkbox
-                path="active"
-                materialize
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
+                {clientTypes.map((type) => (
+                  <option
+                    key={type.id}
+                    value={type.id}
+                    className="text-gray-900 bg-white py-2 hover:bg-blue-50"
+                  >
+                    {type.name}
+                  </option>
+                ))}
+              </Select.Int>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estado
+              </label>
+              <div className="flex items-center pt-2">
+                <Checkbox
+                  path="active"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Cliente Activo
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -438,49 +401,13 @@ function ClientForm({
         >
           Cancelar
         </button>
-        <Submit<ClientFormState>
-          onSubmit={async (data) => {
-            try {
-              await upsertClient({
-                typeId: Number(data.typeId),
-                active: data.active ?? true,
-                photo: data.photo,
-                user: {
-                  documentTypeId: Number(data.documentTypeId),
-                  documentNumber: String(data.documentNumber),
-                  // Common fields are inside person or company depending on active path
-                  ...(data.person
-                    ? {
-                        email: data.person.email,
-                        phone: data.person.phone,
-                        address: data.person.address,
-                        person: {
-                          firstName: data.person.firstName,
-                          lastName: data.person.lastName,
-                          birthdate: new DateTime(data.person.birthdate),
-                        },
-                      }
-                    : {}),
-                  ...(data.company
-                    ? {
-                        email: data.company.email,
-                        phone: data.company.phone,
-                        address: data.company.address,
-                        company: {
-                          legalName: data.company.legalName,
-                          tradeName: data.company.tradeName,
-                        },
-                      }
-                    : {}),
-                } as any,
-              });
-              notify({ payload: "Cliente creado exitosamente" });
-              navigate("../clients");
-            } catch (error: any) {
-              notify({
-                payload: error,
-              });
-            }
+        <Submit<UpsertClientPayload>
+          onSubmit={upsertClient}
+          onSuccess={() => {
+            navigate("../clients");
+            notify({
+              payload: "Cliente creado exitosamente",
+            });
           }}
           className="px-6 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
         >
