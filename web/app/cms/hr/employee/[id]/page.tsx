@@ -8,6 +8,7 @@ import { upsertEmployee, getEmployeeById } from "@agape/hr/employee";
 import DateTime from "@utils/data/DateTime";
 import { listDocumentTypes } from "@agape/core/documentType";
 import { getUserByDocument } from "@agape/core/user";
+import Image from "@/components/util/image";
 
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
@@ -207,7 +208,7 @@ function EmployeeForm({
         <div className="flex flex-col items-center">
           <div className="relative">
             {photoPreview ? (
-              <img
+              <Image
                 src={photoPreview}
                 alt="Vista previa"
                 className="h-32 w-32 rounded-full object-cover ring-4 ring-white shadow-xl"

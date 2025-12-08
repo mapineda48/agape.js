@@ -11,6 +11,7 @@ import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "@/utils/debounce";
 import { Pagination } from "../../inventory/Pagination";
+import Image from "@/components/util/image";
 
 const PAGE_SIZE = 15;
 
@@ -333,7 +334,7 @@ function ClientRow({
         <div className="flex items-center">
           <div className="flex-shrink-0 h-12 w-12">
             {client.photoUrl ? (
-              <img
+              <Image
                 className="h-12 w-12 rounded-full object-cover ring-2 ring-blue-100"
                 src={client.photoUrl}
                 alt={`${client.firstName} ${client.lastName}`}
@@ -341,8 +342,8 @@ function ClientRow({
             ) : (
               <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center ring-2 ring-blue-100">
                 <span className="text-white font-semibold text-lg">
-                  {client.firstName[0]}
-                  {client.lastName[0]}
+                  {client?.firstName?.[0]}
+                  {client?.lastName?.[0]}
                 </span>
               </div>
             )}

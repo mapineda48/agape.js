@@ -69,5 +69,5 @@ export default function useInput<T = unknown>(
     [dispatch, deps]
   );
 
-  return [value, setValue] as const;
+  return [value as T, setValue] as const;
 }

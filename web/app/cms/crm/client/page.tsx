@@ -14,6 +14,7 @@ import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
 import { useFormReset } from "@/components/form";
 import useInput from "@/components/form/Input/useInput";
+import Image from "@/components/util/image";
 
 type ClientType = Awaited<ReturnType<typeof findAll>>[number];
 type DocumentType = Awaited<ReturnType<typeof listDocumentTypes>>[number];
@@ -193,7 +194,7 @@ function ClientForm({
         <div className="flex flex-col items-center">
           <div className="relative">
             {photoPreview ? (
-              <img
+              <Image
                 src={photoPreview}
                 alt="Vista previa"
                 className="h-32 w-32 rounded-full object-cover ring-4 ring-white shadow-xl"

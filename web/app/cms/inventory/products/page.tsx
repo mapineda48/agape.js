@@ -4,7 +4,6 @@ import {
   type ListItemsParams as GetItemsParams,
   type ListItemItem as GetItem,
   type ListItemsResult as GetItemsResult,
-  type ItemType,
 } from "@agape/catalogs/item";
 
 import { listCategories as findAll } from "@agape/inventory/category";
@@ -14,6 +13,7 @@ import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "@/utils/debounce";
 import { Pagination } from "../Pagination";
 import Decimal from "@utils/data/Decimal";
+import Image from "@/components/util/image";
 
 const PAGE_SIZE = 12;
 
@@ -187,8 +187,18 @@ export default function CatalogPage(props: Props) {
                   <TypeFilterButton
                     label="Productos"
                     icon={
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                        />
                       </svg>
                     }
                     isActive={filters.type === "good"}
@@ -198,8 +208,18 @@ export default function CatalogPage(props: Props) {
                   <TypeFilterButton
                     label="Servicios"
                     icon={
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     }
                     isActive={filters.type === "service"}
@@ -435,9 +455,10 @@ function TypeFilterButton(props: {
   onClick: () => void;
   color?: "blue" | "purple";
 }) {
-  const activeClass = props.color === "purple"
-    ? "bg-purple-50 text-purple-700 border-purple-200"
-    : "bg-blue-50 text-blue-700 border-blue-200";
+  const activeClass =
+    props.color === "purple"
+      ? "bg-purple-50 text-purple-700 border-purple-200"
+      : "bg-blue-50 text-blue-700 border-blue-200";
 
   return (
     <button
@@ -468,7 +489,7 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {image ? (
-          <img
+          <Image
             src={image}
             alt={item.fullName}
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
@@ -476,12 +497,32 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             {isService ? (
-              <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             ) : (
-              <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              <svg
+                className="h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
               </svg>
             )}
           </div>
@@ -496,15 +537,35 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
           >
             {isService ? (
               <>
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 Servicio
               </>
             ) : (
               <>
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
                 </svg>
                 Producto
               </>
@@ -527,9 +588,11 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-2">
-          <p className={`text-xs font-medium uppercase tracking-wide ${
-            isService ? "text-purple-600" : "text-blue-600"
-          }`}>
+          <p
+            className={`text-xs font-medium uppercase tracking-wide ${
+              isService ? "text-purple-600" : "text-blue-600"
+            }`}
+          >
             {item.category || (isService ? "Servicio" : "Producto")}
           </p>
           <div className="flex items-center">
@@ -546,9 +609,13 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
             </span>
           </div>
         </div>
-        <h3 className={`text-lg font-bold text-gray-900 mb-2 line-clamp-2 transition-colors ${
-          isService ? "group-hover:text-purple-600" : "group-hover:text-blue-600"
-        }`}>
+        <h3
+          className={`text-lg font-bold text-gray-900 mb-2 line-clamp-2 transition-colors ${
+            isService
+              ? "group-hover:text-purple-600"
+              : "group-hover:text-blue-600"
+          }`}
+        >
           {item.fullName}
         </h3>
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">

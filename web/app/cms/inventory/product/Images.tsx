@@ -1,5 +1,6 @@
 import { useInput } from "@/components/form";
 import { useState, useEffect } from "react";
+import Image from "@/components/util/image";
 
 const path = "images";
 
@@ -25,18 +26,14 @@ export default function InputImages() {
     }
   };
 
-  const getImageUrl = (image: string | File) => {
-    return typeof image === "string" ? image : URL.createObjectURL(image);
-  };
-
   return (
     <div className="space-y-4">
       {/* Main Preview Area */}
       <div className="relative w-full aspect-video bg-gray-100 rounded-xl overflow-hidden border border-gray-200 group">
         {images.length > 0 ? (
           <>
-            <img
-              src={getImageUrl(currentImage)}
+            <Image
+              src={currentImage}
               alt="Product preview"
               className="w-full h-full object-contain"
             />
@@ -153,8 +150,8 @@ export default function InputImages() {
                 : "border-transparent hover:border-gray-300"
             }`}
           >
-            <img
-              src={getImageUrl(img)}
+            <Image
+              src={img}
               alt={`Thumbnail ${idx + 1}`}
               className="w-full h-full object-cover"
             />
