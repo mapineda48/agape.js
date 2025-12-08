@@ -321,24 +321,26 @@ function ClientForm({
             Identificación
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Select.Int
-              path="documentTypeId"
-              required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Seleccionar tipo...</option>
-              {enabledDocumentTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </Select.Int>
-            <Input.Text
-              path="documentNumber"
-              placeholder="Número de documento"
-              required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            />
+            <PathProvider value="user" autoCleanup>
+              <Select.Int
+                path="documentTypeId"
+                required
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              >
+                <option value="">Seleccionar tipo...</option>
+                {enabledDocumentTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </Select.Int>
+              <Input.Text
+                path="documentNumber"
+                placeholder="Número de documento"
+                required
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </PathProvider>
           </div>
         </div>
 
