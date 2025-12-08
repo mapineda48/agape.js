@@ -439,11 +439,234 @@ INSERT INTO "agape_app_development_demo"."purchasing_supplier_type" ("name") VAL
 -- 7. Tipos de documento de numeración (numbering)
 --    para movimientos de inventario
 -- ============================================
-INSERT INTO "agape_app_development_demo"."numbering_document_type"
-    ("code", "name", "description", "module", "is_enabled")
-VALUES
-    ('INV_MOV', 'Movimiento de Inventario', 'Documentos de movimientos de inventario', 'inventory', true)
-ON CONFLICT ("code") DO NOTHING;
+-- ============================================
+-- Tipos de movimiento de inventario adicionales
+-- ============================================
+WITH inv_doc_type AS (
+    SELECT id
+    FROM "agape_app_development_demo"."numbering_document_type"
+    WHERE code = 'INV_MOV'
+)
+INSERT INTO "agape_app_development_demo"."inventory_movement_type"
+    ("name", "factor", "affects_stock", "is_enabled", "document_type_id")
+SELECT
+    v.name,
+    v.factor,
+    v.affects_stock,
+    v.is_enabled,
+    inv_doc_type.id
+FROM inv_doc_type,
+     (VALUES
+        ('Ajuste de Entrada', 1, true, true),
+        ('Ajuste de Salida', -1, true, true),
+        ('Venta', -1, true, true),
+        ('Compra', 1, true, true)
+     ) AS v(name, factor, affects_stock, is_enabled)
+ON CONFLICT DO NOTHING;
+
+
+-- ============================================
+-- Series de Numeración para Movimientos de Inventario
+-- ============================================
+WITH inv_doc_type AS (
+    SELECT id
+    FROM "agape_app_development_demo"."numbering_document_type"
+    WHERE code = 'INV_MOV'
+)
+INSERT INTO "agape_app_development_demo"."numbering_document_series"
+    ("document_type_id", "series_code", "prefix", "suffix", "start_number", "end_number", "current_number", "valid_from", "valid_to", "is_active", "is_default")
+SELECT
+    inv_doc_type.id,
+    v.series_code,
+    v.prefix,
+    v.suffix,
+    v.start_number,
+    v.end_number,
+    v.start_number,
+    NOW() - INTERVAL '1 month',
+    NULL,
+    true,
+    v.is_default
+FROM inv_doc_type,
+     (VALUES
+        ('ENTRADA', 'E-', NULL, 1, 999999, true),
+        ('SALIDA', 'S-', NULL, 1, 999999, false),
+        ('AJUSTE', 'A-', NULL, 1, 999999, false),
+        ('TRANSFER', 'T-', NULL, 1, 999999, false)
+     ) AS v(series_code, prefix, suffix, start_number, end_number, is_default)
+ON CONFLICT ("document_type_id", "series_code") DO NOTHING;
+
+
+-- ============================================
+-- 13. Movimiento de Inventario Inicial (Entrada por Ajuste)
+--     Se crean las entradas para todos los productos en la ubicación 'Principal'.
+-- ============================================
+DO $$
+DECLARE
+    v_movement_type_id INT;
+    v_location_id INT;
+    v_document_series_id INT;
+    v_next_document_number BIGINT;
+    v_employee_id INT;
+BEGIN
+
+    -- 1. Obtener IDs necesarios
+    SELECT id INTO v_movement_type_id
+    FROM "agape_app_development_demo"."inventory_movement_type"
+    WHERE name = 'Ajuste de Entrada';
+
+    SELECT id INTO v_location_id
+    FROM "agape_app_development_demo"."inventory_location"
+    WHERE name = 'Principal';
+
+    SELECT ds.id INTO v_document_series_id
+    FROM "agape_app_development_demo"."numbering_document_series" ds
+    JOIN "agape_app_development_demo"."numbering_document_type" dt ON dt.id = ds.document_type_id
+    WHERE dt.code = 'INV_MOV' AND ds.series_code = 'ENTRADA';
+
+    SELECT id INTO v_employee_id
+    FROM "agape_app_development_demo"."hr_employee"
+    WHERE id IN (
+        SELECT employee_id
+        FROM "agape_app_development_demo"."security_user"
+        WHERE username = 'root'
+    );
+
+    IF v_movement_type_id IS NOT NULL AND v_location_id IS NOT NULL AND v_document_series_id IS NOT NULL AND v_employee_id IS NOT NULL THEN
+        -- 2. Obtener el siguiente número de documento y actualizar la serie
+        v_next_document_number := (
+            SELECT "current_number"
+            FROM "agape_app_development_demo"."numbering_document_series"
+            WHERE id = v_document_series_id
+            FOR UPDATE
+        );
+        
+        UPDATE "agape_app_development_demo"."numbering_document_series"
+        SET "current_number" = v_next_document_number + 1
+        WHERE id = v_document_series_id;
+
+        -- 3. Crear el encabezado del movimiento de inventario
+        INSERT INTO "agape_app_development_demo"."inventory_movement" (
+            "movement_type_id",
+            "movement_date",
+            "observation",
+            "user_id",
+            "document_series_id",
+            "document_number",
+            "document_number_full"
+        )
+        VALUES (
+            v_movement_type_id,
+            NOW(),
+            'Inventario Inicial de Productos',
+            v_employee_id,
+            v_document_series_id,
+            v_next_document_number,
+            (SELECT prefix FROM "agape_app_development_demo"."numbering_document_series" WHERE id = v_document_series_id) || LPAD(v_next_document_number::text, 6, '0')
+        )
+        RETURNING id INTO v_next_document_number; -- Reutilizamos la variable para el ID del movimiento
+
+        -- 4. Insertar los detalles del movimiento y el stock inicial
+        WITH item_data AS (
+            SELECT id AS item_id, base_price
+            FROM "agape_app_development_demo"."catalogs_item"
+            WHERE type = 'good'
+        ),
+        movement_details AS (
+            INSERT INTO "agape_app_development_demo"."inventory_movement_detail" (
+                "movement_id",
+                "item_id",
+                "location_id",
+                "quantity",
+                "unit_cost"
+            )
+            SELECT
+                v_next_document_number,
+                item_id,
+                v_location_id,
+                FLOOR(random() * 100 + 10)::INT, -- Cantidad aleatoria entre 10 y 109
+                base_price
+            FROM item_data
+            RETURNING item_id, quantity
+        )
+        INSERT INTO "agape_app_development_demo"."inventory_stock" (
+            "item_id",
+            "location_id",
+            "quantity"
+        )
+        SELECT
+            md.item_id,
+            v_location_id,
+            md.quantity
+        FROM movement_details md
+        ON CONFLICT ("item_id", "location_id") DO UPDATE
+        SET quantity = "agape_app_development_demo"."inventory_stock".quantity + EXCLUDED.quantity;
+    END IF;
+END $$;
+
+
+-- ============================================
+-- 14. Insertar Clientes de Demo (como personas)
+-- ============================================
+WITH person_doc_type AS (
+    SELECT id AS document_type_id
+    FROM "agape_app_development_demo"."core_identity_document_type"
+    WHERE code = 'CC'
+),
+client_type_reg AS (
+    SELECT id AS client_type_id
+    FROM "agape_app_development_demo"."crm_client_type"
+    WHERE name = 'Regular'
+),
+client_data AS (
+    SELECT *
+    FROM (VALUES
+      ('Pedro',   'Gómez',    '1995-05-15', 'pedro.gomez@mail.com',   '300-111-2233', 'Calle 10 # 5-20',   '1010101010', 'Regular'),
+      ('Ana',     'López',    '1980-08-25', 'ana.lopez@mail.com',     '310-444-5566', 'Carrera 7 # 15-30', '1020202020', 'VIP'),
+      ('Sofía',   'Martínez', '2001-01-01', 'sofia.m@mail.com',       '320-777-8899', 'Av. Siempre Viva 742', '1030303030', 'Ocasional'),
+      ('Juan',    'Rodríguez','1975-12-10', 'juan.rodriguez@mail.com','301-555-6677', 'Diagonal 99 # 1-1A', '1040404040', 'Regular')
+    ) AS v(first_name, last_name, birthdate, email, phone, address, document_number, client_type_name)
+),
+new_users AS (
+    INSERT INTO "agape_app_development_demo"."user"
+        (user_type, document_type_id, document_number, email, phone, address)
+    SELECT
+        'person',
+        pdt.document_type_id,
+        cd.document_number,
+        cd.email,
+        cd.phone,
+        cd.address
+    FROM client_data cd
+    CROSS JOIN person_doc_type pdt
+    ON CONFLICT ("document_type_id", "document_number") DO NOTHING
+    RETURNING id, document_number
+),
+new_core_person AS (
+    INSERT INTO "agape_app_development_demo"."core_person"
+        (id, first_name, last_name, birthdate)
+    SELECT
+        u.id,
+        cd.first_name,
+        cd.last_name,
+        cd.birthdate::timestamp with time zone
+    FROM new_users u
+    JOIN client_data cd ON cd.document_number = u.document_number
+    ON CONFLICT ("id") DO NOTHING
+    RETURNING id
+)
+INSERT INTO "agape_app_development_demo"."crm_client"
+    (id, type_id, active)
+SELECT
+    u.id,
+    ct.id,
+    true
+FROM new_users u
+JOIN client_data cd
+    ON cd.document_number = u.document_number
+JOIN "agape_app_development_demo"."crm_client_type" ct
+    ON ct."name" = cd.client_type_name
+ON CONFLICT ("id") DO NOTHING;
 
 
 -- ============================================
