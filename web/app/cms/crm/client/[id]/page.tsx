@@ -18,6 +18,7 @@ import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
 import useInput from "@/components/form/Input/useInput";
 import ImageClient from "./ImageClient";
+import { useSelector } from "@/components/form/hooks";
 
 type ClientType = Awaited<ReturnType<typeof findAll>>[number];
 type ClientData = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
@@ -67,14 +68,22 @@ interface EditClientFormState {
   email: string;
   phone?: string;
   address?: string;
-  person?: {
-    firstName: string;
-    lastName: string;
-    birthdate?: any;
-  };
-  company?: {
-    legalName: string;
-    tradeName?: string;
+
+  user: {
+    documentTypeId: number;
+    documentNumber: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    person?: {
+      firstName: string;
+      lastName: string;
+      birthdate?: any;
+    };
+    company?: {
+      legalName: string;
+      tradeName?: string;
+    };
   };
 }
 
@@ -173,8 +182,12 @@ function ClientForm({
   const { merge, setAt } = useFormReset();
 
   // Watch fields for validation
-  const [documentTypeId] = useInput("documentTypeId");
-  const [documentNumber] = useInput("documentNumber");
+  const documentTypeId = useSelector(
+    (state: EditClientFormState) => state.user.documentTypeId
+  );
+  const documentNumber = useSelector(
+    (state: EditClientFormState) => state.user.documentNumber
+  );
 
   // Document Validation Effect
   useEffect(() => {
