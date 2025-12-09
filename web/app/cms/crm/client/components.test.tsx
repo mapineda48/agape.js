@@ -3,14 +3,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ClientForm } from "./components";
 import Form from "@/components/form";
 import { getUserByDocument } from "@agape/core/user";
+import { getClientByDocument } from "@agape/crm/client";
 import { useNotificacion } from "@/components/ui/notification";
 import { useFormReset } from "@/components/form";
+import { useRouter } from "@/components/router/router-hook";
 import { type DocumentType } from "@agape/core/documentType";
 import { type ClientType } from "@agape/crm/clientType";
 
 // Mock dependencies
 vi.mock("@/components/ui/notification", () => ({
   useNotificacion: vi.fn(),
+}));
+
+vi.mock("@/components/router/router-hook", () => ({
+  useRouter: vi.fn(),
 }));
 
 // Mock useFormReset
@@ -24,7 +30,7 @@ vi.mock("@/components/form", async (importOriginal) => {
 
 describe("ClientForm", () => {
   const mockNotify = vi.fn();
-  const mockMerge = vi.fn();
+  const mockNavigate = vi.fn();
   const mockSetAt = vi.fn();
 
   const mockDocumentTypes: DocumentType[] = [
@@ -53,15 +59,17 @@ describe("ClientForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useNotificacion as any).mockReturnValue(mockNotify);
+    (useRouter as any).mockReturnValue({ navigate: mockNavigate });
+    (getClientByDocument as any).mockResolvedValue(null);
+    (getUserByDocument as any).mockResolvedValue(null);
     (useFormReset as any).mockReturnValue({
-      merge: mockMerge,
       setAt: mockSetAt,
     });
   });
 
-  const renderForm = (props = {}) => {
+  const renderForm = (props = {}, state?: any) => {
     return render(
-      <Form>
+      <Form state={state}>
         <ClientForm
           documentTypes={mockDocumentTypes}
           clientTypes={mockClientTypes}
@@ -127,13 +135,24 @@ describe("ClientForm", () => {
       { timeout: 1000 }
     );
 
-    // Verify merge called
+    // Verify form data was prefilled
     await waitFor(() => {
-      expect(mockMerge).toHaveBeenCalledWith({
-        email: "found@example.com",
-        phone: "555-FOUND",
-        address: "Found Address",
-      });
+      expect(mockSetAt).toHaveBeenCalledWith(
+        ["user", "email"],
+        "found@example.com"
+      );
+      expect(mockSetAt).toHaveBeenCalledWith(["user", "phone"], "555-FOUND");
+      expect(mockSetAt).toHaveBeenCalledWith(
+        ["user", "address"],
+        "Found Address"
+      );
+      expect(mockSetAt).toHaveBeenCalledWith(
+        ["user", "person"],
+        expect.objectContaining({
+          firstName: "Found",
+          lastName: "One",
+        })
+      );
     });
 
     // Verify notification
@@ -142,5 +161,53 @@ describe("ClientForm", () => {
         payload: "Se ha cargado la información existente.",
       })
     );
+  });
+
+  it("redirects to existing client when document already exists", async () => {
+    (getClientByDocument as any).mockResolvedValue({
+      id: 500,
+      person: { firstName: "Carlos", lastName: "Perez", birthdate: null },
+    });
+
+    renderForm();
+
+    const selects = screen.getAllByRole("combobox");
+    const docSelect = selects[0];
+    fireEvent.change(docSelect, { target: { value: "1" } });
+    fireEvent.change(
+      screen.getByPlaceholderText("Número de documento"),
+      {
+        target: { value: "123456" },
+      }
+    );
+
+    await waitFor(
+      () => {
+        expect(getClientByDocument).toHaveBeenCalledWith(1, "123456");
+      },
+      { timeout: 1000 }
+    );
+
+    expect(mockNotify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload:
+          "Ya existe un cliente registrado con este documento: Carlos Perez",
+        type: "warning",
+      })
+    );
+    expect(mockNavigate).toHaveBeenCalledWith("../client/500");
+  });
+
+  it("does not trigger duplicate validation on initial render in edit mode", async () => {
+    renderForm(
+      { isEdit: true, clientId: 99 },
+      {
+        user: { documentTypeId: 1, documentNumber: "5555" },
+      }
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    expect(getClientByDocument).not.toHaveBeenCalled();
   });
 });

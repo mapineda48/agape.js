@@ -98,3 +98,8 @@ export interface ClientRecord {
   updatedAt: DateTime | null;
   user: IUser;
 }
+
+/**
+ * Resultado de búsqueda por documento.
+ */
+export type GetClientByDocumentResult = ClientDto | null;

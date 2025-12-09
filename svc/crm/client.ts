@@ -67,6 +67,51 @@ export async function getClientById(id: number): Promise<ClientDto> {
 }
 
 /**
+ * Busca un cliente por tipo y número de documento para validar duplicados.
+ */
+export async function getClientByDocument(
+  documentTypeId: number,
+  documentNumber: string
+): Promise<ClientDto | null> {
+  const [match] = await db
+    .select({
+      id: client.id,
+      typeId: client.typeId,
+      active: client.active,
+      photo: client.photoUrl,
+      user: {
+        id: user.id,
+        documentTypeId: user.documentTypeId,
+        documentNumber: user.documentNumber,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+      },
+      person: {
+        firstName: person.firstName,
+        lastName: person.lastName,
+        birthdate: person.birthdate,
+      },
+      company: {
+        legalName: company.legalName,
+        tradeName: company.tradeName,
+      },
+    })
+    .from(client)
+    .innerJoin(user, eq(client.id, user.id))
+    .leftJoin(person, eq(client.id, person.id))
+    .leftJoin(company, eq(client.id, company.id))
+    .where(
+      and(
+        eq(user.documentTypeId, documentTypeId),
+        eq(user.documentNumber, documentNumber)
+      )
+    );
+
+  return (match as ClientDto) ?? null;
+}
+
+/**
  * Lista clientes con filtros opcionales y paginación.
  *
  * @param params - Parámetros de búsqueda y paginación
@@ -283,4 +328,5 @@ export type {
   ClientListItem,
   UpsertClientPayload,
   ClientRecord,
+  GetClientByDocumentResult,
 } from "#utils/dto/crm/client";

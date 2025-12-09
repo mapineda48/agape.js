@@ -1,30 +1,37 @@
-import { useMemo, useEffect, type ReactNode } from "react";
+import { useMemo, useEffect, useRef, type ReactNode } from "react";
 import { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
 import { useNotificacion } from "@/components/ui/notification";
 import { getUserByDocument } from "@agape/core/user";
+import { useRouter } from "@/components/router/router-hook";
 import Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
 import { useSelector } from "@/components/form/hooks";
 import ImageClient from "./ImageClient";
-import type { UpsertClientPayload } from "@agape/crm/client";
+import { getClientByDocument, type UpsertClientPayload } from "@agape/crm/client";
 import type { ClientType } from "@agape/crm/clientType";
 import type { DocumentType } from "@agape/core/documentType";
+import DateTime from "@utils/data/DateTime";
 
 interface ClientFormProps {
   clientTypes: ClientType[];
   documentTypes: DocumentType[];
   children?: ReactNode;
+  isEdit?: boolean;
+  clientId?: number;
 }
 
 export function ClientForm({
   clientTypes,
   documentTypes,
   children,
+  isEdit = false,
+  clientId,
 }: ClientFormProps) {
   const notify = useNotificacion();
-  const { merge, setAt } = useFormReset();
+  const { navigate } = useRouter();
+  const { setAt } = useFormReset();
 
   // Watch fields for validation
   const documentTypeId = useSelector(
@@ -34,39 +41,116 @@ export function ClientForm({
     (state: UpsertClientPayload) => state.user?.documentNumber
   );
 
+  const initialValuesRef = useRef<{
+    documentTypeId: number | undefined;
+    documentNumber: string | undefined;
+    captured: boolean;
+    hasRun: boolean;
+  } | null>(null);
+
+  if (initialValuesRef.current === null) {
+    initialValuesRef.current = {
+      documentTypeId: documentTypeId ? Number(documentTypeId) : undefined,
+      documentNumber: documentNumber ? String(documentNumber) : undefined,
+      captured: !!(documentTypeId && documentNumber),
+      hasRun: false,
+    };
+  }
+
+  const selectedDocumentType = useMemo(
+    () => documentTypes.find((d) => d.id === Number(documentTypeId)),
+    [documentTypeId, documentTypes]
+  );
+  const isCompany = selectedDocumentType?.appliesToCompany;
+  const expectsPerson = selectedDocumentType?.appliesToPerson;
+  const requiresPerson = Boolean(expectsPerson && !isCompany);
+  const requiresCompany = Boolean(isCompany && !expectsPerson);
+
   // Document Validation Effect
   useEffect(() => {
     const timeOutId = setTimeout(async () => {
       if (!documentTypeId || !documentNumber) return;
 
+      const currentTypeId = Number(documentTypeId);
+      const currentDocNumber = String(documentNumber);
+
+      const ref = initialValuesRef.current!;
+      const isFirstRun = !ref.hasRun;
+      const hadInitialData = ref.captured;
+      const valuesUnchanged =
+        ref.documentTypeId === currentTypeId &&
+        ref.documentNumber === currentDocNumber;
+
+      ref.hasRun = true;
+
+      if (isFirstRun && hadInitialData && valuesUnchanged) {
+        return;
+      }
+
       try {
-        const user = await getUserByDocument(
-          Number(documentTypeId),
-          String(documentNumber)
+        const existingClient = await getClientByDocument(
+          currentTypeId,
+          currentDocNumber
         );
 
-        if (user) {
-          // Preload common information
-          merge({
-            email: user.email || undefined,
-            phone: user.phone || undefined,
-            address: user.address || undefined,
+        if (existingClient) {
+          if (isEdit && existingClient.id === clientId) {
+            return;
+          }
+
+          const clientName = existingClient.person
+            ? `${existingClient.person.firstName} ${existingClient.person.lastName}`.trim()
+            : existingClient.company?.legalName || "cliente";
+
+          notify({
+            payload: `Ya existe un cliente registrado con este documento: ${clientName}`,
+            type: "warning",
           });
+          navigate(`../client/${existingClient.id}`);
+          return;
+        }
+
+        const user = await getUserByDocument(currentTypeId, currentDocNumber);
+
+        if (user) {
+          if (requiresPerson && !user.person) {
+            notify({
+              payload:
+                "El documento ingresado corresponde a una empresa, no a una persona.",
+              type: "error",
+            });
+            return;
+          }
+
+          if (requiresCompany && !user.company) {
+            notify({
+              payload:
+                "El documento ingresado corresponde a una persona, no a una empresa.",
+              type: "error",
+            });
+            return;
+          }
+
+          setAt(["user", "email"], user.email || undefined);
+          setAt(["user", "phone"], user.phone || undefined);
+          setAt(["user", "address"], user.address || undefined);
 
           // Preload person information
           if (user.person) {
-            setAt(["person"], {
+            setAt(["user", "person"], {
               firstName: user.person.firstName,
               lastName: user.person.lastName,
               birthdate: user.person.birthdate
-                ? user.person.birthdate
+                ? user.person.birthdate instanceof DateTime
+                  ? user.person.birthdate
+                  : new DateTime(user.person.birthdate)
                 : undefined,
             });
           }
 
           // Preload company information
           if (user.company) {
-            setAt(["company"], {
+            setAt(["user", "company"], {
               legalName: user.company.legalName,
               tradeName: user.company.tradeName,
             });
@@ -78,22 +162,29 @@ export function ClientForm({
           });
         }
       } catch (error) {
-        console.error("Error searching user:", error);
+        console.error("Error searching client/user:", error);
       }
     }, 500);
 
     return () => clearTimeout(timeOutId);
-  }, [documentTypeId, documentNumber, merge, setAt, notify]);
+  }, [
+    documentTypeId,
+    documentNumber,
+    notify,
+    setAt,
+    isEdit,
+    clientId,
+    navigate,
+    isCompany,
+    expectsPerson,
+    requiresPerson,
+    requiresCompany,
+  ]);
 
   // Filter enabled document types
   const enabledDocumentTypes = useMemo(() => {
     return documentTypes.filter((d) => d.isEnabled);
   }, [documentTypes]);
-
-  const isCompany = useMemo(() => {
-    const type = documentTypes.find((d) => d.id === Number(documentTypeId));
-    return type?.appliesToCompany;
-  }, [documentTypeId, documentTypes]);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">

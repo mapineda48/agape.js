@@ -117,6 +117,8 @@ export default function EditClientPage(props: Props) {
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
+              isEdit
+              clientId={props.client.id}
             >
               <button
                 type="button"
