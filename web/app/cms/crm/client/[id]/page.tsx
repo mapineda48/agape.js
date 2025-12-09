@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useEffect } from "react";
 import Form, { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
-import { Submit } from "@/components/form/Submit";
+import Submit from "@/components/ui/submit";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import {

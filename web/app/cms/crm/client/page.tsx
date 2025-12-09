@@ -1,12 +1,11 @@
 import { Fragment, useMemo, useEffect } from "react";
 import Form, { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
-import { Submit } from "@/components/form/Submit";
+import Submit from "@/components/ui/submit";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { upsertClient, type UpsertClientPayload } from "@agape/crm/client";
 import { listClientTypes, type ClientType } from "@agape/crm/clientType";
-import DateTime from "@utils/data/DateTime";
 import { listDocumentTypes, type DocumentType } from "@agape/core/documentType";
 import { getUserByDocument } from "@agape/core/user";
 import Select from "@/components/form/Select";
@@ -24,7 +23,7 @@ export async function onInit() {
   const [clientTypes, documentTypes] = await Promise.all([
     listClientTypes(),
     listDocumentTypes(),
-  ]);
+  ] as const);
 
   return {
     clientTypes,
@@ -32,14 +31,11 @@ export async function onInit() {
   };
 }
 
-export default function NewClientPage(props: Props) {
+export default function EditClientPage(props: Props) {
   const { navigate } = useRouter();
 
-  // Initial state for the form
-  const initialData: Partial<UpsertClientPayload> = {
-    active: true,
-    user: {} as any, // Initialize user object to avoid crashes with nested paths
-  };
+  // Prepare initial form data
+  const initialData = {} as UpsertClientPayload;
 
   return (
     <Fragment>
@@ -74,7 +70,7 @@ export default function NewClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <Form<UpsertClientPayload> state={initialData as UpsertClientPayload}>
+          <Form<UpsertClientPayload> state={initialData}>
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
@@ -119,32 +115,25 @@ function ClientForm({
         if (user) {
           // Preload common information
           merge({
-            user: {
-              ...user,
-              documentTypeId: Number(documentTypeId),
-              documentNumber: String(documentNumber),
-              // We ensure we don't overwrite document ID/Number with potentially different values if they were just typed
-              // Actually merge will overwrite, but we want to load existing data
-              email: user.email || undefined,
-              phone: user.phone || undefined,
-              address: user.address || undefined,
-            } as any,
+            email: user.email || undefined,
+            phone: user.phone || undefined,
+            address: user.address || undefined,
           });
 
           // Preload person information
           if (user.person) {
-            setAt(["user", "person"], {
+            setAt(["person"], {
               firstName: user.person.firstName,
               lastName: user.person.lastName,
               birthdate: user.person.birthdate
-                ? new DateTime(new Date(user.person.birthdate as any))
+                ? user.person.birthdate
                 : undefined,
             });
           }
 
           // Preload company information
           if (user.company) {
-            setAt(["user", "company"], {
+            setAt(["company"], {
               legalName: user.company.legalName,
               tradeName: user.company.tradeName,
             });
@@ -172,6 +161,8 @@ function ClientForm({
     const type = documentTypes.find((d) => d.id === Number(documentTypeId));
     return type?.appliesToCompany;
   }, [documentTypeId, documentTypes]);
+
+  console.log({ documentTypeId, documentNumber, isCompany });
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
