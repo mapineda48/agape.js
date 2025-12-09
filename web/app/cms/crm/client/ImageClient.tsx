@@ -1,9 +1,10 @@
-import { useInput } from "@/components/form";
+import { useSelector } from "@/components/form/hooks";
 import Input from "@/components/form/Input";
 import Image from "@/components/util/image";
+import type { UpsertClientPayload } from "@agape/crm/client";
 
 export default function ImageClient() {
-  const [photo] = useInput<File | null>("photo");
+  const photo = useSelector((state: UpsertClientPayload) => state.photo);
 
   return (
     <div className="flex flex-col items-center">

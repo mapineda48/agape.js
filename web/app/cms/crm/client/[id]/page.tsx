@@ -16,7 +16,7 @@ import { getUserByDocument } from "@agape/core/user";
 import Select from "@/components/form/Select";
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
-import ImageClient from "./ImageClient";
+import ImageClient from "../ImageClient";
 import { useSelector } from "@/components/form/hooks";
 
 interface Props {
