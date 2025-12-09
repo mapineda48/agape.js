@@ -9,7 +9,10 @@ import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
 import { useSelector } from "@/components/form/hooks";
 import ImageClient from "./ImageClient";
-import { getClientByDocument, type UpsertClientPayload } from "@agape/crm/client";
+import {
+  getClientByDocument,
+  type UpsertClientPayload,
+} from "@agape/crm/client";
 import type { ClientType } from "@agape/crm/clientType";
 import type { DocumentType } from "@agape/core/documentType";
 import DateTime from "@utils/data/DateTime";
@@ -160,6 +163,13 @@ export function ClientForm({
             payload: "Se ha cargado la información existente.",
             type: "success",
           });
+        } else if (isEdit) {
+          notify({
+            payload:
+              "El documento ingresado no corresponde a ningún cliente existente. Redirigiendo a crear nuevo cliente.",
+            type: "info",
+          });
+          navigate("../../client");
         }
       } catch (error) {
         console.error("Error searching client/user:", error);

@@ -174,12 +174,9 @@ describe("ClientForm", () => {
     const selects = screen.getAllByRole("combobox");
     const docSelect = selects[0];
     fireEvent.change(docSelect, { target: { value: "1" } });
-    fireEvent.change(
-      screen.getByPlaceholderText("Número de documento"),
-      {
-        target: { value: "123456" },
-      }
-    );
+    fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
+      target: { value: "123456" },
+    });
 
     await waitFor(
       () => {
@@ -209,5 +206,46 @@ describe("ClientForm", () => {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     expect(getClientByDocument).not.toHaveBeenCalled();
+  });
+
+  it("redirects to create client when document does not exist in edit mode", async () => {
+    // Start with some initial data
+    renderForm(
+      { isEdit: true, clientId: 99 },
+      {
+        user: { documentTypeId: 1, documentNumber: "5555" },
+      }
+    );
+
+    // Initial check should be skipped
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(getClientByDocument).not.toHaveBeenCalled();
+
+    // Now change the document to something new that doesn't exist
+    const selects = screen.getAllByRole("combobox");
+    const docSelect = selects[0];
+    const docInput = screen.getByPlaceholderText("Número de documento");
+
+    fireEvent.change(docSelect, { target: { value: "2" } }); // Change to NIT
+    fireEvent.change(docInput, { target: { value: "88888" } });
+
+    // Wait for logic
+    await waitFor(
+      () => {
+        expect(getClientByDocument).toHaveBeenCalledWith(2, "88888");
+        expect(getUserByDocument).toHaveBeenCalledWith(2, "88888");
+      },
+      { timeout: 1000 }
+    );
+
+    // Should trigger redirect to create
+    expect(mockNotify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload:
+          "El documento ingresado no corresponde a ningún cliente existente. Redirigiendo a crear nuevo cliente.",
+        type: "info",
+      })
+    );
+    expect(mockNavigate).toHaveBeenCalledWith("../../client");
   });
 });
