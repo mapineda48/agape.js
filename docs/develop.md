@@ -1,9 +1,3 @@
-Claro, aquí tienes una propuesta para el archivo `README.md` (o `index.md`) que sirve como punto de entrada centralizado para la documentación técnica.
-
-Está organizado lógicamente para que un desarrollador nuevo entienda primero la arquitectura de datos, luego el backend y finalmente el frontend.
-
----
-
 # 📘 Documentación Técnica del Proyecto
 
 Bienvenido a la documentación técnica del sistema. Este proyecto sigue una arquitectura estricta basada en **TypeScript**, separación de responsabilidades mediante **DTOs**, y patrones de diseño específicos tanto para el modelado de datos como para la gestión del estado en el frontend.

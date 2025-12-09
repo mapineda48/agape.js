@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Development
 pnpm dev              # Vite dev server (frontend, port 5173)
-pnpm backend          # Watch-mode backend with tsx
+pnpm web              # Watch-mode backend with tsx
 pnpm frontend         # Alias for pnpm dev
 
 # Build
@@ -17,7 +17,7 @@ pnpm preview          # Serve built SPA locally
 # Testing
 pnpm test             # Vitest (dual projects: backend/node + frontend/jsdom)
 pnpm test:backend     # Backend tests only (runs pnpm generate first)
-pnpm test:frontend    # Frontend tests only
+pnpm test:web         # Frontend tests only
 
 # Code Quality
 pnpm lint             # ESLint on all TS/TSX files
@@ -54,6 +54,7 @@ const user = await getUser(userId);
 ### File-Based Routing (Frontend)
 
 Similar to Next.js App Router in `web/app/`:
+
 - `page.tsx` defines a route
 - `_layout.tsx` wraps child routes
 - `[param]` for dynamic segments (e.g., `users/[id]/page.tsx` → `/users/:id`)
@@ -61,6 +62,7 @@ Similar to Next.js App Router in `web/app/`:
 ### Database Pattern: Class Table Inheritance (CTI)
 
 The domain model uses CTI for entity inheritance:
+
 - Base table (e.g., `user`) contains common attributes
 - Child tables (e.g., `crm_client`) share the same PK as FK to parent
 - Example: A client IS-A user, so `crm_client.id` = FK to `user.id`
@@ -70,9 +72,11 @@ Domains: core, security, crm, inventory, catalog, purchasing, finance, hr, numbe
 ## Path Aliases
 
 **Backend** (`tsconfig.app.json`):
+
 - `#lib/*`, `#models/*`, `#svc/*`, `#session`, `#logger`
 
 **Frontend** (`tsconfig.web.json`):
+
 - `@agape/*` (RPC virtual modules), `@/*` (web/ root)
 
 ## Coding Conventions
