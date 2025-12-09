@@ -8,6 +8,21 @@ import { upsertUser, type IUser, type IUpsertUser } from "#svc/core/user";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import type DateTime from "#utils/data/DateTime";
 
+// Re-export DTOs from shared module
+export type {
+  ListSuppliersParams,
+  ListSuppliersResult,
+  SupplierListItem,
+  UpsertSupplierPayload,
+  SupplierRecord,
+  SupplierDetails,
+} from "#utils/dto/purchasing/supplier";
+
+import type {
+  ListSuppliersParams,
+  ListSuppliersResult,
+} from "#utils/dto/purchasing/supplier";
+
 /**
  * Obtiene un proveedor por su ID con los datos de contacto y tipo.
  */
@@ -170,51 +185,15 @@ export async function deleteSupplier(id: number) {
   await db.delete(supplier).where(eq(supplier.id, id));
 }
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface ListSuppliersParams {
-  fullName?: string;
-  isActive?: boolean;
-  supplierTypeId?: number;
-  includeTotalCount?: boolean;
-  pageIndex?: number;
-  pageSize?: number;
-}
-
-export interface ListSuppliersResult {
-  suppliers: SupplierListItem[];
-  totalCount?: number;
-}
-
-export interface SupplierListItem {
-  id: number;
-  userId: number;
-  firstName: string | null;
-  lastName: string | null;
-  legalName: string | null;
-  tradeName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  birthdate: DateTime | null;
-  supplierTypeId: number;
-  supplierTypeName: string | null;
-  registrationDate: DateTime;
-  active: boolean;
-  documentTypeId: number;
-  documentNumber: string;
-}
-
-export interface UpsertSupplierPayload {
+// Local types that use internal service types
+interface UpsertSupplierPayload {
   id?: number;
   user: IUser;
   supplierTypeId: number;
   active?: boolean;
 }
 
-export interface SupplierRecord {
+interface SupplierRecord {
   id: number;
   supplierTypeId: number;
   registrationDate: DateTime;

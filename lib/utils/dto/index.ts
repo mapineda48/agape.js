@@ -7,3 +7,4 @@ export * from "./core";
 export * from "./hr";
 export * from "./security";
 export * from "./crm";
+export * from "./purchasing";
