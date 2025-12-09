@@ -1,6 +1,7 @@
 import { db } from "#lib/db";
-import clientType, { type NewClientType } from "#models/crm/client_type";
+import clientType from "#models/crm/client_type";
 import { eq, desc } from "drizzle-orm";
+import type { ClientType, NewClientType } from "#utils/dto/crm/clientType";
 
 /**
  * Lista todos los tipos de cliente.
@@ -101,16 +102,5 @@ export async function deleteClientType(id: number) {
   await db.delete(clientType).where(eq(clientType.id, id));
 }
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Tipo de cliente individual del listado.
- */
-export type ClientType = Awaited<ReturnType<typeof listClientTypes>>[number];
-
-/**
- * Re-exportación del tipo para creación/actualización.
- */
-export type { NewClientType };
+// Re-exportar DTOs
+export type { ClientType, NewClientType } from "#utils/dto/crm/clientType";

@@ -6,8 +6,15 @@ import { user } from "#models/core/user";
 import clientType from "#models/crm/client_type";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { and, count, eq, sql, desc } from "drizzle-orm";
-import type DateTime from "#utils/data/DateTime";
-import { upsertUser, type IUpsertUser, type IUser } from "#svc/core/user";
+import { upsertUser, type IUser } from "#svc/core/user";
+import type {
+  ClientDto,
+  GetClientByIdResult,
+  ListClientsParams,
+  ListClientsResult,
+  UpsertClientPayload,
+  ClientRecord,
+} from "#utils/dto/crm/client";
 
 /**
  * Obtiene un cliente por su ID con todos los datos relacionados.
@@ -23,36 +30,6 @@ import { upsertUser, type IUpsertUser, type IUser } from "#svc/core/user";
  * }
  * ```
  */
-export interface ClientDto {
-  id: number;
-  typeId: number | null;
-  active: boolean;
-  photo: string | null;
-  user: {
-    id: number;
-    documentTypeId: number;
-    documentNumber: string;
-    email: string | null;
-    phone: string | null;
-    address: string | null;
-  };
-  person: {
-    firstName: string;
-    lastName: string;
-    birthdate: DateTime | null;
-  } | null;
-  company: {
-    legalName: string;
-    tradeName: string | null;
-  } | null;
-}
-
-/**
- * Alias para el resultado de getClientById
- */
-export type GetClientByIdResult = NonNullable<
-  Awaited<ReturnType<typeof getClientById>>
->;
 export async function getClientById(id: number): Promise<ClientDto> {
   const [match] = await db
     .select({
@@ -86,7 +63,7 @@ export async function getClientById(id: number): Promise<ClientDto> {
     .leftJoin(company, eq(client.id, company.id))
     .where(eq(client.id, id));
 
-  return match;
+  return match as ClientDto;
 }
 
 /**
@@ -243,7 +220,7 @@ export async function upsertClient(
   const { id, photo, user: userDto, ...clientData } = payload;
 
   // Paso 1: Upsert del usuario (persona o compañía)
-  const userRecord = await upsertUser(userDto);
+  const userRecord = await upsertUser(userDto as any);
 
   // Paso 2: Upsert del registro de cliente
   const [clientRecord] = await db
@@ -297,83 +274,13 @@ export async function upsertClient(
   };
 }
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Parámetros para listar clientes con filtros y paginación.
- */
-export interface ListClientsParams {
-  /** Filtro por nombre completo (busca en firstName + lastName) */
-  fullName?: string;
-  /** Filtro por estado activo/inactivo */
-  isActive?: boolean;
-  /** Filtro por tipo de cliente */
-  typeId?: number;
-  /** Si es true, incluye el conteo total de registros */
-  includeTotalCount?: boolean;
-  /** Índice de página (0-based) */
-  pageIndex?: number;
-  /** Tamaño de página */
-  pageSize?: number;
-}
-
-/**
- * Resultado de listar clientes.
- */
-export interface ListClientsResult {
-  clients: ClientListItem[];
-  totalCount?: number;
-}
-
-/**
- * Elemento de la lista de clientes.
- */
-export interface ClientListItem {
-  id: number;
-  userId: number;
-  firstName: string | null;
-  lastName: string | null;
-  legalName: string | null;
-  tradeName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  birthdate: DateTime | null;
-  typeId: number | null;
-  typeName: string | null;
-  photoUrl: string | null;
-  active: boolean;
-  createdAt: DateTime;
-  updatedAt: DateTime | null;
-}
-
-/**
- * Payload para crear o actualizar un cliente.
- */
-export interface UpsertClientPayload {
-  /** ID del cliente (solo para actualización) */
-  id?: number;
-  /** Datos del usuario (persona o compañía) */
-  user: IUser;
-  /** ID del tipo de cliente */
-  typeId: number;
-  /** Estado activo del cliente */
-  active?: boolean;
-  /** Foto del cliente (URL existente o nuevo archivo) */
-  photo?: string | File;
-}
-
-/**
- * Registro de cliente retornado por upsertClient.
- */
-export interface ClientRecord {
-  id: number;
-  typeId: number | null;
-  photoUrl: string | null;
-  active: boolean;
-  createdAt: DateTime;
-  updatedAt: DateTime | null;
-  user: IUser;
-}
+// Re-exportar DTOs
+export type {
+  ClientDto,
+  GetClientByIdResult,
+  ListClientsParams,
+  ListClientsResult,
+  ClientListItem,
+  UpsertClientPayload,
+  ClientRecord,
+} from "#utils/dto/crm/client";

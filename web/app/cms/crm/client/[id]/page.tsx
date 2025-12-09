@@ -49,6 +49,7 @@ export default function EditClientPage(props: Props) {
 
   // Prepare initial form data
   const initialData = {
+    id: props.client.id,
     typeId: props.client.typeId || 0,
     active: props.client.active,
     photo: props.client.photo || undefined,

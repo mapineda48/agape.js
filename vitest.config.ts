@@ -63,6 +63,14 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/catalogs/item.ts"
             ),
+            "@agape/crm/client": path.resolve(
+              __dirname,
+              "./web/test/mocks/crm/client.ts"
+            ),
+            "@agape/crm/clientType": path.resolve(
+              __dirname,
+              "./web/test/mocks/crm/clientType.ts"
+            ),
           },
         },
       },
