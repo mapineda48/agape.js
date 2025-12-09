@@ -260,7 +260,7 @@ function ClientForm({
 
         {/* Dynamic Personal/Company Information */}
         {isCompany ? (
-          <PathProvider value={["user", "company"]} autoCleanup>
+          <PathProvider key="company" value={["user", "company"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
@@ -289,7 +289,7 @@ function ClientForm({
             </div>
           </PathProvider>
         ) : (
-          <PathProvider value={["user", "person"]} autoCleanup>
+          <PathProvider key="person" value={["user", "person"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
