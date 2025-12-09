@@ -7,6 +7,31 @@ import { and, count, eq, sql, desc } from "drizzle-orm";
 import DateTime from "#utils/data/DateTime";
 import { upsertUser, type IUpsertUser, type IUser } from "#svc/core/user";
 
+// Re-export DTOs from shared module
+export type {
+  ListEmployeesParams,
+  ListEmployeesResult,
+  EmployeeListItem,
+  UpsertEmployeePayload,
+  EmployeeRecord,
+  EmployeeDetails,
+} from "#utils/dto/hr/employee";
+
+import type {
+  ListEmployeesParams,
+  ListEmployeesResult,
+} from "#utils/dto/hr/employee";
+
+// El UpsertEmployeePayload local usa los tipos de svc/core/user que son más estrictos
+interface UpsertEmployeePayload {
+  id?: number;
+  user: IUser;
+  isActive?: boolean;
+  hireDate?: Date;
+  metadata?: unknown;
+  avatar?: string | File;
+}
+
 /**
  * Obtiene un empleado por su ID con todos los datos relacionados.
  *
@@ -130,9 +155,7 @@ export async function listEmployees(
  * @param payload - Datos del empleado a insertar o actualizar
  * @returns El empleado creado o actualizado con sus datos relacionados
  */
-export async function upsertEmployee(
-  payload: UpsertEmployeePayload
-): Promise<EmployeeRecord> {
+export async function upsertEmployee(payload: UpsertEmployeePayload) {
   const { id, avatar, user: userDto, ...employeeData } = payload;
 
   // Paso 1: Upsert del usuario (SIEMPRE persona para empleados)
@@ -158,6 +181,8 @@ export async function upsertEmployee(
     .onConflictDoUpdate({
       target: employee.id,
       set: {
+        // Siempre actualizar updatedAt para evitar error de "No values to set"
+        updatedAt: new DateTime(),
         ...(employeeData.hireDate
           ? { hireDate: new DateTime(employeeData.hireDate) }
           : {}),
@@ -193,65 +218,15 @@ export async function upsertEmployee(
     return {
       ...employeeRecord,
       avatarUrl,
-      user: userRecord as IUser,
+      user: userRecord,
     };
   }
 
   return {
     ...employeeRecord,
-    user: userRecord as IUser,
+    user: userRecord,
   };
 }
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface ListEmployeesParams {
-  fullName?: string;
-  isActive?: boolean;
-  includeTotalCount?: boolean;
-  pageIndex?: number;
-  pageSize?: number;
-}
-
-export interface ListEmployeesResult {
-  employees: EmployeeListItem[];
-  totalCount?: number;
-}
-
-export interface EmployeeListItem {
-  id: number;
-  userId: number;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  birthdate: DateTime | null;
-  hireDate: DateTime;
-  isActive: boolean;
-  avatarUrl: string | null;
-  createdAt: DateTime;
-  updatedAt: DateTime | null;
-}
-
-export interface UpsertEmployeePayload {
-  id?: number;
-  user: IUser;
-  isActive?: boolean;
-  hireDate?: Date;
-  metadata?: any;
-  avatar?: string | File;
-}
-
-export interface EmployeeRecord {
-  id: number;
-  hireDate: DateTime;
-  isActive: boolean;
-  avatarUrl: string | null;
-  metadata: unknown;
-  createdAt: DateTime;
-  updatedAt: DateTime | null;
-  user: IUser;
-}
+// Types are now imported from "#utils/dto/hr/employee"
+// and re-exported at the top of this file.
