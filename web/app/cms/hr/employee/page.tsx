@@ -10,6 +10,7 @@ import DateTime from "@utils/data/DateTime";
 
 interface Props {
   documentTypes: DocumentType[];
+  initialData?: UpsertEmployeePayload;
 }
 
 export async function onInit() {
@@ -26,6 +27,10 @@ export default function NewEmployeePage(props: Props) {
 
   // Initial state logic to auto-select Cedula if possible
   const initialData = useMemo(() => {
+    if (props.initialData) {
+      return props.initialData;
+    }
+
     const cedulaType = props.documentTypes.find(
       (d) =>
         d.code === "CC" ||
@@ -39,7 +44,7 @@ export default function NewEmployeePage(props: Props) {
         documentTypeId: cedulaType?.id,
       },
     } as UpsertEmployeePayload;
-  }, [props.documentTypes]);
+  }, [props.documentTypes, props.initialData]);
 
   return (
     <Fragment>

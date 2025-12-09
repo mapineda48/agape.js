@@ -410,7 +410,17 @@ describe("EmployeeForm", () => {
         });
       });
 
-      expect(mockNavigate).toHaveBeenCalledWith("../../employee");
+      expect(mockNavigate).toHaveBeenCalledWith("../../employee", {
+        state: expect.objectContaining({
+          documentTypes: mockDocumentTypes,
+          initialData: expect.objectContaining({
+            user: expect.objectContaining({
+              documentTypeId: 1,
+              documentNumber: "9999999999",
+            }),
+          }),
+        }),
+      });
     });
 
     it("should redirect to existing employee when changing to different employee document in edit mode", async () => {

@@ -11,6 +11,7 @@ import { ClientForm } from "./components";
 interface Props {
   clientTypes: ClientType[];
   documentTypes: DocumentType[];
+  initialData?: UpsertClientPayload;
 }
 
 export async function onInit() {
@@ -30,7 +31,7 @@ export default function EditClientPage(props: Props) {
   const notify = useNotificacion();
 
   // Prepare initial form data
-  const initialData = {} as UpsertClientPayload;
+  const initialData = props.initialData || ({} as UpsertClientPayload);
 
   return (
     <Fragment>

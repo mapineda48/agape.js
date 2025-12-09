@@ -246,6 +246,17 @@ describe("ClientForm", () => {
         type: "info",
       })
     );
-    expect(mockNavigate).toHaveBeenCalledWith("../../client");
+    expect(mockNavigate).toHaveBeenCalledWith("../../client", {
+      state: expect.objectContaining({
+        clientTypes: mockClientTypes,
+        documentTypes: mockDocumentTypes,
+        initialData: expect.objectContaining({
+          user: expect.objectContaining({
+            documentTypeId: 2,
+            documentNumber: "88888",
+          }),
+        }),
+      }),
+    });
   });
 });

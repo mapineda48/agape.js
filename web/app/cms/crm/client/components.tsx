@@ -169,7 +169,18 @@ export function ClientForm({
               "El documento ingresado no corresponde a ningún cliente existente. Redirigiendo a crear nuevo cliente.",
             type: "info",
           });
-          navigate("../../client");
+          navigate("../../client", {
+            state: {
+              clientTypes,
+              documentTypes,
+              initialData: {
+                user: {
+                  documentTypeId: Number(documentTypeId),
+                  documentNumber: String(documentNumber),
+                },
+              },
+            },
+          });
         }
       } catch (error) {
         console.error("Error searching client/user:", error);

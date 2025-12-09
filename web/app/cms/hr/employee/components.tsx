@@ -231,7 +231,17 @@ export function EmployeeForm({
               "El documento ingresado no corresponde a ningún empleado existente. Redirigiendo a crear nuevo empleado.",
             type: "info",
           });
-          navigate("../../employee");
+          navigate("../../employee", {
+            state: {
+              documentTypes,
+              initialData: {
+                user: {
+                  documentTypeId: Number(documentTypeId),
+                  documentNumber: String(documentNumber),
+                },
+              },
+            },
+          });
         }
         // If in create mode and no user exists, just continue (user is creating new)
       } catch (error) {
