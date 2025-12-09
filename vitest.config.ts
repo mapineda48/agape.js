@@ -47,6 +47,18 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/category.ts"
             ),
+            "@agape/core/user": path.resolve(
+              __dirname,
+              "./web/test/mocks/user.ts"
+            ),
+            "@agape/core/documentType": path.resolve(
+              __dirname,
+              "./web/test/mocks/documentType.ts"
+            ),
+            "@agape/hr/employee": path.resolve(
+              __dirname,
+              "./web/test/mocks/employee.ts"
+            ),
           },
         },
       },
