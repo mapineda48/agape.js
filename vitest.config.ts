@@ -59,6 +59,10 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/employee.ts"
             ),
+            "@agape/catalogs/item": path.resolve(
+              __dirname,
+              "./web/test/mocks/catalogs/item.ts"
+            ),
           },
         },
       },

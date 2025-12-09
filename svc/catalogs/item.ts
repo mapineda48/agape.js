@@ -11,6 +11,18 @@ import { category } from "#models/catalogs/category";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { and, count, eq, gte, lte, sql } from "drizzle-orm";
 import Decimal from "#utils/data/Decimal";
+// DTOs compartidos con el frontend
+import type {
+  IGood,
+  IService,
+  IItemGood,
+  IItemService,
+  IItem,
+  IItemRecord,
+  ListItemsParams,
+  ListItemItem,
+  ListItemsResult,
+} from "#utils/dto/catalogs/item";
 
 /**
  * Obtiene un ítem por su ID, incluyendo los detalles según su tipo (good o service).
@@ -30,7 +42,9 @@ import Decimal from "#utils/data/Decimal";
  * }
  * ```
  */
-export async function getItemById(id: number): Promise<IItemRecord | undefined> {
+export async function getItemById(
+  id: number
+): Promise<IItemRecord | undefined> {
   const [record] = await db.select().from(item).where(eq(item.id, id));
 
   if (!record) {
@@ -75,57 +89,6 @@ export async function getItemById(id: number): Promise<IItemRecord | undefined> 
 export async function getItemByCode(code: string) {
   const [record] = await db.select().from(item).where(eq(item.code, code));
   return record;
-}
-
-/**
- * Parámetros para listar ítems con filtros y paginación.
- */
-export interface ListItemsParams {
-  /** Filtro por nombre (búsqueda parcial insensible a mayúsculas) */
-  fullName?: string;
-  /** Filtro por código (búsqueda parcial insensible a mayúsculas) */
-  code?: string;
-  /** Filtro por estado habilitado/deshabilitado */
-  isEnabled?: boolean;
-  /** Filtro por tipo de ítem */
-  type?: ItemType;
-  /** Filtro por ID de categoría */
-  categoryId?: number;
-  /** Filtro por precio mínimo */
-  minPrice?: Decimal;
-  /** Filtro por precio máximo */
-  maxPrice?: Decimal;
-  /** Filtro por calificación mínima */
-  rating?: number;
-  /** Si es true, incluye el conteo total de registros */
-  includeTotalCount?: boolean;
-  /** Índice de página (0-based) */
-  pageIndex?: number;
-  /** Tamaño de página */
-  pageSize?: number;
-}
-
-/**
- * Ítem en lista con nombre de categoría.
- */
-export interface ListItemItem {
-  id: number;
-  code: string;
-  fullName: string;
-  isEnabled: boolean;
-  type: ItemType;
-  basePrice: Decimal;
-  category: string | null;
-  images: unknown;
-  rating: number;
-}
-
-/**
- * Resultado de listado de ítems.
- */
-export interface ListItemsResult {
-  items: ListItemItem[];
-  totalCount?: number;
 }
 
 /**
@@ -510,61 +473,21 @@ function areArraysEqual(a: string[], b: (string | File)[]) {
 }
 
 /**
- * Datos de bien físico omitiendo el itemId (se genera automáticamente).
- */
-type IGood = Omit<NewInventoryItem, "itemId">;
-
-/**
- * Datos de servicio omitiendo el itemId (se genera automáticamente).
- */
-type IService = Omit<NewService, "itemId">;
-
-/**
- * Base de ítem sin el tipo "type" (se infiere automáticamente).
- */
-type ItemBase = Omit<NewItem, "type" | "images">;
-
-/**
- * Interfaz para un ítem de tipo bien físico.
- * Garantiza que los datos de bien estén presentes
- * y que NO se pueda pasar service al mismo tiempo.
- */
-export interface IItemGood extends ItemBase {
-  good: IGood;
-  service?: never;
-  images?: (string | File)[];
-}
-
-/**
- * Interfaz para un ítem de tipo servicio.
- * Garantiza que los datos de servicio estén presentes
- * y que NO se pueda pasar good al mismo tiempo.
- */
-export interface IItemService extends ItemBase {
-  service: IService;
-  good?: never;
-  images?: (string | File)[];
-}
-
-/**
- * Interfaz general de entrada para crear o actualizar un ítem.
- * Debe incluir datos de good O service (no ambos).
- */
-export type IItem = IItemGood | IItemService;
-
-/**
- * Interfaz para un registro de ítem leído de la BD con sus detalles.
- * Incluye good O service según el tipo del ítem.
- */
-export type IItemRecord = Item & (
-  | { good: IGood; service?: never }
-  | { service: IService; good?: never }
-  | { good?: never; service?: never }
-);
-
-/**
  * Tipo inferido del resultado de upsertItem.
  */
 export type IUpsertItem = Awaited<ReturnType<typeof upsertItem>>;
 
 export type { Item, NewItem, ItemType };
+
+// Re-exportar DTOs compartidos con frontend
+export type {
+  IGood,
+  IService,
+  IItemGood,
+  IItemService,
+  IItem,
+  IItemRecord,
+  ListItemsParams,
+  ListItemItem,
+  ListItemsResult,
+} from "#utils/dto/catalogs/item";
