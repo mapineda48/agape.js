@@ -72,6 +72,14 @@ if (isProduction) {
             "blob:",
             blobStorageHost,
           ],
+          "style-src": [
+            ...helmet.contentSecurityPolicy.getDefaultDirectives()["style-src"],
+            "https://fonts.googleapis.com",
+          ],
+          "font-src": [
+            ...helmet.contentSecurityPolicy.getDefaultDirectives()["font-src"],
+            "https://fonts.gstatic.com",
+          ],
         },
       },
     })
@@ -138,6 +146,7 @@ if (!isDevelopment) {
 
   // Fallback to SPA entrypoint (for client-side routing)
   app.get(/.*/, (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.sendFile(indexHtml);
   });
 }

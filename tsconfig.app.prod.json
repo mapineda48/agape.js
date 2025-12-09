@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "noEmit": false
   },
   "exclude": ["dist", "web", "**/*.test.ts", "bin/build.ts"]
 }
