@@ -15,7 +15,7 @@ import { ClientForm } from "../components";
 
 interface Props {
   clientTypes: ClientType[];
-  client: GetClientByIdResult;
+  client: NonNullable<GetClientByIdResult>;
   documentTypes: DocumentType[];
 }
 
@@ -78,7 +78,7 @@ export default function EditClientPage(props: Props) {
           }
         : {}),
     },
-  };
+  } as UpsertClientPayload;
 
   return (
     <Fragment>

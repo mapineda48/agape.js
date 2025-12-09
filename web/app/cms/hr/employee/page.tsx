@@ -6,6 +6,7 @@ import { useNotificacion } from "@/components/ui/notification";
 import { upsertEmployee, type UpsertEmployeePayload } from "@agape/hr/employee";
 import { listDocumentTypes, type DocumentType } from "@agape/core/documentType";
 import { EmployeeForm } from "./components";
+import DateTime from "@utils/data/DateTime";
 
 interface Props {
   documentTypes: DocumentType[];
@@ -95,19 +96,27 @@ export default function NewEmployeePage(props: Props) {
                     const payload = {
                       ...data,
                       ...(data.hireDate
-                        ? { hireDate: new Date(data.hireDate) }
+                        ? {
+                            hireDate:
+                              data.hireDate instanceof DateTime
+                                ? data.hireDate
+                                : new DateTime(data.hireDate),
+                          }
                         : {}),
                       user: {
                         ...data.user,
                         documentTypeId: Number(data.user.documentTypeId),
                         person: {
                           ...data.user.person,
-                          birthdate: data.user.person.birthdate
-                            ? new Date(data.user.person.birthdate)
-                            : undefined,
+                          birthdate:
+                            data.user.person.birthdate instanceof DateTime
+                              ? data.user.person.birthdate
+                              : data.user.person.birthdate
+                              ? new DateTime(data.user.person.birthdate)
+                              : undefined,
                         },
                       },
-                    } as UpsertEmployeePayload;
+                    };
 
                     await upsertEmployee(payload);
 

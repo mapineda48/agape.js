@@ -35,8 +35,6 @@ describe("ClientForm", () => {
       appliesToPerson: true,
       appliesToCompany: false, // Important: Person
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
     {
       id: 2,
@@ -45,8 +43,6 @@ describe("ClientForm", () => {
       appliesToPerson: false,
       appliesToCompany: true, // Important: Company
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
   ];
 

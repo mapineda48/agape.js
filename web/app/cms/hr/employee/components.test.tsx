@@ -35,24 +35,30 @@ describe("EmployeeForm", () => {
   const mockMerge = vi.fn();
   const mockSetAt = vi.fn();
 
-  const mockDocumentTypes: DocumentType[] = [
+  const mockDocumentTypes = [
     {
       id: 1,
       name: "Cédula de Ciudadanía",
       code: "CC",
+      appliesToPerson: true,
       appliesToCompany: false,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
     {
       id: 2,
+      name: "Tarjeta de Identidad",
+      code: "TI",
+      appliesToPerson: true,
+      appliesToCompany: false,
+      isEnabled: true,
+    },
+    {
+      id: 3,
       name: "NIT",
       code: "NIT",
+      appliesToPerson: false,
       appliesToCompany: true,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
   ];
 
@@ -103,6 +109,7 @@ describe("EmployeeForm", () => {
       expect(options.map((o) => o.textContent)).toEqual([
         "Seleccionar tipo...",
         "Cédula de Ciudadanía",
+        "Tarjeta de Identidad",
       ]);
     });
   });

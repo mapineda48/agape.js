@@ -1,5 +1,6 @@
-import { type JSX } from "react";
+import { useMemo, type JSX } from "react";
 import useInput from "./useInput";
+import stringToPath from "@/utils/stringToPath";
 
 export default function InputText(props: Props) {
   const {
@@ -12,7 +13,12 @@ export default function InputText(props: Props) {
     ...core
   } = props;
 
-  const [state, setState] = useInput(path, value, { materialize, autoCleanup });
+  const paths = useMemo(() => stringToPath(path), [path]);
+
+  const [state, setState] = useInput(paths, value, {
+    materialize,
+    autoCleanup,
+  });
 
   return (
     <input
@@ -25,7 +31,7 @@ export default function InputText(props: Props) {
 }
 
 interface Props extends Core {
-  path: string;
+  path: string | number;
   password?: boolean;
   email?: boolean;
   value?: string;

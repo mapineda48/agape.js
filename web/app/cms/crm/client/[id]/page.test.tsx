@@ -12,7 +12,7 @@ import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import type { DocumentType } from "@agape/core/documentType";
 import type { ClientType } from "@agape/crm/clientType";
-import { ClientDto } from "@agape/crm/client";
+import type { ClientDto } from "@agape/crm/client";
 import EventEmitter from "@/components/util/event-emitter";
 import PortalProvider from "@/components/util/portal";
 
@@ -37,8 +37,6 @@ describe("EditClientPage", () => {
       appliesToPerson: true,
       appliesToCompany: false,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
     {
       id: 2,
@@ -47,8 +45,6 @@ describe("EditClientPage", () => {
       appliesToPerson: false,
       appliesToCompany: true,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
   ];
 

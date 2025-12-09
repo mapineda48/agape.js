@@ -1,18 +1,17 @@
 import { useEffect, useState, useMemo } from "react";
 import Form, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
+import Decimal from "@utils/data/Decimal";
 import { useInputArray } from "@/components/form/hooks";
-import useInput from "@/components/form/Input/useInput";
+
 import Select from "@/components/form/Select";
 import Submit from "@/components/ui/submit";
-import { useEventEmitter } from "@/components/util/event-emitter";
 import {
   createInventoryMovement,
   getInventoryMovement,
 } from "@agape/inventory/movement";
 import { listMovementTypes } from "@agape/inventory/movementType";
 import { listItems } from "@agape/catalogs/item";
-import { useNotificacion } from "@/components/ui/notification";
 import DateTime from "@utils/data/DateTime";
 import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 
@@ -37,7 +36,7 @@ interface MovementFormState {
   details: Array<{
     itemId?: number;
     quantity: number;
-    unitCost?: number;
+    unitCost?: Decimal;
     locationId?: number;
   }>;
 }
@@ -56,15 +55,13 @@ export function MovementForm(props: Props) {
 function MovementFormContent(props: Props) {
   const isEditing = !!props.initialData?.id;
   const dispatch = useAppDispatch();
-  const emitter = useEventEmitter();
-  const updateFormEvent = useMemo(() => Symbol("updateForm"), []);
-  const notify = useNotificacion();
+  // const updateFormEvent = useMemo(() => Symbol("updateForm"), []);
+  // const notify = useNotificacion();
 
   useEffect(() => {
-    return emitter.on(updateFormEvent, ((record: any) => {
-      // Handle update if needed, but usually we just redirect
-    }) as any);
-  }, [emitter, updateFormEvent]);
+    //   // Handle update if needed, but usually we just redirect
+    // }) as any);
+  }, []);
 
   // Set default date if new
   useEffect(() => {
@@ -86,11 +83,11 @@ function MovementFormContent(props: Props) {
             <Submit<MovementFormState>
               onSubmit={async (state) => {
                 const payload = {
-                  movementTypeId: state.movementTypeId,
+                  movementTypeId: state.movementTypeId!,
                   movementDate:
                     state.movementDate instanceof DateTime
                       ? state.movementDate
-                      : new DateTime(state.movementDate),
+                      : new DateTime(state.movementDate ?? new Date()),
                   observation: state.observation,
                   userId: 1, // TODO: Get from auth context
                   sourceDocumentType: state.sourceDocumentType,
@@ -98,7 +95,7 @@ function MovementFormContent(props: Props) {
                   details: state.details.map((d: any) => ({
                     itemId: d.itemId,
                     quantity: Number(d.quantity),
-                    unitCost: d.unitCost ? Number(d.unitCost) : undefined,
+                    unitCost: d.unitCost,
                     locationId: d.locationId,
                   })),
                 };
@@ -113,7 +110,6 @@ function MovementFormContent(props: Props) {
                 }
                 props.onSuccess?.();
               }}
-              event={updateFormEvent}
               className="w-full py-3 px-4 text-white font-medium rounded-xl shadow-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition-all shadow-indigo-500/30"
             >
               {isEditing ? "Guardar Cambios" : "Crear Movimiento"}
@@ -217,7 +213,7 @@ function DetailsCard() {
           </div>
         ) : (
           <div className="space-y-4">
-            {details.map((item, index) => (
+            {details.map((_item, index) => (
               <div
                 key={index}
                 className="flex gap-4 items-start p-4 bg-gray-50 rounded-lg border border-gray-100 relative group"

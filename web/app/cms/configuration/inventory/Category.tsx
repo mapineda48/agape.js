@@ -75,7 +75,7 @@ function CategoryFilterModalWrapper(
       <CategoryFilterForm
         initialFilters={props.filters}
         onApply={props.onApply}
-        onClose={() => props.close()}
+        onClose={() => props.remove()}
       />
     </PortalModal>
   );
@@ -221,11 +221,13 @@ function CategoryForm({
 }
 
 function SubCategoriesManager() {
-  const subcategories = useInputArray<{
-    id?: number;
-    fullName: string;
-    isEnabled: boolean;
-  }>("subcategories");
+  const subcategories = useInputArray<
+    {
+      id?: number;
+      fullName: string;
+      isEnabled: boolean;
+    }[]
+  >("subcategories");
 
   return (
     <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">

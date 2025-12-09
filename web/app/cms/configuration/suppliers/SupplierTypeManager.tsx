@@ -38,7 +38,6 @@ interface SupplierTypeFormState {
 }
 
 interface SupplierTypeManagerProps {
-  onClose: () => void;
 }
 
 // -- Form Modal --
@@ -61,7 +60,6 @@ function SupplierTypeFormModalWrapper(
       <SupplierTypeForm
         item={props.item}
         onSave={props.onSave}
-        onClose={() => props.close()}
       />
     </PortalModal>
   );
@@ -69,11 +67,9 @@ function SupplierTypeFormModalWrapper(
 
 function SupplierTypeForm({
   item,
-  onClose,
   onSave,
 }: {
   item: SupplierType | null;
-  onClose: () => void;
   onSave: () => Promise<void>;
 }) {
   const notify = useNotificacion();
@@ -88,7 +84,6 @@ function SupplierTypeForm({
         await createSupplierType(data);
       }
       await onSave();
-      onClose();
     } catch (error) {
       console.error("Error saving supplier type:", error);
       notify({
@@ -120,7 +115,6 @@ function SupplierTypeForm({
       <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 rounded-b-xl">
         <button
           type="button"
-          onClick={onClose}
           className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           Cancelar
@@ -151,7 +145,6 @@ function FilterModalWrapper(
       <FilterForm
         initialSearch={props.search}
         onApply={props.onApply}
-        onClose={() => props.close()}
       />
     </PortalModal>
   );
@@ -160,18 +153,15 @@ function FilterModalWrapper(
 function FilterForm({
   initialSearch,
   onApply,
-  onClose,
 }: {
   initialSearch: string;
   onApply: (search: string) => void;
-  onClose: () => void;
 }) {
   const [search, setSearch] = useState(initialSearch);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onApply(search);
-    onClose();
   };
 
   return (
@@ -193,7 +183,6 @@ function FilterForm({
       <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 rounded-b-xl">
         <button
           type="button"
-          onClick={onClose}
           className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           Cancelar
@@ -214,7 +203,6 @@ const useFilterModal = createPortalHook(FilterModalWrapper);
 // -- Main Component --
 
 export default function SupplierTypeManager({
-  onClose,
 }: SupplierTypeManagerProps) {
   const notify = useNotificacion();
   const [types, setTypes] = useState<SupplierType[]>([]);
@@ -275,7 +263,7 @@ export default function SupplierTypeManager({
       message: `¿Seguro que deseas eliminar "${item.name}"?`,
       confirmText: "Eliminar",
       variant: "danger",
-      zIndex: 60, // Higher z-index for confirm on top of modal
+      // zIndex: 60, // Higher z-index for confirm on top of modal
       onConfirm: async () => {
         try {
           await deleteSupplierType(item.id);

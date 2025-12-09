@@ -127,19 +127,27 @@ export default function EditEmployeePage(props: Props) {
                     const payload = {
                       ...data,
                       ...(data.hireDate
-                        ? { hireDate: new Date(data.hireDate) }
+                        ? {
+                            hireDate:
+                              data.hireDate instanceof DateTime
+                                ? data.hireDate
+                                : new DateTime(data.hireDate),
+                          }
                         : {}),
                       user: {
                         ...data.user,
                         documentTypeId: Number(data.user.documentTypeId),
                         person: {
                           ...data.user.person,
-                          birthdate: data.user.person.birthdate
-                            ? new Date(data.user.person.birthdate)
-                            : undefined,
+                          birthdate:
+                            data.user.person.birthdate instanceof DateTime
+                              ? data.user.person.birthdate
+                              : data.user.person.birthdate
+                              ? new DateTime(data.user.person.birthdate)
+                              : undefined,
                         },
                       },
-                    } as UpsertEmployeePayload;
+                    };
 
                     await upsertEmployee(payload);
                     notify({ payload: "Empleado actualizado exitosamente" });

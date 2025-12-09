@@ -80,7 +80,7 @@ describe("FormProvider", () => {
 
       render(
         <FormProvider state={{ user: { profile: { name: "John" } } }}>
-          <Input.Text path={["user", "profile", "name"]} data-testid="input" />
+          <Input.Text path="user.profile.name" data-testid="input" />
         </FormProvider>
       );
 
@@ -196,10 +196,7 @@ describe("FormProvider", () => {
 
       render(
         <FormProvider state={{ user: { settings: { notifications: 5 } } }}>
-          <Input.Int
-            path={["user", "settings", "notifications"]}
-            data-testid="input"
-          />
+          <Input.Int path="user.settings.notifications" data-testid="input" />
         </FormProvider>
       );
 
@@ -294,10 +291,7 @@ describe("FormProvider", () => {
 
       render(
         <FormProvider state={{ user: { settings: { notifications: false } } }}>
-          <Checkbox
-            path={["user", "settings", "notifications"]}
-            data-testid="checkbox"
-          />
+          <Checkbox path="user.settings.notifications" data-testid="checkbox" />
         </FormProvider>
       );
 
@@ -389,16 +383,13 @@ describe("FormProvider", () => {
             },
           }}
         >
-          <Input.Text path={["user", "profile", "name"]} data-testid="name" />
-          <Input.Int path={["user", "profile", "age"]} data-testid="age" />
+          <Input.Text path="user.profile.name" data-testid="name" />
+          <Input.Int path="user.profile.age" data-testid="age" />
           <Checkbox
-            path={["user", "settings", "notifications"]}
+            path="user.settings.notifications"
             data-testid="notifications"
           />
-          <Input.Text
-            path={["user", "settings", "theme"]}
-            data-testid="theme"
-          />
+          <Input.Text path="user.settings.theme" data-testid="theme" />
         </FormProvider>
       );
 

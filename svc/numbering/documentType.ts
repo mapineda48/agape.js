@@ -4,6 +4,7 @@ import {
   type NewDocumentType,
   type DocumentType,
 } from "#models/numbering/document_type";
+export type { DocumentType, NewDocumentType };
 import { eq } from "drizzle-orm";
 
 /**

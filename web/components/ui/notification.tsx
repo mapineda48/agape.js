@@ -36,7 +36,14 @@ const iconStyles: Record<NotificationType, string> = {
 };
 
 export default function Notification(props: NotificationProps) {
-  const { payload, type = "success", duration = 4000, remove, style } = props;
+  const {
+    payload,
+    title,
+    type = "success",
+    duration = 4000,
+    remove,
+    style,
+  } = props;
 
   const isError = payload instanceof Error;
   const resolvedType: NotificationType = isError ? "error" : type;
@@ -56,7 +63,7 @@ export default function Notification(props: NotificationProps) {
 
     let exitTimeout: number | undefined;
     if (duration && duration > 0) {
-      exitTimeout = setTimeout(() => handleClose(), duration);
+      exitTimeout = window.setTimeout(() => handleClose(), duration);
     }
 
     return () => {
@@ -100,6 +107,7 @@ export default function Notification(props: NotificationProps) {
         />
 
         <div className="flex-1">
+          {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
           <p className="text-sm font-medium leading-relaxed">{message}</p>
         </div>
 
@@ -120,5 +128,6 @@ export const useNotificacion = createPortalHook(Notification);
 interface NotificationProps extends PortalInjectedProps {
   payload: string | Error;
   type?: NotificationType;
+  title?: string;
   duration?: number;
 }

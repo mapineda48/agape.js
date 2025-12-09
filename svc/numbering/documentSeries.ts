@@ -4,6 +4,7 @@ import {
   type NewDocumentSeries,
   type DocumentSeries,
 } from "#models/numbering/document_series";
+export type { DocumentSeries, NewDocumentSeries };
 import DateTime from "#utils/data/DateTime";
 import { and, eq, sql } from "drizzle-orm";
 

@@ -44,7 +44,7 @@ export default function EditMovementPage(props: PageProps) {
   const handleSuccess = () => {
     notify({
       title: "Movimiento actualizado",
-      message: "Los cambios se han guardado exitosamente.",
+      payload: "Los cambios se han guardado exitosamente.",
       type: "success",
     });
     navigate("../.."); // Back to list

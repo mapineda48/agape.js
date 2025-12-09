@@ -13,3 +13,6 @@ export type NodeBuffer = Uint8Array;
 // Para cualquier export que no esté definido explícitamente
 declare const _default: any;
 export default _default;
+
+export declare function encode(value: unknown): Uint8Array;
+export declare function decode<T = unknown>(buffer: Buffer | Uint8Array): T;

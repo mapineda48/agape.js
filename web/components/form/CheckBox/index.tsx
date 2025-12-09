@@ -1,5 +1,6 @@
-import { type JSX } from "react";
+import { useMemo, type JSX } from "react";
 import useInput from "../Input/useInput";
+import stringToPath from "@/utils/stringToPath";
 
 /**
  * Checkbox form input component.
@@ -15,9 +16,17 @@ import useInput from "../Input/useInput";
  * If true, the value will be removed from the store when this input unmounts.
  */
 export default function Checkbox(props: Props) {
-  const { path, defaultChecked = false, materialize, autoCleanup, ...core } = props;
+  const {
+    path,
+    defaultChecked = false,
+    materialize,
+    autoCleanup,
+    ...core
+  } = props;
 
-  const [state, setState] = useInput(path, defaultChecked, {
+  const paths = useMemo(() => stringToPath(path), [path]);
+
+  const [state, setState] = useInput(paths, defaultChecked, {
     materialize,
     autoCleanup,
   });

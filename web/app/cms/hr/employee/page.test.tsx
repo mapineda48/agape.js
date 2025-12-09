@@ -36,8 +36,6 @@ describe("NewEmployeePage", () => {
       appliesToPerson: true,
       appliesToCompany: false,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
     {
       id: 2,
@@ -46,8 +44,6 @@ describe("NewEmployeePage", () => {
       appliesToPerson: true,
       appliesToCompany: false,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
     {
       id: 3,
@@ -56,8 +52,6 @@ describe("NewEmployeePage", () => {
       appliesToPerson: false,
       appliesToCompany: true,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
   ];
 
@@ -331,8 +325,6 @@ describe("NewEmployeePage", () => {
           appliesToPerson: true,
           appliesToCompany: false,
           isEnabled: true,
-          createdAt: new Date(),
-          updatedAt: null,
         },
       ];
 

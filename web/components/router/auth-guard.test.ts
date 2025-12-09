@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AuthGuard } from "./auth-guard";
 import type { INavigateTo } from "./types";
 
@@ -149,8 +148,8 @@ describe("AuthGuard", () => {
     });
 
     it("should log error in development mode", async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "development";
+      vi.stubEnv("NODE_ENV", "development");
+
       const consoleSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
@@ -161,9 +160,8 @@ describe("AuthGuard", () => {
       await guard.check("/cms", ctx);
 
       expect(consoleSpy).toHaveBeenCalled();
-
       consoleSpy.mockRestore();
-      process.env.NODE_ENV = originalEnv;
+      vi.unstubAllEnvs();
     });
   });
 

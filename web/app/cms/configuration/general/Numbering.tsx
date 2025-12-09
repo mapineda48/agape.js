@@ -8,7 +8,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DocumentTextIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
 import {
   listDocumentTypes,
@@ -29,7 +28,7 @@ import {
   type PortalInjectedProps,
 } from "@/components/util/portal";
 import PortalModal from "@/components/ui/PortalModal";
-import { useConfirmModal } from "@/components/ui/PortalConfirm";
+import DateTime from "@utils/data/DateTime";
 
 /**
  * Form state interface for DocumentSeries creation/editing.
@@ -42,8 +41,8 @@ interface SeriesFormState {
   startNumber: number;
   endNumber: number;
   currentNumber?: number;
-  validFrom?: string;
-  validTo?: string;
+  validFrom?: DateTime;
+  validTo?: DateTime;
   isActive: boolean;
   isDefault: boolean;
 }
@@ -114,14 +113,22 @@ function SeriesForm({
     endNumber: series?.endNumber ?? 999999,
     currentNumber: series?.currentNumber, // Optional in UI, handled by backend on create
     validFrom: series?.validFrom,
-    validTo: series?.validTo,
+    validTo: series?.validTo ?? undefined,
     isActive: series?.isActive ?? true,
     isDefault: series?.isDefault ?? false,
   };
 
   async function handleSubmit(data: SeriesFormState) {
+    if (!data.validFrom) {
+      notify({ payload: "La fecha de inicio es requerida", type: "error" });
+      return;
+    }
+
     try {
-      await upsertDocumentSeries(data);
+      await upsertDocumentSeries({
+        ...data,
+        validFrom: data.validFrom,
+      });
       await onSave();
       onClose();
     } catch (error) {
@@ -282,13 +289,19 @@ function DocumentTypeForm({
   const isEditing = !!item;
   const [currentId, setCurrentId] = useState<number | undefined>(item?.id);
 
-  const initialState: DocumentTypeFormState = item || {
-    code: "",
-    name: "",
-    module: "",
-    description: "",
-    isEnabled: true,
-  };
+  const initialState: DocumentTypeFormState = item
+    ? {
+        ...item,
+        module: item.module ?? "",
+        description: item.description ?? "",
+      }
+    : {
+        code: "",
+        name: "",
+        module: "",
+        description: "",
+        isEnabled: true,
+      };
 
   // Series handling
   const [seriesList, setSeriesList] = useState<DocumentSeries[]>([]);

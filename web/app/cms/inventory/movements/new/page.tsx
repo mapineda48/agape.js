@@ -21,7 +21,7 @@ export default function NewMovementPage(props: PageProps) {
   const handleSuccess = () => {
     notify({
       title: "Movimiento creado",
-      message: "El movimiento de inventario se ha registrado exitosamente.",
+      payload: "El movimiento de inventario se ha registrado exitosamente.",
       type: "success",
     });
     navigate(".."); // Go back to list

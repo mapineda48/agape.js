@@ -1,13 +1,21 @@
-import { type JSX } from "react";
+import { useMemo, type JSX } from "react";
 import useInput from "./useInput";
+import stringToPath from "@/utils/stringToPath";
 
 export default function InputInt(props: Props) {
   const { path, materialize, autoCleanup, nullable, ...core } = props;
 
   const defaultValue = nullable ? null : 0;
-  const [state, setState] = useInput(path, defaultValue, { materialize, autoCleanup });
 
-  const displayValue = state === null || Number.isNaN(state as number) ? "" : (state as number);
+  const paths = useMemo(() => stringToPath(path), [path]);
+
+  const [state, setState] = useInput(paths, defaultValue, {
+    materialize,
+    autoCleanup,
+  });
+
+  const displayValue =
+    state === null || Number.isNaN(state as number) ? "" : (state as number);
 
   return (
     <input

@@ -13,6 +13,7 @@ import { useNotificacion } from "@/components/ui/notification";
 import type { DocumentType } from "@agape/core/documentType";
 import EventEmitter from "@/components/util/event-emitter";
 import PortalProvider from "@/components/util/portal";
+import DateTime from "@utils/data/DateTime";
 
 // @agape/hr/employee is mocked via alias in vitest.config.ts -> web/test/mocks/employee.ts
 
@@ -36,8 +37,6 @@ describe("EditEmployeePage", () => {
       appliesToPerson: true,
       appliesToCompany: false,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
     {
       id: 2,
@@ -46,8 +45,6 @@ describe("EditEmployeePage", () => {
       appliesToPerson: true,
       appliesToCompany: false,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
     {
       id: 3,
@@ -56,8 +53,6 @@ describe("EditEmployeePage", () => {
       appliesToPerson: false,
       appliesToCompany: true,
       isEnabled: true,
-      createdAt: new Date(),
-      updatedAt: null,
     },
   ];
 
@@ -70,11 +65,11 @@ describe("EditEmployeePage", () => {
     email: "juan@example.com",
     phone: "555-0000",
     address: "Calle Falsa 123",
-    birthdate: new Date("1990-05-15"),
-    hireDate: new Date("2020-01-10"),
+    birthdate: new DateTime("1990-05-15"),
+    hireDate: new DateTime("2020-01-10"),
     isActive: true,
-    avatarUrl: null,
-    createdAt: new Date(),
+    avatarUrl: "",
+    createdAt: new DateTime(),
     updatedAt: null,
     documentTypeId: 1,
     documentNumber: "1234567890",
@@ -187,7 +182,7 @@ describe("EditEmployeePage", () => {
         phone: null,
         address: null,
         birthdate: null,
-        avatarUrl: null,
+        avatarUrl: "",
       };
 
       renderWithProviders(

@@ -135,7 +135,7 @@ function SupplierTypeManagerModalWrapper(props: PortalInjectedProps) {
   return (
     <PortalModal {...props} title="Gestionar tipos de proveedor" size="lg">
       {/* onClose will be injected by PortalModal */}
-      <SupplierTypeManager onClose={() => {}} />
+      <SupplierTypeManager />
     </PortalModal>
   );
 }
@@ -511,7 +511,7 @@ function SupplierFormContent({
   const isEditing = !!supplier?.id;
 
   const [type] = useInput("type");
-  const [documentNumber] = useInput("documentNumber");
+  const [documentNumber] = useInput<string>("documentNumber");
 
   useEffect(() => {
     const timeOutId = setTimeout(async () => {

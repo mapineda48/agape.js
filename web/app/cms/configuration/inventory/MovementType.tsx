@@ -87,7 +87,7 @@ function MovementFilterModalWrapper(
       <MovementFilterForm
         initialFilters={props.filters}
         onApply={props.onApply}
-        onClose={() => props.close()}
+        onClose={() => props.remove()}
       />
     </PortalModal>
   );
