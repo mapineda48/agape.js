@@ -3,3 +3,4 @@
  * Este módulo contiene solo tipos e interfaces sin dependencias de backend.
  */
 export * from "./catalogs";
+export * from "./security";
