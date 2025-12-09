@@ -215,7 +215,7 @@ export function EmployeeForm({
         </div>
 
         {/* Personal Information */}
-        <PathProvider value={["user", "person"]} autoCleanup>
+        <PathProvider value="user" autoCleanup>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg
@@ -233,44 +233,43 @@ export function EmployeeForm({
               Información Personal
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input.Text
-                path="firstName"
-                placeholder="Juan"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Input.Text
-                path="lastName"
-                placeholder="Pérez"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <PathProvider value={[".."]}>
+              {/* Person-specific fields */}
+              <PathProvider value="person">
                 <Input.Text
-                  path="email"
-                  email
-                  placeholder="juan.perez@example.com"
+                  path="firstName"
+                  placeholder="Juan"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
                 <Input.Text
-                  path="phone"
-                  placeholder="+1 234 567 8900"
+                  path="lastName"
+                  placeholder="Pérez"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <Input.DateTime
+                  path="birthdate"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </PathProvider>
-              <Input.DateTime
-                path="birthdate"
+              {/* User-level contact fields */}
+              <Input.Text
+                path="email"
+                email
+                placeholder="juan.perez@example.com"
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-              <PathProvider value={[".."]}>
-                <Input.Text
-                  path="address"
-                  placeholder="Calle Principal 123"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-              </PathProvider>
+              <Input.Text
+                path="phone"
+                placeholder="+1 234 567 8900"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+              <Input.Text
+                path="address"
+                placeholder="Calle Principal 123"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
             </div>
           </div>
         </PathProvider>
