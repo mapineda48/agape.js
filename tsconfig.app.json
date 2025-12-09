@@ -1,33 +1,33 @@
 {
   "compilerOptions": {
+    "incremental": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "target": "es2024",
     "module": "ESNext",
-    "types": ["vite/client", "vitest/globals"],
-    "skipLibCheck": true,
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
-    /* Linting */
+    "moduleResolution": "node",
+    "outDir": "dist",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "baseUrl": "web",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": false,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "lib": ["ESNext"],
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": true,
+    "baseUrl": ".",
     "paths": {
-      "@agape/*": ["../svc/*"],
-      "@/*": ["./*"],
-      "@utils/*": ["../lib/utils/*"]
+      "#utils/*": ["lib/utils/*"],
+      "#models/*": ["models/*"],
+      "#lib/*": ["lib/*"],
+      "#svc/*": ["svc/*"],
+      "#session": ["lib/access/session.ts"],
+      "#logger": ["lib/log/logger.ts"]
     }
   },
-  "include": ["web"],
-  "exclude": ["svc"]
+  "include": ["bin", "svc", "lib", "models"],
+  "exclude": ["dist", "web"]
 }
