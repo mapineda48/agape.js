@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "tsx": "tsx watch --tsconfig ./tsconfig.app.json",
     "backend": "tsx watch --tsconfig ./tsconfig.app.json bin/index.ts",
-    "frontend": "vite",
+    "web": "vite",
     "prebuild": "rimraf dist && tsc -p ./tsconfig.backend.json && vite build",
     "drizzle:push": "drizzle-kit push",
     "build": "tsx bin/build.ts",
