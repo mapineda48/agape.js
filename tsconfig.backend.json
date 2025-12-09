@@ -1,8 +1,7 @@
 {
-  "extends": "./tsconfig.app.json",
-  "exclude": [
-    "dist",
-    "web",
-    "**/*.test.ts" // <- ¡Aquí está tu patrón!
-  ]
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "exclude": ["dist", "web", "**/*.test.ts"]
 }
