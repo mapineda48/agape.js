@@ -21,5 +21,6 @@ export type {
 
 // Mocks de funciones del servicio
 export const getEmployeeById = vi.fn();
+export const getEmployeeByDocument = vi.fn();
 export const listEmployees = vi.fn();
 export const upsertEmployee = vi.fn();

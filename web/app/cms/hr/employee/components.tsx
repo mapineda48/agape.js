@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
 import { useNotificacion } from "@/components/ui/notification";
+import { useRouter } from "@/components/router/router-hook";
 import { getUserByDocument } from "@agape/core/user";
+import { getEmployeeByDocument } from "@agape/hr/employee";
 import Checkbox from "@/components/form/CheckBox";
 import PathProvider from "@/components/form/paths";
 import { useSelector } from "@/components/form/hooks";
@@ -73,16 +75,30 @@ function ImageProfile({ initialAvatar }: { initialAvatar?: string | null }) {
   );
 }
 
+/**
+ * Props for EmployeeForm component.
+ * @property isEdit - Indicates if the form is in edit mode
+ * @property employeeId - The ID of the employee being edited (only relevant in edit mode)
+ */
+interface EmployeeFormProps {
+  documentTypes: DocumentType[];
+  initialAvatar?: string | null;
+  children?: React.ReactNode;
+  /** Whether the form is editing an existing employee */
+  isEdit?: boolean;
+  /** The ID of the employee being edited (used for redirect comparison) */
+  employeeId?: number;
+}
+
 export function EmployeeForm({
   documentTypes,
   initialAvatar,
   children,
-}: {
-  documentTypes: DocumentType[];
-  initialAvatar?: string | null;
-  children?: React.ReactNode;
-}) {
+  isEdit = false,
+  employeeId,
+}: EmployeeFormProps) {
   const notify = useNotificacion();
+  const { navigate } = useRouter();
   const { merge, setAt } = useFormReset();
 
   // Filter document types for persons only
@@ -118,7 +134,7 @@ export function EmployeeForm({
     };
   }
 
-  // Document Validation Effect - only runs when values CHANGE from initial
+  // Document Validation Effect - validates document and handles redirects
   useEffect(() => {
     const timeOutId = setTimeout(async () => {
       if (!documentTypeId || !documentNumber) return;
@@ -146,6 +162,29 @@ export function EmployeeForm({
       }
 
       try {
+        // Step 1: Check if employee already exists with this document
+        const existingEmployee = await getEmployeeByDocument(
+          currentTypeId,
+          currentDocNumber
+        );
+
+        if (existingEmployee) {
+          // Employee already exists
+          if (isEdit && existingEmployee.id === employeeId) {
+            // Same employee being edited, no action needed
+            return;
+          }
+
+          // Different employee exists with this document - redirect to edit that employee
+          notify({
+            payload: `Ya existe un empleado registrado con este documento: ${existingEmployee.firstName} ${existingEmployee.lastName}`,
+            type: "warning",
+          });
+          navigate(`../employee/${existingEmployee.id}`);
+          return;
+        }
+
+        // Step 2: No employee exists, check if user exists
         const user = await getUserByDocument(currentTypeId, currentDocNumber);
 
         if (user) {
@@ -159,6 +198,7 @@ export function EmployeeForm({
             return;
           }
 
+          // User exists but not as employee - preload user data
           merge({
             user: {
               email: user.email || undefined,
@@ -180,17 +220,36 @@ export function EmployeeForm({
           }
 
           notify({
-            payload: "Se ha cargado la información existente.",
+            payload: "Se ha cargado la información del usuario existente.",
             type: "success",
           });
+        } else if (isEdit) {
+          // Step 3: In edit mode and no employee/user exists with new document
+          // Redirect to create new employee
+          notify({
+            payload:
+              "El documento ingresado no corresponde a ningún empleado existente. Redirigiendo a crear nuevo empleado.",
+            type: "info",
+          });
+          navigate("../../employee");
         }
+        // If in create mode and no user exists, just continue (user is creating new)
       } catch (error) {
-        console.error("Error searching user:", error);
+        console.error("Error searching employee/user:", error);
       }
     }, 500);
 
     return () => clearTimeout(timeOutId);
-  }, [documentTypeId, documentNumber, merge, setAt, notify]);
+  }, [
+    documentTypeId,
+    documentNumber,
+    merge,
+    setAt,
+    notify,
+    navigate,
+    isEdit,
+    employeeId,
+  ]);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">

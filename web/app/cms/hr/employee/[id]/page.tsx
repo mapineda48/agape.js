@@ -105,6 +105,8 @@ export default function EditEmployeePage(props: Props) {
             <EmployeeForm
               documentTypes={props.documentTypes}
               initialAvatar={props.employee.avatarUrl}
+              isEdit
+              employeeId={props.employee.id}
             >
               <button
                 type="button"

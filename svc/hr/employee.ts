@@ -67,6 +67,47 @@ export async function getEmployeeById(id: number) {
 }
 
 /**
+ * Busca un empleado por tipo y número de documento.
+ * Útil para validar si un usuario ya está registrado como empleado.
+ *
+ * @param documentTypeId - ID del tipo de documento
+ * @param documentNumber - Número de documento
+ * @returns Empleado encontrado con datos básicos, o null si no existe
+ */
+export async function getEmployeeByDocument(
+  documentTypeId: number,
+  documentNumber: string
+) {
+  const [match] = await db
+    .select({
+      id: employee.id,
+      userId: employee.id,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      birthdate: person.birthdate,
+      hireDate: employee.hireDate,
+      isActive: employee.isActive,
+      avatarUrl: employee.avatarUrl,
+      documentTypeId: user.documentTypeId,
+      documentNumber: user.documentNumber,
+    })
+    .from(employee)
+    .innerJoin(user, eq(employee.id, user.id))
+    .innerJoin(person, eq(employee.id, person.id))
+    .where(
+      and(
+        eq(user.documentTypeId, documentTypeId),
+        eq(user.documentNumber, documentNumber)
+      )
+    );
+
+  return match ?? null;
+}
+
+/**
  * Lista empleados con filtros opcionales y paginación.
  *
  * @param params - Parámetros de búsqueda y paginación
