@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useFormReset } from "@/components/form";
 import Input from "@/components/form/Input";
 import { useNotificacion } from "@/components/ui/notification";
@@ -98,16 +98,55 @@ export function EmployeeForm({
     (state: UpsertEmployeePayload) => state.user?.documentNumber
   );
 
-  // Document Validation Effect
+  // Track initial values at mount time (edit mode detection)
+  // This ref is initialized ONCE during the first render and never updated
+  const initialValuesRef = useRef<{
+    documentTypeId: number | undefined;
+    documentNumber: string | undefined;
+    captured: boolean;
+    hasRun: boolean;
+  } | null>(null);
+
+  // Capture initial values only on first render (before any effects run)
+  // Using null as initial value to detect first render
+  if (initialValuesRef.current === null) {
+    initialValuesRef.current = {
+      documentTypeId: documentTypeId ? Number(documentTypeId) : undefined,
+      documentNumber: documentNumber ? String(documentNumber) : undefined,
+      captured: !!(documentTypeId && documentNumber), // true if data existed at mount (edit mode)
+      hasRun: false,
+    };
+  }
+
+  // Document Validation Effect - only runs when values CHANGE from initial
   useEffect(() => {
     const timeOutId = setTimeout(async () => {
       if (!documentTypeId || !documentNumber) return;
 
+      const currentTypeId = Number(documentTypeId);
+      const currentDocNumber = String(documentNumber);
+
+      // We know the ref is initialized before this effect runs
+      const ref = initialValuesRef.current!;
+
+      // Skip on first run if this is edit mode (captured = true at mount)
+      // and values haven't changed from initial
+      const isFirstRun = !ref.hasRun;
+      const hadInitialData = ref.captured; // true only if data existed at mount
+      const valuesUnchanged =
+        ref.documentTypeId === currentTypeId &&
+        ref.documentNumber === currentDocNumber;
+
+      // Mark as run after first execution
+      ref.hasRun = true;
+
+      if (isFirstRun && hadInitialData && valuesUnchanged) {
+        // Skip - this is initial render with pre-existing data (edit mode)
+        return;
+      }
+
       try {
-        const user = await getUserByDocument(
-          Number(documentTypeId),
-          String(documentNumber)
-        );
+        const user = await getUserByDocument(currentTypeId, currentDocNumber);
 
         if (user) {
           // Verify if it is a person

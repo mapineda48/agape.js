@@ -182,4 +182,101 @@ describe("EmployeeForm", () => {
       type: "success",
     });
   });
+
+  describe("Edit mode - initial data handling", () => {
+    it("should NOT call getUserByDocument on initial render when editing existing employee", async () => {
+      // This test replicates the bug where the document validation effect
+      // fires on initial render and overwrites the data that came from the server.
+
+      // Initial state simulating data from the server (edit mode)
+      const initialState = {
+        id: 101,
+        isActive: true,
+        user: {
+          id: 202,
+          documentTypeId: 1,
+          documentNumber: "1234567890",
+          email: "existing@email.com",
+          phone: "555-0000",
+          address: "Existing Address 123",
+          person: {
+            firstName: "Juan",
+            lastName: "Perez",
+          },
+        },
+      };
+
+      render(
+        <Form state={initialState}>
+          <EmployeeForm documentTypes={mockDocumentTypes} />
+        </Form>
+      );
+
+      // Wait for the debounce timeout (500ms) + extra buffer
+      await new Promise((resolve) => setTimeout(resolve, 700));
+
+      // The effect should NOT have been called because the data already exists
+      // and the user hasn't made any changes yet
+      expect(getUserByDocument).not.toHaveBeenCalled();
+      expect(mockMerge).not.toHaveBeenCalled();
+      expect(mockSetAt).not.toHaveBeenCalled();
+      expect(mockNotify).not.toHaveBeenCalled();
+    });
+
+    it("should call getUserByDocument when document type CHANGES in edit mode", async () => {
+      // Mock the service to return different data
+      (getUserByDocument as any).mockResolvedValue({
+        id: 300,
+        email: "different@email.com",
+        phone: "999-9999",
+        address: "Different Address",
+        person: {
+          firstName: "Pedro",
+          lastName: "Garcia",
+        },
+      });
+
+      const initialState = {
+        id: 101,
+        isActive: true,
+        user: {
+          id: 202,
+          documentTypeId: 1,
+          documentNumber: "1234567890",
+          email: "existing@email.com",
+          phone: "555-0000",
+          address: "Existing Address 123",
+          person: {
+            firstName: "Juan",
+            lastName: "Perez",
+          },
+        },
+      };
+
+      render(
+        <Form state={initialState}>
+          <EmployeeForm documentTypes={mockDocumentTypes} />
+        </Form>
+      );
+
+      // First, verify no call on initial render
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      expect(getUserByDocument).not.toHaveBeenCalled();
+
+      // Now change the document number to trigger the validation
+      const docInput = screen.getByPlaceholderText("Número de documento");
+      fireEvent.change(docInput, { target: { value: "9999999999" } });
+
+      // Wait for debounce
+      await waitFor(
+        () => {
+          expect(getUserByDocument).toHaveBeenCalledWith(1, "9999999999");
+        },
+        { timeout: 1000 }
+      );
+
+      // Verify merge was called with the new data
+      expect(mockMerge).toHaveBeenCalled();
+    });
+  });
 });
