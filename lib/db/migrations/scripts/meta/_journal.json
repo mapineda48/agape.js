@@ -50,6 +50,13 @@
       "when": 1765382615446,
       "tag": "0006_hot_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1765383089335,
+      "tag": "0007_spotty_dazzler",
+      "breakpoints": true
     }
   ]
 }
