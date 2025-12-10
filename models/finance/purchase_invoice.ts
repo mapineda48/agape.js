@@ -9,12 +9,22 @@ import {
 import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { schema } from "../agape";
 import supplier from "../purchasing/supplier";
+import purchase_order from "../purchasing/purchase_order";
+import goods_receipt from "../purchasing/goods_receipt";
 import { decimal } from "../../lib/db/custom-types";
 import { documentSeries } from "../numbering/document_series";
+import { paymentTerms } from "./payment_terms";
 
 /**
  * Modelo de factura de compra (Purchase Invoice)
  * Representa una factura emitida por un proveedor.
+ *
+ * Vinculaciones:
+ * - Puede referenciar una OC (purchaseOrderId) para facturación directa
+ * - Puede referenciar un GRN (goodsReceiptId) para facturación basada en recepción
+ * - Incluye términos de pago (paymentTermsId) para calcular vencimiento
+ *
+ * Las líneas de detalle están en finance_purchase_invoice_item
  */
 const purchase_invoice = schema.table(
   "finance_purchase_invoice",
@@ -35,10 +45,37 @@ const purchase_invoice = schema.table(
       .notNull()
       .references(() => supplier.id),
 
+    /**
+     * Orden de compra de referencia (opcional)
+     * Útil cuando se factura directamente contra una OC
+     */
+    purchaseOrderId: integer("purchase_order_id").references(
+      () => purchase_order.id,
+      { onDelete: "restrict" }
+    ),
+
+    /**
+     * Documento de recepción de referencia (opcional)
+     * Flujo preferido: OC → GRN → Factura
+     */
+    goodsReceiptId: integer("goods_receipt_id").references(
+      () => goods_receipt.id,
+      { onDelete: "restrict" }
+    ),
+
+    /**
+     * Términos de pago aplicables a esta factura
+     * Define el plazo para calcular la fecha de vencimiento
+     */
+    paymentTermsId: integer("payment_terms_id").references(
+      () => paymentTerms.id,
+      { onDelete: "restrict" }
+    ),
+
     /** Fecha de emisión de la factura */
     issueDate: date("issue_date").defaultNow().notNull(),
 
-    /** Fecha de vencimiento de la factura */
+    /** Fecha de vencimiento de la factura (puede calcularse desde paymentTerms) */
     dueDate: date("due_date"),
 
     /** Monto total de la factura */

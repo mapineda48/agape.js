@@ -36,6 +36,13 @@
       "when": 1765381764191,
       "tag": "0004_huge_silvermane",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765382158944,
+      "tag": "0005_demonic_viper",
+      "breakpoints": true
     }
   ]
 }
