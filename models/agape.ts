@@ -18,7 +18,7 @@ export const agape = schema.table("agape", {
   /** Fecha de creación */
   createdAt: dateTime("created_at").default(sql`now()`),
   /** Fecha de última actualización */
-  updateAt: dateTime("updated_at")
+  updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
 });

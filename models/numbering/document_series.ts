@@ -27,6 +27,8 @@ export const documentSeries = schema.table(
       .notNull()
       .references(() => documentType.id, { onDelete: "restrict" }),
 
+    // ========== CONFIGURACIÓN DE NUMERACIÓN ==========
+
     /**
      * Código de la serie/numeración.
      * Ejemplos: "INV-2025-A", "F001", "POS1-2025".
@@ -52,6 +54,8 @@ export const documentSeries = schema.table(
      */
     currentNumber: bigint("current_number", { mode: "number" }).notNull(),
 
+    // ========== VIGENCIA Y ESTADO ==========
+
     /** Fecha desde la cual la serie está vigente */
     validFrom: dateTime("valid_from").notNull(),
 
@@ -66,6 +70,14 @@ export const documentSeries = schema.table(
      * La unicidad de la serie por defecto se maneja a nivel de aplicación.
      */
     isDefault: boolean("is_default").notNull().default(false),
+
+    // ========== AUDITORÍA ==========
+
+    /**
+     * Fecha y hora de la última asignación de número.
+     * Útil para monitoreo, debugging y detección de actividad inusual.
+     */
+    lastAssignedAt: dateTime("last_assigned_at"),
   },
   (table) => [
     /** Evitamos series duplicadas por tipo de documento y código */
@@ -77,6 +89,8 @@ export const documentSeries = schema.table(
     /** Índices útiles para búsquedas y filtros habituales */
     index("ix_numbering_series_type").on(table.documentTypeId),
     index("ix_numbering_series_active").on(table.isActive),
+    /** Índice para monitoreo de última asignación */
+    index("ix_numbering_series_last_assigned").on(table.lastAssignedAt),
   ]
 );
 

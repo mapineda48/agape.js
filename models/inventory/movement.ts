@@ -18,7 +18,11 @@ export const inventoryMovement = schema.table(
     movementDate: dateTime("movement_date").notNull(),
     observation: varchar("observation", { length: 500 }),
 
-    userId: integer("user_id")
+    /**
+     * Empleado responsable del movimiento.
+     * Referencia al registro de employee, no al usuario del sistema.
+     */
+    employeeId: integer("employee_id")
       .references(() => employee.id)
       .notNull(),
 
