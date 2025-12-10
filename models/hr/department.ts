@@ -1,5 +1,10 @@
 import { serial, varchar, text, boolean, integer } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import {
+  relations,
+  sql,
+  type InferSelectModel,
+  type InferInsertModel,
+} from "drizzle-orm";
 import { schema } from "../agape";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
@@ -26,7 +31,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * - Puede vincularse a un centro de costo
  * - Tiene un gerente/responsable (opcional)
  */
-const department = schema.table("hr_department", {
+export const department = schema.table("hr_department", {
   /** Identificador único del departamento */
   id: serial("id").primaryKey(),
 
@@ -88,5 +93,8 @@ export const departmentRelations = relations(department, ({ one, many }) => ({
   /** Subdepartamentos */
   children: many(department, { relationName: "departmentHierarchy" }),
 }));
+
+export type Department = InferSelectModel<typeof department>;
+export type NewDepartment = InferInsertModel<typeof department>;
 
 export default department;
