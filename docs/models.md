@@ -198,6 +198,79 @@ Esto permite tener múltiples estrategias de pricing según canal, tipo de clien
 
 Esto separa el **pricing dinámico** del precio base del catálogo.
 
+#### 2.7 Atributos de ítem (`catalogs_item_attribute`)
+
+- Define los **atributos disponibles** para crear variantes:
+
+  - Color, Talla, Material, Capacidad, etc.
+
+- Cada atributo tiene:
+
+  - Código único y nombre.
+  - Descripción.
+  - Estado habilitado.
+
+Los atributos son la base del sistema de variantes.
+
+#### 2.8 Valores de atributo (`catalogs_item_attribute_value`)
+
+- Define los **valores posibles** para cada atributo:
+
+  - Para "Color": Rojo, Azul, Verde, Negro, Blanco.
+  - Para "Talla": XS, S, M, L, XL, XXL.
+  - Para "Material": Algodón, Poliéster, Lana.
+
+- Cada valor tiene:
+
+  - Código y nombre para display.
+  - Valor adicional (ej: código hex para colores).
+  - Orden de presentación.
+
+#### 2.9 Variantes de ítem (`catalogs_item_variant`)
+
+- Representa un **SKU hijo** derivado de un ítem padre (template):
+
+  - Ítem padre: "Camiseta Básica".
+  - Variantes:
+    - "Camiseta Básica - Rojo - S" (CAM-001-RED-S).
+    - "Camiseta Básica - Azul - M" (CAM-001-BLUE-M).
+
+- Cada variante tiene:
+
+  - Código/SKU único.
+  - Nombre generado o personalizado.
+  - Modificador de precio (diferencia respecto al padre).
+
+#### 2.10 Atributos de variante (`catalogs_item_variant_attribute_value`)
+
+- Tabla pivote que define **qué valores de atributos** tiene cada variante.
+- Ejemplo: variante "Camiseta Roja M" tiene:
+
+  - Color = Rojo.
+  - Talla = M.
+
+Esto permite consultar y filtrar variantes por atributos específicos.
+
+#### 2.11 Bundles / Kits (`catalogs_item_bundle`)
+
+- Define la **composición de un bundle/kit**:
+
+  - Ítem padre (el bundle).
+  - Ítems hijos (componentes) con cantidad.
+
+- Ejemplo: "Kit de Limpieza" contiene:
+
+  - 1x Escoba.
+  - 1x Recogedor.
+  - 2x Paños de microfibra.
+  - 1x Balde 10L.
+
+- Permite:
+
+  - Descontar stock de componentes al vender.
+  - Calcular costo basado en componentes.
+  - Ofrecer precio especial vs. comprar por separado.
+
 ---
 
 ### 3. `core`: identidad (party / identidad jurídica)
