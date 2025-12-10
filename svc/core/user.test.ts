@@ -45,8 +45,6 @@ describe("user service", () => {
       const created = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "123456789",
-        email: "john@example.com",
-        phone: "1234567890",
         person: {
           firstName: "John",
           lastName: "Doe",
@@ -62,7 +60,6 @@ describe("user service", () => {
       expect(result).toBeDefined();
       expect(result.id).toBe(created.id);
       expect(result.documentNumber).toBe("123456789");
-      expect(result.email).toBe("john@example.com");
       // El tipo ahora es el valor del enum ("person") en lugar de "P"
       expect(result.type).toBe("person");
     });
@@ -84,7 +81,6 @@ describe("user service", () => {
       const created = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "900123456",
-        email: "info@company.com",
         company: {
           legalName: "Acme Corporation",
           tradeName: "Acme",
@@ -130,9 +126,9 @@ describe("user service", () => {
       const result = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "987654321",
-        email: "jane@example.com",
-        phone: "9876543210",
-        address: "123 Main St",
+        countryCode: "CO",
+        languageCode: "es",
+        currencyCode: "COP",
         person: {
           firstName: "Jane",
           lastName: "Smith",
@@ -141,7 +137,9 @@ describe("user service", () => {
 
       expect(result).toHaveProperty("id");
       expect(result.documentNumber).toBe("987654321");
-      expect(result.email).toBe("jane@example.com");
+      expect(result.countryCode).toBe("CO");
+      expect(result.languageCode).toBe("es");
+      expect(result.currencyCode).toBe("COP");
       expect(result.isActive).toBe(true);
       expect(result).toHaveProperty("person");
       expect(result.person.firstName).toBe("Jane");
@@ -164,8 +162,7 @@ describe("user service", () => {
       const result = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "800123456",
-        email: "contact@business.com",
-        phone: "5551234567",
+        countryCode: "CO",
         company: {
           legalName: "Business Solutions LLC",
           tradeName: "BizSolutions",
@@ -200,9 +197,10 @@ describe("user service", () => {
         },
       });
 
-      expect(result.email).toBeNull();
-      expect(result.phone).toBeNull();
-      expect(result.address).toBeNull();
+      // Los campos opcionales de internacionalización deben ser null
+      expect(result.countryCode).toBeNull();
+      expect(result.languageCode).toBeNull();
+      expect(result.currencyCode).toBeNull();
     });
 
     it("should throw error when neither person nor company is provided", async () => {
@@ -327,7 +325,6 @@ describe("user service", () => {
       const created = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "11111111",
-        email: "original@example.com",
         person: {
           firstName: "Original",
           lastName: "Name",
@@ -339,8 +336,8 @@ describe("user service", () => {
         id: created.id,
         documentTypeId: docType.id,
         documentNumber: "11111111",
-        email: "updated@example.com",
-        phone: "5559999999",
+        countryCode: "CO",
+        languageCode: "es",
         person: {
           firstName: "Updated",
           lastName: "Name",
@@ -348,8 +345,8 @@ describe("user service", () => {
       });
 
       expect(updated.id).toBe(created.id);
-      expect(updated.email).toBe("updated@example.com");
-      expect(updated.phone).toBe("5559999999");
+      expect(updated.countryCode).toBe("CO");
+      expect(updated.languageCode).toBe("es");
       expect(updated.person?.firstName).toBe("Updated");
 
       // Verificar que se actualizó en la base de datos
@@ -360,9 +357,8 @@ describe("user service", () => {
       }
 
       expect(fromDb).toBeDefined();
-
-      expect(fromDb.email).toBe("updated@example.com");
-      expect(fromDb.phone).toBe("5559999999");
+      expect(fromDb.countryCode).toBe("CO");
+      expect(fromDb.languageCode).toBe("es");
     });
 
     it("should update an existing user company", async () => {
@@ -382,7 +378,6 @@ describe("user service", () => {
       const created = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "22-3333333",
-        email: "old@company.com",
         company: {
           legalName: "Old Company Name Inc",
         },
@@ -393,7 +388,8 @@ describe("user service", () => {
         id: created.id,
         documentTypeId: docType.id,
         documentNumber: "22-3333333",
-        email: "new@company.com",
+        countryCode: "US",
+        currencyCode: "USD",
         company: {
           legalName: "New Company Name Inc",
           tradeName: "NewCo",
@@ -401,7 +397,8 @@ describe("user service", () => {
       });
 
       expect(updated.id).toBe(created.id);
-      expect(updated.email).toBe("new@company.com");
+      expect(updated.countryCode).toBe("US");
+      expect(updated.currencyCode).toBe("USD");
       expect(updated.company?.legalName).toBe("New Company Name Inc");
       expect(updated.company?.tradeName).toBe("NewCo");
 
@@ -413,7 +410,7 @@ describe("user service", () => {
       }
 
       expect(fromDb).toBeDefined();
-      expect(fromDb.email).toBe("new@company.com");
+      expect(fromDb.countryCode).toBe("US");
     });
 
     it("should update user status to inactive", async () => {
@@ -495,7 +492,7 @@ describe("user service", () => {
         id: created.id,
         documentTypeId: docType.id,
         documentNumber: "CURP123456",
-        email: "carlos@example.com",
+        countryCode: "MX",
         person: {
           firstName: "Carlos Alberto",
           lastName: "Rodriguez",

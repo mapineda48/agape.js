@@ -97,7 +97,6 @@ beforeAll(async () => {
       type: "person",
       documentTypeId: dtUser.id,
       documentNumber: "999",
-      email: "cost@test.com",
     })
     .returning();
   await db

@@ -30,8 +30,16 @@ describe("location service", () => {
     it("should return only enabled locations when activeOnly is true", async () => {
       const { listLocations, upsertLocation } = await import("./location");
 
-      await upsertLocation({ name: "Bodega Principal", isEnabled: true });
-      await upsertLocation({ name: "Bodega Inactiva", isEnabled: false });
+      await upsertLocation({
+        name: "Bodega Principal",
+        code: "BOD-PRINCIPAL",
+        isEnabled: true,
+      });
+      await upsertLocation({
+        name: "Bodega Inactiva",
+        code: "BOD-INACTIVA",
+        isEnabled: false,
+      });
 
       const result = await listLocations(true);
 
@@ -66,6 +74,7 @@ describe("location service", () => {
 
       expect(result[0]).toHaveProperty("id");
       expect(result[0]).toHaveProperty("name");
+      expect(result[0]).toHaveProperty("code");
       expect(result[0]).toHaveProperty("isEnabled");
     });
   });
@@ -76,6 +85,7 @@ describe("location service", () => {
 
       const [created] = await upsertLocation({
         name: "Sucursal Norte",
+        code: "SUC-NORTE",
         isEnabled: true,
       });
 
@@ -84,6 +94,7 @@ describe("location service", () => {
       expect(result).toBeDefined();
       expect(result?.id).toBe(created.id);
       expect(result?.name).toBe("Sucursal Norte");
+      expect(result?.code).toBe("SUC-NORTE");
       expect(result?.isEnabled).toBe(true);
     });
 
@@ -102,11 +113,13 @@ describe("location service", () => {
 
       const [created] = await upsertLocation({
         name: "Almacén Central",
+        code: "ALM-CENTRAL",
         isEnabled: true,
       });
 
       expect(created).toHaveProperty("id");
       expect(created.name).toBe("Almacén Central");
+      expect(created.code).toBe("ALM-CENTRAL");
       expect(created.isEnabled).toBe(true);
     });
 
@@ -115,12 +128,14 @@ describe("location service", () => {
 
       const [created] = await upsertLocation({
         name: "Original",
+        code: "LOC-ORIGINAL",
         isEnabled: true,
       });
 
       const [updated] = await upsertLocation({
         id: created.id,
         name: "Actualizado",
+        code: "LOC-ACTUALIZADO",
         isEnabled: false,
       });
 
@@ -138,6 +153,7 @@ describe("location service", () => {
 
       const [created] = await upsertLocation({
         name: "Ubicación Deshabilitada",
+        code: "UBI-DISABLED",
         isEnabled: false,
       });
 

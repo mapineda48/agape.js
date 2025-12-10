@@ -1,8 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
- * Nota: Es importante que no se realicen imports en el top de los servicios ya que estos dependen de la DB
- * que se inicializa en el beforeAll. Por lo tanto, se debe importar el servicio dentro de la prueba.
+ * Tests de integración para el servicio de proveedores.
+ *
+ * IMPORTANTE: No realizar imports de servicios en el top-level.
+ * Los servicios dependen de la DB que se inicializa en beforeAll.
+ *
+ * NOTA: El modelo user fue simplificado. Los campos de contacto (email, phone, address)
+ * ahora se manejan a través de contactMethod y userAddress.
  */
 
 let documentTypeId: number;
@@ -58,9 +63,7 @@ describe("supplier service", () => {
         user: {
           documentTypeId,
           documentNumber: `SUP-${crypto.randomUUID().slice(0, 6)}`,
-          email: "supplier1@example.com",
-          phone: "5551111",
-          address: "123 Supplier St",
+          countryCode: "CO",
           person: { firstName: "Supplier", lastName: "One" },
         },
         supplierTypeId: defaultSupplierTypeId,
@@ -69,7 +72,7 @@ describe("supplier service", () => {
       expect(supplier.id).toBeDefined();
       expect(supplier.active).toBe(true);
       expect(supplier.supplierTypeId).toBe(defaultSupplierTypeId);
-      expect(supplier.user.email).toBe("supplier1@example.com");
+      expect(supplier.user.countryCode).toBe("CO");
     });
 
     it("should update an existing supplier and user data", async () => {
@@ -81,7 +84,6 @@ describe("supplier service", () => {
         user: {
           documentTypeId,
           documentNumber,
-          email: "supplier-update@example.com",
           person: { firstName: "Original", lastName: "Supplier" },
         },
         supplierTypeId: defaultSupplierTypeId,
@@ -94,8 +96,7 @@ describe("supplier service", () => {
           id: created.user.id,
           documentTypeId,
           documentNumber,
-          email: "updated@example.com",
-          phone: "5559999",
+          countryCode: "MX",
           person: { firstName: "Updated", lastName: "Vendor" },
         },
         supplierTypeId: alternativeSupplierTypeId,
@@ -105,12 +106,11 @@ describe("supplier service", () => {
       expect(updated.id).toBe(created.id);
       expect(updated.supplierTypeId).toBe(alternativeSupplierTypeId);
       expect(updated.active).toBe(false);
-      expect(updated.user.email).toBe("updated@example.com");
+      expect(updated.user.countryCode).toBe("MX");
       expect(updated.user.person?.firstName).toBe("Updated");
 
       const fromDb = await getSupplierById(created.id);
       expect(fromDb?.supplierTypeId).toBe(alternativeSupplierTypeId);
-      expect(fromDb?.email).toBe("updated@example.com");
       expect(fromDb?.firstName).toBe("Updated");
       expect(fromDb?.active).toBe(false);
     });
@@ -124,7 +124,6 @@ describe("supplier service", () => {
         user: {
           documentTypeId,
           documentNumber: `SUP-${crypto.randomUUID().slice(0, 6)}`,
-          email: "supplier-list@example.com",
           person: { firstName: "List", lastName: "Vendor" },
         },
         supplierTypeId: defaultSupplierTypeId,
@@ -148,7 +147,6 @@ describe("supplier service", () => {
         user: {
           documentTypeId,
           documentNumber: `SUP-${crypto.randomUUID().slice(0, 6)}`,
-          email: "filter@example.com",
           person: { firstName: "Filter", lastName: "Target" },
         },
         supplierTypeId: defaultSupplierTypeId,
@@ -159,7 +157,6 @@ describe("supplier service", () => {
         user: {
           documentTypeId,
           documentNumber: `SUP-${crypto.randomUUID().slice(0, 6)}`,
-          email: "inactive@example.com",
           person: { firstName: "Inactive", lastName: "Vendor" },
         },
         supplierTypeId: alternativeSupplierTypeId,
@@ -200,7 +197,6 @@ describe("supplier service", () => {
         user: {
           documentTypeId,
           documentNumber: `SUP-${crypto.randomUUID().slice(0, 6)}`,
-          email: "getbyid@example.com",
           person: { firstName: "Lookup", lastName: "Vendor" },
         },
         supplierTypeId: defaultSupplierTypeId,
@@ -234,7 +230,6 @@ describe("supplier service", () => {
         user: {
           documentTypeId,
           documentNumber: `SUP-${crypto.randomUUID().slice(0, 6)}`,
-          email: "delete@example.com",
           person: { firstName: "Delete", lastName: "Vendor" },
         },
         supplierTypeId: defaultSupplierTypeId,

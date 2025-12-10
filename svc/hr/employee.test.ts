@@ -1,15 +1,19 @@
 import { afterAll, describe, it, expect, beforeAll } from "vitest";
 
 /**
- * Nota: Es importante que no se realicen imports en el top de los servicios ya que estos dependen de la DB
- * que se inicializa en el beforeAll. Por lo tanto, se debe importar el servicio dentro de la prueba.
+ * Tests de integración para el servicio de empleados.
+ *
+ * IMPORTANTE: No realizar imports de servicios en el top-level.
+ * Los servicios dependen de la DB que se inicializa en beforeAll.
+ *
+ * NOTA: El modelo user fue simplificado. Los campos de contacto (email, phone, address)
+ * ahora se manejan a través de contactMethod y userAddress.
  */
 
 beforeAll(async () => {
   const { default: initDatabase } = await import("#lib/db");
-  const uuid = crypto.randomUUID(); // Es muy importante iniciar siempre un id único para evitar conflictos por concurrencia
+  const uuid = crypto.randomUUID();
 
-  // 1. Inicializar la DB
   await initDatabase("postgresql://postgres:mypassword@localhost", {
     tenant: `vitest_employee_${uuid}`,
     dev: false,
@@ -46,9 +50,7 @@ describe("employee service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "123456789",
-          email: "juan@example.com",
-          phone: "1234567890",
-          address: "Calle 123",
+          countryCode: "CO",
           person: {
             firstName: "Juan",
             lastName: "Pérez",
@@ -63,7 +65,7 @@ describe("employee service", () => {
       expect(result?.id).toBe(created.id);
       expect(result?.firstName).toBe("Juan");
       expect(result?.lastName).toBe("Pérez");
-      expect(result?.email).toBe("juan@example.com");
+      expect(result?.countryCode).toBe("CO");
       expect(result?.isActive).toBe(true);
     });
 
@@ -95,7 +97,6 @@ describe("employee service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "PA111",
-          email: "employee1@example.com",
           person: { firstName: "Alice", lastName: "Smith" },
         },
         isActive: true,
@@ -105,7 +106,6 @@ describe("employee service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "PA222",
-          email: "employee2@example.com",
           person: { firstName: "Bob", lastName: "Johnson" },
         },
         isActive: true,
@@ -151,7 +151,6 @@ describe("employee service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "DNI999",
-          email: "inactive@example.com",
           person: { firstName: "Inactive", lastName: "Employee" },
         },
         isActive: false,
@@ -177,8 +176,6 @@ describe("employee service", () => {
       expect(result.employees[0]).toHaveProperty("userId");
       expect(result.employees[0]).toHaveProperty("firstName");
       expect(result.employees[0]).toHaveProperty("lastName");
-      expect(result.employees[0]).toHaveProperty("email");
-      expect(result.employees[0]).toHaveProperty("phone");
       expect(result.employees[0]).toHaveProperty("hireDate");
       expect(result.employees[0]).toHaveProperty("isActive");
       expect(result.employees[0]).toHaveProperty("avatarUrl");
@@ -204,9 +201,8 @@ describe("employee service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "TI12345",
-          email: "newemployee@example.com",
-          phone: "5551234567",
-          address: "123 Main St",
+          countryCode: "CO",
+          languageCode: "es",
           person: {
             firstName: "New",
             lastName: "Employee",
@@ -219,6 +215,7 @@ describe("employee service", () => {
       expect(result).toHaveProperty("id");
       expect(result.isActive).toBe(true);
       expect(result.user).toBeDefined();
+      expect(result.user.countryCode).toBe("CO");
     });
 
     it("should update an existing employee", async () => {
@@ -239,7 +236,6 @@ describe("employee service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "LC12345",
-          email: "original@example.com",
           person: { firstName: "Original", lastName: "Name" },
         },
         isActive: true,
@@ -252,7 +248,7 @@ describe("employee service", () => {
           id: created.user.id,
           documentTypeId: docType.id,
           documentNumber: "LC12345",
-          email: "updated@example.com",
+          countryCode: "MX",
           person: { firstName: "Updated", lastName: "Name" },
         },
         isActive: false,
@@ -264,7 +260,7 @@ describe("employee service", () => {
       // Verificar en la base de datos
       const fromDb = await getEmployeeById(created.id);
       expect(fromDb?.isActive).toBe(false);
-      expect(fromDb?.email).toBe("updated@example.com");
+      expect(fromDb?.countryCode).toBe("MX");
       expect(fromDb?.firstName).toBe("Updated");
     });
 

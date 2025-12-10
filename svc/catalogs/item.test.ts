@@ -20,6 +20,14 @@ beforeAll(async () => {
     skipSeeds: true,
   });
 
+  // Crear unidades de medida requeridas para goods
+  const { db } = await import("#lib/db");
+  const unitOfMeasure = await import("#models/inventory/unit_of_measure");
+  await db.insert(unitOfMeasure.default).values([
+    { id: 1, code: "UN", fullName: "Unidad", isEnabled: true },
+    { id: 2, code: "KG", fullName: "Kilogramo", isEnabled: true },
+  ]);
+
   // Crear categoría con subcategoría para los tests
   const { upsertCategory } = await import("#svc/inventory/category");
   const cat = await upsertCategory({

@@ -1,15 +1,16 @@
 import { afterAll, describe, it, expect, beforeAll } from "vitest";
 
 /**
- * Nota: Es importante que no se realicen imports en el top de los servicios ya que estos dependen de la DB
- * que se inicializa en el beforeAll. Por lo tanto, se debe importar el servicio dentro de la prueba.
+ * Tests de integración para el servicio de clientes.
+ *
+ * IMPORTANTE: No realizar imports de servicios en el top-level.
+ * Los servicios dependen de la DB que se inicializa en beforeAll.
  */
 
 beforeAll(async () => {
   const { default: initDatabase } = await import("#lib/db");
-  const uuid = crypto.randomUUID(); // Es muy importante iniciar siempre un id único para evitar conflictos por concurrencia
+  const uuid = crypto.randomUUID();
 
-  // 1. Inicializar la DB
   await initDatabase("postgresql://postgres:mypassword@localhost", {
     tenant: `vitest_client_${uuid}`,
     dev: false,
@@ -53,8 +54,7 @@ describe("client service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "123456789",
-          email: "john@example.com",
-          phone: "1234567890",
+          countryCode: "CO",
           person: {
             firstName: "John",
             lastName: "Doe",
@@ -70,7 +70,7 @@ describe("client service", () => {
       expect(result?.id).toBe(created.id);
       expect(result?.person?.firstName).toBe("John");
       expect(result?.person?.lastName).toBe("Doe");
-      expect(result?.user.email).toBe("john@example.com");
+      expect(result?.user.countryCode).toBe("CO");
       expect(result?.active).toBe(true);
     });
 
@@ -109,7 +109,6 @@ describe("client service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "PA111",
-          email: "client1@example.com",
           person: { firstName: "Alice", lastName: "Smith" },
         },
         typeId: clientTypeRecord.id,
@@ -120,7 +119,6 @@ describe("client service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "PA222",
-          email: "client2@example.com",
           person: { firstName: "Bob", lastName: "Johnson" },
         },
         typeId: clientTypeRecord.id,
@@ -174,7 +172,6 @@ describe("client service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "DNI999",
-          email: "inactive@example.com",
           person: { firstName: "Inactive", lastName: "Client" },
         },
         typeId: clientTypeRecord.id,
@@ -198,8 +195,6 @@ describe("client service", () => {
       expect(result.clients[0]).toHaveProperty("id");
       expect(result.clients[0]).toHaveProperty("firstName");
       expect(result.clients[0]).toHaveProperty("lastName");
-      expect(result.clients[0]).toHaveProperty("email");
-      expect(result.clients[0]).toHaveProperty("phone");
       expect(result.clients[0]).toHaveProperty("typeId");
       expect(result.clients[0]).toHaveProperty("typeName");
       expect(result.clients[0]).toHaveProperty("photoUrl");
@@ -233,9 +228,8 @@ describe("client service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "TI12345",
-          email: "newclient@example.com",
-          phone: "5551234567",
-          address: "123 Main St",
+          countryCode: "CO",
+          languageCode: "es",
           person: {
             firstName: "New",
             lastName: "Client",
@@ -249,7 +243,7 @@ describe("client service", () => {
       expect(result.active).toBe(true);
       expect(result.typeId).toBe(clientTypeRecord.id);
       expect(result.user).toBeDefined();
-      expect(result.user.email).toBe("newclient@example.com");
+      expect(result.user.countryCode).toBe("CO");
     });
 
     it("should update an existing client", async () => {
@@ -281,7 +275,7 @@ describe("client service", () => {
         user: {
           documentTypeId: docType.id,
           documentNumber: "LC12345",
-          email: "original@example.com",
+          countryCode: "CO",
           person: { firstName: "Original", lastName: "Name" },
         },
         typeId: type1.id,
@@ -295,7 +289,7 @@ describe("client service", () => {
           id: created.user.id,
           documentTypeId: docType.id,
           documentNumber: "LC12345",
-          email: "updated@example.com",
+          countryCode: "MX",
           person: { firstName: "Updated", lastName: "Name" },
         },
         typeId: type2.id,
@@ -305,12 +299,12 @@ describe("client service", () => {
       expect(updated.id).toBe(created.id);
       expect(updated.typeId).toBe(type2.id);
       expect(updated.active).toBe(false);
-      expect(updated.user.email).toBe("updated@example.com");
+      expect(updated.user.countryCode).toBe("MX");
 
       // Verificar en la base de datos
       const fromDb = await getClientById(created.id);
       expect(fromDb?.active).toBe(false);
-      expect(fromDb?.user.email).toBe("updated@example.com");
+      expect(fromDb?.user.countryCode).toBe("MX");
     });
 
     it("should create client with default active status", async () => {

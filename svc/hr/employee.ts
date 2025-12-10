@@ -45,9 +45,6 @@ export async function getEmployeeById(id: number) {
       userId: employee.id,
       firstName: person.firstName,
       lastName: person.lastName,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
       birthdate: person.birthdate,
       hireDate: employee.hireDate,
       isActive: employee.isActive,
@@ -57,6 +54,10 @@ export async function getEmployeeById(id: number) {
       // Identity fields
       documentTypeId: user.documentTypeId,
       documentNumber: user.documentNumber,
+      // Internationalization fields
+      countryCode: user.countryCode,
+      languageCode: user.languageCode,
+      currencyCode: user.currencyCode,
     })
     .from(employee)
     .innerJoin(user, eq(employee.id, user.id))
@@ -84,9 +85,6 @@ export async function getEmployeeByDocument(
       userId: employee.id,
       firstName: person.firstName,
       lastName: person.lastName,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
       birthdate: person.birthdate,
       hireDate: employee.hireDate,
       isActive: employee.isActive,
@@ -149,9 +147,6 @@ export async function listEmployees(
       userId: employee.id,
       firstName: person.firstName,
       lastName: person.lastName,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
       birthdate: person.birthdate,
       hireDate: employee.hireDate,
       isActive: employee.isActive,

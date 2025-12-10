@@ -13,9 +13,9 @@ export interface ClientDto {
     id: number;
     documentTypeId: number;
     documentNumber: string;
-    email: string | null;
-    phone: string | null;
-    address: string | null;
+    countryCode: string | null;
+    languageCode: string | null;
+    currencyCode: string | null;
   };
   person: {
     firstName: string;
@@ -35,6 +35,9 @@ export type GetClientByIdResult = ClientDto | undefined;
 
 /**
  * Elemento de la lista de clientes (aplanado para la tabla).
+ *
+ * NOTA: Los campos de contacto (email, phone, address) fueron migrados a
+ * core_contact_method y core_user_address.
  */
 export interface ClientListItem {
   id: number;
@@ -43,9 +46,6 @@ export interface ClientListItem {
   lastName: string | null;
   legalName: string | null;
   tradeName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
   birthdate: DateTime | null;
   typeId: number | null;
   typeName: string | null;

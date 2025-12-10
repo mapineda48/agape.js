@@ -107,7 +107,6 @@ describe("address service", () => {
       const user = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "ADDR_TEST_001",
-        email: "addr_test_1@example.com",
         person: {
           firstName: "Test",
           lastName: "Address",
@@ -181,7 +180,6 @@ describe("address service", () => {
       const user = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "ADDR_TEST_002",
-        email: "addr_test_2@example.com",
         person: {
           firstName: "Test",
           lastName: "Types",
@@ -254,7 +252,6 @@ describe("address service", () => {
       const user = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "CREATE_TEST_001",
-        email: "create_test@example.com",
         person: {
           firstName: "Create",
           lastName: "Test",
@@ -315,7 +312,6 @@ describe("address service", () => {
       const user = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "DELETE_TEST_001",
-        email: "delete_test@example.com",
         person: {
           firstName: "Delete",
           lastName: "Test",
@@ -372,7 +368,6 @@ describe("address service", () => {
       const user = await upsertUser({
         documentTypeId: docType.id,
         documentNumber: "DELETE_FULL_001",
-        email: "delete_full@example.com",
         person: {
           firstName: "Delete",
           lastName: "Full",

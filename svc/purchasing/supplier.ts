@@ -35,14 +35,13 @@ export async function getSupplierById(id: number) {
       lastName: person.lastName,
       legalName: company.legalName,
       tradeName: company.tradeName,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
       birthdate: person.birthdate,
       supplierTypeId: supplier.supplierTypeId,
       supplierTypeName: supplierType.name,
       registrationDate: supplier.registrationDate,
       active: supplier.active,
+      documentTypeId: user.documentTypeId,
+      documentNumber: user.documentNumber,
     })
     .from(supplier)
     .innerJoin(user, eq(supplier.id, user.id))
@@ -96,9 +95,6 @@ export async function listSuppliers(
       lastName: person.lastName,
       legalName: company.legalName,
       tradeName: company.tradeName,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
       birthdate: person.birthdate,
       supplierTypeId: supplier.supplierTypeId,
       supplierTypeName: supplierType.name,

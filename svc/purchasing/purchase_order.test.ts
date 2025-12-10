@@ -67,7 +67,6 @@ beforeAll(async () => {
     user: {
       documentTypeId: documentType.id,
       documentNumber: `SUP-${uuid.slice(0, 6)}`,
-      email: "supplier-active@example.com",
       person: { firstName: "Proveedor", lastName: "Activo" },
     },
     supplierTypeId: supplierType.id,
@@ -79,7 +78,6 @@ beforeAll(async () => {
     user: {
       documentTypeId: documentType.id,
       documentNumber: `INACT-${uuid.slice(0, 6)}`,
-      email: "supplier-inactive@example.com",
       person: { firstName: "Proveedor", lastName: "Inactivo" },
     },
     supplierTypeId: supplierType.id,
@@ -139,7 +137,6 @@ beforeAll(async () => {
     user: {
       documentTypeId: documentType.id,
       documentNumber: `EMP-${uuid.slice(0, 6)}`,
-      email: "employee-test@example.com",
       person: { firstName: "Empleado", lastName: "Test" },
     },
     isActive: true,

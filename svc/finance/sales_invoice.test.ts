@@ -48,7 +48,6 @@ beforeAll(async () => {
     user: {
       documentTypeId: documentType.id,
       documentNumber: `CLI-${uuid.slice(0, 6)}`,
-      email: "client@example.com",
       person: { firstName: "Cliente", lastName: "Test" },
     },
     typeId: clientType.id,

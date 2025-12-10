@@ -191,7 +191,6 @@ beforeAll(async () => {
       type: "person",
       documentTypeId: idDocType.id,
       documentNumber: "12345678",
-      email: "test@example.com",
     })
     .returning();
 

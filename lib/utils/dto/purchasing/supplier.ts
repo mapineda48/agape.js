@@ -37,9 +37,6 @@ export interface SupplierListItem {
   lastName: string | null;
   legalName: string | null;
   tradeName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
   birthdate: DateTime | null;
   supplierTypeId: number;
   supplierTypeName: string | null;
@@ -78,6 +75,9 @@ export interface SupplierRecord {
 /**
  * Proveedor obtenido por getSupplierById.
  * Incluye datos aplanados de persona/empresa y usuario.
+ *
+ * NOTA: Los campos de contacto (email, phone, address) fueron migrados a
+ * core_contact_method y core_user_address.
  */
 export interface SupplierDetails {
   id: number;
@@ -86,12 +86,11 @@ export interface SupplierDetails {
   lastName: string | null;
   legalName: string | null;
   tradeName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
   birthdate: DateTime | null;
   supplierTypeId: number;
   supplierTypeName: string | null;
   registrationDate: DateTime;
   active: boolean;
+  documentTypeId: number;
+  documentNumber: string;
 }

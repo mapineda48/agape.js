@@ -36,6 +36,7 @@ export interface ICompany {
 
 /**
  * Campos base de un usuario (sin tipo, se infiere).
+ *
  */
 export interface IUserBase {
   /** ID del usuario (solo para updates) */
@@ -44,12 +45,14 @@ export interface IUserBase {
   documentTypeId: number;
   /** Número de documento */
   documentNumber: string;
-  /** Email (opcional) */
-  email?: string | null;
-  /** Teléfono (opcional) */
-  phone?: string | null;
-  /** Dirección (opcional) */
-  address?: string | null;
+  /** Código ISO 3166-1 alpha-2 del país (ej: CO, US, ES, MX) */
+  countryCode?: string | null;
+  /** Código ISO 639-1 del idioma preferido (ej: es, en, pt) */
+  languageCode?: string | null;
+  /** Código ISO 4217 de la moneda preferida (ej: COP, USD, EUR) */
+  currencyCode?: string | null;
+  /** Indica si el usuario está activo */
+  isActive?: boolean;
 }
 
 /**

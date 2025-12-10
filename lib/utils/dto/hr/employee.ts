@@ -33,9 +33,6 @@ export interface EmployeeListItem {
   userId: number;
   firstName: string | null;
   lastName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
   birthdate: DateTime | null;
   hireDate: DateTime;
   isActive: boolean;
@@ -80,15 +77,15 @@ export interface EmployeeRecord {
 /**
  * Empleado obtenido por getEmployeeById.
  * Incluye datos aplanados de persona y usuario.
+ *
+ * NOTA: Los campos de contacto (email, phone, address) fueron migrados a
+ * core_contact_method y core_user_address.
  */
 export interface EmployeeDetails {
   id: number;
   userId: number;
   firstName: string | null;
   lastName: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
   birthdate: DateTime | null;
   hireDate: DateTime;
   isActive: boolean;
@@ -97,4 +94,10 @@ export interface EmployeeDetails {
   updatedAt: DateTime | null;
   documentTypeId: number;
   documentNumber: string;
+  /** Código ISO 3166-1 alpha-2 del país */
+  countryCode: string | null;
+  /** Código ISO 639-1 del idioma */
+  languageCode: string | null;
+  /** Código ISO 4217 de la moneda */
+  currencyCode: string | null;
 }

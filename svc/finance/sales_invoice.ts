@@ -65,11 +65,12 @@ export async function createSalesInvoice(
   payload: CreateSalesInvoiceInput
 ): Promise<SalesInvoiceWithNumbering> {
   return db.transaction(async (tx) => {
-    // Validar que la orden exista
+    // Validar que la orden exista y obtener clientId
     const [orderRecord] = await tx
       .select({
         id: order.id,
         status: order.status,
+        clientId: order.clientId,
       })
       .from(order)
       .where(eq(order.id, payload.orderId));
@@ -98,6 +99,7 @@ export async function createSalesInvoice(
     const [invoice] = await tx
       .insert(sales_invoice)
       .values({
+        clientId: orderRecord.clientId,
         orderId: payload.orderId,
         issueDate,
         dueDate,
