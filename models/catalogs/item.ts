@@ -13,6 +13,8 @@ import { category } from "./category";
 import { subcategory } from "./subcategory";
 import { decimal } from "../../lib/db/custom-types";
 import { itemTypeEnum } from "./enums";
+import { taxGroup } from "../finance/tax_group";
+import { itemAccountingGroup } from "../finance/item_accounting_group";
 
 /**
  * Maestro de ítems (Item)
@@ -61,6 +63,25 @@ export const item = schema.table(
     subcategoryId: integer("subcategory_id").references(() => subcategory.id, {
       onDelete: "set null",
     }),
+
+    /**
+     * Grupo de impuestos del ítem (opcional).
+     * Define qué impuestos aplican al vender/comprar este ítem.
+     * Ej: Gravados (IVA 19%), Exentos, Canasta Familiar (IVA 5%).
+     */
+    taxGroupId: integer("tax_group_id").references(() => taxGroup.id, {
+      onDelete: "set null",
+    }),
+
+    /**
+     * Grupo contable del ítem (opcional).
+     * Define a qué cuentas contables se postean las operaciones.
+     * Ej: Mercancía, Servicios, Materias Primas.
+     */
+    itemAccountingGroupId: integer("item_accounting_group_id").references(
+      () => itemAccountingGroup.id,
+      { onDelete: "set null" }
+    ),
 
     /** Imágenes del ítem en formato JSON */
     images: jsonb("images").notNull(),

@@ -1,9 +1,9 @@
 import { schema } from "../agape";
-import { integer, boolean } from "drizzle-orm/pg-core";
+import { integer } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { item } from "../catalogs/item";
 import { decimal } from "../../lib/db/custom-types";
-// import { unitOfMeasure } from "./unit_of_measure"; // suponiendo que tengas esto
+import { unitOfMeasure } from "./unit_of_measure";
 
 /**
  * Detalle de inventario para bienes físicos que manejan stock.
@@ -15,8 +15,10 @@ export const inventoryItem = schema.table("inventory_item", {
     .primaryKey()
     .references(() => item.id, { onDelete: "cascade" }),
 
-  /** Unidad de medida base */
-  uomId: integer("uom_id").notNull(), // .references(() => unitOfMeasure.id)
+  /** Unidad de medida base del ítem inventariable */
+  uomId: integer("uom_id")
+    .notNull()
+    .references(() => unitOfMeasure.id, { onDelete: "restrict" }),
 
   /** Stock mínimo recomendado */
   minStock: decimal("min_stock"),

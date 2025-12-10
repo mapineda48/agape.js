@@ -157,6 +157,8 @@ A nivel funcional, un ítem tiene:
 - Estado habilitado.
 - Precio base.
 - Categoría y subcategoría opcionales.
+- **Grupo de impuestos** (`taxGroupId`): define qué impuestos aplican al ítem.
+- **Grupo contable** (`itemAccountingGroupId`): define a qué cuentas se postean las operaciones.
 - Imágenes en JSON.
 
 Es la tabla **central** para todo lo que tenga que ver con productos/servicios.
@@ -171,6 +173,30 @@ Es la tabla **central** para todo lo que tenga que ver con productos/servicios.
   - Si es un servicio recurrente.
 
 Cuando un ítem es de tipo servicio, su información específica vive aquí.
+
+#### 2.5 Listas de precios (`catalogs_price_list`)
+
+- Representa **diferentes listas de precios** del sistema:
+
+  - Retail, Mayorista, Web, Promoción, etc.
+
+- Cada lista tiene:
+
+  - Código único y nombre.
+  - Flag de lista por defecto.
+  - Estado habilitado.
+
+Esto permite tener múltiples estrategias de pricing según canal, tipo de cliente o promociones.
+
+#### 2.6 Precios por ítem y lista (`catalogs_price_list_item`)
+
+- Relaciona cada ítem con las diferentes **listas de precios**.
+- Incluye:
+
+  - Precio específico para esa lista.
+  - Fechas de vigencia (desde/hasta) para manejar promociones o cambios de precio.
+
+Esto separa el **pricing dinámico** del precio base del catálogo.
 
 ---
 
@@ -357,6 +383,52 @@ Este dominio maneja la consecuencia financiera de las órdenes.
 
 Este diseño separa claramente el **documento** (factura) del **estado de cobro/pago** (cartera).
 
+#### 6.5 Impuestos (`finance_tax`)
+
+- Representa los **impuestos individuales** del sistema:
+
+  - IVA 19%, IVA 5%, Exento, INC 8%, etc.
+
+- Cada impuesto tiene:
+
+  - Código único y nombre.
+  - Tasa porcentual (ej: 19.00 para IVA 19%).
+  - Estado habilitado.
+
+#### 6.6 Grupos de impuestos (`finance_tax_group`)
+
+- Agrupa impuestos para facilitar su asignación a ítems:
+
+  - "Productos Gravados" → incluye IVA 19%.
+  - "Servicios Profesionales" → IVA 19% + Retención.
+  - "Canasta Familiar" → IVA 5%.
+
+- Cada grupo tiene código, nombre y estado habilitado.
+- Relación N:M con impuestos mediante `finance_tax_group_tax`.
+
+#### 6.7 Relación grupo-impuestos (`finance_tax_group_tax`)
+
+- Tabla pivote many-to-many entre grupos e impuestos.
+- Permite que un grupo contenga múltiples impuestos.
+
+#### 6.8 Grupos contables de ítems (`finance_item_accounting_group`)
+
+- Define los **grupos contables** para la contabilización automática de ítems.
+- Similar a "Posting Groups" en SAP o "Account Groups" en Odoo.
+- Cada grupo define cuentas contables para:
+
+  - Inventario (existencias).
+  - Costo de ventas.
+  - Ingresos por ventas.
+  - Compras.
+
+- Ejemplos:
+
+  - "Mercancía" → Inventario: 1435, Costo: 6135, Ingreso: 4135.
+  - "Servicios" → Sin inventario, Ingreso: 4170.
+
+Los ítems del catálogo se asignan a un grupo contable mediante `itemAccountingGroupId`.
+
 ---
 
 ### 7. `hr`: empleados y roles
@@ -418,23 +490,54 @@ En resumen: **“Empleado” es la persona interna; `security_user` es su cuenta
 
 Este dominio maneja existencias y movimientos de inventario.
 
-#### 9.1 Detalle de inventario (`inventory_item`)
+#### 9.1 Unidades de medida (`inventory_unit_of_measure`)
+
+- Representa las **unidades de medida base** del sistema:
+
+  - Unidad (UN), Kilogramo (KG), Litro (LT), Metro (MT), Caja (CJ), etc.
+
+- Cada UOM tiene:
+
+  - Código único.
+  - Nombre completo.
+  - Descripción opcional.
+  - Estado habilitado.
+
+Esta es la tabla referenciada por `inventory_item.uomId`.
+
+#### 9.2 Conversiones de UOM por ítem (`inventory_item_uom`)
+
+- Define **múltiplos/conversiones** de UOM para cada ítem inventariable:
+
+  - Si la UOM base es "Unidad":
+    - Caja = 12 unidades (factor = 12).
+    - Pallet = 50 cajas = 600 unidades (factor = 600).
+
+- Esto permite:
+
+  - Vender en cajas y comprar en unidades.
+  - Definir UOM preferida para compras vs. ventas.
+  - Manejar diferentes presentaciones del mismo producto.
+
+- Incluye flags para `isDefaultPurchase` e `isDefaultSales`.
+
+#### 9.3 Detalle de inventario (`inventory_item`)
 
 - CTI sobre `catalogs_item` para ítems de tipo bien físico.
 - Guarda:
 
-  - Unidad de medida base.
+  - Unidad de medida base (FK a `inventory_unit_of_measure`).
   - Stock mínimo/máximo recomendado.
   - Punto de reorden.
 
 Solo los ítems que realmente manejan stock necesitan tener registro aquí.
 
-#### 9.2 Ubicaciones (`inventory_location`)
+#### 9.4 Ubicaciones (`inventory_location`)
 
 - Representa **bodegas** o ubicaciones de inventario.
 - Cada movimiento o stock se puede asociar a una ubicación.
 
-#### 9.3 Stock (`inventory_stock`)
+#### 9.5 Stock (`inventory_stock`)
 
 - Tabla de stock por **ítem inventariable y ubicación**.
 - PK compuesta: `(item_id, location_id)` para garantizar unicidad.
@@ -442,7 +545,7 @@ Solo los ítems que realmente manejan stock necesitan tener registro aquí.
 
 Este es el estándar en ERPs: una fila por combinación ítem–bodega.
 
-#### 9.4 Tipos de movimiento (`inventory_movement_type`)
+#### 9.6 Tipos de movimiento (`inventory_movement_type`)
 
 - Define los distintos tipos de movimiento:
 
@@ -455,7 +558,7 @@ Este es el estándar en ERPs: una fila por combinación ítem–bodega.
   - Si está habilitado.
   - Tipo de documento de negocio asociado (`numbering_document_type`).
 
-#### 9.5 Movimientos de inventario (`inventory_movement`)
+#### 9.7 Movimientos de inventario (`inventory_movement`)
 
 - Representan un **documento de movimiento de inventario**:
 
@@ -470,7 +573,7 @@ Este es el estándar en ERPs: una fila por combinación ítem–bodega.
 
 Incluye una restricción que garantiza que un número no se duplique dentro de la misma serie.
 
-#### 9.6 Detalle de movimiento (`inventory_movement_detail`)
+#### 9.8 Detalle de movimiento (`inventory_movement_detail`)
 
 - Ítems afectados por cada movimiento:
 
