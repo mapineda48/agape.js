@@ -8,6 +8,7 @@ import {
 import { inventoryItem, type NewInventoryItem } from "#models/inventory/item";
 import { service, type NewService } from "#models/catalogs/service";
 import { category } from "#models/catalogs/category";
+import { subcategory } from "#models/catalogs/subcategory";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { and, count, eq, gte, lte, sql } from "drizzle-orm";
 import Decimal from "#utils/data/Decimal";
@@ -23,6 +24,79 @@ import type {
   ListItemItem,
   ListItemsResult,
 } from "#utils/dto/catalogs/item";
+
+// ============================================================================
+// Errores de Negocio
+// ============================================================================
+
+/**
+ * Error cuando la subcategoría especificada no existe.
+ */
+export class SubcategoryNotFoundError extends Error {
+  constructor(subcategoryId: number) {
+    super(`La subcategoría con ID ${subcategoryId} no existe.`);
+    this.name = "SubcategoryNotFoundError";
+  }
+}
+
+/**
+ * Error cuando la subcategoría no pertenece a la categoría especificada.
+ * Ejemplo: Intentar asignar subcategoría "Zapatillas" (de Ropa) a un ítem de categoría "Comida".
+ */
+export class CategoryMismatchError extends Error {
+  constructor(
+    categoryId: number | null | undefined,
+    subcategoryId: number,
+    actualCategoryId: number
+  ) {
+    super(
+      `La subcategoría ${subcategoryId} pertenece a la categoría ${actualCategoryId}, ` +
+        `pero el ítem tiene categoryId ${categoryId ?? "null"}.`
+    );
+    this.name = "CategoryMismatchError";
+  }
+}
+
+// ============================================================================
+// Validaciones de Negocio
+// ============================================================================
+
+/**
+ * Valida que la subcategoría pertenezca a la categoría del ítem.
+ *
+ * @param categoryId - ID de la categoría del ítem
+ * @param subcategoryId - ID de la subcategoría del ítem
+ * @throws SubcategoryNotFoundError si la subcategoría no existe
+ * @throws CategoryMismatchError si la subcategoría no pertenece a la categoría
+ */
+async function validateCategoryHierarchy(
+  categoryId: number | null | undefined,
+  subcategoryId: number | null | undefined
+): Promise<void> {
+  // Sin subcategoría, no hay nada que validar
+  if (subcategoryId === null || subcategoryId === undefined) {
+    return;
+  }
+
+  // Obtener la subcategoría y verificar su categoría padre
+  const [sub] = await db
+    .select({ categoryId: subcategory.categoryId })
+    .from(subcategory)
+    .where(eq(subcategory.id, subcategoryId));
+
+  if (!sub) {
+    throw new SubcategoryNotFoundError(subcategoryId);
+  }
+
+  // Verificar que la subcategoría pertenezca a la categoría del ítem
+  if (sub.categoryId !== categoryId) {
+    throw new CategoryMismatchError(categoryId, subcategoryId, sub.categoryId);
+  }
+}
+
+// ============================================================================
+// Funciones de Servicio
+// ============================================================================
 
 /**
  * Obtiene un ítem por su ID, incluyendo los detalles según su tipo (good o service).
@@ -247,6 +321,9 @@ export async function upsertItem(payload: IItem): Promise<IItemRecord> {
     images,
     ...itemDto
   } = payload;
+
+  // Validar coherencia de jerarquía categoría/subcategoría
+  await validateCategoryHierarchy(itemDto.categoryId, itemDto.subcategoryId);
 
   // Inferir el tipo de ítem basado en las propiedades presentes
   const itemType = inferItemType(goodDto, serviceDto);

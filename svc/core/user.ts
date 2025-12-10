@@ -183,47 +183,50 @@ async function updateUser(
   personDto: IPerson | undefined,
   companyDto: ICompany | undefined
 ) {
-  // Actualizar datos base del usuario
-  const [record] = await db
-    .update(user)
-    .set(userDto)
-    .where(eq(user.id, id))
-    .returning();
+  // Transacción atómica: si falla el update de person/company, se revierte el user
+  return await db.transaction(async (tx) => {
+    // Actualizar datos base del usuario
+    const [record] = await tx
+      .update(user)
+      .set(userDto)
+      .where(eq(user.id, id))
+      .returning();
 
-  switch (userType) {
-    case "person": {
-      const [personRecord] = await db
-        .update(person)
-        .set(personDto!)
-        .where(eq(person.id, id))
-        .returning({
-          firstName: person.firstName,
-          lastName: person.lastName,
-          birthdate: person.birthdate,
-        });
+    switch (userType) {
+      case "person": {
+        const [personRecord] = await tx
+          .update(person)
+          .set(personDto!)
+          .where(eq(person.id, id))
+          .returning({
+            firstName: person.firstName,
+            lastName: person.lastName,
+            birthdate: person.birthdate,
+          });
 
-      return { ...record, person: personRecord };
+        return { ...record, person: personRecord };
+      }
+
+      case "company": {
+        const [companyRecord] = await tx
+          .update(company)
+          .set(companyDto!)
+          .where(eq(company.id, id))
+          .returning({
+            legalName: company.legalName,
+            tradeName: company.tradeName,
+          });
+
+        return { ...record, company: companyRecord };
+      }
+
+      default: {
+        // Exhaustividad a nivel de tipos
+        const _exhaustive: never = userType;
+        throw new Error(`Unsupported user type: ${_exhaustive}`);
+      }
     }
-
-    case "company": {
-      const [companyRecord] = await db
-        .update(company)
-        .set(companyDto!)
-        .where(eq(company.id, id))
-        .returning({
-          legalName: company.legalName,
-          tradeName: company.tradeName,
-        });
-
-      return { ...record, company: companyRecord };
-    }
-
-    default: {
-      // Exhaustividad a nivel de tipos
-      const _exhaustive: never = userType;
-      throw new Error(`Unsupported user type: ${_exhaustive}`);
-    }
-  }
+  });
 }
 
 /**
@@ -241,41 +244,44 @@ async function insertUser(
   personDto: IPerson | undefined,
   companyDto: ICompany | undefined
 ) {
-  // Insertar datos base del usuario
-  const [record] = await db.insert(user).values(userDto).returning();
+  // Transacción atómica: si falla el insert de person/company, se revierte el user (CTI)
+  return await db.transaction(async (tx) => {
+    // Insertar datos base del usuario
+    const [record] = await tx.insert(user).values(userDto).returning();
 
-  switch (userType) {
-    case "person": {
-      const [personRecord] = await db
-        .insert(person)
-        .values({ ...personDto!, id: record.id })
-        .returning({
-          firstName: person.firstName,
-          lastName: person.lastName,
-          birthdate: person.birthdate,
-        });
+    switch (userType) {
+      case "person": {
+        const [personRecord] = await tx
+          .insert(person)
+          .values({ ...personDto!, id: record.id })
+          .returning({
+            firstName: person.firstName,
+            lastName: person.lastName,
+            birthdate: person.birthdate,
+          });
 
-      return { ...record, person: personRecord };
+        return { ...record, person: personRecord };
+      }
+
+      case "company": {
+        const [companyRecord] = await tx
+          .insert(company)
+          .values({ ...companyDto!, id: record.id })
+          .returning({
+            legalName: company.legalName,
+            tradeName: company.tradeName,
+          });
+
+        return { ...record, company: companyRecord };
+      }
+
+      default: {
+        // Exhaustividad a nivel de tipos
+        const _exhaustive: never = userType;
+        throw new Error(`Unsupported user type: ${_exhaustive}`);
+      }
     }
-
-    case "company": {
-      const [companyRecord] = await db
-        .insert(company)
-        .values({ ...companyDto!, id: record.id })
-        .returning({
-          legalName: company.legalName,
-          tradeName: company.tradeName,
-        });
-
-      return { ...record, company: companyRecord };
-    }
-
-    default: {
-      // Exhaustividad a nivel de tipos
-      const _exhaustive: never = userType;
-      throw new Error(`Unsupported user type: ${_exhaustive}`);
-    }
-  }
+  });
 }
 
 /**
