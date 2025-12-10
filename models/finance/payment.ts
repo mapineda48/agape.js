@@ -58,7 +58,7 @@ export const paymentStatusEnum = schema.enum("finance_payment_status", [
  * // Recibo de cobro de cliente
  * {
  *   type: "receipt",
- *   partyId: 100,           // ID del cliente (user)
+ *   userId: 100,           // ID del cliente (user)
  *   paymentMethodId: 1,     // Transferencia bancaria
  *   paymentDate: new Date(),
  *   amount: "1500.00",
@@ -92,7 +92,7 @@ const payment = schema.table(
      * La contraparte del pago (cliente o proveedor).
      * Referencia a user porque tanto clientes como proveedores heredan de user.
      */
-    partyId: integer("party_id")
+    userId: integer("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
 
@@ -167,7 +167,7 @@ const payment = schema.table(
     index("ix_finance_payment_series").on(table.seriesId),
 
     /** Índice para búsquedas por contraparte (cliente/proveedor) */
-    index("ix_finance_payment_party").on(table.partyId),
+    index("ix_finance_payment_user").on(table.userId),
 
     /** Índice para búsquedas por tipo */
     index("ix_finance_payment_type").on(table.type),

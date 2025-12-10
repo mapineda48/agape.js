@@ -1,5 +1,5 @@
 {
-  "id": "543126a8-21b3-43a7-81ca-c4c8fba4990a",
+  "id": "006d64dc-bc96-4633-9f78-2befe3b49a3e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1741,8 +1741,8 @@
         }
       },
       "indexes": {
-        "ux_party_document": {
-          "name": "ux_party_document",
+        "ux_user_document": {
+          "name": "ux_user_document",
           "columns": [
             {
               "expression": "document_type_id",
@@ -2192,6 +2192,32 @@
           "primaryKey": false,
           "notNull": false
         },
+        "currency_code": {
+          "name": "currency_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'COP'"
+        },
+        "exchange_rate": {
+          "name": "exchange_rate",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "1"
+        },
+        "shipping_address_snapshot": {
+          "name": "shipping_address_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "billing_address_snapshot": {
+          "name": "billing_address_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "delivery_method": {
           "name": "delivery_method",
           "type": "varchar(50)",
@@ -2248,6 +2274,18 @@
         "notes": {
           "name": "notes",
           "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_id": {
+          "name": "updated_by_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -2470,6 +2508,34 @@
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "billing_address_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "crm_order_created_by_id_user_id_fk": {
+          "name": "crm_order_created_by_id_user_id_fk",
+          "tableFrom": "crm_order",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "crm_order_updated_by_id_user_id_fk": {
+          "name": "crm_order_updated_by_id_user_id_fk",
+          "tableFrom": "crm_order",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "updated_by_id"
           ],
           "columnsTo": [
             "id"
@@ -2803,6 +2869,20 @@
           "primaryKey": false,
           "notNull": true
         },
+        "currency_code": {
+          "name": "currency_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'COP'"
+        },
+        "exchange_rate": {
+          "name": "exchange_rate",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "1"
+        },
         "reference_type": {
           "name": "reference_type",
           "type": "varchar(50)",
@@ -2840,6 +2920,18 @@
         "notes": {
           "name": "notes",
           "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_id": {
+          "name": "updated_by_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -2975,6 +3067,34 @@
             "id"
           ],
           "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finance_gl_journal_entry_created_by_id_user_id_fk": {
+          "name": "finance_gl_journal_entry_created_by_id_user_id_fk",
+          "tableFrom": "finance_gl_journal_entry",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "finance_gl_journal_entry_updated_by_id_user_id_fk": {
+          "name": "finance_gl_journal_entry_updated_by_id_user_id_fk",
+          "tableFrom": "finance_gl_journal_entry",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "updated_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -3603,8 +3723,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "party_id": {
-          "name": "party_id",
+        "user_id": {
+          "name": "user_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -3627,6 +3747,20 @@
           "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": true
+        },
+        "currency_code": {
+          "name": "currency_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'COP'"
+        },
+        "exchange_rate": {
+          "name": "exchange_rate",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "1"
         },
         "unallocated_amount": {
           "name": "unallocated_amount",
@@ -3651,6 +3785,18 @@
         "notes": {
           "name": "notes",
           "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_id": {
+          "name": "updated_by_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -3706,11 +3852,11 @@
           "method": "btree",
           "with": {}
         },
-        "ix_finance_payment_party": {
-          "name": "ix_finance_payment_party",
+        "ix_finance_payment_user": {
+          "name": "ix_finance_payment_user",
           "columns": [
             {
-              "expression": "party_id",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3782,13 +3928,13 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
-        "finance_payment_party_id_user_id_fk": {
-          "name": "finance_payment_party_id_user_id_fk",
+        "finance_payment_user_id_user_id_fk": {
+          "name": "finance_payment_user_id_user_id_fk",
           "tableFrom": "finance_payment",
           "tableTo": "user",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
-            "party_id"
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -3808,6 +3954,34 @@
             "id"
           ],
           "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finance_payment_created_by_id_user_id_fk": {
+          "name": "finance_payment_created_by_id_user_id_fk",
+          "tableFrom": "finance_payment",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "finance_payment_updated_by_id_user_id_fk": {
+          "name": "finance_payment_updated_by_id_user_id_fk",
+          "tableFrom": "finance_payment",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "updated_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -4082,6 +4256,26 @@
           "primaryKey": false,
           "notNull": false
         },
+        "currency_code": {
+          "name": "currency_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'COP'"
+        },
+        "exchange_rate": {
+          "name": "exchange_rate",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "1"
+        },
+        "supplier_address_snapshot": {
+          "name": "supplier_address_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "issue_date": {
           "name": "issue_date",
           "type": "date",
@@ -4100,6 +4294,18 @@
           "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": true
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_id": {
+          "name": "updated_by_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -4209,6 +4415,34 @@
             "id"
           ],
           "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finance_purchase_invoice_created_by_id_user_id_fk": {
+          "name": "finance_purchase_invoice_created_by_id_user_id_fk",
+          "tableFrom": "finance_purchase_invoice",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "finance_purchase_invoice_updated_by_id_user_id_fk": {
+          "name": "finance_purchase_invoice_updated_by_id_user_id_fk",
+          "tableFrom": "finance_purchase_invoice",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "updated_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -4461,6 +4695,32 @@
           "primaryKey": false,
           "notNull": false
         },
+        "currency_code": {
+          "name": "currency_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'COP'"
+        },
+        "exchange_rate": {
+          "name": "exchange_rate",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "1"
+        },
+        "shipping_address_snapshot": {
+          "name": "shipping_address_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "billing_address_snapshot": {
+          "name": "billing_address_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "issue_date": {
           "name": "issue_date",
           "type": "date",
@@ -4519,6 +4779,18 @@
         "notes": {
           "name": "notes",
           "type": "varchar(1000)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_id": {
+          "name": "updated_by_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -4690,6 +4962,34 @@
             "id"
           ],
           "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "finance_sales_invoice_created_by_id_user_id_fk": {
+          "name": "finance_sales_invoice_created_by_id_user_id_fk",
+          "tableFrom": "finance_sales_invoice",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "finance_sales_invoice_updated_by_id_user_id_fk": {
+          "name": "finance_sales_invoice_updated_by_id_user_id_fk",
+          "tableFrom": "finance_sales_invoice",
+          "tableTo": "user",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "updated_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -5559,7 +5859,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "no action"
         },
         "inventory_item_uom_id_inventory_unit_of_measure_id_fk": {
@@ -6111,8 +6411,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "user_id": {
-          "name": "user_id",
+        "employee_id": {
+          "name": "employee_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -6186,13 +6486,13 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
-        "inventory_movement_user_id_hr_employee_id_fk": {
-          "name": "inventory_movement_user_id_hr_employee_id_fk",
+        "inventory_movement_employee_id_hr_employee_id_fk": {
+          "name": "inventory_movement_employee_id_hr_employee_id_fk",
           "tableFrom": "inventory_movement",
           "tableTo": "hr_employee",
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
-            "user_id"
+            "employee_id"
           ],
           "columnsTo": [
             "id"
@@ -6221,8 +6521,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "agape_app_development_demo.inventory_stock": {
-      "name": "inventory_stock",
+    "agape_app_development_demo.inventory_stock_lot": {
+      "name": "inventory_stock_lot",
       "schema": "agape_app_development_demo",
       "columns": {
         "item_id": {
@@ -6241,7 +6541,7 @@
           "name": "lot_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "quantity": {
           "name": "quantity",
@@ -6258,8 +6558,8 @@
         }
       },
       "indexes": {
-        "ix_inventory_stock_lot": {
-          "name": "ix_inventory_stock_lot",
+        "ix_inventory_stock_lot_lot": {
+          "name": "ix_inventory_stock_lot_lot",
           "columns": [
             {
               "expression": "lot_id",
@@ -6272,8 +6572,128 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "ix_inventory_stock_lot_item": {
+          "name": "ix_inventory_stock_lot_item",
+          "columns": [
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_inventory_stock_lot_location": {
+          "name": "ix_inventory_stock_lot_location",
+          "columns": [
+            {
+              "expression": "location_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
+      "foreignKeys": {
+        "inventory_stock_lot_item_id_inventory_item_item_id_fk": {
+          "name": "inventory_stock_lot_item_id_inventory_item_item_id_fk",
+          "tableFrom": "inventory_stock_lot",
+          "tableTo": "inventory_item",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "item_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "inventory_stock_lot_location_id_inventory_location_id_fk": {
+          "name": "inventory_stock_lot_location_id_inventory_location_id_fk",
+          "tableFrom": "inventory_stock_lot",
+          "tableTo": "inventory_location",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "location_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "inventory_stock_lot_lot_id_inventory_lot_id_fk": {
+          "name": "inventory_stock_lot_lot_id_inventory_lot_id_fk",
+          "tableFrom": "inventory_stock_lot",
+          "tableTo": "inventory_lot",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "lot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "inventory_stock_lot_item_id_location_id_lot_id_pk": {
+          "name": "inventory_stock_lot_item_id_location_id_lot_id_pk",
+          "columns": [
+            "item_id",
+            "location_id",
+            "lot_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "agape_app_development_demo.inventory_stock": {
+      "name": "inventory_stock",
+      "schema": "agape_app_development_demo",
+      "columns": {
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location_id": {
+          "name": "location_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reserved_quantity": {
+          "name": "reserved_quantity",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        }
+      },
+      "indexes": {},
       "foreignKeys": {
         "inventory_stock_item_id_inventory_item_item_id_fk": {
           "name": "inventory_stock_item_id_inventory_item_item_id_fk",
@@ -6296,20 +6716,6 @@
           "schemaTo": "agape_app_development_demo",
           "columnsFrom": [
             "location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "inventory_stock_lot_id_inventory_lot_id_fk": {
-          "name": "inventory_stock_lot_id_inventory_lot_id_fk",
-          "tableFrom": "inventory_stock",
-          "tableTo": "inventory_lot",
-          "schemaTo": "agape_app_development_demo",
-          "columnsFrom": [
-            "lot_id"
           ],
           "columnsTo": [
             "id"
@@ -6591,6 +6997,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "last_assigned_at": {
+          "name": "last_assigned_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -6635,6 +7047,21 @@
           "columns": [
             {
               "expression": "is_active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_numbering_series_last_assigned": {
+          "name": "ix_numbering_series_last_assigned",
+          "columns": [
+            {
+              "expression": "last_assigned_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

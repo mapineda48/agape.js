@@ -131,7 +131,7 @@ export const user = schema.table(
      * Restricción de unicidad para evitar que exista más de una
      * entidad con el mismo tipo y número de documento.
      */
-    uniqueIndex("ux_party_document").on(
+    uniqueIndex("ux_user_document").on(
       table.documentTypeId,
       table.documentNumber
     ),

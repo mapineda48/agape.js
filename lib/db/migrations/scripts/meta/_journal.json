@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1765383608254,
-      "tag": "0000_mixed_peter_parker",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1765384115638,
-      "tag": "0001_colossal_layla_miller",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765385140671,
-      "tag": "0002_dashing_wild_child",
+      "when": 1765396916367,
+      "tag": "0000_slippery_stryfe",
       "breakpoints": true
     }
   ]
