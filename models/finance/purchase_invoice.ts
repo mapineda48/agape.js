@@ -4,14 +4,17 @@ import {
   bigint,
   date,
   uniqueIndex,
+  jsonb,
+  varchar,
   index,
 } from "drizzle-orm/pg-core";
-import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
+import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
 import { schema } from "../agape";
 import supplier from "../purchasing/supplier";
 import purchase_order from "../purchasing/purchase_order";
 import goods_receipt from "../purchasing/goods_receipt";
-import { decimal } from "../../lib/db/custom-types";
+import { user } from "../core/user";
+import { decimal, type AddressSnapshot } from "../../lib/db/custom-types";
 import { documentSeries } from "../numbering/document_series";
 import { paymentTerms } from "./payment_terms";
 
@@ -72,6 +75,32 @@ const purchase_invoice = schema.table(
       { onDelete: "restrict" }
     ),
 
+    // ========================================================================
+    // Información Multimoneda
+    // ========================================================================
+
+    /** Código de moneda (ej: COP, USD) */
+    currencyCode: varchar("currency_code", { length: 3 })
+      .notNull()
+      .default("COP"),
+
+    /** Tasa de cambio (Default 1.0) */
+    exchangeRate: decimal("exchange_rate")
+      .notNull()
+      .default(sql`1`),
+
+    // ========================================================================
+    // Snapshots de Direcciones
+    // ========================================================================
+
+    /**
+     * Snapshot de la dirección del proveedor.
+     * Importante para validar obligaciones fiscales y retenciones.
+     */
+    supplierAddressSnapshot: jsonb(
+      "supplier_address_snapshot"
+    ).$type<AddressSnapshot>(),
+
     /** Fecha de emisión de la factura */
     issueDate: date("issue_date").defaultNow().notNull(),
 
@@ -80,6 +109,16 @@ const purchase_invoice = schema.table(
 
     /** Monto total de la factura */
     totalAmount: decimal("total_amount").notNull(),
+
+    /** Usuario que creó el registro */
+    createdById: integer("created_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+
+    /** Usuario que actualizó por última vez */
+    updatedById: integer("updated_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     /** Garantiza unicidad del número de documento dentro de la serie */

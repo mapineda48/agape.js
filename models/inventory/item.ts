@@ -13,7 +13,7 @@ export const inventoryItem = schema.table("inventory_item", {
   /** FK al ítem maestro (1:1) */
   itemId: integer("item_id")
     .primaryKey()
-    .references(() => item.id, { onDelete: "cascade" }),
+    .references(() => item.id, { onDelete: "restrict" }),
 
   /** Unidad de medida base del ítem inventariable */
   uomId: integer("uom_id")

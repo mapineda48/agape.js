@@ -12,6 +12,7 @@ import { schema } from "../agape";
 import { decimal, dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import { documentSeries } from "../numbering/document_series";
+import { user } from "../core/user";
 
 /**
  * Enum de estado del asiento contable.
@@ -96,6 +97,16 @@ const gl_journal_entry = schema.table(
     /** Descripción o concepto del asiento */
     description: varchar("description", { length: 500 }).notNull(),
 
+    /** Código de moneda (ej: COP, USD) */
+    currencyCode: varchar("currency_code", { length: 3 })
+      .notNull()
+      .default("COP"),
+
+    /** Tasa de cambio (Default 1.0) */
+    exchangeRate: decimal("exchange_rate")
+      .notNull()
+      .default(sql`1`),
+
     /**
      * Tipo de documento de referencia que originó el asiento.
      * Ej: "sales_invoice", "purchase_invoice", "payment", etc.
@@ -129,6 +140,16 @@ const gl_journal_entry = schema.table(
 
     /** Notas internas */
     notes: varchar("notes", { length: 1000 }),
+
+    /** Usuario que creó el registro */
+    createdById: integer("created_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+
+    /** Usuario que actualizó por última vez */
+    updatedById: integer("updated_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
 
     /** Fecha de creación del registro */
     createdAt: dateTime("created_at")

@@ -107,6 +107,16 @@ const payment = schema.table(
     /** Monto total del pago */
     amount: decimal("amount").notNull(),
 
+    /** Código de moneda (ej: COP, USD) */
+    currencyCode: varchar("currency_code", { length: 3 })
+      .notNull()
+      .default("COP"),
+
+    /** Tasa de cambio (Default 1.0) */
+    exchangeRate: decimal("exchange_rate")
+      .notNull()
+      .default(sql`1`),
+
     /**
      * Monto pendiente por asignar a facturas.
      * Inicialmente igual a amount, decrece con cada asignación.
@@ -125,6 +135,16 @@ const payment = schema.table(
 
     /** Notas internas sobre el pago */
     notes: varchar("notes", { length: 500 }),
+
+    /** Usuario que creó el registro */
+    createdById: integer("created_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+
+    /** Usuario que actualizó por última vez */
+    updatedById: integer("updated_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
 
     /** Fecha de creación del registro */
     createdAt: dateTime("created_at")

@@ -4,6 +4,7 @@ import {
   bigint,
   date,
   varchar,
+  jsonb,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -11,7 +12,12 @@ import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
 import { schema } from "../agape";
 import order from "../crm/order";
 import client from "../crm/client";
-import { decimal, dateTime } from "../../lib/db/custom-types";
+import { user } from "../core/user";
+import {
+  decimal,
+  dateTime,
+  type AddressSnapshot,
+} from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import { documentSeries } from "../numbering/document_series";
 import { paymentTerms } from "./payment_terms";
@@ -90,6 +96,40 @@ const sales_invoice = schema.table(
     ),
 
     // ========================================================================
+    // Información Multimoneda
+    // ========================================================================
+
+    /** Código de moneda (ej: COP, USD) */
+    currencyCode: varchar("currency_code", { length: 3 })
+      .notNull()
+      .default("COP"),
+
+    /** Tasa de cambio (Default 1.0) */
+    exchangeRate: decimal("exchange_rate")
+      .notNull()
+      .default(sql`1`),
+
+    // ========================================================================
+    // Snapshots de Direcciones
+    // ========================================================================
+
+    /**
+     * Snapshot de dirección de envío.
+     * Vital si la factura sirve como documento de despacho.
+     */
+    shippingAddressSnapshot: jsonb(
+      "shipping_address_snapshot"
+    ).$type<AddressSnapshot>(),
+
+    /**
+     * Snapshot de dirección de facturación (Fiscal).
+     * CRÍTICO: Debe ser la dirección del cliente al momento de facturar.
+     */
+    billingAddressSnapshot: jsonb(
+      "billing_address_snapshot"
+    ).$type<AddressSnapshot>(),
+
+    // ========================================================================
     // Fechas
     // ========================================================================
 
@@ -146,6 +186,16 @@ const sales_invoice = schema.table(
 
     /** Notas internas sobre la factura */
     notes: varchar("notes", { length: 1000 }),
+
+    /** Usuario que creó el registro */
+    createdById: integer("created_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+
+    /** Usuario que actualizó por última vez */
+    updatedById: integer("updated_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
 
     /** Fecha de creación del registro */
     createdAt: dateTime("created_at")

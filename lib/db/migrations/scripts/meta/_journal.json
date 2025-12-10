@@ -15,6 +15,13 @@
       "when": 1765384115638,
       "tag": "0001_colossal_layla_miller",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765385140671,
+      "tag": "0002_dashing_wild_child",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import {
   date,
   boolean,
   varchar,
+  jsonb,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -15,12 +16,17 @@ import {
   type InferSelectModel,
 } from "drizzle-orm";
 import { schema } from "../agape";
-import { decimal, dateTime } from "../../lib/db/custom-types";
+import {
+  decimal,
+  dateTime,
+  type AddressSnapshot,
+} from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import client from "./client";
 import order_type from "./order_type";
 import { documentSeries } from "../numbering/document_series";
 import { userAddress } from "../core/address";
+import { user } from "../core/user";
 import { paymentTerms } from "../finance/payment_terms";
 import { priceList } from "../catalogs/price_list";
 import employee from "../hr/employee";
@@ -145,6 +151,47 @@ const order = schema.table(
       { onDelete: "set null" }
     ),
 
+    // ========================================================================
+    // Información Multimoneda
+    // ========================================================================
+
+    /**
+     * Código de moneda de la transacción (ej: COP, USD, EUR).
+     * Fundamental para operaciones internacionales.
+     */
+    currencyCode: varchar("currency_code", { length: 3 })
+      .notNull()
+      .default("COP"),
+
+    /**
+     * Tasa de cambio en el momento de la transacción.
+     * Permite convertir a la moneda base del sistema para reportes.
+     * Default 1.0 para moneda local.
+     */
+    exchangeRate: decimal("exchange_rate")
+      .notNull()
+      .default(sql`1`),
+
+    // ========================================================================
+    // Snapshots de Direcciones (Integridad Histórica)
+    // ========================================================================
+
+    /**
+     * Snapshot de la dirección de envío al momento de la orden.
+     * Preserva la dirección exacta incluso si el maestro de direcciones cambia.
+     */
+    shippingAddressSnapshot: jsonb(
+      "shipping_address_snapshot"
+    ).$type<AddressSnapshot>(),
+
+    /**
+     * Snapshot de la dirección de facturación al momento de la orden.
+     * Preserva la dirección exacta incluso si el maestro de direcciones cambia.
+     */
+    billingAddressSnapshot: jsonb(
+      "billing_address_snapshot"
+    ).$type<AddressSnapshot>(),
+
     /** Método de entrega (ej: mensajería, correo, pickup, etc.) */
     deliveryMethod: varchar("delivery_method", { length: 50 }),
 
@@ -208,6 +255,16 @@ const order = schema.table(
 
     /** Notas internas sobre la orden */
     notes: varchar("notes", { length: 1000 }),
+
+    /** Usuario que creó el registro */
+    createdById: integer("created_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+
+    /** Usuario que actualizó por última vez */
+    updatedById: integer("updated_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
 
     /** Fecha de creación del registro */
     createdAt: dateTime("created_at")
