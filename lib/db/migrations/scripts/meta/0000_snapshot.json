@@ -1,5 +1,5 @@
 {
-  "id": "006d64dc-bc96-4633-9f78-2befe3b49a3e",
+  "id": "909f6ab4-114b-4bcb-8873-6e76eaf003e3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1697,24 +1697,6 @@
         "currency_code": {
           "name": "currency_code",
           "type": "varchar(3)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "phone": {
-          "name": "phone",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "address": {
-          "name": "address",
-          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },

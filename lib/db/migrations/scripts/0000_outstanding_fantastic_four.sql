@@ -199,9 +199,6 @@ CREATE TABLE "agape_app_development_demo"."user" (
 	"country_code" varchar(2),
 	"language_code" varchar(2),
 	"currency_code" varchar(3),
-	"email" varchar(255),
-	"phone" varchar(20),
-	"address" varchar(255),
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now()

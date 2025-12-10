@@ -87,31 +87,6 @@ export const user = schema.table(
     currencyCode: varchar("currency_code", { length: 3 }),
 
     // ========================================================================
-    // Campos legacy (deprecated - usar contactMethod y userAddress)
-    // ========================================================================
-
-    /**
-     * Email de contacto (opcional)
-     * @deprecated Usar `core_contact_method` para gestionar múltiples emails.
-     *             Se mantiene por compatibilidad hacia atrás.
-     */
-    email: varchar("email", { length: 255 }),
-
-    /**
-     * Teléfono de contacto (opcional)
-     * @deprecated Usar `core_contact_method` para gestionar múltiples teléfonos.
-     *             Se mantiene por compatibilidad hacia atrás.
-     */
-    phone: varchar("phone", { length: 20 }),
-
-    /**
-     * Dirección genérica de contacto (opcional)
-     * @deprecated Usar `core_user_address` para gestionar múltiples direcciones.
-     *             Se mantiene por compatibilidad hacia atrás.
-     */
-    address: varchar("address", { length: 255 }),
-
-    // ========================================================================
     // Campos de control
     // ========================================================================
 
