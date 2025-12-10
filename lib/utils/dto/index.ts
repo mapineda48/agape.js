@@ -4,7 +4,8 @@
  */
 export * from "./catalogs";
 export * from "./core";
-export * from "./hr";
-export * from "./security";
 export * from "./crm";
+export * from "./finance";
+export * from "./hr";
 export * from "./purchasing";
+export * from "./security";

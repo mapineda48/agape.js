@@ -9,11 +9,16 @@ import person from "#models/core/person";
 import { company } from "#models/core/company";
 import { user } from "#models/core/user";
 import { documentType } from "#models/numbering/document_type";
+import { documentSequence } from "#models/numbering/document_sequence";
 import DateTime from "#utils/data/DateTime";
 import Decimal from "#utils/data/Decimal";
 import { eq, inArray, and, gte, lte, count, desc, sql } from "drizzle-orm";
 import { createInventoryMovement } from "#svc/inventory/movement";
 import { inventoryMovementType } from "#models/inventory/movement_type";
+import { getNextDocumentNumberTx } from "#svc/numbering/getNextDocumentNumber";
+
+/** Código del tipo de documento para órdenes de compra */
+export const PURCHASE_ORDER_DOCUMENT_TYPE_CODE = "PURCHASE_ORDER";
 
 // Re-export DTOs from shared module
 export type {
@@ -48,13 +53,15 @@ import type {
 
 /**
  * Crea una nueva orden de compra con sus ítems.
+ * Asigna automáticamente un número de documento vía el motor de numeración.
  *
  * @param payload Datos de la orden de compra
- * @returns La orden de compra creada con sus ítems
+ * @returns La orden de compra creada con sus ítems y numeración
  * @throws Error si el estado es inválido
  * @throws Error si no hay ítems o sus cantidades/precios son inválidos
  * @throws Error si el proveedor no existe o está inactivo
  * @throws Error si algún ítem no existe o está deshabilitado
+ * @throws Error si no hay series de numeración disponibles
  */
 export async function createPurchaseOrder(
   payload: CreatePurchaseOrderInput
@@ -127,14 +134,36 @@ export async function createPurchaseOrder(
         ? new DateTime(payload.orderDate)
         : new DateTime();
 
+    // Obtener número de documento usando ID temporal
+    const tempExternalId = crypto.randomUUID();
+    const numbering = await getNextDocumentNumberTx(tx, {
+      documentTypeCode: PURCHASE_ORDER_DOCUMENT_TYPE_CODE,
+      today: orderDate,
+      externalDocumentType: "purchase_order",
+      externalDocumentId: tempExternalId,
+    });
+
     const [order] = await tx
       .insert(purchaseOrder)
       .values({
         supplierId: payload.supplierId,
         orderDate,
         status,
+        seriesId: numbering.seriesId,
+        documentNumber: numbering.assignedNumber,
       })
       .returning();
+
+    // Actualizar externalDocumentId en document_sequence con el ID real
+    await tx
+      .update(documentSequence)
+      .set({ externalDocumentId: order.id.toString() })
+      .where(
+        and(
+          eq(documentSequence.seriesId, numbering.seriesId),
+          eq(documentSequence.assignedNumber, numbering.assignedNumber)
+        )
+      );
 
     const insertedItems = await tx
       .insert(orderItem)
@@ -150,6 +179,7 @@ export async function createPurchaseOrder(
 
     return {
       ...order,
+      documentNumberFull: numbering.fullNumber,
       items: insertedItems,
     };
   });
@@ -164,12 +194,20 @@ export async function createPurchaseOrder(
 export async function getPurchaseOrderById(
   id: number
 ): Promise<PurchaseOrderDetails | undefined> {
+  // Import documentSeries for building full number
+  const { documentSeries } = await import("#models/numbering/document_series");
+
   const [order] = await db
     .select({
       id: purchaseOrder.id,
       supplierId: purchaseOrder.supplierId,
       orderDate: purchaseOrder.orderDate,
       status: purchaseOrder.status,
+      seriesId: purchaseOrder.seriesId,
+      documentNumber: purchaseOrder.documentNumber,
+      // Series data for full number
+      seriesPrefix: documentSeries.prefix,
+      seriesSuffix: documentSeries.suffix,
       // Supplier data (person or company name)
       supplierFirstName: person.firstName,
       supplierLastName: person.lastName,
@@ -180,6 +218,7 @@ export async function getPurchaseOrderById(
     .from(purchaseOrder)
     .innerJoin(supplier, eq(purchaseOrder.supplierId, supplier.id))
     .innerJoin(user, eq(supplier.id, user.id))
+    .innerJoin(documentSeries, eq(purchaseOrder.seriesId, documentSeries.id))
     .leftJoin(person, eq(supplier.id, person.id))
     .leftJoin(company, eq(supplier.id, company.id))
     .leftJoin(documentType, eq(user.documentTypeId, documentType.id))
@@ -221,6 +260,11 @@ export async function getPurchaseOrderById(
     ? `${order.supplierFirstName} ${order.supplierLastName ?? ""}`.trim()
     : order.supplierLegalName ?? "";
 
+  // Build full document number
+  const prefix = order.seriesPrefix ?? "";
+  const suffix = order.seriesSuffix ?? "";
+  const documentNumberFull = `${prefix}${order.documentNumber}${suffix}`;
+
   return {
     id: order.id,
     supplierId: order.supplierId,
@@ -229,6 +273,7 @@ export async function getPurchaseOrderById(
     supplierDocumentNumber: order.supplierDocumentNumber,
     orderDate: order.orderDate,
     status: order.status as PurchaseOrderStatus,
+    documentNumberFull,
     totalAmount,
     items: itemsWithSubtotal,
   };
@@ -243,6 +288,9 @@ export async function getPurchaseOrderById(
 export async function listPurchaseOrders(
   params: ListPurchaseOrdersParams = {}
 ): Promise<ListPurchaseOrdersResult> {
+  // Import documentSeries for building full number
+  const { documentSeries } = await import("#models/numbering/document_series");
+
   const {
     supplierId,
     status,
@@ -294,6 +342,9 @@ export async function listPurchaseOrders(
     .select({
       id: purchaseOrder.id,
       supplierId: purchaseOrder.supplierId,
+      documentNumber: purchaseOrder.documentNumber,
+      seriesPrefix: documentSeries.prefix,
+      seriesSuffix: documentSeries.suffix,
       supplierFirstName: person.firstName,
       supplierLastName: person.lastName,
       supplierLegalName: company.legalName,
@@ -305,6 +356,7 @@ export async function listPurchaseOrders(
     .from(purchaseOrder)
     .innerJoin(supplier, eq(purchaseOrder.supplierId, supplier.id))
     .innerJoin(user, eq(supplier.id, user.id))
+    .innerJoin(documentSeries, eq(purchaseOrder.seriesId, documentSeries.id))
     .leftJoin(person, eq(supplier.id, person.id))
     .leftJoin(company, eq(supplier.id, company.id))
     .leftJoin(orderSummary, eq(purchaseOrder.id, orderSummary.purchaseOrderId))
@@ -312,6 +364,16 @@ export async function listPurchaseOrders(
     .orderBy(desc(purchaseOrder.orderDate), desc(purchaseOrder.id))
     .limit(pageSize)
     .offset(pageIndex * pageSize);
+
+  const buildDocumentNumberFull = (o: {
+    documentNumber: number;
+    seriesPrefix: string | null;
+    seriesSuffix: string | null;
+  }) => {
+    const prefix = o.seriesPrefix ?? "";
+    const suffix = o.seriesSuffix ?? "";
+    return `${prefix}${o.documentNumber}${suffix}`;
+  };
 
   if (!includeTotalCount) {
     const ordersRaw = await queryOrders;
@@ -323,6 +385,7 @@ export async function listPurchaseOrders(
         : o.supplierLegalName ?? "",
       orderDate: o.orderDate,
       status: o.status as PurchaseOrderStatus,
+      documentNumberFull: buildDocumentNumberFull(o),
       totalAmount: o.totalAmount ?? new Decimal(0),
       itemCount: Number(o.itemCount) || 0,
     }));
@@ -347,6 +410,7 @@ export async function listPurchaseOrders(
       : o.supplierLegalName ?? "",
     orderDate: o.orderDate,
     status: o.status as PurchaseOrderStatus,
+    documentNumberFull: buildDocumentNumberFull(o),
     totalAmount: o.totalAmount ?? new Decimal(0),
     itemCount: Number(o.itemCount) || 0,
   }));
@@ -373,9 +437,24 @@ export async function updatePurchaseOrderStatus(
   }
 
   return db.transaction(async (tx) => {
+    // Import documentSeries for building full number
+    const { documentSeries } = await import(
+      "#models/numbering/document_series"
+    );
+
     const [currentOrder] = await tx
-      .select()
+      .select({
+        id: purchaseOrder.id,
+        supplierId: purchaseOrder.supplierId,
+        orderDate: purchaseOrder.orderDate,
+        status: purchaseOrder.status,
+        seriesId: purchaseOrder.seriesId,
+        documentNumber: purchaseOrder.documentNumber,
+        seriesPrefix: documentSeries.prefix,
+        seriesSuffix: documentSeries.suffix,
+      })
       .from(purchaseOrder)
+      .innerJoin(documentSeries, eq(purchaseOrder.seriesId, documentSeries.id))
       .where(eq(purchaseOrder.id, orderId));
 
     if (!currentOrder) {
@@ -410,8 +489,14 @@ export async function updatePurchaseOrderStatus(
       .from(orderItem)
       .where(eq(orderItem.purchaseOrderId, orderId));
 
+    // Build full document number
+    const prefix = currentOrder.seriesPrefix ?? "";
+    const suffix = currentOrder.seriesSuffix ?? "";
+    const documentNumberFull = `${prefix}${currentOrder.documentNumber}${suffix}`;
+
     return {
       ...updatedOrder,
+      documentNumberFull,
       items,
     };
   });

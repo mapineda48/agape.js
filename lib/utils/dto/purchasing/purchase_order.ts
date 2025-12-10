@@ -74,6 +74,12 @@ export interface PurchaseOrderWithItems {
   supplierId: number;
   orderDate: DateTime;
   status: PurchaseOrderStatus;
+  /** ID de la serie de numeración */
+  seriesId: number;
+  /** Número del documento en la serie */
+  documentNumber: number;
+  /** Número completo del documento (con prefijo/sufijo) */
+  documentNumberFull: string;
   items: PurchaseOrderItem[];
 }
 
@@ -88,6 +94,8 @@ export interface PurchaseOrderDetails {
   supplierDocumentNumber: string | null;
   orderDate: DateTime;
   status: PurchaseOrderStatus;
+  /** Número completo del documento (con prefijo/sufijo) */
+  documentNumberFull: string;
   totalAmount: Decimal;
   items: PurchaseOrderItemWithProduct[];
 }
@@ -121,6 +129,8 @@ export interface PurchaseOrderListItem {
   supplierName: string;
   orderDate: DateTime;
   status: PurchaseOrderStatus;
+  /** Número completo del documento (con prefijo/sufijo) */
+  documentNumberFull: string;
   totalAmount: Decimal;
   itemCount: number;
 }

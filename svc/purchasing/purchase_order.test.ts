@@ -34,6 +34,9 @@ beforeAll(async () => {
   const { upsertDocumentSeries } = await import(
     "#svc/numbering/documentSeries"
   );
+  const { PURCHASE_ORDER_DOCUMENT_TYPE_CODE } = await import(
+    "./purchase_order"
+  );
 
   // Create document type for identification
   const [documentType] = await upsertDocumentType({
@@ -138,11 +141,32 @@ beforeAll(async () => {
     isEnabled: true,
   });
 
-  // Create document series for the business document type
+  // Create document series for inventory movement document type
   await upsertDocumentSeries({
     documentTypeId: businessDocType.id,
     seriesCode: `SERIE-${uuid.slice(0, 6)}`,
     prefix: "ENT-",
+    suffix: "",
+    startNumber: 1,
+    endNumber: 99999,
+    validFrom: new DateTime("2024-01-01"),
+    validTo: new DateTime("2030-12-31"),
+    isActive: true,
+    isDefault: true,
+  });
+
+  // Create business document type for purchase orders
+  const purchaseOrderDocType = await upsertBusinessDocType({
+    code: PURCHASE_ORDER_DOCUMENT_TYPE_CODE,
+    name: "Orden de Compra",
+    isEnabled: true,
+  });
+
+  // Create document series for purchase order document type
+  await upsertDocumentSeries({
+    documentTypeId: purchaseOrderDocType.id,
+    seriesCode: `PO-SERIE-${uuid.slice(0, 6)}`,
+    prefix: "OC-",
     suffix: "",
     startNumber: 1,
     endNumber: 99999,
@@ -181,7 +205,7 @@ afterAll(async () => {
 });
 
 describe("createPurchaseOrder service", () => {
-  it("crea una orden de compra con estado pendiente por defecto", async () => {
+  it("crea una orden de compra con estado pendiente por defecto y asigna numeración", async () => {
     const { createPurchaseOrder } = await import("./purchase_order");
 
     const order = await createPurchaseOrder({
@@ -199,6 +223,12 @@ describe("createPurchaseOrder service", () => {
     expect(order.items.every((item) => item.purchaseOrderId === order.id)).toBe(
       true
     );
+    // Verificar campos de numeración
+    expect(order.seriesId).toBeDefined();
+    expect(order.documentNumber).toBeDefined();
+    expect(order.documentNumber).toBeGreaterThan(0);
+    expect(order.documentNumberFull).toBeDefined();
+    expect(order.documentNumberFull).toContain("OC-"); // Prefijo definido en beforeAll
   });
 
   it("permite definir un estado válido distinto al predeterminado", async () => {
@@ -289,7 +319,7 @@ describe("createPurchaseOrder service", () => {
 });
 
 describe("getPurchaseOrderById service", () => {
-  it("retorna una orden de compra con sus detalles", async () => {
+  it("retorna una orden de compra con sus detalles y número de documento", async () => {
     const { createPurchaseOrder, getPurchaseOrderById } = await import(
       "./purchase_order"
     );
@@ -309,6 +339,9 @@ describe("getPurchaseOrderById service", () => {
     expect(order?.supplierId).toBe(supplierId);
     expect(order?.supplierName).toContain("Proveedor");
     expect(order?.items).toHaveLength(2);
+    // Verificar número de documento
+    expect(order?.documentNumberFull).toBeDefined();
+    expect(order?.documentNumberFull).toContain("OC-");
     // Total = 5*100 + 3*150 = 500 + 450 = 950
     const totalNumber =
       order?.totalAmount instanceof Decimal
@@ -326,7 +359,7 @@ describe("getPurchaseOrderById service", () => {
 });
 
 describe("listPurchaseOrders service", () => {
-  it("lista órdenes de compra con paginación", async () => {
+  it("lista órdenes de compra con paginación y número de documento", async () => {
     const { createPurchaseOrder, listPurchaseOrders } = await import(
       "./purchase_order"
     );
@@ -346,6 +379,10 @@ describe("listPurchaseOrders service", () => {
     expect(result.orders).toBeInstanceOf(Array);
     expect(result.totalCount).toBeGreaterThan(0);
     expect(result.orders.every((o) => o.supplierName !== undefined)).toBe(true);
+    // Verificar que todas las órdenes tienen número de documento
+    expect(result.orders.every((o) => o.documentNumberFull !== undefined)).toBe(
+      true
+    );
   });
 
   it("filtra por estado de la orden", async () => {
