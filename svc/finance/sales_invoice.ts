@@ -122,6 +122,7 @@ export async function createSalesInvoice(
 
     return {
       ...invoice,
+      orderId: invoice.orderId!, // We know it's not null because we inserted it
       documentNumberFull: numbering.fullNumber,
     };
   });
@@ -194,7 +195,7 @@ export async function getSalesInvoiceById(
 
   return {
     id: invoice.id,
-    orderId: invoice.orderId,
+    orderId: invoice.orderId!,
     orderDocumentNumber,
     clientId: invoice.clientId,
     clientName,
@@ -280,7 +281,7 @@ export async function listSalesInvoices(
 
   const buildResult = (inv: {
     id: number;
-    orderId: number;
+    orderId: number | null;
     issueDate: string;
     totalAmount: Decimal;
     documentNumber: number;
@@ -299,7 +300,7 @@ export async function listSalesInvoices(
     const orderSuffix = inv.orderSeriesSuffix ?? "";
     return {
       id: inv.id,
-      orderId: inv.orderId,
+      orderId: inv.orderId!,
       orderDocumentNumber: `${orderPrefix}${inv.orderDocumentNumber}${orderSuffix}`,
       clientName: inv.clientFirstName
         ? `${inv.clientFirstName} ${inv.clientLastName ?? ""}`.trim()

@@ -20,7 +20,7 @@ export async function findUser(
   const [record] = await db
     .select({
       id: securityUser.id,
-      passwordHash: securityUser.password,
+      passwordHash: securityUser.passwordHash,
       avatarUrl: employee.avatarUrl,
       fullName: sql<string>`${person.firstName} || ' ' || ${person.lastName}`,
     })

@@ -102,7 +102,7 @@ export async function consumeLayers(
 
     await tx
       .update(inventoryCostLayer)
-      .set({ remainingQuantity: newRemaining.toString() })
+      .set({ remainingQuantity: newRemaining })
       .where(eq(inventoryCostLayer.id, layer.id));
 
     remainingToConsume = remainingToConsume.minus(consumeFromLayer);

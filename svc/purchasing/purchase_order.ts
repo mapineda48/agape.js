@@ -617,10 +617,27 @@ export async function receivePurchaseOrder(
       .from(orderItem)
       .where(eq(orderItem.purchaseOrderId, input.orderId));
 
+    // Build full document number for the order
+    const { documentSeries } = await import(
+      "#models/numbering/document_series"
+    );
+    const [seriesInfo] = await tx
+      .select({
+        prefix: documentSeries.prefix,
+        suffix: documentSeries.suffix,
+      })
+      .from(documentSeries)
+      .where(eq(documentSeries.id, currentOrder.seriesId));
+
+    const prefix = seriesInfo?.prefix ?? "";
+    const suffix = seriesInfo?.suffix ?? "";
+    const documentNumberFull = `${prefix}${currentOrder.documentNumber}${suffix}`;
+
     return {
       order: {
         ...updatedOrder,
         items: updatedItems,
+        documentNumberFull,
       },
       inventoryMovementId: movement.id,
       movementNumber: movement.documentNumberFull,
@@ -731,7 +748,7 @@ async function createInventoryMovementInTx(
       movementId: movement.id,
       itemId: d.itemId,
       locationId: d.locationId,
-      quantity: d.quantity,
+      quantity: toDecimal(d.quantity),
       unitCost: d.unitCost,
     }))
   );

@@ -152,8 +152,8 @@ export async function updateStock(
         itemId,
         locationId,
         lotId,
-        quantity: deltaDecimal.toString(),
-        reservedQuantity: "0",
+        quantity: deltaDecimal,
+        reservedQuantity: new Decimal(0),
       });
     }
   }

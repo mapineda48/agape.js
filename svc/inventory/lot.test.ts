@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import DateTime from "#utils/data/DateTime";
+import Decimal from "decimal.js";
 
 let itemId: number;
 let expiredLotId: number;
@@ -33,7 +34,7 @@ beforeAll(async () => {
       fullName: "Lot Item Test",
       type: "good",
       isEnabled: true,
-      basePrice: "10.00",
+      basePrice: new Decimal("10.00"),
       images: [],
     })
     .returning();

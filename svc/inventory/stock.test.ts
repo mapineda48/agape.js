@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
+import DateTime from "#utils/data/DateTime";
 
 let itemId: number;
 let locationId: number;
@@ -38,7 +39,7 @@ beforeAll(async () => {
       fullName: "Stock Item Test",
       type: "good",
       isEnabled: true,
-      basePrice: "10.00",
+      basePrice: new Decimal("10.00"),
       images: [],
     })
     .returning();
@@ -67,7 +68,7 @@ beforeAll(async () => {
     .values({
       itemId,
       lotNumber: "LOT-001",
-      receivedDate: new Date(),
+      receivedDate: new DateTime(),
       status: "ACTIVE",
     })
     .returning();

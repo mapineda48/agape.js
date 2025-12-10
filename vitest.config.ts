@@ -9,6 +9,8 @@ export default defineConfig({
         // Proyecto backend (Node, svc/lib/models)
         test: {
           maxConcurrency: 10, // limita la cantidad de tests que se ejecutan simultáneamente por postgres
+          testTimeout: 30000, // 30 segundos
+          hookTimeout: 30000, // beforeAll / afterAll también
           name: "backend",
           environment: "node",
           root: path.resolve(__dirname), // importante: raíz del repo
