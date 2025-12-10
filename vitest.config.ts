@@ -71,6 +71,22 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/crm/clientType.ts"
             ),
+            "@agape/purchasing/purchase_order": path.resolve(
+              __dirname,
+              "./web/test/mocks/purchasing/purchaseOrder.ts"
+            ),
+            "@agape/purchasing/supplier": path.resolve(
+              __dirname,
+              "./web/test/mocks/purchasing/supplier.ts"
+            ),
+            "@agape/purchasing/supplierType": path.resolve(
+              __dirname,
+              "./web/test/mocks/purchasing/supplierType.ts"
+            ),
+            "@agape/inventory/location": path.resolve(
+              __dirname,
+              "./web/test/mocks/inventory/location.ts"
+            ),
           },
         },
       },
