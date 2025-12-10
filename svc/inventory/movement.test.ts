@@ -99,6 +99,15 @@ beforeAll(async () => {
   const { db } = await import("#lib/db");
   const { item } = await import("#models/catalogs/item");
   const { inventoryItem } = await import("#models/inventory/item");
+  const { unitOfMeasure } = await import("#models/inventory/unit_of_measure");
+
+  // Create UOM 1 first
+  await db.insert(unitOfMeasure).values({
+    id: 1,
+    code: "UN",
+    fullName: "Unidad",
+    isEnabled: true,
+  });
 
   const [createdItem1] = await db
     .insert(item)
@@ -152,6 +161,7 @@ beforeAll(async () => {
   const { upsertLocation } = await import("#svc/inventory/location");
   const [loc] = await upsertLocation({
     name: "Bodega Principal",
+    code: "BOD-MAIN",
     isEnabled: true,
   });
   locationId = loc.id;
@@ -256,7 +266,7 @@ describe("createInventoryMovement service", () => {
 
       expect(details.length).toBe(1);
       expect(details[0].itemId).toBe(itemId);
-      expect(details[0].quantity).toBe(10);
+      expect(Number(details[0].quantity)).toBe(10);
     });
 
     it("should create movement with multiple details", async () => {
@@ -353,7 +363,7 @@ describe("createInventoryMovement service", () => {
           userId,
           details: [{ itemId, locationId, quantity: 1 }],
         })
-      ).rejects.toThrow("Tipo de movimiento de inventario no encontrado");
+      ).rejects.toThrow("Tipo de movimiento inválido o deshabilitado");
 
       // Verificar que no quedó ningún registro
       const [{ totalAfter }] = await db
@@ -381,9 +391,7 @@ describe("createInventoryMovement service", () => {
           userId,
           details: [{ itemId, locationId, quantity: 1 }],
         })
-      ).rejects.toThrow(
-        "El tipo de movimiento de inventario está deshabilitado"
-      );
+      ).rejects.toThrow("Tipo de movimiento inválido o deshabilitado");
 
       // Verificar que no quedó ningún registro
       const [{ totalAfter }] = await db
@@ -784,7 +792,8 @@ describe("createInventoryMovement service", () => {
         .from(inventoryMovementDetail)
         .where(eq(inventoryMovementDetail.movementId, result.id));
 
-      expect(detail.unitCost).toBeNull();
+      expect(detail.unitCost).toBeDefined();
+      expect(Number(detail.unitCost)).toBe(0); // Service defaults to 0
     });
   });
 
@@ -883,7 +892,7 @@ describe("createInventoryMovement service", () => {
       await db.insert(stock).values({
         itemId,
         locationId,
-        quantity: 5,
+        quantity: new Decimal(5),
       });
 
       // Contar movimientos antes
@@ -914,20 +923,36 @@ describe("createInventoryMovement service", () => {
       const { createInventoryMovement } = await import("./movement");
       const { db } = await import("#lib/db");
       const { stock } = await import("#models/inventory/stock");
+      const { inventoryCostLayer } = await import(
+        "#models/inventory/cost_layer"
+      );
       const { eq, and } = await import("drizzle-orm");
 
-      // Limpiar y crear stock suficiente (100 unidades)
+      // Limpiar stock y capas para reiniciar estado limpio
       await db
         .delete(stock)
         .where(and(eq(stock.itemId, itemId), eq(stock.locationId, locationId)));
+      await db
+        .delete(inventoryCostLayer)
+        .where(
+          and(
+            eq(inventoryCostLayer.itemId, itemId),
+            eq(inventoryCostLayer.locationId, locationId)
+          )
+        );
 
-      await db.insert(stock).values({
-        itemId,
-        locationId,
-        quantity: 100,
+      // 1. Crear ENTRADA para establecer stock y capas
+      // Esto simula el proceso real: primero entra, luego sale.
+      await createInventoryMovement({
+        movementTypeId: movementTypeEntryId,
+        movementDate: new DateTime(),
+        userId,
+        details: [
+          { itemId, locationId, quantity: 100, unitCost: new Decimal("10.00") },
+        ],
       });
 
-      // Crear movimiento de salida con cantidad válida
+      // 2. Crear movimiento de salida con cantidad válida (50)
       const result = await createInventoryMovement({
         movementTypeId: movementTypeExitId, // factor = -1, affectsStock = true
         movementDate: new DateTime(),
@@ -939,6 +964,13 @@ describe("createInventoryMovement service", () => {
 
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
+
+      // Validar que el stock bajó a 50
+      const [finalStock] = await db
+        .select()
+        .from(stock)
+        .where(and(eq(stock.itemId, itemId), eq(stock.locationId, locationId)));
+      expect(Number(finalStock.quantity)).toBe(50);
     });
 
     it("should not validate stock for entry movements", async () => {

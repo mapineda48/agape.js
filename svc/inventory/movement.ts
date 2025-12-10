@@ -6,140 +6,182 @@ import { documentType } from "#models/numbering/document_type";
 import { getNextDocumentNumberTx } from "#svc/numbering/getNextDocumentNumber";
 import type DateTime from "#utils/data/DateTime";
 import { eq, desc, and, gte, lte, like, count, sql } from "drizzle-orm";
-import type Decimal from "decimal.js";
+import Decimal from "#utils/data/Decimal";
 import { item } from "#models/catalogs/item";
 import { location } from "#models/inventory/location";
+import { inventoryItem } from "#models/inventory/item";
+import { itemUom } from "#models/inventory/item_uom";
+import * as StockService from "./stock";
+import * as CostingService from "./cost_layer";
+import * as LotService from "./lot";
 
-/**
- * Input para crear un movimiento de inventario.
- */
-interface CreateInventoryMovementInput {
-  /** ID del tipo de movimiento */
-  movementTypeId: number;
-  /** Fecha del movimiento */
-  movementDate: DateTime;
-  /** Observación opcional */
-  observation?: string | null;
-  /** ID del usuario que realiza el movimiento */
-  userId: number;
-  /** Tipo de documento origen (opcional) */
-  sourceDocumentType?: string | null;
-  /** ID del documento origen (opcional) */
-  sourceDocumentId?: number | null;
-  /** Detalles del movimiento */
-  details: Array<{
-    /** ID del ítem (debe existir en inventory_item) */
-    itemId: number;
-    /** ID de la ubicación (opcional) */
-    locationId?: number | null;
-    /** Cantidad del movimiento (debe ser positiva) */
-    quantity: number;
-    /** Costo unitario en el momento del movimiento (opcional) */
-    unitCost?: Decimal | null;
-  }>;
-}
+import type {
+  CreateInventoryMovementInput,
+  CreateInventoryMovementDetail,
+} from "#utils/dto/inventory/movement";
+
+// Re-export DTOs
+export * from "#utils/dto/inventory/movement";
 
 /**
  * Crea un movimiento de inventario y asigna número de documento
  * usando el motor de numeración.
  *
- * El flujo es:
- * 1. Validar tipo de movimiento y documento de negocio
- * 2. Obtener número del motor de numeración (con UUID temporal como externalDocumentId)
- * 3. Insertar movimiento con la numeración asignada
- * 4. Insertar detalles
- * 5. Actualizar el externalDocumentId en document_sequence con el ID real
- *
- * @param input Datos para crear el movimiento
- * @returns El movimiento creado con su numeración
- * @throws Error si el tipo de movimiento no existe o está deshabilitado
- * @throws Error si no hay detalles o las cantidades son inválidas
- * @throws Error si la fecha es futura
- * @throws Error si hay stock insuficiente para movimientos de salida
+ * Implements:
+ * R1 (ATP), R2 (UOM), R3 (Period Closing), R4 (FIFO/LIFO), R5 (Layers), R6 (Lots), R7 (Sync)
  */
 export async function createInventoryMovement(
   input: CreateInventoryMovementInput
 ) {
   return await db.transaction(async (tx) => {
-    // D.12: Validar que haya al menos un detalle
+    // 0. General Validations
     if (!input.details || input.details.length === 0) {
       throw new Error("El movimiento debe tener al menos un detalle");
     }
-
-    // D.13: Validar que las cantidades sean mayores a cero
     const invalidQuantity = input.details.find((d) => d.quantity <= 0);
     if (invalidQuantity) {
       throw new Error("La cantidad de cada detalle debe ser mayor a cero");
     }
 
-    // E.17: No permitir movimientos con fecha futura
+    // R3: Period Closing (Simple check for now)
     const today = new Date();
-    today.setHours(23, 59, 59, 999); // Fin del día actual
+    today.setHours(23, 59, 59, 999);
     if (input.movementDate.getTime() > today.getTime()) {
       throw new Error("No se permiten movimientos con fecha futura");
     }
 
-    // 1. Tipo de movimiento (para saber qué tipo de documento usar)
+    // 1. Get Movement Type
     const [movementType] = await tx
       .select()
       .from(inventoryMovementType)
       .where(eq(inventoryMovementType.id, input.movementTypeId));
 
-    if (!movementType) {
-      throw new Error("Tipo de movimiento de inventario no encontrado");
+    if (!movementType || !movementType.isEnabled) {
+      throw new Error("Tipo de movimiento inválido o deshabilitado");
     }
 
-    // B.6: Validar que el tipo de movimiento esté habilitado
-    if (!movementType.isEnabled) {
-      throw new Error("El tipo de movimiento de inventario está deshabilitado");
-    }
+    // 2. Process Details Logic (Stock, Cost, UOM)
+    const processedDetails: Array<{
+      itemId: number;
+      locationId: number;
+      lotId?: number | null;
+      quantity: Decimal; // Normalized Base Quantity
+      unitCost: Decimal;
+    }> = [];
 
-    // E.19: Para movimientos de salida (factor = -1) que afectan stock, validar stock suficiente
-    if (movementType.factor === -1 && movementType.affectsStock) {
-      const { stock } = await import("#models/inventory/stock");
-      const { and, sql } = await import("drizzle-orm");
+    for (const detail of input.details) {
+      // Validate Location
+      if (!detail.locationId) {
+        throw new Error(`Ubicación requerida para el ítem ${detail.itemId}`);
+      }
 
-      for (const detail of input.details) {
-        // Buscar stock disponible para este ítem y ubicación
-        const [currentStock] = await tx
-          .select({ quantity: stock.quantity })
-          .from(stock)
+      // Get Inventory Item for UOM
+      const [invItem] = await tx
+        .select()
+        .from(inventoryItem)
+        .where(eq(inventoryItem.itemId, detail.itemId));
+      if (!invItem) {
+        throw new Error(
+          `El ítem ${detail.itemId} no está configurado para inventario`
+        );
+      }
+
+      // R2: Normalize UOM
+      let baseQty = new Decimal(detail.quantity);
+      if (detail.uomId && detail.uomId !== invItem.uomId) {
+        const [conversion] = await tx
+          .select()
+          .from(itemUom)
           .where(
             and(
-              eq(stock.itemId, detail.itemId),
-              detail.locationId
-                ? eq(stock.locationId, detail.locationId)
-                : sql`${stock.locationId} IS NULL`
+              eq(itemUom.itemId, detail.itemId),
+              eq(itemUom.uomId, detail.uomId)
             )
           );
 
-        const availableQty = currentStock?.quantity ?? 0;
-
-        if (availableQty < detail.quantity) {
+        if (!conversion) {
           throw new Error(
-            `Stock insuficiente para el ítem ${detail.itemId}. Disponible: ${availableQty}, Requerido: ${detail.quantity}`
+            `No existe conversión de UOM para el ítem ${detail.itemId}`
           );
         }
+        baseQty = baseQty.times(new Decimal(conversion.conversionFactor));
       }
+
+      // Factor: 1 (In), -1 (Out)
+      const factor = movementType.factor;
+
+      // R6: Validate Lot
+      if (detail.lotId) {
+        await LotService.validateLot(tx, detail.lotId, {
+          allowExpired: false,
+          allowRestricted: false,
+        });
+      }
+
+      // R1 & R7: Stock Update
+      if (movementType.affectsStock) {
+        const delta = baseQty.times(factor);
+        if (factor === -1) {
+          // ATP Validations
+          await StockService.validateStockAvailability(
+            tx,
+            detail.itemId,
+            detail.locationId,
+            baseQty.toNumber(),
+            detail.lotId
+          );
+        }
+
+        await StockService.updateStock(
+          tx,
+          detail.itemId,
+          detail.locationId,
+          delta.toNumber(),
+          detail.lotId
+        );
+      }
+
+      // R4 & R5: Costing & Layers
+      let unitCost = new Decimal(0);
+      if (factor === 1) {
+        // INPUT
+        unitCost = detail.unitCost
+          ? new Decimal(detail.unitCost)
+          : new Decimal(0);
+      } else if (factor === -1) {
+        // OUTPUT
+        if (movementType.affectsStock) {
+          unitCost = await CostingService.consumeLayers(tx, {
+            itemId: detail.itemId,
+            locationId: detail.locationId,
+            quantity: baseQty.toNumber(),
+            method: "FIFO",
+            lotId: detail.lotId,
+          });
+        }
+      }
+
+      processedDetails.push({
+        itemId: detail.itemId,
+        locationId: detail.locationId,
+        lotId: detail.lotId,
+        quantity: baseQty,
+        unitCost: unitCost,
+      });
     }
 
-    // 2. Obtener el tipo de documento de negocio asociado
+    // 3. Create Header (Movement)
+    // Get Document Type
     const [docType] = await tx
       .select()
       .from(documentType)
       .where(eq(documentType.id, movementType.documentTypeId));
 
     if (!docType) {
-      throw new Error(
-        "Tipo de documento de negocio no configurado para este tipo de movimiento"
-      );
+      throw new Error("Tipo de documento no configurado");
     }
 
-    // 3. Generar UUID temporal para el externalDocumentId
     const tempExternalId = crypto.randomUUID();
-
-    // 4. Pedir número al motor de numeración (usando tx)
-    // Usamos UUID temporal porque aún no tenemos el ID del movimiento
     const numbering = await getNextDocumentNumberTx(tx, {
       documentTypeCode: docType.code,
       today: input.movementDate,
@@ -147,27 +189,25 @@ export async function createInventoryMovement(
       externalDocumentId: tempExternalId,
     });
 
-    // 5. Insertar el movimiento CON la numeración correcta
     const [movement] = await tx
       .insert(inventoryMovement)
       .values({
         movementTypeId: input.movementTypeId,
         movementDate: input.movementDate,
-        observation: input.observation ?? null,
-        userId: input.userId,
-        sourceDocumentType: input.sourceDocumentType ?? null,
-        sourceDocumentId: input.sourceDocumentId ?? null,
+        observation: input.observation,
+        employeeId: input.userId, // Map userId to employeeId
+        sourceDocumentType: input.sourceDocumentType,
+        sourceDocumentId: input.sourceDocumentId,
         documentSeriesId: numbering.seriesId,
         documentNumber: numbering.assignedNumber,
         documentNumberFull: numbering.fullNumber,
       })
       .returning();
 
-    // 6. Actualizar el externalDocumentId en document_sequence con el ID real del movimiento
+    // Fix numbering external Id
     const { documentSequence } = await import(
       "#models/numbering/document_sequence"
     );
-    const { and } = await import("drizzle-orm");
     await tx
       .update(documentSequence)
       .set({ externalDocumentId: movement.id.toString() })
@@ -178,16 +218,32 @@ export async function createInventoryMovement(
         )
       );
 
-    // 7. Insertar detalles
-    await tx.insert(inventoryMovementDetail).values(
-      input.details.map((d) => ({
+    // 4. Create Details & Layers
+    for (const pDetail of processedDetails) {
+      // Insert Detail
+      await tx.insert(inventoryMovementDetail).values({
         movementId: movement.id,
-        itemId: d.itemId,
-        locationId: d.locationId,
-        quantity: d.quantity,
-        unitCost: d.unitCost,
-      }))
-    );
+        itemId: pDetail.itemId,
+        locationId: pDetail.locationId,
+        lotId: pDetail.lotId,
+        quantity: pDetail.quantity,
+        unitCost: pDetail.unitCost,
+        totalCost: pDetail.quantity.times(pDetail.unitCost),
+      });
+
+      // R5: Create Layer for Inputs
+      if (movementType.factor === 1 && movementType.affectsStock) {
+        await CostingService.createLayer(tx, {
+          itemId: pDetail.itemId,
+          locationId: pDetail.locationId,
+          lotId: pDetail.lotId,
+          quantity: pDetail.quantity.toNumber(),
+          unitCost: pDetail.unitCost,
+          movementId: movement.id,
+          createdAt: input.movementDate,
+        });
+      }
+    }
 
     return movement;
   });
@@ -279,7 +335,7 @@ export async function getInventoryMovement(id: number) {
       movementTypeId: inventoryMovement.movementTypeId,
       movementDate: inventoryMovement.movementDate,
       observation: inventoryMovement.observation,
-      userId: inventoryMovement.userId,
+      employeeId: inventoryMovement.employeeId,
       documentNumberFull: inventoryMovement.documentNumberFull,
       documentSeriesId: inventoryMovement.documentSeriesId,
       documentNumber: inventoryMovement.documentNumber,
@@ -316,6 +372,7 @@ export async function getInventoryMovement(id: number) {
 
   return {
     ...movement,
+    userId: movement.employeeId, // Map employeeId back to userId for DTO compatibility if strictly needed, or just return employeeId
     details,
   };
 }

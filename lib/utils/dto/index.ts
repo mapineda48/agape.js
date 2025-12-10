@@ -8,4 +8,5 @@ export * from "./crm";
 export * from "./finance";
 export * from "./hr";
 export * from "./purchasing";
+export * from "./inventory";
 export * from "./security";
