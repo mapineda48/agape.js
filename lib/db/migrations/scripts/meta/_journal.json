@@ -29,6 +29,13 @@
       "when": 1765381365690,
       "tag": "0003_yellow_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765381764191,
+      "tag": "0004_huge_silvermane",
+      "breakpoints": true
     }
   ]
 }
