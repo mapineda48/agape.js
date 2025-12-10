@@ -18,6 +18,8 @@ import documentType from "./documentType";
 import person from "./person";
 import company from "./company";
 import { userTypeEnum, type UserType } from "./enums";
+import { userAddress } from "./address";
+import contactMethod from "./contactMethod";
 
 /**
  * User (entidad genérica)
@@ -26,6 +28,21 @@ import { userTypeEnum, type UserType } from "./enums";
  *
  * Implementa el patrón Class Table Inheritance donde `user` es la tabla
  * maestra y `person`/`company` son tablas de detalle especializadas.
+ *
+ * ## Relaciones con otros modelos
+ *
+ * - **Direcciones**: Un user puede tener múltiples direcciones a través
+ *   de `core_user_address`. Ver `./address.ts`.
+ *
+ * - **Métodos de contacto**: Un user puede tener múltiples métodos de
+ *   contacto (emails, teléfonos, WhatsApp, etc.) a través de
+ *   `core_contact_method`. Ver `./contactMethod.ts`.
+ *
+ * ## Campos legacy
+ *
+ * Los campos `email`, `phone` y `address` se mantienen por compatibilidad
+ * hacia atrás, pero se recomienda usar los modelos de `contactMethod` y
+ * `userAddress` para nuevas implementaciones.
  */
 export const user = schema.table(
   "user",
@@ -47,14 +64,56 @@ export const user = schema.table(
     /** Número del documento de identificación */
     documentNumber: varchar("document_number", { length: 30 }).notNull(),
 
-    /** Email de contacto (opcional) */
+    // ========================================================================
+    // Campos de internacionalización
+    // ========================================================================
+
+    /**
+     * Código ISO 3166-1 alpha-2 del país (ej: CO, US, ES, MX)
+     * @see https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+     */
+    countryCode: varchar("country_code", { length: 2 }),
+
+    /**
+     * Código ISO 639-1 del idioma preferido (ej: es, en, pt)
+     * @see https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+     */
+    languageCode: varchar("language_code", { length: 2 }),
+
+    /**
+     * Código ISO 4217 de la moneda preferida (ej: COP, USD, EUR)
+     * @see https://en.wikipedia.org/wiki/ISO_4217
+     */
+    currencyCode: varchar("currency_code", { length: 3 }),
+
+    // ========================================================================
+    // Campos legacy (deprecated - usar contactMethod y userAddress)
+    // ========================================================================
+
+    /**
+     * Email de contacto (opcional)
+     * @deprecated Usar `core_contact_method` para gestionar múltiples emails.
+     *             Se mantiene por compatibilidad hacia atrás.
+     */
     email: varchar("email", { length: 255 }),
 
-    /** Teléfono de contacto (opcional) */
+    /**
+     * Teléfono de contacto (opcional)
+     * @deprecated Usar `core_contact_method` para gestionar múltiples teléfonos.
+     *             Se mantiene por compatibilidad hacia atrás.
+     */
     phone: varchar("phone", { length: 20 }),
 
-    /** Dirección genérica de contacto (opcional) */
+    /**
+     * Dirección genérica de contacto (opcional)
+     * @deprecated Usar `core_user_address` para gestionar múltiples direcciones.
+     *             Se mantiene por compatibilidad hacia atrás.
+     */
     address: varchar("address", { length: 255 }),
+
+    // ========================================================================
+    // Campos de control
+    // ========================================================================
 
     /** Indica si la entidad está activa en el sistema */
     isActive: boolean("is_active").notNull().default(true),
@@ -90,10 +149,12 @@ export const documentTypeRelations = relations(documentType, ({ many }) => ({
 /**
  * Relaciones de User:
  * - Cada user tiene exactamente un tipo de documento.
- * - Puede tener una persona asociada (si userType = P).
- * - Puede tener una empresa asociada (si userType = C).
+ * - Puede tener una persona asociada (si userType = person).
+ * - Puede tener una empresa asociada (si userType = company).
+ * - Puede tener múltiples direcciones asociadas.
+ * - Puede tener múltiples métodos de contacto.
  */
-export const userRelations = relations(user, ({ one }) => ({
+export const userRelations = relations(user, ({ one, many }) => ({
   documentType: one(documentType, {
     fields: [user.documentTypeId],
     references: [documentType.id],
@@ -106,6 +167,10 @@ export const userRelations = relations(user, ({ one }) => ({
     fields: [user.id],
     references: [company.id],
   }),
+  /** Direcciones asociadas al usuario (via tabla pivote) */
+  addresses: many(userAddress),
+  /** Métodos de contacto del usuario */
+  contactMethods: many(contactMethod),
 }));
 
 export type User = InferSelectModel<typeof user>;
