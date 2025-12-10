@@ -43,6 +43,13 @@
       "when": 1765382158944,
       "tag": "0005_demonic_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1765382615446,
+      "tag": "0006_hot_hercules",
+      "breakpoints": true
     }
   ]
 }
