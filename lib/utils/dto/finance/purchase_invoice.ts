@@ -3,15 +3,38 @@ import type Decimal from "../../data/Decimal";
 /**
  * Input para crear una factura de compra.
  */
+export interface CreatePurchaseInvoiceItemInput {
+  itemId: number;
+  quantity: number;
+  unitPrice: Decimal | number | string;
+  /** ID de la línea de OC (opcional) */
+  orderItemId?: number;
+  /** ID de la línea de recepción (opcional) */
+  goodsReceiptItemId?: number;
+  /** ID del impuesto (opcional) */
+  taxId?: number;
+}
+
+/**
+ * Input para crear una factura de compra.
+ */
 export interface CreatePurchaseInvoiceInput {
   /** ID del proveedor */
   supplierId: number;
   /** Fecha de emisión (opcional, por defecto hoy) */
   issueDate?: Date | string;
-  /** Fecha de vencimiento (opcional) */
+  /** Fecha de vencimiento (opcional, si no se envía se calcula con paymentTerms) */
   dueDate?: Date | string | null;
-  /** Monto total de la factura */
+  /** ID de términos de pago */
+  paymentTermsId?: number;
+  /** ID de la OC asociada (opcional) */
+  purchaseOrderId?: number;
+  /** ID de la recepción asociada (opcional) */
+  goodsReceiptId?: number;
+  /** Monto total de la factura (header total) */
   totalAmount: Decimal | number | string;
+  /** Ítems de la factura */
+  items: CreatePurchaseInvoiceItemInput[];
 }
 
 /**

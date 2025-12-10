@@ -702,7 +702,7 @@ async function createInventoryMovementInTx(
       movementTypeId: input.movementTypeId,
       movementDate: input.movementDate,
       observation: input.observation ?? null,
-      userId: input.userId,
+      employeeId: input.userId,
       sourceDocumentType: input.sourceDocumentType ?? null,
       sourceDocumentId: input.sourceDocumentId ?? null,
       documentSeriesId: numbering.seriesId,

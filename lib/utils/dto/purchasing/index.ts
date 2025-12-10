@@ -5,3 +5,4 @@
 
 export * from "./purchase_order";
 export * from "./supplier";
+export * from "./goods_receipt";

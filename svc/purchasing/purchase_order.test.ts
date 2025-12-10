@@ -47,6 +47,16 @@ beforeAll(async () => {
     appliesToCompany: true,
   });
 
+  // Create UOM
+  const { unitOfMeasure } = await import("#models/inventory/unit_of_measure");
+  const { db } = await import("#lib/db");
+  await db.insert(unitOfMeasure).values({
+    id: 1,
+    code: "UN",
+    fullName: "Unidad",
+    isEnabled: true,
+  });
+
   // Create supplier type
   const [supplierType] = await upsertSupplierType({
     name: "Proveedor Nacional",
@@ -120,6 +130,7 @@ beforeAll(async () => {
   // Create location for inventory reception
   const [location] = await upsertLocation({
     name: `Bodega Principal ${uuid.slice(0, 6)}`,
+    code: `BOD-${uuid.slice(0, 3)}`,
     isEnabled: true,
   });
 
