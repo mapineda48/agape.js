@@ -12,6 +12,7 @@ CREATE TYPE "agape_app_development_demo"."finance_gl_journal_entry_type" AS ENUM
 CREATE TYPE "agape_app_development_demo"."finance_payment_status" AS ENUM('draft', 'posted', 'cancelled');--> statement-breakpoint
 CREATE TYPE "agape_app_development_demo"."finance_payment_type" AS ENUM('receipt', 'disbursement');--> statement-breakpoint
 CREATE TYPE "agape_app_development_demo"."finance_sales_invoice_status" AS ENUM('draft', 'issued', 'partially_paid', 'paid', 'cancelled');--> statement-breakpoint
+CREATE TYPE "agape_app_development_demo"."inventory_movement_status" AS ENUM('draft', 'posted', 'cancelled');--> statement-breakpoint
 CREATE TYPE "agape_app_development_demo"."purchasing_goods_receipt_status" AS ENUM('draft', 'posted', 'cancelled');--> statement-breakpoint
 CREATE TYPE "agape_app_development_demo"."purchasing_purchase_order_status" AS ENUM('pending', 'approved', 'received', 'cancelled');--> statement-breakpoint
 CREATE TABLE "agape_app_development_demo"."agape" (
@@ -642,6 +643,9 @@ CREATE TABLE "agape_app_development_demo"."inventory_movement" (
 	"movement_date" timestamp with time zone NOT NULL,
 	"observation" varchar(500),
 	"employee_id" integer NOT NULL,
+	"status" "agape_app_development_demo"."inventory_movement_status" DEFAULT 'draft' NOT NULL,
+	"reversed_movement_id" integer,
+	"reversing_movement_id" integer,
 	"source_document_type" varchar(30),
 	"source_document_id" integer,
 	"document_series_id" integer NOT NULL,
@@ -1017,6 +1021,8 @@ CREATE INDEX "ix_inventory_movement_detail_item" ON "agape_app_development_demo"
 CREATE INDEX "ix_inventory_movement_detail_location" ON "agape_app_development_demo"."inventory_movement_detail" USING btree ("location_id");--> statement-breakpoint
 CREATE INDEX "ix_inventory_movement_detail_lot" ON "agape_app_development_demo"."inventory_movement_detail" USING btree ("lot_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "ux_inventory_movement_series_number" ON "agape_app_development_demo"."inventory_movement" USING btree ("document_series_id","document_number");--> statement-breakpoint
+CREATE INDEX "ix_inventory_movement_status" ON "agape_app_development_demo"."inventory_movement" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "ix_inventory_movement_reversed" ON "agape_app_development_demo"."inventory_movement" USING btree ("reversed_movement_id");--> statement-breakpoint
 CREATE INDEX "ix_inventory_stock_lot_lot" ON "agape_app_development_demo"."inventory_stock_lot" USING btree ("lot_id");--> statement-breakpoint
 CREATE INDEX "ix_inventory_stock_lot_item" ON "agape_app_development_demo"."inventory_stock_lot" USING btree ("item_id");--> statement-breakpoint
 CREATE INDEX "ix_inventory_stock_lot_location" ON "agape_app_development_demo"."inventory_stock_lot" USING btree ("location_id");--> statement-breakpoint

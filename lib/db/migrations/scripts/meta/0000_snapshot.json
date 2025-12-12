@@ -1,5 +1,5 @@
 {
-  "id": "0150eacb-1fee-40c6-9a56-49e74f79b328",
+  "id": "5b9c8d2b-ef69-4aa9-8743-c9eb39fa8351",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -6488,6 +6488,26 @@
           "primaryKey": false,
           "notNull": true
         },
+        "status": {
+          "name": "status",
+          "type": "inventory_movement_status",
+          "typeSchema": "agape_app_development_demo",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "reversed_movement_id": {
+          "name": "reversed_movement_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reversing_movement_id": {
+          "name": "reversing_movement_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "source_document_type": {
           "name": "source_document_type",
           "type": "varchar(30)",
@@ -6537,6 +6557,36 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_inventory_movement_status": {
+          "name": "ix_inventory_movement_status",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ix_inventory_movement_reversed": {
+          "name": "ix_inventory_movement_reversed",
+          "columns": [
+            {
+              "expression": "reversed_movement_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -8346,6 +8396,15 @@
         "issued",
         "partially_paid",
         "paid",
+        "cancelled"
+      ]
+    },
+    "agape_app_development_demo.inventory_movement_status": {
+      "name": "inventory_movement_status",
+      "schema": "agape_app_development_demo",
+      "values": [
+        "draft",
+        "posted",
         "cancelled"
       ]
     },
