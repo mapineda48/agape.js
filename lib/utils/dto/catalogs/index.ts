@@ -4,3 +4,5 @@
  * sin depender de referencias específicas del backend.
  */
 export * from "./item";
+export * from "./category";
+export * from "./price_list";

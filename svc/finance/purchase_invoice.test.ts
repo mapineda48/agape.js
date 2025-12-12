@@ -33,7 +33,7 @@ beforeAll(async () => {
   const { PURCHASE_INVOICE_DOCUMENT_TYPE_CODE } = await import(
     "./purchase_invoice"
   );
-  const { upsertCategory } = await import("#svc/inventory/category");
+  const { upsertCategory } = await import("#svc/catalogs/category");
   const { upsertItem } = await import("#svc/inventory/item");
   const { db } = await import("#lib/db");
   const { paymentTerms } = await import("#models/finance/payment_terms");
@@ -96,7 +96,7 @@ beforeAll(async () => {
   });
 
   // Item setup
-  const category = await upsertCategory({ fullName: "Cat", isEnabled: true });
+  const [category] = await upsertCategory({ fullName: "Cat", isEnabled: true });
   categoryId = category.id;
   const item = await upsertItem({
     code: `ITM-INV-${uuid.slice(0, 6)}`,

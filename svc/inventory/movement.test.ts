@@ -86,14 +86,21 @@ beforeAll(async () => {
   disabledMovementTypeId = disabledType.id;
 
   // 4. Crear categoría con subcategoría
-  const { upsertCategory } = await import("#svc/inventory/category");
-  const cat = await upsertCategory({
+  const { upsertCategory, upsertSubcategory } = await import(
+    "#svc/catalogs/category"
+  );
+  const [cat] = await upsertCategory({
     fullName: "Categoría Test",
     isEnabled: true,
-    subcategories: [{ fullName: "Subcategoría Test", isEnabled: true }],
   });
   categoryId = cat.id;
-  const subcatId = cat.subcategories[0].id ?? 0;
+
+  const [subcat] = await upsertSubcategory({
+    fullName: "Subcategoría Test",
+    categoryId: cat.id,
+    isEnabled: true,
+  });
+  const subcatId = subcat.id;
 
   // 5. Crear ítems directamente en DB (con su registro en inventory_item)
   const { db } = await import("#lib/db");

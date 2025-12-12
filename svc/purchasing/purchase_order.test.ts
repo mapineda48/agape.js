@@ -23,7 +23,9 @@ beforeAll(async () => {
   const { upsertDocumentType } = await import("#svc/core/documentType");
   const { upsertSupplierType } = await import("./supplier_type");
   const { upsertSupplier } = await import("./supplier");
-  const { upsertCategory } = await import("#svc/inventory/category");
+  const { upsertCategory, upsertSubcategory } = await import(
+    "#svc/catalogs/category"
+  );
   const { upsertItem } = await import("#svc/inventory/item");
   const { upsertLocation } = await import("#svc/inventory/location");
   const { upsertEmployee } = await import("#svc/hr/employee");
@@ -85,13 +87,18 @@ beforeAll(async () => {
   });
 
   // Create category with subcategory
-  const category = await upsertCategory({
+  const [category] = await upsertCategory({
     fullName: "Compras Test",
     isEnabled: true,
-    subcategories: [{ fullName: "Insumos Test", isEnabled: true }],
   });
 
-  const subcategoryId = category.subcategories[0].id ?? 0;
+  const [subcategory] = await upsertSubcategory({
+    fullName: "Insumos Test",
+    categoryId: category.id,
+    isEnabled: true,
+  });
+
+  const subcategoryId = subcategory.id;
 
   // Create active item
   const activeItem = await upsertItem({

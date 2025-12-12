@@ -99,9 +99,9 @@ describe("clientType service", () => {
       const result = await getClientTypeById(created.id);
 
       expect(result).toBeDefined();
-      expect(result.id).toBe(created.id);
-      expect(result.name).toBe("Wholesale");
-      expect(result.isEnabled).toBe(true);
+      expect(result!.id).toBe(created.id);
+      expect(result!.name).toBe("Wholesale");
+      expect(result!.isEnabled).toBe(true);
     });
 
     it("should return undefined when client type does not exist", async () => {
@@ -152,8 +152,8 @@ describe("clientType service", () => {
 
       // Verificar que se actualizó en la base de datos
       const fromDb = await getClientTypeById(created.id);
-      expect(fromDb.name).toBe("Updated");
-      expect(fromDb.isEnabled).toBe(false);
+      expect(fromDb!.name).toBe("Updated");
+      expect(fromDb!.isEnabled).toBe(false);
     });
 
     it("should handle creating client type with isEnabled false", async () => {

@@ -29,14 +29,21 @@ beforeAll(async () => {
   ]);
 
   // Crear categoría con subcategoría para los tests
-  const { upsertCategory } = await import("#svc/inventory/category");
-  const cat = await upsertCategory({
+  const { upsertCategory, upsertSubcategory } = await import(
+    "#svc/catalogs/category"
+  );
+  const [cat] = await upsertCategory({
     fullName: "Categoría Test",
     isEnabled: true,
-    subcategories: [{ fullName: "Subcategoría Test", isEnabled: true }],
   });
   categoryId = cat.id;
-  subcategoryId = cat.subcategories[0]?.id ?? 0;
+
+  const [subcat] = await upsertSubcategory({
+    fullName: "Subcategoría Test",
+    categoryId: cat.id,
+    isEnabled: true,
+  });
+  subcategoryId = subcat.id;
 });
 
 afterAll(async () => {

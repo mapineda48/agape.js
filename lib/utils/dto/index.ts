@@ -3,6 +3,7 @@
  * Este módulo contiene solo tipos e interfaces sin dependencias de backend.
  */
 export * from "./catalogs";
+export * from "./config";
 export * from "./core";
 export * from "./crm";
 export * from "./finance";

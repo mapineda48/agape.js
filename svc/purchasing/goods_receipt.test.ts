@@ -20,7 +20,7 @@ beforeAll(async () => {
   const { upsertDocumentType } = await import("#svc/core/documentType");
   const { upsertSupplierType } = await import("./supplier_type");
   const { upsertSupplier } = await import("./supplier");
-  const { upsertCategory } = await import("#svc/inventory/category");
+  const { upsertCategory } = await import("#svc/catalogs/category");
   const { upsertItem } = await import("#svc/inventory/item");
   const { upsertLocation } = await import("#svc/inventory/location");
   const { upsertEmployee } = await import("#svc/hr/employee");
@@ -69,7 +69,7 @@ beforeAll(async () => {
   supplierId = supplier.id;
 
   // Inventory Setup
-  const category = await upsertCategory({ fullName: "Cat", isEnabled: true });
+  const [category] = await upsertCategory({ fullName: "Cat", isEnabled: true });
   const item = await upsertItem({
     code: `ITM-GR-${uuid.slice(0, 6)}`,
     fullName: "Item GR Test",

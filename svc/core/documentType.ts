@@ -1,53 +1,120 @@
+/**
+ * Servicio de Tipos de Documento de Identidad (Identity Document Type)
+ *
+ * Gestiona el catálogo de tipos de documento de identificación personal
+ * y empresarial (CC, NIT, PAS, CE, etc.).
+ *
+ * **Reglas de negocio:**
+ * 1. No se puede deshabilitar un tipo de documento si hay usuarios activos usándolo.
+ * 2. No se puede cambiar `appliesToPerson=false` si hay usuarios tipo persona usándolo.
+ * 3. No se puede cambiar `appliesToCompany=false` si hay usuarios tipo empresa usándolo.
+ *
+ * @module core/documentType
+ */
+
 import { db } from "#lib/db";
 import { documentType, type NewDocumentType } from "#models/core/documentType";
-import { and, eq } from "drizzle-orm";
+import { user } from "#models/core/user";
+import { and, eq, count } from "drizzle-orm";
+import type {
+  IUpsertDocumentType,
+  IListDocumentTypesParams,
+  IDocumentType,
+  IToggleDocumentType,
+  IToggleDocumentTypeResult,
+} from "#utils/dto/core/documentType";
 
-function buildDocumentTypeQuery({
-  activeOnly,
-  personOnly,
-}: {
-  activeOnly?: boolean;
-  personOnly?: boolean;
-}) {
-  const condition =
-    activeOnly && personOnly
-      ? and(
-          eq(documentType.isEnabled, true),
-          eq(documentType.appliesToPerson, true)
-        )
-      : activeOnly
-      ? eq(documentType.isEnabled, true)
-      : personOnly
-      ? eq(documentType.appliesToPerson, true)
-      : undefined;
+// ============================================================================
+// Utilidades internas
+// ============================================================================
+
+/**
+ * Cuenta usuarios activos que usan un tipo de documento específico.
+ */
+async function countUsersWithDocumentType(
+  documentTypeId: number,
+  userType?: "person" | "company"
+): Promise<number> {
+  const conditions = [
+    eq(user.documentTypeId, documentTypeId),
+    eq(user.isActive, true),
+  ];
+
+  if (userType) {
+    conditions.push(eq(user.type, userType));
+  }
+
+  const [result] = await db
+    .select({ total: count() })
+    .from(user)
+    .where(and(...conditions));
+
+  return result?.total ?? 0;
+}
+
+// ============================================================================
+// Servicios de lectura
+// ============================================================================
+
+/**
+ * Lista los tipos de documento según los filtros especificados.
+ *
+ * @param params Filtros de listado.
+ * @returns Lista de tipos de documento.
+ *
+ * @example
+ * ```ts
+ * // Solo tipos de documento activos para personas
+ * const types = await listDocumentTypes({ activeOnly: true, personOnly: true });
+ * ```
+ */
+export async function listDocumentTypes(
+  params: IListDocumentTypesParams = {}
+): Promise<IDocumentType[]> {
+  const { activeOnly = true, personOnly, companyOnly } = params;
+
+  const conditions = [];
+
+  if (activeOnly) {
+    conditions.push(eq(documentType.isEnabled, true));
+  }
+
+  if (personOnly) {
+    conditions.push(eq(documentType.appliesToPerson, true));
+  }
+
+  if (companyOnly) {
+    conditions.push(eq(documentType.appliesToCompany, true));
+  }
 
   const query = db.select().from(documentType);
 
-  return condition ? query.where(condition) : query;
+  if (conditions.length > 0) {
+    return query.where(and(...conditions));
+  }
+
+  return query;
 }
 
 /**
- * Obtiene la lista de tipos de documento.
- * @param activeOnly Si es true, retorna solo los activos
- * @returns Lista de tipos de documento.
+ * Lista los tipos de documento que aplican para personas naturales.
+ * @deprecated Usa `listDocumentTypes({ personOnly: true })` en su lugar.
  */
-export async function listDocumentTypes(activeOnly = true) {
-  const query = buildDocumentTypeQuery({ activeOnly });
-
-  return await query;
+export async function listPersonDocumentTypes(
+  activeOnly = true
+): Promise<IDocumentType[]> {
+  return listDocumentTypes({ activeOnly, personOnly: true });
 }
 
 /**
- * Obtiene la lista de tipos de documento que aplican para personas naturales.
- * @param activeOnly Si es true, retorna solo los activos
- * @returns Lista de tipos de documento para personas.
+ * Obtiene un tipo de documento por su ID.
+ *
+ * @param id ID del tipo de documento.
+ * @returns Tipo de documento o undefined si no existe.
  */
-export async function listPersonDocumentTypes(activeOnly = true) {
-  const query = buildDocumentTypeQuery({ activeOnly, personOnly: true });
-  return await query;
-}
-
-export async function getDocumentTypeById(id: number) {
+export async function getDocumentTypeById(
+  id: number
+): Promise<IDocumentType | undefined> {
   const [record] = await db
     .select()
     .from(documentType)
@@ -56,43 +123,178 @@ export async function getDocumentTypeById(id: number) {
 }
 
 /**
- * Inserta o actualiza un tipo de documento.
- * @param payload Datos del tipo de documento a insertar o actualizar.
- * @returns El tipo de documento insertado o actualizado.
+ * Obtiene un tipo de documento por su código.
+ *
+ * @param code Código del tipo de documento.
+ * @returns Tipo de documento o undefined si no existe.
  */
-export async function upsertDocumentType(payload: NewDocumentType) {
-  const { id, ...documentTypeDto } = payload;
-
-  if (typeof id !== "number") {
-    return db.insert(documentType).values(documentTypeDto).returning();
-  }
-
-  return db
-    .update(documentType)
-    .set(documentTypeDto)
-    .where(eq(documentType.id, id))
-    .returning();
+export async function getDocumentTypeByCode(
+  code: string
+): Promise<IDocumentType | undefined> {
+  const [record] = await db
+    .select()
+    .from(documentType)
+    .where(eq(documentType.code, code));
+  return record;
 }
 
 // ============================================================================
-// Types
+// Servicios de escritura
 // ============================================================================
 
 /**
- * Tipo de documento individual de la listado.
+ * Crea o actualiza un tipo de documento de identidad.
+ *
+ * **Validaciones:**
+ * - Si ya existe un tipo con el mismo código (y diferente ID), falla por unique constraint.
+ * - Si se intenta cambiar `appliesToPerson=false` y hay usuarios persona usándolo, lanza error.
+ * - Si se intenta cambiar `appliesToCompany=false` y hay usuarios empresa usándolo, lanza error.
+ *
+ * @param payload Datos del tipo de documento.
+ * @returns Array con el tipo de documento creado/actualizado.
+ *
+ * @example
+ * ```ts
+ * // Crear nuevo tipo de documento
+ * const [docType] = await upsertDocumentType({
+ *   code: "CC",
+ *   name: "Cédula de Ciudadanía",
+ *   appliesToPerson: true,
+ *   appliesToCompany: false,
+ * });
+ *
+ * // Actualizar existente
+ * const [updated] = await upsertDocumentType({
+ *   id: 1,
+ *   code: "CC",
+ *   name: "Cédula de Ciudadanía Colombiana",
+ *   appliesToPerson: true,
+ *   appliesToCompany: false,
+ * });
+ * ```
  */
-export type DocumentType = Awaited<
-  ReturnType<typeof listDocumentTypes>
->[number];
+export async function upsertDocumentType(
+  payload: IUpsertDocumentType
+): Promise<[IDocumentType]> {
+  const { id, ...data } = payload;
+
+  // Si es actualización, aplicar reglas de negocio
+  if (typeof id === "number") {
+    const existing = await getDocumentTypeById(id);
+
+    if (!existing) {
+      throw new Error(`Tipo de documento con ID ${id} no encontrado`);
+    }
+
+    // Regla: No cambiar appliesToPerson=false si hay usuarios persona usándolo
+    if (existing.appliesToPerson && !data.appliesToPerson) {
+      const personCount = await countUsersWithDocumentType(id, "person");
+      if (personCount > 0) {
+        throw new Error(
+          `No se puede desmarcar "Aplica a Persona" porque hay ${personCount} usuario(s) persona usando este tipo de documento`
+        );
+      }
+    }
+
+    // Regla: No cambiar appliesToCompany=false si hay usuarios empresa usándolo
+    if (existing.appliesToCompany && !data.appliesToCompany) {
+      const companyCount = await countUsersWithDocumentType(id, "company");
+      if (companyCount > 0) {
+        throw new Error(
+          `No se puede desmarcar "Aplica a Empresa" porque hay ${companyCount} usuario(s) empresa usando este tipo de documento`
+        );
+      }
+    }
+
+    const result = await db
+      .update(documentType)
+      .set(data)
+      .where(eq(documentType.id, id))
+      .returning();
+
+    return result as [IDocumentType];
+  }
+
+  // Insertar nuevo
+  const result = await db
+    .insert(documentType)
+    .values(data as NewDocumentType)
+    .returning();
+
+  return result as [IDocumentType];
+}
 
 /**
- * Tipo de documento retornado por getDocumentTypeById.
+ * Habilita o deshabilita un tipo de documento.
+ *
+ * **Reglas de negocio:**
+ * - No se puede deshabilitar si hay usuarios activos usando este tipo de documento.
+ *
+ * @param payload ID y nuevo estado del tipo de documento.
+ * @returns Resultado de la operación con el tipo de documento actualizado.
+ *
+ * @example
+ * ```ts
+ * // Deshabilitar tipo de documento
+ * const result = await toggleDocumentType({ id: 1, isEnabled: false });
+ *
+ * if (result.success) {
+ *   console.log("Tipo de documento deshabilitado");
+ * } else {
+ *   console.error(result.message);
+ * }
+ * ```
  */
-export type DocumentTypeRecord = NonNullable<
-  Awaited<ReturnType<typeof getDocumentTypeById>>
->;
+export async function toggleDocumentType(
+  payload: IToggleDocumentType
+): Promise<IToggleDocumentTypeResult> {
+  const { id, isEnabled } = payload;
 
-/**
- * Re-exportación del tipo para creación/actualización.
- */
+  const existing = await getDocumentTypeById(id);
+
+  if (!existing) {
+    throw new Error(`Tipo de documento con ID ${id} no encontrado`);
+  }
+
+  // Regla: No deshabilitar si hay usuarios activos usándolo
+  if (!isEnabled) {
+    const userCount = await countUsersWithDocumentType(id);
+    if (userCount > 0) {
+      throw new Error(
+        `No se puede deshabilitar este tipo de documento porque hay ${userCount} usuario(s) activo(s) usándolo. ` +
+          `Primero debe migrar estos usuarios a otro tipo de documento o desactivarlos.`
+      );
+    }
+  }
+
+  const [updated] = await db
+    .update(documentType)
+    .set({ isEnabled })
+    .where(eq(documentType.id, id))
+    .returning();
+
+  return {
+    success: true,
+    documentType: updated,
+    message: isEnabled
+      ? "Tipo de documento habilitado correctamente"
+      : "Tipo de documento deshabilitado correctamente",
+  };
+}
+
+// ============================================================================
+// Re-exportación de tipos
+// ============================================================================
+
+export type {
+  IUpsertDocumentType,
+  IListDocumentTypesParams,
+  IDocumentType,
+  IToggleDocumentType,
+  IToggleDocumentTypeResult,
+} from "#utils/dto/core/documentType";
+
+// Tipos derivados de funciones para compatibilidad con frontend
+export type DocumentType = IDocumentType;
+export type DocumentTypeRecord = IDocumentType;
 export type { NewDocumentType };
