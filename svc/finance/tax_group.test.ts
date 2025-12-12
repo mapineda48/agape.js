@@ -349,3 +349,138 @@ describe("TaxGroupService", () => {
     });
   });
 });
+
+// ============================================================================
+// Tests para toggleTax (UC-9)
+// ============================================================================
+
+describe("TaxService - toggleTax (UC-9)", () => {
+  let taxIdForToggle: number;
+  let taxIdInActiveGroup: number;
+
+  describe("setup", () => {
+    it("should create a tax for toggle tests", async () => {
+      const { upsertTax } = await import("./tax_group");
+
+      const [tax] = await upsertTax({
+        code: "TOGGLETEST",
+        fullName: "Impuesto para Toggle",
+        rate: new Decimal("10"),
+        isEnabled: true,
+      });
+
+      taxIdForToggle = tax.id;
+      expect(tax.isEnabled).toBe(true);
+    });
+
+    it("should create a tax included in active group", async () => {
+      const { upsertTax, upsertTaxGroup } = await import("./tax_group");
+
+      // Crear impuesto
+      const [tax] = await upsertTax({
+        code: "INGROUP",
+        fullName: "Impuesto en Grupo Activo",
+        rate: new Decimal("5"),
+        isEnabled: true,
+      });
+
+      taxIdInActiveGroup = tax.id;
+
+      // Incluirlo en un grupo activo
+      await upsertTaxGroup({
+        code: "GROUPWITHTAX",
+        fullName: "Grupo con Impuesto",
+        taxIds: [taxIdInActiveGroup],
+        isEnabled: true,
+      });
+    });
+  });
+
+  describe("toggleTax - habilitación", () => {
+    it("should enable a disabled tax", async () => {
+      const { toggleTax, upsertTax } = await import("./tax_group");
+
+      // Crear tax deshabilitado
+      const [disabledTax] = await upsertTax({
+        code: "DISABLEDTAX",
+        fullName: "Impuesto Deshabilitado",
+        rate: new Decimal("0"),
+        isEnabled: false,
+      });
+
+      const result = await toggleTax({
+        id: disabledTax.id,
+        isEnabled: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.tax.isEnabled).toBe(true);
+      expect(result.message).toMatch(/habilitado/i);
+    });
+  });
+
+  describe("toggleTax - deshabilitación permitida", () => {
+    it("should disable a tax without usage", async () => {
+      const { toggleTax } = await import("./tax_group");
+
+      const result = await toggleTax({
+        id: taxIdForToggle,
+        isEnabled: false,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.tax.isEnabled).toBe(false);
+      expect(result.message).toMatch(/deshabilitado/i);
+    });
+  });
+
+  describe("toggleTax - deshabilitación rechazada", () => {
+    it("should reject disabling tax in active group", async () => {
+      const { toggleTax } = await import("./tax_group");
+
+      await expect(
+        toggleTax({ id: taxIdInActiveGroup, isEnabled: false })
+      ).rejects.toThrow(/grupo.*impuestos.*activo|no se puede deshabilitar/i);
+    });
+
+    it("should throw error when toggling non-existent tax", async () => {
+      const { toggleTax } = await import("./tax_group");
+
+      await expect(toggleTax({ id: 999999, isEnabled: false })).rejects.toThrow(
+        /no encontrado|not found/i
+      );
+    });
+  });
+
+  describe("getTaxUsageInfo", () => {
+    it("should return usage info for tax", async () => {
+      const { getTaxUsageInfo } = await import("./tax_group");
+
+      const usageInfo = await getTaxUsageInfo(taxIdForToggle);
+
+      expect(usageInfo).toHaveProperty("salesInvoiceItemsCount");
+      expect(usageInfo).toHaveProperty("purchaseInvoiceItemsCount");
+      expect(usageInfo).toHaveProperty("activeTaxGroupsCount");
+      expect(usageInfo).toHaveProperty("canDisable");
+      expect(typeof usageInfo.canDisable).toBe("boolean");
+    });
+
+    it("should indicate tax in active group cannot be disabled", async () => {
+      const { getTaxUsageInfo } = await import("./tax_group");
+
+      const usageInfo = await getTaxUsageInfo(taxIdInActiveGroup);
+
+      expect(usageInfo.canDisable).toBe(false);
+      expect(usageInfo.activeTaxGroupsCount).toBeGreaterThan(0);
+      expect(usageInfo.reason).toMatch(/grupo/i);
+    });
+
+    it("should throw error for non-existent tax", async () => {
+      const { getTaxUsageInfo } = await import("./tax_group");
+
+      await expect(getTaxUsageInfo(999999)).rejects.toThrow(
+        /no encontrado|not found/i
+      );
+    });
+  });
+});

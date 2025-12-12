@@ -18,6 +18,9 @@ import {
   type NewTaxGroupTax,
 } from "#models/finance/tax_group_tax";
 import { item } from "#models/catalogs/item";
+import salesInvoiceItem from "#models/finance/sales_invoice_item";
+import purchaseInvoiceItem from "#models/finance/purchase_invoice_item";
+import salesInvoice from "#models/finance/sales_invoice";
 import { BusinessRuleError, NotFoundError } from "#lib/error";
 import Decimal from "#utils/data/Decimal";
 
@@ -29,6 +32,9 @@ import type {
   ITaxGroupWithTaxes,
   IToggleTaxGroup,
   IToggleTaxGroupResult,
+  IToggleTax,
+  IToggleTaxResult,
+  ITaxUsageInfo,
   IListTaxGroupsParams,
   IListTaxesParams,
   ITaxGroupUsageInfo,
@@ -153,6 +159,179 @@ export async function upsertTax(payload: IUpsertTax): Promise<[ITax]> {
   }
 
   return [toTaxDto(record)];
+}
+
+/**
+ * Obtiene información de uso de un impuesto individual.
+ *
+ * @param id ID del impuesto.
+ * @returns Información de uso.
+ */
+export async function getTaxUsageInfo(id: number): Promise<ITaxUsageInfo> {
+  // Verificar que el impuesto existe
+  const [taxRecord] = await db.select().from(tax).where(eq(tax.id, id));
+
+  if (!taxRecord) {
+    throw new NotFoundError(`Impuesto con ID ${id} no encontrado`);
+  }
+
+  // Contar líneas de facturas de venta con este impuesto que NO están canceladas
+  const [{ value: salesInvoiceItemsCount }] = await db
+    .select({ value: count() })
+    .from(salesInvoiceItem)
+    .innerJoin(
+      salesInvoice,
+      eq(salesInvoiceItem.salesInvoiceId, salesInvoice.id)
+    )
+    .where(
+      and(
+        eq(salesInvoiceItem.taxId, id),
+        sql`${salesInvoice.status} != 'cancelled'`
+      )
+    );
+
+  // Contar líneas de facturas de compra con este impuesto
+  const [{ value: purchaseInvoiceItemsCount }] = await db
+    .select({ value: count() })
+    .from(purchaseInvoiceItem)
+    .where(eq(purchaseInvoiceItem.taxId, id));
+
+  // Contar grupos de impuestos activos que incluyen este impuesto
+  const [{ value: activeTaxGroupsCount }] = await db
+    .select({ value: count() })
+    .from(taxGroupTax)
+    .innerJoin(taxGroup, eq(taxGroupTax.taxGroupId, taxGroup.id))
+    .where(and(eq(taxGroupTax.taxId, id), eq(taxGroup.isEnabled, true)));
+
+  // Determinar si se puede deshabilitar
+  const hasOpenInvoices =
+    salesInvoiceItemsCount > 0 || purchaseInvoiceItemsCount > 0;
+  const canDisable = !hasOpenInvoices && activeTaxGroupsCount === 0;
+
+  let reason: string | undefined;
+  if (hasOpenInvoices) {
+    reason = `No se puede deshabilitar porque hay facturas activas: ${salesInvoiceItemsCount} línea(s) de venta, ${purchaseInvoiceItemsCount} línea(s) de compra`;
+  } else if (activeTaxGroupsCount > 0) {
+    reason = `No se puede deshabilitar porque está incluido en ${activeTaxGroupsCount} grupo(s) de impuestos activo(s)`;
+  }
+
+  return {
+    salesInvoiceItemsCount,
+    purchaseInvoiceItemsCount,
+    activeTaxGroupsCount,
+    canDisable,
+    reason,
+  };
+}
+
+/**
+ * Habilita o deshabilita un impuesto individual.
+ *
+ * **Reglas de negocio (UC-9):**
+ * - No se puede deshabilitar si está en uso en items de facturas abiertas.
+ * - No se puede deshabilitar si está incluido en grupos de impuestos activos.
+ * - Habilitar siempre está permitido.
+ *
+ * @param payload DTO con ID y nuevo estado.
+ * @returns Resultado de la operación.
+ *
+ * @example
+ * ```ts
+ * const result = await toggleTax({ id: 1, isEnabled: false });
+ * if (!result.success) {
+ *   console.log(result.message);
+ * }
+ * ```
+ */
+export async function toggleTax(
+  payload: IToggleTax
+): Promise<IToggleTaxResult> {
+  const { id, isEnabled } = payload;
+
+  return db.transaction(async (tx) => {
+    // Verificar que existe
+    const [existing] = await tx.select().from(tax).where(eq(tax.id, id));
+
+    if (!existing) {
+      throw new NotFoundError(`Impuesto con ID ${id} no encontrado`);
+    }
+
+    // Si se está habilitando, no hay restricciones
+    if (isEnabled) {
+      const [updated] = await tx
+        .update(tax)
+        .set({ isEnabled: true })
+        .where(eq(tax.id, id))
+        .returning();
+
+      return {
+        success: true,
+        tax: toTaxDto(updated),
+        message: `Impuesto "${updated.code}" habilitado correctamente`,
+      };
+    }
+
+    // Validar que no hay facturas de venta abiertas usando este impuesto
+    const [{ value: salesCount }] = await tx
+      .select({ value: count() })
+      .from(salesInvoiceItem)
+      .innerJoin(
+        salesInvoice,
+        eq(salesInvoiceItem.salesInvoiceId, salesInvoice.id)
+      )
+      .where(
+        and(
+          eq(salesInvoiceItem.taxId, id),
+          sql`${salesInvoice.status} != 'cancelled'`
+        )
+      );
+
+    if (salesCount > 0) {
+      throw new BusinessRuleError(
+        `No se puede deshabilitar el impuesto "${existing.code}" porque hay ${salesCount} línea(s) de factura de venta activa(s) usándolo. ` +
+          `Deshabilitar este impuesto podría generar inconsistencias en facturación electrónica.`
+      );
+    }
+
+    // Validar que no hay facturas de compra usando este impuesto
+    const [{ value: purchaseCount }] = await tx
+      .select({ value: count() })
+      .from(purchaseInvoiceItem)
+      .where(eq(purchaseInvoiceItem.taxId, id));
+
+    if (purchaseCount > 0) {
+      throw new BusinessRuleError(
+        `No se puede deshabilitar el impuesto "${existing.code}" porque hay ${purchaseCount} línea(s) de factura de compra registrada(s) usándolo.`
+      );
+    }
+
+    // Validar que no está en grupos de impuestos activos
+    const [{ value: activeGroupsCount }] = await tx
+      .select({ value: count() })
+      .from(taxGroupTax)
+      .innerJoin(taxGroup, eq(taxGroupTax.taxGroupId, taxGroup.id))
+      .where(and(eq(taxGroupTax.taxId, id), eq(taxGroup.isEnabled, true)));
+
+    if (activeGroupsCount > 0) {
+      throw new BusinessRuleError(
+        `No se puede deshabilitar el impuesto "${existing.code}" porque está incluido en ${activeGroupsCount} grupo(s) de impuestos activo(s). ` +
+          `Primero debe removerlo de esos grupos o deshabilitarlos.`
+      );
+    }
+
+    // Deshabilitar
+    const [updated] = await tx
+      .update(tax)
+      .set({ isEnabled: false })
+      .where(eq(tax.id, id))
+      .returning();
+
+    return {
+      success: true,
+      tax: toTaxDto(updated),
+      message: `Impuesto "${updated.code}" deshabilitado correctamente`,
+    };
+  });
 }
 
 // ============================================================================
@@ -494,6 +673,9 @@ export async function toggleTaxGroup(
 export type {
   IUpsertTax,
   ITax,
+  IToggleTax,
+  IToggleTaxResult,
+  ITaxUsageInfo,
   IUpsertTaxGroup,
   ITaxGroup,
   ITaxGroupWithTaxes,

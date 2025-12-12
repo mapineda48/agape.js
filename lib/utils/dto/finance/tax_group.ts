@@ -144,3 +144,45 @@ export interface IListTaxesParams {
   /** Si es true, retorna solo los activos */
   activeOnly?: boolean;
 }
+
+// ============================================================================
+// DTOs para impuestos individuales (Tax)
+// ============================================================================
+
+/**
+ * DTO para toggle (habilitar/deshabilitar) un impuesto individual.
+ */
+export interface IToggleTax {
+  /** ID del impuesto */
+  id: number;
+  /** Nuevo estado de habilitación */
+  isEnabled: boolean;
+}
+
+/**
+ * Resultado de la operación toggle de impuesto.
+ */
+export interface IToggleTaxResult {
+  /** Si la operación fue exitosa */
+  success: boolean;
+  /** Impuesto actualizado */
+  tax: ITax;
+  /** Mensaje informativo */
+  message?: string;
+}
+
+/**
+ * Información de uso de un impuesto individual.
+ */
+export interface ITaxUsageInfo {
+  /** Número de líneas de facturas de venta usando este impuesto */
+  salesInvoiceItemsCount: number;
+  /** Número de líneas de facturas de compra usando este impuesto */
+  purchaseInvoiceItemsCount: number;
+  /** Número de grupos de impuestos activos que incluyen este impuesto */
+  activeTaxGroupsCount: number;
+  /** Indica si el impuesto puede ser deshabilitado */
+  canDisable: boolean;
+  /** Razón por la que no puede deshabilitarse */
+  reason?: string;
+}
