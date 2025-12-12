@@ -378,6 +378,15 @@ export async function postGoodsReceipt(
 }
 
 /**
+ * Obtiene un Goods Receipt por su ID.
+ */
+export async function getGoodsReceiptById(
+  id: number
+): Promise<GoodsReceiptDetails | null> {
+  return getGoodsReceiptByIdTx(db, id);
+}
+
+/**
  * Helper para obtener GR con items dentro de TX
  */
 async function getGoodsReceiptByIdTx(
