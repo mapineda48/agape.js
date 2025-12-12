@@ -369,11 +369,48 @@ export function ClientForm({
     [modalDecision, navigate, setAt, notify, clientTypes, documentTypes, validateDocument]
   );
 
-  // Document Validation Effect with debounce
-  useEffect(() => {
-    const timeOutId = setTimeout(validateDocument, 500);
-    return () => clearTimeout(timeOutId);
-  }, [validateDocument]);
+  /**
+   * Handler para el evento onBlur del campo de documento.
+   * Solo valida si hay valores completos y son diferentes a los iniciales.
+   */
+  const handleDocumentBlur = useCallback(() => {
+    if (!documentTypeId || !documentNumber) return;
+
+    const currentTypeId = Number(documentTypeId);
+    const currentDocNumber = String(documentNumber).trim();
+
+    // No validar si está vacío
+    if (!currentDocNumber) return;
+
+    const ref = initialValuesRef.current!;
+    const valuesUnchanged =
+      ref.documentTypeId === currentTypeId &&
+      ref.documentNumber === currentDocNumber;
+
+    // En edición, no validar si los valores no han cambiado
+    if (isEdit && valuesUnchanged && ref.captured) {
+      return;
+    }
+
+    // Marcar que ya corrió al menos una vez
+    ref.hasRun = true;
+
+    validateDocument();
+  }, [documentTypeId, documentNumber, isEdit, validateDocument]);
+
+  /**
+   * Handler para cuando cambia el tipo de documento.
+   * Si ya existe un número de documento, valida automáticamente.
+   */
+  const handleDocumentTypeChange = useCallback(() => {
+    // Solo validar si ya hay un número de documento ingresado
+    if (documentNumber && String(documentNumber).trim()) {
+      // Usar setTimeout para que el estado se actualice primero
+      setTimeout(() => {
+        validateDocument();
+      }, 100);
+    }
+  }, [documentNumber, validateDocument]);
 
   // Filter enabled document types
   const enabledDocumentTypes = useMemo(() => {
@@ -421,6 +458,7 @@ export function ClientForm({
                 <Form.Select.Int
                   path="documentTypeId"
                   required
+                  onChange={handleDocumentTypeChange}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 >
                   <option value="">Seleccionar tipo...</option>
@@ -434,6 +472,7 @@ export function ClientForm({
                   path="documentNumber"
                   placeholder="Número de documento"
                   required
+                  onBlur={handleDocumentBlur}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </Form.Scope>

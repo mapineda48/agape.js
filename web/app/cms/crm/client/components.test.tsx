@@ -141,15 +141,19 @@ describe("ClientForm", () => {
 
       const selects = screen.getAllByRole("combobox");
       const docSelect = selects[0];
+      const docInput = screen.getByPlaceholderText("Número de documento");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
       });
 
       await act(async () => {
-        fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
-          target: { value: "123456" },
-        });
+        fireEvent.change(docInput, { target: { value: "123456" } });
+      });
+
+      // Trigger blur to initiate validation
+      await act(async () => {
+        fireEvent.blur(docInput);
       });
 
       await waitFor(
@@ -179,15 +183,18 @@ describe("ClientForm", () => {
 
       const selects = screen.getAllByRole("combobox");
       const docSelect = selects[0];
+      const docInput = screen.getByPlaceholderText("Número de documento");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
       });
 
       await act(async () => {
-        fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
-          target: { value: "123456" },
-        });
+        fireEvent.change(docInput, { target: { value: "123456" } });
+      });
+
+      await act(async () => {
+        fireEvent.blur(docInput);
       });
 
       // Wait for modal
@@ -214,15 +221,18 @@ describe("ClientForm", () => {
 
       const selects = screen.getAllByRole("combobox");
       const docSelect = selects[0];
+      const docInput = screen.getByPlaceholderText("Número de documento");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
       });
 
       await act(async () => {
-        fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
-          target: { value: "123456" },
-        });
+        fireEvent.change(docInput, { target: { value: "123456" } });
+      });
+
+      await act(async () => {
+        fireEvent.blur(docInput);
       });
 
       // Wait for modal
@@ -273,6 +283,10 @@ describe("ClientForm", () => {
         fireEvent.change(docInput, { target: { value: "99999" } });
       });
 
+      await act(async () => {
+        fireEvent.blur(docInput);
+      });
+
       // Wait for modal
       await waitFor(
         () => {
@@ -310,14 +324,18 @@ describe("ClientForm", () => {
       const selects = screen.getAllByRole("combobox");
       const docSelect = selects[0];
 
+      const docInput = screen.getByPlaceholderText("Número de documento");
+
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
       });
 
       await act(async () => {
-        fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
-          target: { value: "99999" },
-        });
+        fireEvent.change(docInput, { target: { value: "99999" } });
+      });
+
+      await act(async () => {
+        fireEvent.blur(docInput);
       });
 
       // Wait for modal
@@ -382,6 +400,10 @@ describe("ClientForm", () => {
         fireEvent.change(docInput, { target: { value: "88888" } });
       });
 
+      await act(async () => {
+        fireEvent.blur(docInput);
+      });
+
       // Wait for validation
       await waitFor(
         () => {
@@ -422,6 +444,10 @@ describe("ClientForm", () => {
         fireEvent.change(docInput, { target: { value: "88888" } });
       });
 
+      await act(async () => {
+        fireEvent.blur(docInput);
+      });
+
       // Wait for modal
       await waitFor(() => {
         expect(screen.getByText("Documento No Encontrado")).toBeInTheDocument();
@@ -456,15 +482,18 @@ describe("ClientForm", () => {
 
       const selects = screen.getAllByRole("combobox");
       const docSelect = selects[0];
+      const docInput = screen.getByPlaceholderText("Número de documento");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
       });
 
       await act(async () => {
-        fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
-          target: { value: "123456" },
-        });
+        fireEvent.change(docInput, { target: { value: "123456" } });
+      });
+
+      await act(async () => {
+        fireEvent.blur(docInput);
       });
 
       // Wait for validation error
@@ -490,15 +519,18 @@ describe("ClientForm", () => {
 
       const selects = screen.getAllByRole("combobox");
       const docSelect = selects[0];
+      const docInput = screen.getByPlaceholderText("Número de documento");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
       });
 
       await act(async () => {
-        fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
-          target: { value: "123456" },
-        });
+        fireEvent.change(docInput, { target: { value: "123456" } });
+      });
+
+      await act(async () => {
+        fireEvent.blur(docInput);
       });
 
       // Wait for error modal
