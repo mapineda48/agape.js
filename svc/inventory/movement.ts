@@ -75,15 +75,55 @@ export async function createInventoryMovement(
         throw new Error(`Ubicación requerida para el ítem ${detail.itemId}`);
       }
 
-      // Get Inventory Item for UOM
+      // UC-10: Validar que el ítem es inventariable (regla de dominio, no DB)
+      // Primero verificamos que existe y es tipo 'good'
+      const [catalogItem] = await tx
+        .select({ type: item.type, code: item.code, fullName: item.fullName })
+        .from(item)
+        .where(eq(item.id, detail.itemId));
+
+      if (!catalogItem) {
+        throw new Error(`El ítem ${detail.itemId} no existe`);
+      }
+
+      if (catalogItem.type !== "good") {
+        throw new Error(
+          `El ítem '${catalogItem.code} - ${catalogItem.fullName}' no es inventariable (tipo: ${catalogItem.type}). Solo los bienes físicos pueden tener movimientos de inventario.`
+        );
+      }
+
+      // Get Inventory Item for UOM and lot requirements
       const [invItem] = await tx
         .select()
         .from(inventoryItem)
         .where(eq(inventoryItem.itemId, detail.itemId));
+
       if (!invItem) {
         throw new Error(
-          `El ítem ${detail.itemId} no está configurado para inventario`
+          `El ítem '${catalogItem.code}' no está configurado para inventario. Debe crearse primero un registro en inventory_item.`
         );
+      }
+
+      // UC-11: Validar lote obligatorio según configuración del ítem
+      await LotService.validateLotRequirement(
+        tx,
+        detail.itemId,
+        detail.lotId,
+        detail.lotNumber
+      );
+
+      // UC-11: Resolver lotNumber a lotId si se proporcionó lotNumber
+      let resolvedLotId = detail.lotId;
+      if (!resolvedLotId && detail.lotNumber) {
+        const lotResult = await LotService.findOrCreateLot(tx, {
+          itemId: detail.itemId,
+          lotNumber: detail.lotNumber,
+          expirationDate: detail.lotExpirationDate,
+          receivedDate: input.movementDate,
+          sourceDocumentType: input.sourceDocumentType,
+          sourceDocumentId: input.sourceDocumentId,
+        });
+        resolvedLotId = lotResult.lotId;
       }
 
       // R2: Normalize UOM
@@ -110,9 +150,9 @@ export async function createInventoryMovement(
       // Factor: 1 (In), -1 (Out)
       const factor = movementType.factor;
 
-      // R6: Validate Lot
-      if (detail.lotId) {
-        await LotService.validateLot(tx, detail.lotId, {
+      // R6: Validate Lot status if provided
+      if (resolvedLotId) {
+        await LotService.validateLot(tx, resolvedLotId, {
           allowExpired: false,
           allowRestricted: false,
         });
@@ -128,7 +168,7 @@ export async function createInventoryMovement(
             detail.itemId,
             detail.locationId,
             baseQty.toNumber(),
-            detail.lotId
+            resolvedLotId
           );
         }
 
@@ -137,7 +177,7 @@ export async function createInventoryMovement(
           detail.itemId,
           detail.locationId,
           delta.toNumber(),
-          detail.lotId
+          resolvedLotId
         );
       }
 
@@ -156,7 +196,7 @@ export async function createInventoryMovement(
             locationId: detail.locationId,
             quantity: baseQty.toNumber(),
             method: "FIFO",
-            lotId: detail.lotId,
+            lotId: resolvedLotId,
           });
         }
       }
@@ -164,7 +204,7 @@ export async function createInventoryMovement(
       processedDetails.push({
         itemId: detail.itemId,
         locationId: detail.locationId,
-        lotId: detail.lotId,
+        lotId: resolvedLotId,
         quantity: baseQty,
         unitCost: unitCost,
       });
@@ -375,4 +415,141 @@ export async function getInventoryMovement(id: number) {
     userId: movement.employeeId, // Map employeeId back to userId for DTO compatibility if strictly needed, or just return employeeId
     details,
   };
+}
+
+/**
+ * DTO para crear una transferencia de inventario.
+ */
+export interface CreateInventoryTransferInput {
+  /** ID del tipo de movimiento de SALIDA */
+  exitMovementTypeId: number;
+  /** ID del tipo de movimiento de ENTRADA */
+  entryMovementTypeId: number;
+  /** Fecha del movimiento */
+  movementDate: DateTime;
+  /** Observación opcional */
+  observation?: string | null;
+  /** ID del usuario que realiza el movimiento */
+  userId: number;
+  /** Detalles de la transferencia */
+  details: Array<{
+    itemId: number;
+    /** Ubicación de ORIGEN (de donde sale) */
+    sourceLocationId: number;
+    /** Ubicación de DESTINO (a donde entra) */
+    destinationLocationId: number;
+    /** ID del lote (opcional) */
+    lotId?: number | null;
+    /** Número de lote alternativo */
+    lotNumber?: string | null;
+    /** Cantidad a transferir */
+    quantity: number;
+  }>;
+}
+
+/**
+ * Resultado de una transferencia de inventario.
+ */
+export interface CreateInventoryTransferResult {
+  /** Movimiento de SALIDA creado */
+  exitMovementId: number;
+  exitMovementNumber: string;
+  /** Movimiento de ENTRADA creado */
+  entryMovementId: number;
+  entryMovementNumber: string;
+}
+
+/**
+ * Crea una transferencia de inventario entre ubicaciones.
+ * UC-10: Salida de origen + entrada en destino en una sola transacción.
+ *
+ * Esta operación es atómica: si falla cualquier línea, no se afecta ningún registro.
+ */
+export async function createInventoryTransfer(
+  input: CreateInventoryTransferInput
+): Promise<CreateInventoryTransferResult> {
+  return await db.transaction(async (tx) => {
+    // Validaciones básicas
+    if (!input.details || input.details.length === 0) {
+      throw new Error("La transferencia debe tener al menos un detalle");
+    }
+
+    for (const detail of input.details) {
+      if (detail.quantity <= 0) {
+        throw new Error("La cantidad de cada detalle debe ser mayor a cero");
+      }
+      if (detail.sourceLocationId === detail.destinationLocationId) {
+        throw new Error(
+          `El origen y destino no pueden ser iguales para el ítem ${detail.itemId}`
+        );
+      }
+    }
+
+    // IMPORTANTE: Usamos la función interna con la misma TX para garantizar atomicidad
+    // El movimiento de inventario normalmente crea su propia TX,
+    // pero Drizzle soporta transacciones anidadas (SAVEPOINT).
+
+    // 1. Crear movimiento de SALIDA
+    const exitMovement = await createInventoryMovement({
+      movementTypeId: input.exitMovementTypeId,
+      movementDate: input.movementDate,
+      observation: input.observation
+        ? `[TRANSFER-OUT] ${input.observation}`
+        : "[TRANSFER-OUT]",
+      userId: input.userId,
+      sourceDocumentType: "inventory_transfer",
+      details: input.details.map((d) => ({
+        itemId: d.itemId,
+        locationId: d.sourceLocationId,
+        lotId: d.lotId,
+        lotNumber: d.lotNumber,
+        quantity: d.quantity,
+      })),
+    });
+
+    // 2. Crear movimiento de ENTRADA con el costo de salida
+    // Obtenemos los costos del movimiento de salida
+    const exitDetails = await db
+      .select({
+        itemId: inventoryMovementDetail.itemId,
+        unitCost: inventoryMovementDetail.unitCost,
+      })
+      .from(inventoryMovementDetail)
+      .where(eq(inventoryMovementDetail.movementId, exitMovement.id));
+
+    const costMap = new Map<number, Decimal>();
+    for (const ed of exitDetails) {
+      // Si hay múltiples líneas del mismo item, usamos el primer costo encontrado
+      if (!costMap.has(ed.itemId) && ed.unitCost !== null) {
+        costMap.set(ed.itemId, new Decimal(ed.unitCost));
+      }
+    }
+
+    const entryMovement = await createInventoryMovement({
+      movementTypeId: input.entryMovementTypeId,
+      movementDate: input.movementDate,
+      observation: input.observation
+        ? `[TRANSFER-IN] ${input.observation}`
+        : "[TRANSFER-IN]",
+      userId: input.userId,
+      sourceDocumentType: "inventory_transfer",
+      sourceDocumentId: exitMovement.id, // Vincula con movimiento de salida
+      details: input.details.map((d) => ({
+        itemId: d.itemId,
+        locationId: d.destinationLocationId,
+        lotId: d.lotId,
+        lotNumber: d.lotNumber,
+        quantity: d.quantity,
+        // Usar el mismo costo unitario que la salida
+        unitCost: costMap.get(d.itemId),
+      })),
+    });
+
+    return {
+      exitMovementId: exitMovement.id,
+      exitMovementNumber: exitMovement.documentNumberFull,
+      entryMovementId: entryMovement.id,
+      entryMovementNumber: entryMovement.documentNumberFull,
+    };
+  });
 }

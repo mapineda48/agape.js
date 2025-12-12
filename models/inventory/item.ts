@@ -1,5 +1,5 @@
 import { schema } from "../agape";
-import { integer } from "drizzle-orm/pg-core";
+import { integer, boolean } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { item } from "../catalogs/item";
 import { decimal } from "../../lib/db/custom-types";
@@ -28,6 +28,18 @@ export const inventoryItem = schema.table("inventory_item", {
 
   /** Punto de reorden */
   reorderPoint: decimal("reorder_point"),
+
+  /**
+   * Indica si el ítem requiere número de lote obligatorio.
+   * Ej: productos farmacéuticos, alimentos perecederos.
+   */
+  requiresLot: boolean("requires_lot").notNull().default(false),
+
+  /**
+   * Indica si el ítem requiere número de serie individual (cada unidad es única).
+   * Ej: equipos electrónicos, vehículos.
+   */
+  requiresSerial: boolean("requires_serial").notNull().default(false),
 });
 
 export type InventoryItem = InferSelectModel<typeof inventoryItem>;

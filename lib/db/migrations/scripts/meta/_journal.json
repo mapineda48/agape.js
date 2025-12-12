@@ -15,6 +15,13 @@
       "when": 1765548578390,
       "tag": "0001_unknown_cardiac",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765549045774,
+      "tag": "0002_brief_the_anarchist",
+      "breakpoints": true
     }
   ]
 }

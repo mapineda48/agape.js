@@ -11,6 +11,16 @@ export interface CreateInventoryMovementDetail {
   locationId?: number | null;
   /** ID del lote (opcional, para ítems controlados por lote) */
   lotId?: number | null;
+  /**
+   * Número de lote (alternativa a lotId).
+   * Si se provee lotNumber en lugar de lotId, el servicio buscará
+   * o creará el lote automáticamente.
+   */
+  lotNumber?: string | null;
+  /**
+   * Fecha de expiración del lote (opcional, solo usado si se crea lote nuevo).
+   */
+  lotExpirationDate?: DateTime | null;
   /** ID de la unidad de medida (si difiere de la base) */
   uomId?: number | null;
   /** Cantidad del movimiento (visual, en la UOM especificada) */
