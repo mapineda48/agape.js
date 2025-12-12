@@ -318,15 +318,14 @@ function EmployeeRow({
             <div className="text-sm font-bold text-gray-900">
               {employee.firstName} {employee.lastName}
             </div>
-            <div className="text-sm text-gray-500">{employee.email}</div>
+            <div className="text-sm text-gray-500">
+              {employee.documentNumber}
+            </div>
           </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm text-gray-900">{employee.phone || "—"}</div>
-        <div className="text-sm text-gray-500 truncate max-w-xs">
-          {employee.address || "—"}
-        </div>
+        <div className="text-sm text-gray-900">Migrado</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
         {new Date(employee.hireDate as any).toLocaleDateString()}

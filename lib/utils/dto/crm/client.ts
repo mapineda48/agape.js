@@ -51,6 +51,7 @@ export interface ClientListItem {
   typeName: string | null;
   photoUrl: string | null;
   active: boolean;
+  documentNumber: string;
   createdAt: DateTime;
   updatedAt: DateTime | null;
 }

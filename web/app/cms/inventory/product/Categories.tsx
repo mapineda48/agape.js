@@ -5,18 +5,18 @@ import {
   useSharedState,
 } from "@/components/util/event-emitter";
 import {
-  type CategoryWithSubcategoriesDto as Category,
+  type ICategory as Category,
   listCategories as findAll,
-} from "@agape/inventory/category";
+  listSubcategories,
+} from "@agape/catalogs/category";
 
-const DEFAULT_CATEGORY: Category = {
+const DEFAULT_CATEGORY: Partial<Category> = {
   id: 0,
   fullName: "- Seleccionar -",
   isEnabled: false,
-  subcategories: [],
 };
 
-const REF_READ_DELAY_MS = 5;
+const REF_READ_DELAY_MS = 50; // Increased slightly
 
 export default function Categories() {
   const ref = useRef<HTMLSelectElement>(null);
@@ -27,16 +27,29 @@ export default function Categories() {
     const loadCategories = async () => {
       try {
         const categories = await findAll();
-        setState([{ ...DEFAULT_CATEGORY }, ...categories]);
-        updateSubcategories(ref.current, categories, emitter);
+        setState([{ ...DEFAULT_CATEGORY } as Category, ...categories]);
+
+        // Initial load of subcategories if value exists
+        if (ref.current?.value) {
+          updateSubcategories(parseInt(ref.current.value), emitter);
+        } else {
+          // Try again shortly in case ref is not ready
+          setTimeout(() => {
+            if (ref.current?.value)
+              updateSubcategories(parseInt(ref.current.value), emitter);
+          }, REF_READ_DELAY_MS);
+        }
       } catch (error) {
         console.error("Error loading categories:", error);
-        setState([{ ...DEFAULT_CATEGORY, fullName: "Error" }]);
       }
     };
 
     loadCategories();
-  }, [setState]);
+  }, [setState, emitter]);
+
+  const handleChange = (value: number) => {
+    updateSubcategories(value, emitter);
+  };
 
   return (
     <Select.Int
@@ -44,13 +57,7 @@ export default function Categories() {
       required
       className="mt-1 block w-full border-gray-300 rounded p-2"
       ref={ref}
-      onChange={(_, index) => {
-        const subcategories = state[index]?.subcategories || [];
-        emitter.emit("setSubCategories", [
-          { ...DEFAULT_CATEGORY },
-          ...subcategories,
-        ]);
-      }}
+      onChange={handleChange}
     >
       {state.map((category) => (
         <option key={category.id} value={category.id || ""}>
@@ -61,18 +68,20 @@ export default function Categories() {
   );
 }
 
-function updateSubcategories(
-  ref: HTMLSelectElement | null,
-  categories: Category[],
+async function updateSubcategories(
+  categoryId: number,
   emitter: ReturnType<typeof useEventEmitter>
 ) {
-  setTimeout(() => {
-    const selectedId = parseInt(ref?.value || "0");
-    if (!selectedId) return;
+  if (!categoryId) {
+    emitter.emit("setSubCategories", []);
+    return;
+  }
 
-    const selectedCategory = categories.find((c) => c.id === selectedId);
-    const subcategories = selectedCategory?.subcategories || [];
-
-    emitter.emit("setSubCategories", structuredClone(subcategories));
-  }, REF_READ_DELAY_MS);
+  try {
+    const subcategories = await listSubcategories({ categoryId });
+    emitter.emit("setSubCategories", subcategories);
+  } catch (err) {
+    console.error("Error loading subcategories", err);
+    emitter.emit("setSubCategories", []);
+  }
 }

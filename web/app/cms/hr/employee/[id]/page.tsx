@@ -55,9 +55,6 @@ export default function EditEmployeePage(props: Props) {
       id: props.employee.userId,
       documentTypeId: props.employee.documentTypeId,
       documentNumber: props.employee.documentNumber,
-      email: props.employee.email || "",
-      phone: props.employee.phone || "",
-      address: props.employee.address || "",
       person: {
         firstName: props.employee.firstName || "",
         lastName: props.employee.lastName || "",
@@ -65,7 +62,7 @@ export default function EditEmployeePage(props: Props) {
           ? new DateTime(new Date(props.employee.birthdate as any))
           : undefined,
       },
-    } as any, // casting as any to bypass strict IUser structure check if needed, but structure matches
+    },
   };
 
   return (

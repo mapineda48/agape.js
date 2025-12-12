@@ -285,7 +285,6 @@ export default function SuppliersConfigurationPage(props: {
               <thead className="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
                   <Th>Proveedor</Th>
-                  <Th>Contacto</Th>
                   <Th>Tipo</Th>
                   <Th>Estado</Th>
                   <Th align="right">Acciones</Th>
@@ -337,16 +336,6 @@ export default function SuppliersConfigurationPage(props: {
                             </div>
                           </div>
                         </div>
-                      </Td>
-                      <Td>
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {supplier.email}
-                        </div>
-                        {supplier.phone ? (
-                          <div className="text-xs text-gray-500">
-                            {supplier.phone}
-                          </div>
-                        ) : null}
                       </Td>
                       <Td>
                         <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
@@ -520,14 +509,8 @@ function SupplierFormContent({
         const user = await getUserByDocument(targetDocTypeId, documentNumber);
 
         if (user) {
-          // Preload common information using merge
-          merge({
-            email: user.email || undefined,
-            phone: user.phone || undefined,
-            address: user.address || undefined,
-          });
-
           // Preload type-specific information using setAt
+          // Contact fields (email, phone, address) are no longer on User entity
           if (type === "person" && user.person) {
             setAt(["person"], {
               firstName: user.person.firstName,
@@ -582,34 +565,8 @@ function SupplierFormContent({
         </Field>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {/* Common Fields */}
-          <Field label="Correo electrónico">
-            <Form.Text
-              path="email"
-              email
-              required
-              placeholder="contacto@ejemplo.com"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-          </Field>
-          <Field label="Teléfono">
-            <Form.Text
-              path="phone"
-              placeholder="+52 55 1234 5678"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-          </Field>
-
           {/* Conditional Fields */}
           <ConditionalFields />
-
-          <Field label="Dirección" className="md:col-span-2">
-            <Form.Text
-              path="address"
-              placeholder="Calle, número, ciudad"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-          </Field>
 
           <hr className="md:col-span-2 border-gray-200 dark:border-gray-700 my-2" />
 
@@ -672,9 +629,6 @@ function SupplierFormContent({
               supplierTypeId: Number(data.supplierTypeId),
               active: data.active,
               user: {
-                email: data.email,
-                phone: data.phone,
-                address: data.address,
                 documentNumber: data.documentNumber,
                 documentTypeId: targetDocTypeId,
                 ...(isPersonType

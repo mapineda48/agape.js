@@ -129,10 +129,6 @@ export function ClientForm({
             return;
           }
 
-          setAt(["user", "email"], user.email || undefined);
-          setAt(["user", "phone"], user.phone || undefined);
-          setAt(["user", "address"], user.address || undefined);
-
           // Preload person information
           if (user.person) {
             setAt(["user", "person"], {
@@ -248,48 +244,6 @@ export function ClientForm({
                 path="documentNumber"
                 placeholder="Número de documento"
                 required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-            </Form.Scope>
-          </div>
-        </div>
-
-        {/* Common User Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <svg
-              className="h-5 w-5 mr-2 text-blue-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            Datos Básicos
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Form.Scope path="user" autoCleanup>
-              <Form.Text
-                path="email"
-                type="email"
-                placeholder="correo@ejemplo.com"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Form.Text
-                path="phone"
-                placeholder="+1 234 567 8900"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Form.Text
-                path="address"
-                placeholder="Dirección Física"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </Form.Scope>

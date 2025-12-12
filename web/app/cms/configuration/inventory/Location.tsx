@@ -19,9 +19,12 @@ import PortalModal from "@/components/ui/PortalModal";
 import { useConfirmModal } from "@/components/ui/PortalConfirm";
 import { Card, StackedList, Field } from "./components";
 
-interface Location {
+interface InventoryLocation {
   id?: number;
   name: string;
+  code: string;
+  type: string;
+  description?: string | null;
   isEnabled: boolean;
 }
 
@@ -36,13 +39,16 @@ interface LocationFilters {
 interface LocationFormState {
   id?: number;
   name: string;
+  code: string;
+  type: string;
+  description?: string | null;
   isEnabled: boolean;
 }
 
 function LocationModalWrapper(
   props: {
-    location: Location;
-    onSave: (data: Location) => Promise<void>;
+    location: InventoryLocation;
+    onSave: (data: InventoryLocation) => Promise<void>;
   } & PortalInjectedProps
 ) {
   return (
@@ -153,17 +159,16 @@ function LocationForm({
   onClose,
   onSave,
 }: {
-  location: Location;
+  location: InventoryLocation;
   onClose: () => void;
-  onSave: (data: {
-    id?: number;
-    name: string;
-    isEnabled: boolean;
-  }) => Promise<void>;
+  onSave: (data: InventoryLocation) => Promise<void>;
 }) {
   const initialState: LocationFormState = {
     id: location.id || undefined,
     name: location.name,
+    code: location.code || "",
+    type: location.type || "warehouse",
+    description: location.description,
     isEnabled: location.isEnabled ?? true,
   };
 
@@ -171,8 +176,11 @@ function LocationForm({
     await onSave({
       id: data.id,
       name: data.name,
+      code: data.code,
+      type: data.type,
+      description: data.description || "",
       isEnabled: data.isEnabled,
-    });
+    } as any);
     onClose();
   }
 
@@ -187,6 +195,43 @@ function LocationForm({
             path="name"
             required
             placeholder="Ej: Almacén Central"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          />
+        </label>
+        <div className="grid grid-cols-2 gap-4">
+          <label className="space-y-1.5 block">
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              Código
+            </span>
+            <Input.Text
+              path="code"
+              required
+              placeholder="Ej: ALM-01"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </label>
+          <label className="space-y-1.5 block">
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              Tipo
+            </span>
+            <Form.Select.String
+              path="type"
+              required
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
+              <option value="warehouse">Bodega</option>
+              <option value="store">Tienda</option>
+              <option value="shelf">Estantería</option>
+            </Form.Select.String>
+          </label>
+        </div>
+        <label className="space-y-1.5 block">
+          <span className="text-sm font-medium text-gray-900 dark:text-white">
+            Descripción
+          </span>
+          <Input.TextArea
+            path="description"
+            rows={2}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           />
         </label>
@@ -222,9 +267,13 @@ function LocationForm({
 const useLocationModal = createPortalHook(LocationModalWrapper);
 const useLocationFilterModal = createPortalHook(LocationFilterModalWrapper);
 
-export default function LocationList(props: { locations: Location[] }) {
+export default function LocationList(props: {
+  locations: InventoryLocation[];
+}) {
   const notify = useNotificacion();
-  const [locations, setLocations] = useState<Location[]>(props.locations);
+  const [locations, setLocations] = useState<InventoryLocation[]>(
+    props.locations
+  );
   const [loading, setLoading] = useState(false);
 
   // Filters
@@ -275,16 +324,12 @@ export default function LocationList(props: { locations: Location[] }) {
 
   const totalPages = Math.ceil(filteredLocations.length / pageSize);
 
-  async function saveLocation(data: {
-    id?: number;
-    name: string;
-    isEnabled: boolean;
-  }) {
-    await upsertLocation(data);
+  async function saveLocation(data: InventoryLocation) {
+    await upsertLocation(data as any);
     await loadLocations();
   }
 
-  async function confirmDeleteLocation(item: Location) {
+  async function confirmDeleteLocation(item: InventoryLocation) {
     showConfirm({
       title: "Eliminar registro",
       message: `¿Seguro que deseas eliminar "${item.name}"?`,
@@ -292,7 +337,7 @@ export default function LocationList(props: { locations: Location[] }) {
       variant: "danger",
       onConfirm: async () => {
         try {
-          await upsertLocation({ ...item, isEnabled: false });
+          await upsertLocation({ ...item, isEnabled: false } as any);
           await loadLocations();
         } catch (error) {
           console.error("Error al eliminar:", error);
@@ -333,7 +378,13 @@ export default function LocationList(props: { locations: Location[] }) {
             type="button"
             onClick={() =>
               showLocation({
-                location: { name: "", isEnabled: true },
+                location: {
+                  name: "",
+                  code: "",
+                  type: "warehouse",
+                  description: "", // Added description for new location
+                  isEnabled: true,
+                },
                 onSave: saveLocation,
               })
             }
@@ -345,7 +396,7 @@ export default function LocationList(props: { locations: Location[] }) {
         </div>
       }
     >
-      <StackedList<Location>
+      <StackedList<InventoryLocation>
         items={paginatedLocations}
         loading={loading}
         empty="No se encontraron ubicaciones"

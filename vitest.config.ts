@@ -90,6 +90,14 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/inventory/location.ts"
             ),
+            "@agape/inventory/movement": path.resolve(
+              __dirname,
+              "./web/test/mocks/inventory/movement.ts"
+            ),
+            "@agape/inventory/movementType": path.resolve(
+              __dirname,
+              "./web/test/mocks/inventory/movementType.ts"
+            ),
           },
         },
       },

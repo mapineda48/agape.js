@@ -129,15 +129,6 @@ describe("NewEmployeePage", () => {
       // Personal fields
       expect(screen.getByPlaceholderText("Juan")).toBeInTheDocument(); // firstName
       expect(screen.getByPlaceholderText("Pérez")).toBeInTheDocument(); // lastName
-      expect(
-        screen.getByPlaceholderText("juan.perez@example.com")
-      ).toBeInTheDocument(); // email
-      expect(
-        screen.getByPlaceholderText("+1 234 567 8900")
-      ).toBeInTheDocument(); // phone
-      expect(
-        screen.getByPlaceholderText("Calle Principal 123")
-      ).toBeInTheDocument(); // address
 
       // Work fields
       expect(screen.getByText("Fecha de Contratación")).toBeInTheDocument();
@@ -175,21 +166,6 @@ describe("NewEmployeePage", () => {
       const lastName = screen.getByPlaceholderText("Pérez");
       fireEvent.change(lastName, { target: { value: "García" } });
       expect(lastName).toHaveValue("García");
-
-      // Email
-      const email = screen.getByPlaceholderText("juan.perez@example.com");
-      fireEvent.change(email, { target: { value: "carlos@test.com" } });
-      expect(email).toHaveValue("carlos@test.com");
-
-      // Phone
-      const phone = screen.getByPlaceholderText("+1 234 567 8900");
-      fireEvent.change(phone, { target: { value: "555-1234" } });
-      expect(phone).toHaveValue("555-1234");
-
-      // Address
-      const address = screen.getByPlaceholderText("Calle Principal 123");
-      fireEvent.change(address, { target: { value: "Av. Siempre Viva 742" } });
-      expect(address).toHaveValue("Av. Siempre Viva 742");
     });
 
     it("allows changing document type", () => {
@@ -236,9 +212,6 @@ describe("NewEmployeePage", () => {
       fireEvent.change(screen.getByPlaceholderText("Pérez"), {
         target: { value: "López" },
       });
-      fireEvent.change(screen.getByPlaceholderText("juan.perez@example.com"), {
-        target: { value: "maria@company.com" },
-      });
 
       // Submit form
       const form = document.querySelector("form");
@@ -279,7 +252,7 @@ describe("NewEmployeePage", () => {
         <NewEmployeePage documentTypes={mockDocumentTypes} />
       );
 
-      // Fill all fields including optional
+      // Fill all fields
       fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
         target: { value: "9876543210" },
       });
@@ -288,15 +261,6 @@ describe("NewEmployeePage", () => {
       });
       fireEvent.change(screen.getByPlaceholderText("Pérez"), {
         target: { value: "Martínez" },
-      });
-      fireEvent.change(screen.getByPlaceholderText("juan.perez@example.com"), {
-        target: { value: "pedro@test.com" },
-      });
-      fireEvent.change(screen.getByPlaceholderText("+1 234 567 8900"), {
-        target: { value: "300-555-1234" },
-      });
-      fireEvent.change(screen.getByPlaceholderText("Calle Principal 123"), {
-        target: { value: "Carrera 50 #20-30" },
       });
 
       // Submit form
@@ -310,9 +274,8 @@ describe("NewEmployeePage", () => {
       });
 
       const payload = (upsertEmployee as any).mock.calls[0][0];
-      expect(payload.user.email).toBe("pedro@test.com");
-      expect(payload.user.phone).toBe("300-555-1234");
-      expect(payload.user.address).toBe("Carrera 50 #20-30");
+      expect(payload.user.person.firstName).toBe("Pedro");
+      expect(payload.user.person.lastName).toBe("Martínez");
     });
 
     it("validates missing document type", async () => {

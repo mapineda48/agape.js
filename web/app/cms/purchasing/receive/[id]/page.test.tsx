@@ -34,6 +34,7 @@ const mockOrder: PurchaseOrderDetails = {
   supplierDocumentNumber: "123456789",
   orderDate: new DateTime("2024-01-01"),
   status: "approved",
+  documentNumberFull: "PO-00001",
   totalAmount: new Decimal(1000),
   items: [
     {
@@ -59,9 +60,25 @@ const mockOrder: PurchaseOrderDetails = {
   ],
 };
 
-const mockLocations = [
-  { id: 1, name: "Bodega Principal", isEnabled: true },
-  { id: 2, name: "Bodega Secundaria", isEnabled: true },
+const mockLocations: any[] = [
+  {
+    id: 1,
+    name: "Bodega Principal",
+    isEnabled: true,
+    code: "BP",
+    type: "warehouse",
+    parentLocationId: null,
+    description: null,
+  },
+  {
+    id: 2,
+    name: "Bodega Secundaria",
+    isEnabled: true,
+    code: "BS",
+    type: "warehouse",
+    parentLocationId: null,
+    description: null,
+  },
 ];
 
 describe("ReceiveOrderPage", () => {

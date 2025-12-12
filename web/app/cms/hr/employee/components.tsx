@@ -10,7 +10,9 @@ import { type UpsertEmployeePayload } from "@agape/hr/employee";
 import { type DocumentType } from "@agape/core/documentType";
 
 function ImageProfile({ initialAvatar }: { initialAvatar?: string | null }) {
-  const avatar = Form.useSelector((state: UpsertEmployeePayload) => state.avatar);
+  const avatar = Form.useSelector(
+    (state: UpsertEmployeePayload) => state.avatar
+  );
   const [preview, setPreview] = useState<string | null>(
     typeof avatar === "string" ? avatar : initialAvatar || null
   );
@@ -94,7 +96,7 @@ export function EmployeeForm({
 }: EmployeeFormProps) {
   const notify = useNotificacion();
   const { navigate } = useRouter();
-  const { merge, setAt } = Form.useForm();
+  const { setAt } = Form.useForm();
 
   // Filter document types for persons only
   const personDocumentTypes = useMemo(() => {
@@ -194,14 +196,6 @@ export function EmployeeForm({
           }
 
           // User exists but not as employee - preload user data
-          merge({
-            user: {
-              email: user.email || undefined,
-              phone: user.phone || undefined,
-              address: user.address || undefined,
-            },
-          });
-
           if (user.person) {
             setAt(["user", "person"], {
               firstName: user.person.firstName,
@@ -248,7 +242,6 @@ export function EmployeeForm({
   }, [
     documentTypeId,
     documentNumber,
-    merge,
     setAt,
     notify,
     navigate,
@@ -337,7 +330,7 @@ export function EmployeeForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Person-specific fields */}
-              <Form.Scope value="person">
+              <Form.Scope path="person">
                 <Form.Text
                   path="firstName"
                   placeholder="Juan"
@@ -355,24 +348,6 @@ export function EmployeeForm({
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </Form.Scope>
-              {/* User-level contact fields */}
-              <Form.Text
-                path="email"
-                email
-                placeholder="juan.perez@example.com"
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Form.Text
-                path="phone"
-                placeholder="+1 234 567 8900"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-              <Form.Text
-                path="address"
-                placeholder="Calle Principal 123"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
             </div>
           </div>
         </Form.Scope>

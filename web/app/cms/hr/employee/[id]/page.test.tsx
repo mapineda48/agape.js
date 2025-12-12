@@ -62,9 +62,6 @@ describe("EditEmployeePage", () => {
     userId: 202,
     firstName: "Juan",
     lastName: "Perez",
-    email: "juan@example.com",
-    phone: "555-0000",
-    address: "Calle Falsa 123",
     birthdate: new DateTime("1990-05-15"),
     hireDate: new DateTime("2020-01-10"),
     isActive: true,
@@ -73,6 +70,9 @@ describe("EditEmployeePage", () => {
     updatedAt: null,
     documentTypeId: 1,
     documentNumber: "1234567890",
+    countryCode: "CO",
+    languageCode: "es",
+    currencyCode: "COP",
   };
 
   beforeEach(() => {
@@ -135,9 +135,6 @@ describe("EditEmployeePage", () => {
       // Personal data
       expect(screen.getByDisplayValue("Juan")).toBeInTheDocument();
       expect(screen.getByDisplayValue("Perez")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("juan@example.com")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("555-0000")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("Calle Falsa 123")).toBeInTheDocument();
 
       // isActive checkbox
       const checkbox = screen.getByRole("checkbox");
@@ -178,9 +175,6 @@ describe("EditEmployeePage", () => {
     it("handles employee with null optional fields", () => {
       const employeeWithNulls = {
         ...mockEmployee,
-        email: null,
-        phone: null,
-        address: null,
         birthdate: null,
         avatarUrl: "",
       };
@@ -194,10 +188,6 @@ describe("EditEmployeePage", () => {
 
       // Should render without errors
       expect(screen.getByText("Editar Empleado")).toBeInTheDocument();
-      // Null values should render as empty strings
-      expect(screen.getByPlaceholderText("juan.perez@example.com")).toHaveValue(
-        ""
-      );
     });
   });
 
@@ -226,45 +216,6 @@ describe("EditEmployeePage", () => {
       const lastNameInput = screen.getByDisplayValue("Perez");
       fireEvent.change(lastNameInput, { target: { value: "García" } });
       expect(lastNameInput).toHaveValue("García");
-    });
-
-    it("allows modifying email", () => {
-      renderWithProviders(
-        <EditEmployeePage
-          documentTypes={mockDocumentTypes}
-          employee={mockEmployee}
-        />
-      );
-
-      const emailInput = screen.getByDisplayValue("juan@example.com");
-      fireEvent.change(emailInput, { target: { value: "carlos@new.com" } });
-      expect(emailInput).toHaveValue("carlos@new.com");
-    });
-
-    it("allows modifying phone", () => {
-      renderWithProviders(
-        <EditEmployeePage
-          documentTypes={mockDocumentTypes}
-          employee={mockEmployee}
-        />
-      );
-
-      const phoneInput = screen.getByDisplayValue("555-0000");
-      fireEvent.change(phoneInput, { target: { value: "999-1111" } });
-      expect(phoneInput).toHaveValue("999-1111");
-    });
-
-    it("allows modifying address", () => {
-      renderWithProviders(
-        <EditEmployeePage
-          documentTypes={mockDocumentTypes}
-          employee={mockEmployee}
-        />
-      );
-
-      const addressInput = screen.getByDisplayValue("Calle Falsa 123");
-      fireEvent.change(addressInput, { target: { value: "Av. Nueva 456" } });
-      expect(addressInput).toHaveValue("Av. Nueva 456");
     });
 
     it("allows modifying document number", () => {
@@ -354,19 +305,11 @@ describe("EditEmployeePage", () => {
       const firstNameInput = screen.getByPlaceholderText("Juan");
       const lastNameInput = screen.getByPlaceholderText("Pérez");
       const docNumberInput = screen.getByPlaceholderText("Número de documento");
-      const emailInput = screen.getByPlaceholderText("juan.perez@example.com");
-      const phoneInput = screen.getByPlaceholderText("+1 234 567 8900");
-      const addressInput = screen.getByPlaceholderText("Calle Principal 123");
 
       // Modify all fields
       fireEvent.change(firstNameInput, { target: { value: "Carlos" } });
       fireEvent.change(lastNameInput, { target: { value: "López" } });
       fireEvent.change(docNumberInput, { target: { value: "0000000001" } });
-      fireEvent.change(emailInput, { target: { value: "carlos@newmail.com" } });
-      fireEvent.change(phoneInput, { target: { value: "999-888-7777" } });
-      fireEvent.change(addressInput, {
-        target: { value: "Nueva Dirección 456" },
-      });
 
       // Toggle isActive off
       fireEvent.click(screen.getByRole("checkbox"));
@@ -392,9 +335,6 @@ describe("EditEmployeePage", () => {
       expect(payload.user.id).toBe(202);
       expect(payload.user.documentTypeId).toBe(1);
       expect(payload.user.documentNumber).toBe("0000000001");
-      expect(payload.user.email).toBe("carlos@newmail.com");
-      expect(payload.user.phone).toBe("999-888-7777");
-      expect(payload.user.address).toBe("Nueva Dirección 456");
 
       // Person-level fields
       expect(payload.user.person.firstName).toBe("Carlos");

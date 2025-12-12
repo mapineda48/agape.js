@@ -151,6 +151,7 @@ export async function listEmployees(
       hireDate: employee.hireDate,
       isActive: employee.isActive,
       avatarUrl: employee.avatarUrl,
+      documentNumber: user.documentNumber,
       createdAt: employee.createdAt,
       updatedAt: employee.updatedAt,
     })

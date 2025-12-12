@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { listCategories as findAll } from "@agape/inventory/category";
+import { listCategories as findAll } from "@agape/catalogs/category";
 import PageLayout from "@/components/cms/PageLayout";
 import { useRouter } from "@/components/router/router-hook";
 

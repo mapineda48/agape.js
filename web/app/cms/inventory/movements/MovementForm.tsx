@@ -6,6 +6,7 @@ import Submit from "@/components/ui/submit";
 import {
   createInventoryMovement,
   getInventoryMovement,
+  type CreateInventoryMovementInput,
 } from "@agape/inventory/movement";
 import { listMovementTypes } from "@agape/inventory/movementType";
 import { listItems } from "@agape/catalogs/item";
@@ -39,9 +40,17 @@ interface MovementFormState {
 }
 
 export function MovementForm(props: Props) {
+  const defaultState: MovementFormState = {
+    movementTypeId: undefined,
+    movementDate: new DateTime(),
+    details: [],
+  };
+
   return (
     <Form.Root<MovementFormState>
-      state={props.initialData as MovementFormState}
+      state={
+        (props.initialData as unknown as MovementFormState) ?? defaultState
+      }
       className="max-w-7xl mx-auto space-y-6"
     >
       <MovementFormContent {...props} />
@@ -79,7 +88,7 @@ function MovementFormContent(props: Props) {
           <div className="sticky bottom-6">
             <Submit<MovementFormState>
               onSubmit={async (state) => {
-                const payload = {
+                const payload: CreateInventoryMovementInput = {
                   movementTypeId: state.movementTypeId!,
                   movementDate:
                     state.movementDate instanceof DateTime
@@ -89,8 +98,8 @@ function MovementFormContent(props: Props) {
                   userId: 1, // TODO: Get from auth context
                   sourceDocumentType: state.sourceDocumentType,
                   sourceDocumentId: state.sourceDocumentId,
-                  details: state.details.map((d: any) => ({
-                    itemId: d.itemId,
+                  details: state.details.map((d) => ({
+                    itemId: d.itemId!,
                     quantity: Number(d.quantity),
                     unitCost: d.unitCost,
                     locationId: d.locationId,

@@ -6,7 +6,7 @@ import {
   type ListItemsResult as GetItemsResult,
 } from "@agape/catalogs/item";
 
-import { listCategories as findAll } from "@agape/inventory/category";
+import { listCategories as findAll } from "@agape/catalogs/category";
 import { useSharedState } from "@/components/util/event-emitter";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";

@@ -1,7 +1,7 @@
 import {
   listCategories,
-  type CategoryWithSubcategoriesDto as Category,
-} from "@agape/inventory/category";
+  type ICategoryWithCounts as Category,
+} from "@agape/catalogs/category";
 import { listLocations } from "@agape/inventory/location";
 import { listMovementTypes } from "@agape/inventory/movementType";
 import CategoryList from "./Category";
@@ -11,6 +11,9 @@ import MovementTypeList from "./MovementType";
 interface Location {
   id?: number;
   name: string;
+  code: string;
+  type: string;
+  description?: string | null;
   isEnabled: boolean;
 }
 
@@ -25,7 +28,7 @@ interface MovementType {
 
 export async function onInit() {
   const [categories, locations, movementTypes] = await Promise.all([
-    listCategories(),
+    listCategories({ includeSubcategoryCount: true }),
     listLocations(),
     listMovementTypes(),
   ]);

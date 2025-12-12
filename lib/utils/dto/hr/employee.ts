@@ -37,6 +37,7 @@ export interface EmployeeListItem {
   hireDate: DateTime;
   isActive: boolean;
   avatarUrl: string | null;
+  documentNumber: string;
   createdAt: DateTime;
   updatedAt: DateTime | null;
 }

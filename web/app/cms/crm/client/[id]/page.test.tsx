@@ -62,9 +62,9 @@ describe("EditClientPage", () => {
       id: 100,
       documentTypeId: 1,
       documentNumber: "123456789",
-      email: "juan@example.com",
-      phone: "555-1234",
-      address: "Calle 123",
+      countryCode: "CO",
+      languageCode: "es",
+      currencyCode: "COP",
     },
     person: {
       firstName: "Juan",
@@ -103,7 +103,6 @@ describe("EditClientPage", () => {
 
       // Check pre-filled inputs
       expect(screen.getByDisplayValue("123456789")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("juan@example.com")).toBeInTheDocument();
       expect(screen.getByDisplayValue("Juan")).toBeInTheDocument();
       expect(screen.getByDisplayValue("Perez")).toBeInTheDocument();
 
@@ -147,10 +146,10 @@ describe("EditClientPage", () => {
         />
       );
 
-      // Modify email
-      const emailInput = screen.getByDisplayValue("juan@example.com");
-      fireEvent.change(emailInput, {
-        target: { value: "juan.updated@example.com" },
+      // Modify firstName
+      const firstNameInput = screen.getByDisplayValue("Juan");
+      fireEvent.change(firstNameInput, {
+        target: { value: "Carlos" },
       });
 
       // Submit
@@ -164,7 +163,7 @@ describe("EditClientPage", () => {
       });
 
       const payload = (upsertClient as any).mock.calls[0][0];
-      expect(payload.user.email).toBe("juan.updated@example.com");
+      expect(payload.user.person.firstName).toBe("Carlos");
       expect(payload.id).toBe(100); // Should preserve ID
 
       await waitFor(() => {

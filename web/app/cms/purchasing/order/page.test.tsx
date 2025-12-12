@@ -40,9 +40,6 @@ const mockSuppliers: SupplierListItem[] = [
     lastName: "Proveedor",
     legalName: null,
     tradeName: null,
-    email: "juan@proveedor.com",
-    phone: "1234567890",
-    address: null,
     birthdate: null,
     supplierTypeId: 1,
     supplierTypeName: "Nacional",
@@ -78,6 +75,7 @@ const mockItems: ListItemItem[] = [
   },
 ];
 
+// TODO: Fix Form import issue - this test suite has a preexisting mock problem
 describe("OrderForm Component", () => {
   const renderForm = (initialState?: Partial<CreatePurchaseOrderInput>) => {
     const defaultState: CreatePurchaseOrderInput = {
@@ -101,15 +99,14 @@ describe("OrderForm Component", () => {
         createElement(
           PortalProvider,
           null,
-          createElement(
-            Form,
-            { state: defaultState },
-            createElement(OrderForm, {
+          createElement(Form.Root, {
+            state: defaultState,
+            children: createElement(OrderForm, {
               suppliers: mockSuppliers,
               items: itemsForForm,
               children: createElement("button", { type: "submit" }, "Crear"),
-            })
-          )
+            }),
+          })
         )
       )
     );
@@ -190,6 +187,9 @@ describe("NewOrderPage", () => {
       orderDate: new DateTime(),
       status: "pending",
       items: [],
+      seriesId: 1,
+      documentNumber: 1,
+      documentNumberFull: "OC-001",
     });
 
     vi.mocked(listSuppliers).mockResolvedValue({

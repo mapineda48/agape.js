@@ -352,14 +352,14 @@ function ClientRow({
             <div className="text-sm font-bold text-gray-900">
               {client.firstName} {client.lastName}
             </div>
-            <div className="text-sm text-gray-500">{client.email}</div>
+            <div className="text-sm text-gray-500">{client.documentNumber}</div>
           </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm text-gray-900">{client.phone || "—"}</div>
-        <div className="text-sm text-gray-500 truncate max-w-xs">
-          {client.address || "—"}
+        <div className="text-sm text-gray-500">—</div>
+        <div className="text-sm text-gray-400 truncate max-w-xs">
+          Datos de contacto migrados
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">

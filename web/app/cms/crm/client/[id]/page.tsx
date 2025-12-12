@@ -57,9 +57,6 @@ export default function EditClientPage(props: Props) {
       id: props.client.id,
       documentTypeId: props.client.user.documentTypeId,
       documentNumber: props.client.user.documentNumber,
-      email: props.client.user.email || "",
-      phone: props.client.user.phone || "",
-      address: props.client.user.address || "",
       ...(props.client.person
         ? {
             person: {

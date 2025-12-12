@@ -184,6 +184,7 @@ export async function listClients(
       typeName: clientType.name,
       photoUrl: client.photoUrl,
       active: client.active,
+      documentNumber: user.documentNumber,
       createdAt: client.createdAt,
       updatedAt: client.updatedAt,
     })

@@ -39,9 +39,6 @@ const mockSuppliers: SupplierListItem[] = [
     lastName: "Proveedor",
     legalName: null,
     tradeName: null,
-    email: "juan@proveedor.com",
-    phone: "1234567890",
-    address: null,
     birthdate: null,
     supplierTypeId: 1,
     supplierTypeName: "Nacional",
@@ -57,9 +54,6 @@ const mockSuppliers: SupplierListItem[] = [
     lastName: null,
     legalName: "Distribuidora S.A.",
     tradeName: "Distribuidora",
-    email: "info@distribuidora.com",
-    phone: "0987654321",
-    address: null,
     birthdate: null,
     supplierTypeId: 2,
     supplierTypeName: "Internacional",
@@ -79,6 +73,7 @@ const mockOrders: PurchaseOrderListItem[] = [
     status: "pending" as const,
     totalAmount: new Decimal(1500),
     itemCount: 3,
+    documentNumberFull: "OC-001",
   },
   {
     id: 2,
@@ -88,6 +83,7 @@ const mockOrders: PurchaseOrderListItem[] = [
     status: "approved" as const,
     totalAmount: new Decimal(2500.5),
     itemCount: 5,
+    documentNumberFull: "OC-002",
   },
   {
     id: 3,
@@ -97,6 +93,7 @@ const mockOrders: PurchaseOrderListItem[] = [
     status: "received" as const,
     totalAmount: new Decimal(800),
     itemCount: 2,
+    documentNumberFull: "OC-003",
   },
 ];
 

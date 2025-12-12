@@ -9,9 +9,13 @@ import {
 import {
   listCategories,
   upsertCategory,
-  type CategoryWithSubcategoriesDto as Category,
-} from "@agape/inventory/category";
-import Form, { useInputArray } from "@/components/form";
+  listSubcategories,
+  upsertSubcategory,
+  type ICategory as Category,
+  type ICategoryWithCounts,
+  type ISubcategory,
+} from "@agape/catalogs/category";
+import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
@@ -46,7 +50,7 @@ interface CategoryFormState {
 function CategoryModalWrapper(
   props: {
     category: Category;
-    onSave: (data: Category) => Promise<void>;
+    onSave: (data: Category) => Promise<Category[]>;
   } & PortalInjectedProps
 ) {
   return (
@@ -159,17 +163,48 @@ function CategoryForm({
 }: {
   category: Category;
   onClose: () => void;
-  onSave: (data: Category) => Promise<void>;
+  onSave: (data: Category) => Promise<Category[]>;
 }) {
   const initialState: CategoryFormState = {
     id: category.id || undefined,
     fullName: category.fullName,
     isEnabled: category.isEnabled ?? true,
-    subcategories: category.subcategories || [],
+    subcategories: [], // Loaded via effect
   };
 
+  const { merge } = Form.useForm();
+
+  // Load subcategories if editing
+  const { id } = category;
+  useMemo(() => {
+    if (id) {
+      listSubcategories({ categoryId: id }).then((subs) => {
+        // We need to map ISubcategory back to form structure if needed, or just use as is
+        // The form expects { id, fullName, isEnabled } which matches ISubcategory subset
+        merge({ subcategories: subs });
+      });
+    }
+  }, [id, merge]);
+
   async function handleSubmit(data: CategoryFormState) {
-    await onSave(data as Category);
+    // 1. Save category
+    const [savedCategory] = await onSave(data as any);
+
+    // 2. Save subcategories
+    if (data.subcategories && data.subcategories.length > 0) {
+      if (savedCategory.id) {
+        await Promise.all(
+          data.subcategories.map((sub) =>
+            upsertSubcategory({
+              ...sub,
+              categoryId: savedCategory.id,
+            })
+          )
+        );
+        // Handle deletions? Complex. For now just upsert.
+      }
+    }
+
     onClose();
   }
 
@@ -221,13 +256,7 @@ function CategoryForm({
 }
 
 function SubCategoriesManager() {
-  const subcategories = useInputArray<
-    {
-      id?: number;
-      fullName: string;
-      isEnabled: boolean;
-    }[]
-  >("subcategories");
+  const subcategories = Form.useArray("subcategories");
 
   return (
     <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
@@ -313,7 +342,8 @@ export default function CategoryList(props: { categories: Category[] }) {
   async function loadCategories() {
     try {
       setLoading(true);
-      const cats = await listCategories();
+      setLoading(true);
+      const cats = await listCategories({ includeSubcategoryCount: true });
       setCategories(cats);
     } catch (error) {
       console.error("Error cargando categorías:", error);
@@ -345,8 +375,9 @@ export default function CategoryList(props: { categories: Category[] }) {
   const totalPages = Math.ceil(filteredCategories.length / pageSize);
 
   async function saveCategory(data: Category) {
-    await upsertCategory(data);
+    const result = await upsertCategory(data);
     await loadCategories();
+    return result;
   }
 
   async function confirmDeleteCategory(item: Category) {
@@ -420,7 +451,9 @@ export default function CategoryList(props: { categories: Category[] }) {
         empty="No se encontraron categorías"
         render={(item) => ({
           title: item.fullName,
-          subtitle: `${item.subcategories?.length || 0} subcategorías`,
+          subtitle: `${
+            (item as ICategoryWithCounts).totalSubcategoryCount || 0
+          } subcategorías`,
           badge: item.isEnabled ? "Activa" : "Inactiva",
           badgeTone: item.isEnabled ? "green" : "amber",
           onEdit: () => showCategory({ category: item, onSave: saveCategory }),

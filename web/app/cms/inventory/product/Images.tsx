@@ -1,11 +1,10 @@
-import { useInput } from "@/components/form";
+import Form from "@/components/form";
 import { useState, useEffect } from "react";
 import Image from "@/components/util/image";
-
 const path = "images";
 
 export default function InputImages() {
-  const [images, setImages] = useInput<(string | File)[]>(path, []);
+  const [images, setImages] = Form.useInput<(string | File)[]>(path, []);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Ensure currentIndex is valid when images change

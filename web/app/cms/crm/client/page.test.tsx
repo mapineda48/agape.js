@@ -101,7 +101,6 @@ describe("CreateClientPage", () => {
       );
 
       expect(screen.getByText("Identificación")).toBeInTheDocument();
-      expect(screen.getByText("Datos Básicos")).toBeInTheDocument();
       expect(screen.getByText("Información de Cliente")).toBeInTheDocument();
     });
 
@@ -194,24 +193,15 @@ describe("CreateClientPage", () => {
         target: { value: "123456789" },
       });
 
-      // 3. Email
-      fireEvent.change(screen.getByPlaceholderText("correo@ejemplo.com"), {
-        target: { value: "test@example.com" },
-      });
-
-      // 4. Person Fields
+      // 3. Person Fields
       fireEvent.change(screen.getByPlaceholderText("Juan"), {
         target: { value: "Test" },
       });
       fireEvent.change(screen.getByPlaceholderText("Pérez"), {
         target: { value: "User" },
       });
-      // Date? Input.DateTime usually text-like inputs in JSDOM unless configured
-      // But let's assume it requires value.
-      // If it's `type="datetime-local"`, value format is YYYY-MM-DDTHH:mm
-      // Let's try to set it via path or just ignore if not strictly required by test logic but validation might trigger.
 
-      // 5. Client Type
+      // 4. Client Type
       fireEvent.change(selects[1], { target: { value: "1" } }); // VIP
 
       // Submit

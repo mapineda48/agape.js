@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import Form, { useAppDispatch, setAtPath, useForm } from "@/components/form";
+import Form, { useAppDispatch, setAtPath } from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
-import useInput from "@/components/form/Input/useInput";
 import {
   upsertItem,
   type IItem,
@@ -376,7 +375,7 @@ function GoodDetailsCard() {
 }
 
 function GoodUomSelect() {
-  const [uomId, setUomId] = useInput<number>("good.uomId", 1, {
+  const [uomId, setUomId] = Form.useInput<number>("good.uomId", 1, {
     materialize: true,
   });
 
@@ -458,7 +457,7 @@ function ServiceDetailsCard() {
 }
 
 function ServiceRecurringCheckbox() {
-  const [isRecurring, setIsRecurring] = useInput<boolean>(
+  const [isRecurring, setIsRecurring] = Form.useInput<boolean>(
     "service.isRecurring",
     false,
     { materialize: true }
@@ -585,13 +584,13 @@ function CategorizationCard() {
 function InsertUpdate(props: { itemType: ItemType; onSuccess?: () => void }) {
   const dispatch = useAppDispatch();
   const emitter = useEventEmitter();
-  const evt = useForm();
+  const evt = Form.useForm();
 
   useEffect(() => {
-    return emitter.on(evt.SUBMIT_SUCCESS, ((record: IItemRecord) => {
+    return emitter.on(evt.events.SUBMIT_SUCCESS, ((record: IItemRecord) => {
       dispatch(setAtPath({ path: [], value: record }));
     }) as any);
-  }, [emitter, evt.SUBMIT_SUCCESS, dispatch]);
+  }, [emitter, evt.events.SUBMIT_SUCCESS, dispatch]);
 
   const buttonColor =
     props.itemType === "good"
