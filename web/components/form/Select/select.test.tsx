@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import FormProvider from "../index";
+import { Form } from "../index";
 import * as Select from "./index";
 import { Submit } from "../Submit";
 import EventEmitter from "@/components/util/event-emitter";
@@ -10,18 +10,18 @@ describe("Select Components", () => {
   const SubmitWrapper = ({
     children,
     ...props
-  }: React.ComponentProps<typeof FormProvider>) => (
+  }: React.ComponentProps<typeof Form.Root>) => (
     <EventEmitter>
-      <FormProvider {...props}>{children}</FormProvider>
+      <Form.Root {...props}>{children}</Form.Root>
     </EventEmitter>
   );
 
   describe("Select.Boolean", () => {
     it("should initialize with default value (false)", () => {
       render(
-        <FormProvider state={{ isActive: false }}>
+        <Form.Root state={{ isActive: false }}>
           <Select.Boolean path="isActive" data-testid="select" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;
@@ -30,9 +30,9 @@ describe("Select Components", () => {
 
     it("should initialize with true value", () => {
       render(
-        <FormProvider state={{ isActive: true }}>
+        <Form.Root state={{ isActive: true }}>
           <Select.Boolean path="isActive" data-testid="select" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;
@@ -42,9 +42,9 @@ describe("Select Components", () => {
     it("should update state on change", async () => {
       const user = userEvent.setup();
       render(
-        <FormProvider state={{ isActive: false }}>
+        <Form.Root state={{ isActive: false }}>
           <Select.Boolean path="isActive" data-testid="select" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;
@@ -102,12 +102,12 @@ describe("Select Components", () => {
   describe("Select.Int", () => {
     it("should initialize with default value (0)", () => {
       render(
-        <FormProvider state={{ count: 0 }}>
+        <Form.Root state={{ count: 0 }}>
           <Select.Int path="count" data-testid="select">
             <option value="0">Zero</option>
             <option value="1">One</option>
           </Select.Int>
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;
@@ -116,12 +116,12 @@ describe("Select Components", () => {
 
     it("should initialize with provided value", () => {
       render(
-        <FormProvider state={{ count: 1 }}>
+        <Form.Root state={{ count: 1 }}>
           <Select.Int path="count" data-testid="select">
             <option value="0">Zero</option>
             <option value="1">One</option>
           </Select.Int>
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;
@@ -131,12 +131,12 @@ describe("Select Components", () => {
     it("should update state on change", async () => {
       const user = userEvent.setup();
       render(
-        <FormProvider state={{ count: 0 }}>
+        <Form.Root state={{ count: 0 }}>
           <Select.Int path="count" data-testid="select">
             <option value="0">Zero</option>
             <option value="5">Five</option>
           </Select.Int>
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;
@@ -199,12 +199,12 @@ describe("Select Components", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ count: 5 }}>
+        <Form.Root state={{ count: 5 }}>
           <Select.Int path="count" data-testid="select">
             <option value="0">Zero</option>
             <option value="abc">Invalid</option>
           </Select.Int>
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;
@@ -218,12 +218,12 @@ describe("Select Components", () => {
       const handleChange = vi.fn();
 
       render(
-        <FormProvider state={{ count: 0 }}>
+        <Form.Root state={{ count: 0 }}>
           <Select.Int path="count" onChange={handleChange} data-testid="select">
             <option value="0">Zero</option>
             <option value="10">Ten</option>
           </Select.Int>
-        </FormProvider>
+        </Form.Root>
       );
 
       const select = screen.getByTestId("select") as HTMLSelectElement;

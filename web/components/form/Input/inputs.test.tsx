@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import FormProvider from "../index";
+import { Form } from "../index";
 import * as Input from "./index";
 import { useAppSelector } from "../store/hooks";
 import Decimal from "@utils/data/Decimal";
@@ -29,9 +29,9 @@ describe("Extended Inputs", () => {
     it("should initialize with Decimal value", () => {
       const initialValue = new Decimal(10.5);
       render(
-        <FormProvider state={{ price: initialValue }}>
+        <Form.Root state={{ price: initialValue }}>
           <Input.Decimal path="price" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -41,9 +41,9 @@ describe("Extended Inputs", () => {
     it("should handle decimal input changes", async () => {
       const user = userEvent.setup();
       render(
-        <FormProvider state={{ price: new Decimal(0) }}>
+        <Form.Root state={{ price: new Decimal(0) }}>
           <Input.Decimal path="price" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -56,9 +56,9 @@ describe("Extended Inputs", () => {
     it("should handle invalid decimal input gracefully", async () => {
       const user = userEvent.setup();
       render(
-        <FormProvider state={{ price: new Decimal(0) }}>
+        <Form.Root state={{ price: new Decimal(0) }}>
           <Input.Decimal path="price" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -76,9 +76,9 @@ describe("Extended Inputs", () => {
     it("should handle empty decimal input", async () => {
       const user = userEvent.setup();
       render(
-        <FormProvider state={{ price: new Decimal(10) }}>
+        <Form.Root state={{ price: new Decimal(10) }}>
           <Input.Decimal path="price" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -92,9 +92,9 @@ describe("Extended Inputs", () => {
       const now = new Date("2023-10-27T10:00:00");
       const initialValue = new DateTime(now);
       render(
-        <FormProvider state={{ eventDate: initialValue }}>
+        <Form.Root state={{ eventDate: initialValue }}>
           <Input.DateTime path="eventDate" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -105,9 +105,9 @@ describe("Extended Inputs", () => {
     it("should handle datetime input changes", async () => {
       const user = userEvent.setup();
       render(
-        <FormProvider state={{ eventDate: new DateTime() }}>
+        <Form.Root state={{ eventDate: new DateTime() }}>
           <Input.DateTime path="eventDate" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -121,9 +121,9 @@ describe("Extended Inputs", () => {
     it("should handle invalid datetime input", async () => {
       const initialDate = new DateTime(new Date("2023-01-01T12:00:00"));
       render(
-        <FormProvider state={{ eventDate: initialDate }}>
+        <Form.Root state={{ eventDate: initialDate }}>
           <Input.DateTime path="eventDate" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -142,9 +142,9 @@ describe("Extended Inputs", () => {
       const file = new File(["hello"], "hello.png", { type: "image/png" });
 
       render(
-        <FormProvider state={{ avatar: null }}>
+        <Form.Root state={{ avatar: null }}>
           <Input.File path="avatar" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -161,9 +161,9 @@ describe("Extended Inputs", () => {
         new File(["world"], "world.png", { type: "image/png" }),
       ];
       render(
-        <FormProvider state={{ photos: [] }}>
+        <Form.Root state={{ photos: [] }}>
           <Input.File path="photos" multiple data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -188,10 +188,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ document: null }}>
+        <Form.Root state={{ document: null }}>
           <StateSpy />
           <Input.File path="document" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -205,9 +205,9 @@ describe("Extended Inputs", () => {
   describe("Float Input - NaN handling", () => {
     it("should initialize with 0 as default value", () => {
       render(
-        <FormProvider state={{}}>
+        <Form.Root state={{}}>
           <Input.Float path="value" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -216,9 +216,9 @@ describe("Extended Inputs", () => {
 
     it("should initialize with empty string when nullable", () => {
       render(
-        <FormProvider state={{}}>
+        <Form.Root state={{}}>
           <Input.Float path="value" nullable data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -235,10 +235,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ value: 10 }}>
+        <Form.Root state={{ value: 10 }}>
           <StateSpy />
           <Input.Float path="value" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -259,10 +259,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ value: 10 }}>
+        <Form.Root state={{ value: 10 }}>
           <StateSpy />
           <Input.Float path="value" nullable data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -282,10 +282,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ value: 0 }}>
+        <Form.Root state={{ value: 0 }}>
           <StateSpy />
           <Input.Float path="value" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -298,9 +298,9 @@ describe("Extended Inputs", () => {
   describe("Int Input - NaN handling", () => {
     it("should initialize with 0 as default value", () => {
       render(
-        <FormProvider state={{}}>
+        <Form.Root state={{}}>
           <Input.Int path="count" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -309,9 +309,9 @@ describe("Extended Inputs", () => {
 
     it("should initialize with empty string when nullable", () => {
       render(
-        <FormProvider state={{}}>
+        <Form.Root state={{}}>
           <Input.Int path="count" nullable data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -328,10 +328,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ count: 10 }}>
+        <Form.Root state={{ count: 10 }}>
           <StateSpy />
           <Input.Int path="count" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -352,10 +352,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ count: 10 }}>
+        <Form.Root state={{ count: 10 }}>
           <StateSpy />
           <Input.Int path="count" nullable data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -375,10 +375,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ count: 0 }}>
+        <Form.Root state={{ count: 0 }}>
           <StateSpy />
           <Input.Int path="count" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -397,10 +397,10 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{ count: 0 }}>
+        <Form.Root state={{ count: 0 }}>
           <StateSpy />
           <Input.Int path="count" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -411,22 +411,22 @@ describe("Extended Inputs", () => {
   });
 
   describe("Text Input flags", () => {
-    it("should render password input when password prop is true", () => {
+    it("should render password input when type is password", () => {
       render(
-        <FormProvider state={{ secret: "" }}>
-          <Input.Text path="secret" password data-testid="input" />
-        </FormProvider>
+        <Form.Root state={{ secret: "" }}>
+          <Input.Text path="secret" type="password" data-testid="input" />
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
       expect(input.type).toBe("password");
     });
 
-    it("should render email input when email prop is true", () => {
+    it("should render email input when type is email", () => {
       render(
-        <FormProvider state={{ email: "" }}>
-          <Input.Text path="email" email data-testid="input" />
-        </FormProvider>
+        <Form.Root state={{ email: "" }}>
+          <Input.Text path="email" type="email" data-testid="input" />
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -442,15 +442,15 @@ describe("Extended Inputs", () => {
       };
 
       render(
-        <FormProvider state={{}}>
+        <Form.Root state={{}}>
           <StateSpy />
           <Input.Text
             path="title"
-            value="Hello World"
+            defaultValue="Hello World"
             materialize
             data-testid="input"
           />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -463,17 +463,18 @@ describe("Extended Inputs", () => {
     it("should exclude untouched Int field without materialize from submit payload", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
-      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const EventEmitter = (await import("@/components/util/event-emitter"))
+        .default;
       const { Submit } = await import("../Submit");
 
       render(
         <EventEmitter>
-          <FormProvider>
+          <Form.Root>
             <Input.Int path="untouchedCount" data-testid="input" />
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -489,17 +490,18 @@ describe("Extended Inputs", () => {
     it("should include touched Int field without materialize in submit payload", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
-      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const EventEmitter = (await import("@/components/util/event-emitter"))
+        .default;
       const { Submit } = await import("../Submit");
 
       render(
         <EventEmitter>
-          <FormProvider>
+          <Form.Root>
             <Input.Int path="touchedCount" data-testid="input" />
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -517,17 +519,18 @@ describe("Extended Inputs", () => {
     it("should exclude untouched Float field without materialize from submit payload", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
-      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const EventEmitter = (await import("@/components/util/event-emitter"))
+        .default;
       const { Submit } = await import("../Submit");
 
       render(
         <EventEmitter>
-          <FormProvider>
+          <Form.Root>
             <Input.Float path="untouchedPrice" data-testid="input" />
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -543,17 +546,18 @@ describe("Extended Inputs", () => {
     it("should exclude untouched Text field without materialize from submit payload", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
-      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const EventEmitter = (await import("@/components/util/event-emitter"))
+        .default;
       const { Submit } = await import("../Submit");
 
       render(
         <EventEmitter>
-          <FormProvider>
+          <Form.Root>
             <Input.Text path="untouchedName" data-testid="input" />
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -569,17 +573,18 @@ describe("Extended Inputs", () => {
     it("should include Int field with materialize in submit payload even when untouched", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
-      const EventEmitter = (await import("@/components/util/event-emitter")).default;
+      const EventEmitter = (await import("@/components/util/event-emitter"))
+        .default;
       const { Submit } = await import("../Submit");
 
       render(
         <EventEmitter>
-          <FormProvider>
+          <Form.Root>
             <Input.Int path="count" materialize data-testid="input" />
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 

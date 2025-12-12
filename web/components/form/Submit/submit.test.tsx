@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React, { useEffect } from "react";
-import FormProvider from "../index";
+import { Form } from "../index";
 import { Submit } from "./index";
 import { useEvent } from "../provider";
 import EventEmitter, { useEventEmitter } from "@/components/util/event-emitter";
@@ -21,7 +21,7 @@ describe("Submit component", () => {
 
     render(
       <EventEmitter>
-        <FormProvider>
+        <Form.Root>
           <Submit
             data-testid="submit"
             onSubmit={onSubmit}
@@ -29,7 +29,7 @@ describe("Submit component", () => {
           >
             Submit
           </Submit>
-        </FormProvider>
+        </Form.Root>
       </EventEmitter>
     );
 
@@ -72,7 +72,7 @@ describe("Submit component", () => {
 
     render(
       <EventEmitter>
-        <FormProvider>
+        <Form.Root>
           <SuccessListener />
           <Submit
             data-testid="submit"
@@ -81,7 +81,7 @@ describe("Submit component", () => {
           >
             Submit
           </Submit>
-        </FormProvider>
+        </Form.Root>
       </EventEmitter>
     );
 

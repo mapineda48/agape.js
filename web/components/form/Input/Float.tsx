@@ -1,17 +1,47 @@
-import { type JSX } from "react";
+import { forwardRef, type JSX } from "react";
 import useInput from "./useInput";
 
-export default function InputFloat(props: Props) {
+/**
+ * Props for the Float input component.
+ */
+export interface FloatProps
+  extends Omit<JSX.IntrinsicElements["input"], "value" | "onChange" | "type"> {
+  /** Path within the form store */
+  path: string;
+  /** If true, writes the default value to the store on mount */
+  materialize?: boolean;
+  /** If true, removes the value from the store when unmounted */
+  autoCleanup?: boolean;
+  /** If true, empty input will set null instead of 0 */
+  nullable?: boolean;
+}
+
+/**
+ * Floating point number input connected to the form store.
+ * Parses input as float and stores the numeric value.
+ *
+ * @example
+ * ```tsx
+ * <Form.Float path="price" step="0.01" />
+ * <Form.Float path="weight" nullable />
+ * ```
+ */
+const Float = forwardRef<HTMLInputElement, FloatProps>((props, ref) => {
   const { path, materialize, autoCleanup, nullable, ...core } = props;
 
   const defaultValue = nullable ? null : 0;
-  const [state, setState] = useInput(path, defaultValue, { materialize, autoCleanup });
+  const [state, setState] = useInput(path, defaultValue, {
+    materialize,
+    autoCleanup,
+  });
 
-  const displayValue = state === null || Number.isNaN(state as number) ? "" : (state as number);
+  const displayValue =
+    state === null || Number.isNaN(state as number) ? "" : (state as number);
 
   return (
     <input
       {...core}
+      ref={ref}
       type="number"
       value={displayValue}
       onChange={({ currentTarget }) => {
@@ -30,18 +60,8 @@ export default function InputFloat(props: Props) {
       }}
     />
   );
-}
+});
 
-interface Props extends Core {
-  path: string;
-  materialize?: boolean;
-  /** If true, the value will be removed from the store when this input unmounts */
-  autoCleanup?: boolean;
-  /** If true, empty input will set null instead of 0 */
-  nullable?: boolean;
-}
+Float.displayName = "Form.Float";
 
-type Core = Omit<
-  JSX.IntrinsicElements["input"],
-  "value" | "name" | "onChange" | "type"
->;
+export default Float;

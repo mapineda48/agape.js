@@ -1,27 +1,26 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import FormProvider from "./index";
-import PathProvider from "./paths";
+import { Form } from "./index";
 import * as Input from "./Input";
 import { Submit } from "./Submit";
 import { useInputArray } from "./hooks";
 import EventEmitter from "@/components/util/event-emitter";
 
-describe("PathProvider Nested Paths", () => {
-  it("should handle nested paths using PathProvider", async () => {
+describe("Form.Scope Nested Paths", () => {
+  it("should handle nested paths using Form.Scope", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
     render(
       <EventEmitter>
-        <FormProvider>
-          <PathProvider value="person">
+        <Form.Root>
+          <Form.Scope path="person">
             <Input.Text path="firstName" data-testid="input" />
-          </PathProvider>
+          </Form.Scope>
           <Submit onSubmit={onSubmit} data-testid="submit">
             Submit
           </Submit>
-        </FormProvider>
+        </Form.Root>
       </EventEmitter>
     );
 
@@ -40,22 +39,22 @@ describe("PathProvider Nested Paths", () => {
     });
   });
 
-  it("should handle deeply nested paths using multiple PathProviders", async () => {
+  it("should handle deeply nested paths using multiple Form.Scope", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
     render(
       <EventEmitter>
-        <FormProvider>
-          <PathProvider value="user">
-            <PathProvider value="profile">
+        <Form.Root>
+          <Form.Scope path="user">
+            <Form.Scope path="profile">
               <Input.Text path="name" data-testid="input" />
-            </PathProvider>
-          </PathProvider>
+            </Form.Scope>
+          </Form.Scope>
           <Submit onSubmit={onSubmit} data-testid="submit">
             Submit
           </Submit>
-        </FormProvider>
+        </Form.Root>
       </EventEmitter>
     );
 
@@ -76,7 +75,7 @@ describe("PathProvider Nested Paths", () => {
     });
   });
 
-  it("should compose PathProvider with useInputArray and submit values", async () => {
+  it("should compose Form.Scope with useInputArray and submit values", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
@@ -106,14 +105,14 @@ describe("PathProvider Nested Paths", () => {
 
     render(
       <EventEmitter>
-        <FormProvider state={{ categories: [{ name: "A" }, { name: "B" }] }}>
-          <PathProvider value="categories">
+        <Form.Root state={{ categories: [{ name: "A" }, { name: "B" }] }}>
+          <Form.Scope path="categories">
             <Categories />
-          </PathProvider>
+          </Form.Scope>
           <Submit onSubmit={onSubmit} data-testid="submit">
             Submit
           </Submit>
-        </FormProvider>
+        </Form.Root>
       </EventEmitter>
     );
 
@@ -134,29 +133,29 @@ describe("PathProvider Nested Paths", () => {
     });
   });
 
-  describe("PathProvider autoCleanup", () => {
-    it("should NOT remove values when PathProvider unmounts by default", async () => {
+  describe("Form.Scope autoCleanup", () => {
+    it("should NOT remove values when Form.Scope unmounts by default", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       let showSection = true;
 
       const { rerender } = render(
         <EventEmitter>
-          <FormProvider state={{ main: { value: "main" } }}>
+          <Form.Root state={{ main: { value: "main" } }}>
             {showSection && (
-              <PathProvider value="section">
+              <Form.Scope path="section">
                 <Input.Text
                   path="field"
-                  value="test"
+                  defaultValue="test"
                   materialize
                   data-testid="field"
                 />
-              </PathProvider>
+              </Form.Scope>
             )}
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -175,21 +174,21 @@ describe("PathProvider Nested Paths", () => {
       // Rerender without the section
       rerender(
         <EventEmitter>
-          <FormProvider state={{ main: { value: "main" } }}>
+          <Form.Root state={{ main: { value: "main" } }}>
             {showSection && (
-              <PathProvider value="section">
+              <Form.Scope path="section">
                 <Input.Text
                   path="field"
-                  value="test"
+                  defaultValue="test"
                   materialize
                   data-testid="field"
                 />
-              </PathProvider>
+              </Form.Scope>
             )}
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -203,34 +202,34 @@ describe("PathProvider Nested Paths", () => {
       });
     });
 
-    it("should remove entire subtree when PathProvider unmounts with autoCleanup", async () => {
+    it("should remove entire subtree when Form.Scope unmounts with autoCleanup", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       let showSection = true;
 
       const { rerender } = render(
         <EventEmitter>
-          <FormProvider state={{ main: { value: "main" } }}>
+          <Form.Root state={{ main: { value: "main" } }}>
             {showSection && (
-              <PathProvider value="section" autoCleanup>
+              <Form.Scope path="section" autoCleanup>
                 <Input.Text
                   path="field1"
-                  value="one"
+                  defaultValue="one"
                   materialize
                   data-testid="field1"
                 />
                 <Input.Text
                   path="field2"
-                  value="two"
+                  defaultValue="two"
                   materialize
                   data-testid="field2"
                 />
-              </PathProvider>
+              </Form.Scope>
             )}
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -249,27 +248,27 @@ describe("PathProvider Nested Paths", () => {
       // Rerender without the section (with autoCleanup)
       rerender(
         <EventEmitter>
-          <FormProvider state={{ main: { value: "main" } }}>
+          <Form.Root state={{ main: { value: "main" } }}>
             {showSection && (
-              <PathProvider value="section" autoCleanup>
+              <Form.Scope path="section" autoCleanup>
                 <Input.Text
                   path="field1"
-                  value="one"
+                  defaultValue="one"
                   materialize
                   data-testid="field1"
                 />
                 <Input.Text
                   path="field2"
-                  value="two"
+                  defaultValue="two"
                   materialize
                   data-testid="field2"
                 />
-              </PathProvider>
+              </Form.Scope>
             )}
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -282,36 +281,36 @@ describe("PathProvider Nested Paths", () => {
       });
     });
 
-    it("should handle nested PathProviders with autoCleanup", async () => {
+    it("should handle nested Form.Scope with autoCleanup", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       let showNested = true;
 
       const { rerender } = render(
         <EventEmitter>
-          <FormProvider>
-            <PathProvider value="parent">
+          <Form.Root>
+            <Form.Scope path="parent">
               <Input.Text
                 path="parentField"
-                value="parent"
+                defaultValue="parent"
                 materialize
                 data-testid="parent"
               />
               {showNested && (
-                <PathProvider value="child" autoCleanup>
+                <Form.Scope path="child" autoCleanup>
                   <Input.Text
                     path="childField"
-                    value="child"
+                    defaultValue="child"
                     materialize
                     data-testid="child"
                   />
-                </PathProvider>
+                </Form.Scope>
               )}
-            </PathProvider>
+            </Form.Scope>
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 
@@ -332,29 +331,29 @@ describe("PathProvider Nested Paths", () => {
       // Remove nested section
       rerender(
         <EventEmitter>
-          <FormProvider>
-            <PathProvider value="parent">
+          <Form.Root>
+            <Form.Scope path="parent">
               <Input.Text
                 path="parentField"
-                value="parent"
+                defaultValue="parent"
                 materialize
                 data-testid="parent"
               />
               {showNested && (
-                <PathProvider value="child" autoCleanup>
+                <Form.Scope path="child" autoCleanup>
                   <Input.Text
                     path="childField"
-                    value="child"
+                    defaultValue="child"
                     materialize
                     data-testid="child"
                   />
-                </PathProvider>
+                </Form.Scope>
               )}
-            </PathProvider>
+            </Form.Scope>
             <Submit onSubmit={onSubmit} data-testid="submit">
               Submit
             </Submit>
-          </FormProvider>
+          </Form.Root>
         </EventEmitter>
       );
 

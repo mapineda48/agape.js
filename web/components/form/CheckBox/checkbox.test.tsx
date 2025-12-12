@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import FormProvider from "../index";
+import { Form } from "../index";
 import Checkbox from "./index";
 import { Submit } from "../Submit";
 import EventEmitter from "@/components/util/event-emitter";
@@ -9,17 +9,17 @@ describe("Checkbox Component", () => {
   const SubmitWrapper = ({
     children,
     ...props
-  }: React.ComponentProps<typeof FormProvider>) => (
+  }: React.ComponentProps<typeof Form.Root>) => (
     <EventEmitter>
-      <FormProvider {...props}>{children}</FormProvider>
+      <Form.Root {...props}>{children}</Form.Root>
     </EventEmitter>
   );
 
   it("should initialize with default value (false)", () => {
     render(
-      <FormProvider state={{ isActive: false }}>
+      <Form.Root state={{ isActive: false }}>
         <Checkbox path="isActive" data-testid="checkbox" />
-      </FormProvider>
+      </Form.Root>
     );
 
     const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -28,9 +28,9 @@ describe("Checkbox Component", () => {
 
   it("should initialize with true value", () => {
     render(
-      <FormProvider state={{ isActive: true }}>
+      <Form.Root state={{ isActive: true }}>
         <Checkbox path="isActive" data-testid="checkbox" />
-      </FormProvider>
+      </Form.Root>
     );
 
     const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -40,9 +40,9 @@ describe("Checkbox Component", () => {
   it("should update state on toggle", async () => {
     const user = userEvent.setup();
     render(
-      <FormProvider state={{ isActive: false }}>
+      <Form.Root state={{ isActive: false }}>
         <Checkbox path="isActive" data-testid="checkbox" />
-      </FormProvider>
+      </Form.Root>
     );
 
     const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;

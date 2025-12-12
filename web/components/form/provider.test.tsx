@@ -1,27 +1,26 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import Form from "./index";
-const FormProvider = Form; // Alias for backward compatibility in tests
+import { Form } from "./index";
 import * as Input from "./Input";
 import Checkbox from "./CheckBox";
 import { Submit } from "./Submit";
 import EventEmitter from "@/components/util/event-emitter";
 
-describe("FormProvider", () => {
+describe("Form.Root", () => {
   it("should render children", () => {
     render(
-      <FormProvider>
+      <Form.Root>
         <div data-testid="child">Child</div>
-      </FormProvider>
+      </Form.Root>
     );
     expect(screen.getByTestId("child")).toBeInTheDocument();
   });
 
   it("should initialize with state", () => {
     render(
-      <FormProvider state={{ name: "Initial" }}>
+      <Form.Root state={{ name: "Initial" }}>
         <Input.Text path="name" data-testid="input" />
-      </FormProvider>
+      </Form.Root>
     );
 
     const input = screen.getByTestId("input") as HTMLInputElement;
@@ -33,9 +32,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ name: "" }}>
+        <Form.Root state={{ name: "" }}>
           <Input.Text path="name" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -49,9 +48,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ name: "Initial Text" }}>
+        <Form.Root state={{ name: "Initial Text" }}>
           <Input.Text path="name" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -65,9 +64,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ description: "" }}>
+        <Form.Root state={{ description: "" }}>
           <Input.Text path="description" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -79,9 +78,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ user: { profile: { name: "John" } } }}>
+        <Form.Root state={{ user: { profile: { name: "John" } } }}>
           <Input.Text path="user.profile.name" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -96,10 +95,10 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ firstName: "", lastName: "" }}>
+        <Form.Root state={{ firstName: "", lastName: "" }}>
           <Input.Text path="firstName" data-testid="first-name" />
           <Input.Text path="lastName" data-testid="last-name" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const firstName = screen.getByTestId("first-name") as HTMLInputElement;
@@ -116,9 +115,9 @@ describe("FormProvider", () => {
   describe("Int Input", () => {
     it("should initialize with number value", () => {
       render(
-        <FormProvider state={{ age: 25 }}>
+        <Form.Root state={{ age: 25 }}>
           <Input.Int path="age" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -129,9 +128,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ count: 0 }}>
+        <Form.Root state={{ count: 0 }}>
           <Input.Int path="count" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -144,9 +143,9 @@ describe("FormProvider", () => {
 
     it("should handle negative numbers", async () => {
       render(
-        <FormProvider state={{ temperature: 0 }}>
+        <Form.Root state={{ temperature: 0 }}>
           <Input.Int path="temperature" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -162,9 +161,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ population: 0 }}>
+        <Form.Root state={{ population: 0 }}>
           <Input.Int path="population" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -178,9 +177,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ count: 100 }}>
+        <Form.Root state={{ count: 100 }}>
           <Input.Int path="count" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -195,9 +194,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ user: { settings: { notifications: 5 } } }}>
+        <Form.Root state={{ user: { settings: { notifications: 5 } } }}>
           <Input.Int path="user.settings.notifications" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -212,9 +211,9 @@ describe("FormProvider", () => {
   describe("Checkbox Input", () => {
     it("should initialize with boolean true", () => {
       render(
-        <FormProvider state={{ enabled: true }}>
+        <Form.Root state={{ enabled: true }}>
           <Checkbox path="enabled" data-testid="checkbox" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -223,9 +222,9 @@ describe("FormProvider", () => {
 
     it("should initialize with boolean false", () => {
       render(
-        <FormProvider state={{ enabled: false }}>
+        <Form.Root state={{ enabled: false }}>
           <Checkbox path="enabled" data-testid="checkbox" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -236,9 +235,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ enabled: false }}>
+        <Form.Root state={{ enabled: false }}>
           <Checkbox path="enabled" data-testid="checkbox" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -252,9 +251,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ enabled: true }}>
+        <Form.Root state={{ enabled: true }}>
           <Checkbox path="enabled" data-testid="checkbox" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -268,9 +267,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ enabled: false }}>
+        <Form.Root state={{ enabled: false }}>
           <Checkbox path="enabled" data-testid="checkbox" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -290,9 +289,9 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider state={{ user: { settings: { notifications: false } } }}>
+        <Form.Root state={{ user: { settings: { notifications: false } } }}>
           <Checkbox path="user.settings.notifications" data-testid="checkbox" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -306,13 +305,13 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider
+        <Form.Root
           state={{ notifications: false, newsletter: true, updates: false }}
         >
           <Checkbox path="notifications" data-testid="notifications" />
           <Checkbox path="newsletter" data-testid="newsletter" />
           <Checkbox path="updates" data-testid="updates" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const notifications = screen.getByTestId(
@@ -339,7 +338,7 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider
+        <Form.Root
           state={{
             name: "John",
             age: 30,
@@ -349,7 +348,7 @@ describe("FormProvider", () => {
           <Input.Text path="name" data-testid="name" />
           <Input.Int path="age" data-testid="age" />
           <Checkbox path="active" data-testid="active" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const nameInput = screen.getByTestId("name") as HTMLInputElement;
@@ -375,7 +374,7 @@ describe("FormProvider", () => {
       const user = userEvent.setup();
 
       render(
-        <FormProvider
+        <Form.Root
           state={{
             user: {
               profile: { name: "Alice", age: 28 },
@@ -390,7 +389,7 @@ describe("FormProvider", () => {
             data-testid="notifications"
           />
           <Input.Text path="user.settings.theme" data-testid="theme" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const name = screen.getByTestId("name") as HTMLInputElement;
@@ -423,9 +422,9 @@ describe("FormProvider", () => {
   describe("Default Values", () => {
     it("should use default text value when state is empty", () => {
       render(
-        <FormProvider>
-          <Input.Text path="name" value="Default Name" data-testid="input" />
-        </FormProvider>
+        <Form.Root>
+          <Input.Text path="name" defaultValue="Default Name" data-testid="input" />
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -434,13 +433,13 @@ describe("FormProvider", () => {
 
     it("should use default checkbox value when state is empty", () => {
       render(
-        <FormProvider>
+        <Form.Root>
           <Checkbox
             path="enabled"
             defaultChecked={true}
             data-testid="checkbox"
           />
-        </FormProvider>
+        </Form.Root>
       );
 
       const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
@@ -449,9 +448,9 @@ describe("FormProvider", () => {
 
     it("should use default int value when state is empty", () => {
       render(
-        <FormProvider>
+        <Form.Root>
           <Input.Int path="count" data-testid="input" />
-        </FormProvider>
+        </Form.Root>
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -464,9 +463,9 @@ describe("FormProvider", () => {
     const SubmitWrapper = ({
       children,
       ...props
-    }: React.ComponentProps<typeof FormProvider>) => (
+    }: React.ComponentProps<typeof Form.Root>) => (
       <EventEmitter>
-        <FormProvider {...props}>{children}</FormProvider>
+        <Form.Root {...props}>{children}</Form.Root>
       </EventEmitter>
     );
 

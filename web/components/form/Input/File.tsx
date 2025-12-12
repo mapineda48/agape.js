@@ -1,7 +1,30 @@
-import { type JSX } from "react";
+import { forwardRef, type JSX } from "react";
 import useInput from "./useInput";
 
-export default function InputFile(props: Props) {
+/**
+ * Props for the File input component.
+ */
+export interface FileProps
+  extends Omit<JSX.IntrinsicElements["input"], "value" | "onChange" | "type"> {
+  /** Path within the form store */
+  path: string;
+  /** If true, writes the default value to the store on mount */
+  materialize?: boolean;
+  /** If true, removes the value from the store when unmounted */
+  autoCleanup?: boolean;
+}
+
+/**
+ * File input connected to the form store.
+ * Supports single and multiple file selection.
+ *
+ * @example
+ * ```tsx
+ * <Form.File path="avatar" accept="image/*" />
+ * <Form.File path="documents" multiple />
+ * ```
+ */
+const FileInput = forwardRef<HTMLInputElement, FileProps>((props, ref) => {
   const { path, multiple, materialize, autoCleanup, ...core } = props;
 
   const [state, setState] = useInput<File | File[] | null>(
@@ -13,6 +36,7 @@ export default function InputFile(props: Props) {
   return (
     <input
       {...core}
+      ref={ref}
       type="file"
       multiple={multiple}
       onChange={({ currentTarget }) => {
@@ -32,16 +56,8 @@ export default function InputFile(props: Props) {
       }}
     />
   );
-}
+});
 
-interface Props extends Core {
-  path: string;
-  materialize?: boolean;
-  /** If true, the value will be removed from the store when this input unmounts */
-  autoCleanup?: boolean;
-}
+FileInput.displayName = "Form.File";
 
-type Core = Omit<
-  JSX.IntrinsicElements["input"],
-  "value" | "name" | "onChange" | "type"
->;
+export default FileInput;
