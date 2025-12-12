@@ -408,16 +408,6 @@ describe("createInventoryMovement service", () => {
       expect(totalAfter).toBe(totalBefore);
     });
 
-    // Skipped - La FK constraint de movement_type.documentTypeId ya impide
-    // crear un tipo de movimiento con documentTypeId inválido a nivel de DB.
-    // No es posible crear el escenario de test porque la integridad referencial
-    // lo previene correctamente.
-    it.skip("should throw error when movement type has invalid documentTypeId", async () => {
-      // Este escenario no puede ocurrir porque:
-      // - La FK en inventory_movement_type.document_type_id impide insertar
-      //   un tipo de movimiento que referencie un document_type inexistente.
-      // - Esto es correcto desde el punto de vista de integridad de datos.
-    });
 
     it("should propagate numeration errors and not leave orphan movements", async () => {
       const { createInventoryMovement } = await import("./movement");
@@ -733,13 +723,6 @@ describe("createInventoryMovement service", () => {
       expect(totalAfter).toBe(totalBefore);
     });
 
-    // D.15: Skip - El modelo permite locationId null, por lo que no hay validación obligatoria.
-    // Si en el futuro se requiere validar ubicación para movimientos que afectan stock,
-    // se puede agregar esa validación al servicio.
-    it.skip("should validate locationId when affectsStock is true", async () => {
-      // Este escenario depende de reglas de negocio específicas.
-      // Si se implementa, validaría que locationId no sea null cuando movementType.affectsStock = true.
-    });
 
     it("should persist unitCost when provided", async () => {
       const { createInventoryMovement } = await import("./movement");
@@ -876,13 +859,6 @@ describe("createInventoryMovement service", () => {
       expect(result.movementId).toBeDefined();
     });
 
-    // E.18: Skip - La validación de affectsStock depende de reglas de negocio específicas.
-    // Si en el futuro se requiere que ciertos contextos exijan affectsStock = true,
-    // se puede agregar la validación correspondiente.
-    it.skip("should validate affectsStock in specific contexts", async () => {
-      // Este escenario depende de reglas de negocio no definidas actualmente.
-      // Por ejemplo: "Solo permitir tipos que afectan stock para entradas/salidas"
-    });
 
     it("should throw error when insufficient stock for exit movement", async () => {
       const { createInventoryMovement } = await import("./movement");
