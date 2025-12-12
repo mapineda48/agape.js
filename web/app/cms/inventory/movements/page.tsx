@@ -17,7 +17,7 @@ const PAGE_SIZE = 12;
 
 type InventoryMovement = Awaited<
   ReturnType<typeof listInventoryMovements>
->["items"][number];
+>["movements"][number];
 type MovementType = Awaited<ReturnType<typeof listMovementTypes>>[number];
 
 interface Props {
@@ -37,7 +37,8 @@ export async function onInit() {
   ]);
 
   return {
-    ...movementsResult,
+    items: movementsResult.movements,
+    totalCount: movementsResult.totalCount ?? 0,
     types,
   };
 }
@@ -91,7 +92,7 @@ export default function MovementsPage(props: Props) {
             ...filters,
             includeTotalCount: false,
           },
-          items: response.items,
+          items: response.movements,
           totalCount: response.totalCount ?? totalCount,
         });
       })
@@ -295,8 +296,9 @@ function MovementCard({
             {item.documentNumberFull}
           </span>
           <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            {item.movementType}
+            {item.movementTypeName}
           </span>
+          <StatusBadge status={item.status} />
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500">
           <span>{new Date(item.movementDate as any).toLocaleDateString()}</span>
@@ -331,3 +333,28 @@ interface IState {
   items: InventoryMovement[];
   totalCount: number;
 }
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    draft: "bg-yellow-100 text-yellow-800",
+    posted: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+
+  const labels: Record<string, string> = {
+    draft: "Borrador",
+    posted: "Contabilizado",
+    cancelled: "Cancelado",
+  };
+
+  return (
+    <span
+      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+        styles[status] || "bg-gray-100 text-gray-800"
+      }`}
+    >
+      {labels[status] || status}
+    </span>
+  );
+}
+

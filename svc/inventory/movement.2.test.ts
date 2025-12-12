@@ -336,7 +336,7 @@ describe("Fase 3 - Épica 3.1: Posteo de movimientos", () => {
       const { stock } = await import("#models/inventory/stock");
       const { and, eq } = await import("drizzle-orm");
 
-      // 1. Crear entrada inicial en ubicación 1
+      // 1. Crear entrada inicial en ubicación 1 (con autoPost para afectar stock)
       await createInventoryMovement({
         movementTypeId: movementTypeEntryId,
         movementDate: new DateTime(),
@@ -344,6 +344,7 @@ describe("Fase 3 - Épica 3.1: Posteo de movimientos", () => {
         details: [
           { itemId, locationId, quantity: 100, unitCost: new Decimal("10.00") },
         ],
+        autoPost: true, // Para que afecte stock inmediatamente
       });
 
       // 2. Transferir 30 unidades de loc1 a loc2
@@ -484,7 +485,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
         ],
       });
 
-      expect(result.id).toBeDefined();
+      expect(result.movementId).toBeDefined();
     });
 
     it("si ítem requiere lote y se provee lotNumber, debe crear/encontrar el lote", async () => {
@@ -511,7 +512,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
         ],
       });
 
-      expect(result1.id).toBeDefined();
+      expect(result1.movementId).toBeDefined();
 
       // Verificar que se creó el lote
       const [lot] = await db
@@ -542,7 +543,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
         ],
       });
 
-      expect(result2.id).toBeDefined();
+      expect(result2.movementId).toBeDefined();
 
       // No debería haber lotes duplicados
       const { count } = await import("drizzle-orm");
@@ -590,7 +591,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
         ],
       });
 
-      expect(result.id).toBeDefined();
+      expect(result.movementId).toBeDefined();
     });
   });
 
@@ -615,6 +616,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
         })
         .returning();
 
+      // Con autoPost: true, la validación de lote vencido se ejecuta
       await expect(
         createInventoryMovement({
           movementTypeId: movementTypeEntryId,
@@ -628,6 +630,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
               lotId: expiredLot.id,
             },
           ],
+          autoPost: true, // La validación de lotes ocurre al postear
         })
       ).rejects.toThrow(/vencido/);
     });
@@ -648,6 +651,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
         })
         .returning();
 
+      // Con autoPost: true, la validación de estado de lote se ejecuta
       await expect(
         createInventoryMovement({
           movementTypeId: movementTypeEntryId,
@@ -661,6 +665,7 @@ describe("Fase 3 - Épica 3.2: Lotes/Seriales", () => {
               lotId: quarantineLot.id,
             },
           ],
+          autoPost: true, // La validación de lotes ocurre al postear
         })
       ).rejects.toThrow(/no está disponible/);
     });

@@ -287,7 +287,8 @@ export async function postGoodsReceipt(
 
     // El servicio de inventario inicia su propia TX.
     // Llamarlo dentro de nuestra TX crea savepoint.
-    const movement = await createInventoryMovement({
+    // autoPost: true para que se cree y postee atomicamente
+    const movementResult = await createInventoryMovement({
       movementTypeId: movType.id,
       movementDate: new DateTime(), // Fecha de posteo o de recibo? Usualmente hoy.
       observation: `GRN #${gr.documentNumberFull}`,
@@ -299,6 +300,7 @@ export async function postGoodsReceipt(
         ...d,
         locationId: d.locationId!,
       })), // Force location check
+      autoPost: true, // Crear y postear en una sola operación
     });
 
     // Actualizar estado GR
@@ -370,8 +372,8 @@ export async function postGoodsReceipt(
 
     return {
       goodsReceiptId: gr.id,
-      inventoryMovementId: movement.id,
-      inventoryMovementNumber: movement.documentNumberFull,
+      inventoryMovementId: movementResult.movementId,
+      inventoryMovementNumber: movementResult.documentNumber,
       isPurchaseOrderClosed,
     };
   });
