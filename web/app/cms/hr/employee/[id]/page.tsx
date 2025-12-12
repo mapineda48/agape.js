@@ -101,7 +101,7 @@ export default function EditEmployeePage(props: Props) {
           </div>
 
           {/* Form */}
-          <Form<UpsertEmployeePayload> state={initialData}>
+          <Form.Root<UpsertEmployeePayload> state={initialData}>
             <EmployeeForm
               documentTypes={props.documentTypes}
               initialAvatar={props.employee.avatarUrl}
@@ -163,7 +163,7 @@ export default function EditEmployeePage(props: Props) {
                 Guardar Cambios
               </Submit>
             </EmployeeForm>
-          </Form>
+          </Form.Root>
         </div>
       </div>
     </Fragment>

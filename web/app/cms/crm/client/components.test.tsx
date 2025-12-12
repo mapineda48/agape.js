@@ -1,11 +1,10 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ClientForm } from "./components";
-import Form from "@/components/form";
+import { Form } from "@/components/form";
 import { getUserByDocument } from "@agape/core/user";
 import { getClientByDocument } from "@agape/crm/client";
 import { useNotificacion } from "@/components/ui/notification";
-import { useFormReset } from "@/components/form";
 import { useRouter } from "@/components/router/router-hook";
 import { type DocumentType } from "@agape/core/documentType";
 import { type ClientType } from "@agape/crm/clientType";
@@ -19,12 +18,16 @@ vi.mock("@/components/router/router-hook", () => ({
   useRouter: vi.fn(),
 }));
 
-// Mock useFormReset
+// Mock Form.useForm
 vi.mock("@/components/form", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/components/form")>();
   return {
     ...actual,
-    useFormReset: vi.fn(),
+    Form: {
+      ...actual.Form,
+      useForm: vi.fn(),
+      useSelector: vi.fn(),
+    },
   };
 });
 
@@ -62,20 +65,21 @@ describe("ClientForm", () => {
     (useRouter as any).mockReturnValue({ navigate: mockNavigate });
     (getClientByDocument as any).mockResolvedValue(null);
     (getUserByDocument as any).mockResolvedValue(null);
-    (useFormReset as any).mockReturnValue({
+    (Form.useForm as any).mockReturnValue({
       setAt: mockSetAt,
     });
+    (Form.useSelector as any).mockReturnValue(undefined);
   });
 
   const renderForm = (props = {}, state?: any) => {
     return render(
-      <Form state={state}>
+      <Form.Root state={state}>
         <ClientForm
           documentTypes={mockDocumentTypes}
           clientTypes={mockClientTypes}
           {...props}
         />
-      </Form>
+      </Form.Root>
     );
   };
 

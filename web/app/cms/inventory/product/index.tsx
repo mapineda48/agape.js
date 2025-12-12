@@ -37,7 +37,7 @@ export function ItemForm(props: ItemFormProps) {
     : "good";
 
   return (
-    <Form<ItemFormState>
+    <Form.Root<ItemFormState>
       state={props.item as ItemFormState}
       className="max-w-7xl mx-auto space-y-6"
     >
@@ -46,7 +46,7 @@ export function ItemForm(props: ItemFormProps) {
         isEditing={!!props.item?.id}
         onSuccess={props.onSuccess}
       />
-    </Form>
+    </Form.Root>
   );
 }
 

@@ -174,7 +174,7 @@ function CategoryForm({
   }
 
   return (
-    <Form<CategoryFormState> state={initialState}>
+    <Form.Root<CategoryFormState> state={initialState}>
       <div className="space-y-5 p-5">
         <div className="space-y-4">
           <label className="space-y-1.5 block">
@@ -216,7 +216,7 @@ function CategoryForm({
           {initialState.id ? "Guardar cambios" : "Crear categoría"}
         </Submit>
       </div>
-    </Form>
+    </Form.Root>
   );
 }
 

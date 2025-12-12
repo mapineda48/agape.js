@@ -1,11 +1,10 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { EmployeeForm } from "./components";
-import Form from "@/components/form";
+import { Form } from "@/components/form";
 import { getUserByDocument } from "@agape/core/user";
 import { getEmployeeByDocument } from "@agape/hr/employee";
 import { useNotificacion } from "@/components/ui/notification";
-import { useFormReset } from "@/components/form";
 import { useRouter } from "@/components/router/router-hook";
 import { type DocumentType } from "@agape/core/documentType";
 import EventEmitter from "@/components/util/event-emitter";
@@ -20,12 +19,16 @@ vi.mock("@/components/router/router-hook", () => ({
   useRouter: vi.fn(),
 }));
 
-// We need to mock useFormReset but keep Form component working
+// We need to mock Form.useForm but keep Form component working
 vi.mock("@/components/form", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/components/form")>();
   return {
     ...actual,
-    useFormReset: vi.fn(),
+    Form: {
+      ...actual.Form,
+      useForm: vi.fn(),
+      useSelector: vi.fn(),
+    },
   };
 });
 
@@ -79,10 +82,11 @@ describe("EmployeeForm", () => {
       pathname: "/cms/hr/employee",
       params: {},
     });
-    (useFormReset as any).mockReturnValue({
+    (Form.useForm as any).mockReturnValue({
       merge: mockMerge,
       setAt: mockSetAt,
     });
+    (Form.useSelector as any).mockReturnValue(undefined);
     // Default: no employee/user exists
     (getEmployeeByDocument as any).mockResolvedValue(null);
     (getUserByDocument as any).mockResolvedValue(null);
@@ -91,9 +95,9 @@ describe("EmployeeForm", () => {
   describe("Rendering", () => {
     it("renders correctly and filters document types", () => {
       renderWithProviders(
-        <Form>
+        <Form.Root>
           <EmployeeForm documentTypes={mockDocumentTypes} />
-        </Form>
+        </Form.Root>
       );
 
       // Check if fields exist
@@ -125,9 +129,9 @@ describe("EmployeeForm", () => {
       });
 
       renderWithProviders(
-        <Form>
+        <Form.Root>
           <EmployeeForm documentTypes={mockDocumentTypes} />
-        </Form>
+        </Form.Root>
       );
 
       const select = screen.getByRole("combobox");
@@ -179,9 +183,9 @@ describe("EmployeeForm", () => {
       });
 
       renderWithProviders(
-        <Form>
+        <Form.Root>
           <EmployeeForm documentTypes={mockDocumentTypes} />
-        </Form>
+        </Form.Root>
       );
 
       const select = screen.getByRole("combobox");
@@ -238,9 +242,9 @@ describe("EmployeeForm", () => {
       });
 
       renderWithProviders(
-        <Form>
+        <Form.Root>
           <EmployeeForm documentTypes={mockDocumentTypes} />
-        </Form>
+        </Form.Root>
       );
 
       const select = screen.getByRole("combobox");
@@ -296,13 +300,13 @@ describe("EmployeeForm", () => {
       };
 
       renderWithProviders(
-        <Form state={initialState}>
+        <Form.Root state={initialState}>
           <EmployeeForm
             documentTypes={mockDocumentTypes}
             isEdit={true}
             employeeId={101}
           />
-        </Form>
+        </Form.Root>
       );
 
       // Wait for debounce - should NOT trigger on initial load with same values
@@ -335,13 +339,13 @@ describe("EmployeeForm", () => {
       };
 
       renderWithProviders(
-        <Form state={initialState}>
+        <Form.Root state={initialState}>
           <EmployeeForm
             documentTypes={mockDocumentTypes}
             isEdit={true}
             employeeId={101}
           />
-        </Form>
+        </Form.Root>
       );
 
       // Wait for the debounce timeout (500ms) + extra buffer
@@ -376,13 +380,13 @@ describe("EmployeeForm", () => {
       };
 
       renderWithProviders(
-        <Form state={initialState}>
+        <Form.Root state={initialState}>
           <EmployeeForm
             documentTypes={mockDocumentTypes}
             isEdit={true}
             employeeId={101}
           />
-        </Form>
+        </Form.Root>
       );
 
       // First, verify no call on initial render
@@ -446,13 +450,13 @@ describe("EmployeeForm", () => {
       };
 
       renderWithProviders(
-        <Form state={initialState}>
+        <Form.Root state={initialState}>
           <EmployeeForm
             documentTypes={mockDocumentTypes}
             isEdit={true}
             employeeId={101}
           />
-        </Form>
+        </Form.Root>
       );
 
       // Wait for initial render to pass
@@ -488,9 +492,9 @@ describe("EmployeeForm", () => {
       (getUserByDocument as any).mockResolvedValue(null);
 
       renderWithProviders(
-        <Form>
+        <Form.Root>
           <EmployeeForm documentTypes={mockDocumentTypes} />
-        </Form>
+        </Form.Root>
       );
 
       const select = screen.getByRole("combobox");

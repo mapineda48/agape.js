@@ -18,14 +18,10 @@ import {
 import { listSupplierTypes } from "@agape/purchasing/supplier_type";
 import { listDocumentTypes } from "@agape/core/documentType";
 import { getUserByDocument } from "@agape/core/user";
-import Form, { useFormReset } from "@/components/form";
-import * as Input from "@/components/form/Input";
+import { Form } from "@/components/form";
 import useInput from "@/components/form/Input/useInput";
-import * as Select from "@/components/form/Select";
-import CheckBox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
 import DateTime from "@utils/data/DateTime";
-import PathProvider from "@/components/form/paths";
 import {
   createPortalHook,
   type PortalInjectedProps,
@@ -475,7 +471,7 @@ function SupplierForm({
   };
 
   return (
-    <Form<SupplierFormState> state={initialState}>
+    <Form.Root<SupplierFormState> state={initialState}>
       <SupplierFormContent
         supplier={supplier}
         onClose={onClose}
@@ -485,7 +481,7 @@ function SupplierForm({
         companyDocTypeId={companyDocTypeId}
         hasTypes={hasTypes}
       />
-    </Form>
+    </Form.Root>
   );
 }
 
@@ -507,7 +503,7 @@ function SupplierFormContent({
   hasTypes: boolean;
 }) {
   const notify = useNotificacion();
-  const { merge, setAt } = useFormReset();
+  const { merge, setAt } = Form.useForm();
   const isEditing = !!supplier?.id;
 
   const [type] = useInput("type");
@@ -577,7 +573,7 @@ function SupplierFormContent({
         <TypeSwitcher />
 
         <Field label="Número de documento">
-          <Input.Text
+          <Form.Text
             path="documentNumber"
             required
             placeholder="CC o NIT sin dígito de verificación"
@@ -588,7 +584,7 @@ function SupplierFormContent({
         <div className="grid gap-4 md:grid-cols-2">
           {/* Common Fields */}
           <Field label="Correo electrónico">
-            <Input.Text
+            <Form.Text
               path="email"
               email
               required
@@ -597,7 +593,7 @@ function SupplierFormContent({
             />
           </Field>
           <Field label="Teléfono">
-            <Input.Text
+            <Form.Text
               path="phone"
               placeholder="+52 55 1234 5678"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -608,7 +604,7 @@ function SupplierFormContent({
           <ConditionalFields />
 
           <Field label="Dirección" className="md:col-span-2">
-            <Input.Text
+            <Form.Text
               path="address"
               placeholder="Calle, número, ciudad"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -618,7 +614,7 @@ function SupplierFormContent({
           <hr className="md:col-span-2 border-gray-200 dark:border-gray-700 my-2" />
 
           <Field label="Tipo de clasificación">
-            <Select.Int
+            <Form.Select.Int
               path="supplierTypeId"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               disabled={!hasTypes}
@@ -632,11 +628,11 @@ function SupplierFormContent({
               ) : (
                 <option value="">Crea tipos en la gestión de tipos</option>
               )}
-            </Select.Int>
+            </Form.Select.Int>
           </Field>
           <Field label="Estado">
             <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
-              <CheckBox
+              <Form.Checkbox
                 path="active"
                 className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
               />
@@ -758,9 +754,9 @@ function ConditionalFields() {
   if (type === "company") {
     // Company Fields
     return (
-      <PathProvider value="company" autoCleanup>
+      <Form.Scope path="company" autoCleanup>
         <Field label="Razón Social">
-          <Input.Text
+          <Form.Text
             path="legalName"
             required
             placeholder="Ej: Soluciones Tecnológicas S.A. de C.V."
@@ -768,21 +764,21 @@ function ConditionalFields() {
           />
         </Field>
         <Field label="Nombre Comercial">
-          <Input.Text
+          <Form.Text
             path="tradeName"
             placeholder="Ej: Soluciones Tech"
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           />
         </Field>
-      </PathProvider>
+      </Form.Scope>
     );
   }
 
   // Person Fields
   return (
-    <PathProvider value="person" autoCleanup>
+    <Form.Scope path="person" autoCleanup>
       <Field label="Nombre">
-        <Input.Text
+        <Form.Text
           path="firstName"
           required
           placeholder="Ej: Juan"
@@ -790,7 +786,7 @@ function ConditionalFields() {
         />
       </Field>
       <Field label="Apellido">
-        <Input.Text
+        <Form.Text
           path="lastName"
           required
           placeholder="Ej: Pérez"
@@ -798,12 +794,12 @@ function ConditionalFields() {
         />
       </Field>
       <Field label="Fecha de nacimiento" className="md:col-span-2">
-        <Input.DateTime
+        <Form.DateTime
           path="birthdate"
           className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
       </Field>
-    </PathProvider>
+    </Form.Scope>
   );
 }
 

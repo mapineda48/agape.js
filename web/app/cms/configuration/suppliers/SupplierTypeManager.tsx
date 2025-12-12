@@ -94,7 +94,7 @@ function SupplierTypeForm({
   }
 
   return (
-    <Form<SupplierTypeFormState> state={initialState}>
+    <Form.Root<SupplierTypeFormState> state={initialState}>
       <div className="p-6 space-y-5">
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -126,7 +126,7 @@ function SupplierTypeForm({
           {isEditing ? "Guardar cambios" : "Crear tipo"}
         </Submit>
       </div>
-    </Form>
+    </Form.Root>
   );
 }
 

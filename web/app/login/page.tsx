@@ -1,6 +1,5 @@
 import { login, type LoginRequest } from "@agape/security/access";
-import Form from "@/components/form";
-import Input from "@/components/form/Input";
+import { Form } from "@/components/form";
 import Submit from "@/components/ui/submit";
 import { motion } from "framer-motion";
 import { User, Lock, ArrowRight } from "lucide-react";
@@ -41,7 +40,7 @@ export default function LoginForm() {
             </p>
           </div>
 
-          <Form<LoginRequest>>
+          <Form.Root<LoginRequest>>
             <div className="space-y-6">
               {/* Username Field */}
               <div className="space-y-2">
@@ -55,7 +54,7 @@ export default function LoginForm() {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-blue-300 group-focus-within:text-blue-400 transition-colors" />
                   </div>
-                  <Input.Text
+                  <Form.Text
                     id="username"
                     path="username"
                     required
@@ -77,8 +76,8 @@ export default function LoginForm() {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-blue-300 group-focus-within:text-blue-400 transition-colors" />
                   </div>
-                  <Input.Text
-                    password
+                  <Form.Text
+                    type="password"
                     id="password"
                     path="password"
                     required
@@ -109,7 +108,7 @@ export default function LoginForm() {
                 </a>
               </p>
             </div>
-          </Form>
+          </Form.Root>
         </div>
 
         <div className="mt-8 text-center">

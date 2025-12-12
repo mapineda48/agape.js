@@ -138,7 +138,7 @@ function SeriesForm({
   }
 
   return (
-    <Form<SeriesFormState> state={initialState}>
+    <Form.Root<SeriesFormState> state={initialState}>
       <div className="p-6 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <label className="block space-y-1.5">
@@ -245,7 +245,7 @@ function SeriesForm({
           {isEditing ? "Guardar cambios" : "Crear serie"}
         </Submit>
       </div>
-    </Form>
+    </Form.Root>
   );
 }
 const useSeriesModal = createPortalHook(SeriesModalWrapper);
@@ -377,7 +377,7 @@ function DocumentTypeForm({
   }
 
   return (
-    <Form<DocumentTypeFormState> state={initialState}>
+    <Form.Root<DocumentTypeFormState> state={initialState}>
       <div className="flex flex-col h-[70vh]">
         <div className="p-6 space-y-4 border-b border-gray-100 dark:border-gray-800">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
@@ -527,7 +527,7 @@ function DocumentTypeForm({
           </button>
         </div>
       </div>
-    </Form>
+    </Form.Root>
   );
 }
 const useDocumentTypeModal = createPortalHook(DocumentTypeModalWrapper);

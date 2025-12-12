@@ -79,7 +79,7 @@ export default function NewEmployeePage(props: Props) {
           </div>
 
           {/* Form */}
-          <Form<UpsertEmployeePayload> state={initialData}>
+          <Form.Root<UpsertEmployeePayload> state={initialData}>
             <EmployeeForm documentTypes={props.documentTypes}>
               <button
                 type="button"
@@ -138,7 +138,7 @@ export default function NewEmployeePage(props: Props) {
                 Guardar Empleado
               </Submit>
             </EmployeeForm>
-          </Form>
+          </Form.Root>
         </div>
       </div>
     </Fragment>

@@ -237,7 +237,7 @@ function MovementForm({
   }
 
   return (
-    <Form<MovementTypeFormState> state={initialState}>
+    <Form.Root<MovementTypeFormState> state={initialState}>
       <div className="space-y-4 p-5">
         <Field label="Nombre">
           <Input.Text
@@ -295,7 +295,7 @@ function MovementForm({
           {initialState.id ? "Guardar cambios" : "Crear tipo"}
         </Submit>
       </div>
-    </Form>
+    </Form.Root>
   );
 }
 

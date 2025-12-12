@@ -1,10 +1,5 @@
 import { useMemo, type ReactNode } from "react";
-import { useFormReset, useInputArray } from "@/components/form";
-import Input from "@/components/form/Input";
-import { Int } from "@/components/form/Input";
-import Select from "@/components/form/Select";
-import PathProvider from "@/components/form/paths";
-import { useSelector } from "@/components/form/hooks";
+import { Form } from "@/components/form";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type {
   CreatePurchaseOrderInput,
@@ -34,19 +29,19 @@ export function OrderForm({
   children,
   isEdit = false,
 }: OrderFormProps) {
-  const { setAt } = useFormReset();
+  const { setAt } = Form.useForm();
 
   // Watch order items
   const orderItemsArray =
-    useInputArray<CreatePurchaseOrderItemInput[]>("items");
+    Form.useArray<CreatePurchaseOrderItemInput[]>("items");
 
   // Get items from state using selector
-  const orderItems = useSelector(
+  const orderItems = Form.useSelector(
     (state: CreatePurchaseOrderInput) => state.items
   );
 
   // Watch supplier
-  const supplierId = useSelector(
+  const supplierId = Form.useSelector(
     (state: CreatePurchaseOrderInput) => state.supplierId
   );
 
@@ -140,7 +135,7 @@ export function OrderForm({
             </svg>
             Proveedor
           </h3>
-          <Select.Int
+          <Form.Select.Int
             path="supplierId"
             required
             className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white"
@@ -153,7 +148,7 @@ export function OrderForm({
                   : supplier.legalName ?? ""}
               </option>
             ))}
-          </Select.Int>
+          </Form.Select.Int>
         </div>
 
         {/* Order Date */}
@@ -175,7 +170,7 @@ export function OrderForm({
             </svg>
             Fecha de Orden
           </h3>
-          <Input.DateTime
+          <Form.DateTime
             path="orderDate"
             required
             className="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
@@ -246,7 +241,7 @@ export function OrderForm({
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Cantidad
                     </label>
-                    <Int
+                    <Form.Int
                       path="quantity"
                       min={1}
                       required
@@ -259,7 +254,7 @@ export function OrderForm({
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Precio Unit.
                     </label>
-                    <Input.Decimal
+                    <Form.Decimal
                       path="unitPrice"
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"

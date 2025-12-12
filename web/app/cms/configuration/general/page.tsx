@@ -202,7 +202,7 @@ function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
   }
 
   return (
-    <Form<ClientTypeFormState> state={initialState}>
+    <Form.Root<ClientTypeFormState> state={initialState}>
       <div className="p-6 space-y-5">
         <FieldLabel
           title="Nombre"
@@ -247,7 +247,7 @@ function ClientTypeForm({ item, onClose, onSave }: ClientTypeFormProps) {
           {isEditing ? "Guardar cambios" : "Crear tipo"}
         </Submit>
       </div>
-    </Form>
+    </Form.Root>
   );
 }
 

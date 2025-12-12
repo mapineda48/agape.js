@@ -177,7 +177,7 @@ function LocationForm({
   }
 
   return (
-    <Form<LocationFormState> state={initialState}>
+    <Form.Root<LocationFormState> state={initialState}>
       <div className="space-y-4 p-5">
         <label className="space-y-1.5 block">
           <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -215,7 +215,7 @@ function LocationForm({
           {initialState.id ? "Guardar cambios" : "Crear ubicación"}
         </Submit>
       </div>
-    </Form>
+    </Form.Root>
   );
 }
 

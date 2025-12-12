@@ -1,13 +1,8 @@
 import { useMemo, useEffect, useRef, type ReactNode } from "react";
-import { useFormReset } from "@/components/form";
-import Input from "@/components/form/Input";
+import { Form } from "@/components/form";
 import { useNotificacion } from "@/components/ui/notification";
 import { getUserByDocument } from "@agape/core/user";
 import { useRouter } from "@/components/router/router-hook";
-import Select from "@/components/form/Select";
-import Checkbox from "@/components/form/CheckBox";
-import PathProvider from "@/components/form/paths";
-import { useSelector } from "@/components/form/hooks";
 import ImageClient from "./ImageClient";
 import {
   getClientByDocument,
@@ -34,13 +29,13 @@ export function ClientForm({
 }: ClientFormProps) {
   const notify = useNotificacion();
   const { navigate } = useRouter();
-  const { setAt } = useFormReset();
+  const { setAt } = Form.useForm();
 
   // Watch fields for validation
-  const documentTypeId = useSelector(
+  const documentTypeId = Form.useSelector(
     (state: UpsertClientPayload) => state.user?.documentTypeId
   );
-  const documentNumber = useSelector(
+  const documentNumber = Form.useSelector(
     (state: UpsertClientPayload) => state.user?.documentNumber
   );
 
@@ -236,8 +231,8 @@ export function ClientForm({
             Identificación
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PathProvider value="user" autoCleanup>
-              <Select.Int
+            <Form.Scope path="user" autoCleanup>
+              <Form.Select.Int
                 path="documentTypeId"
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
@@ -248,14 +243,14 @@ export function ClientForm({
                     {type.name}
                   </option>
                 ))}
-              </Select.Int>
-              <Input.Text
+              </Form.Select.Int>
+              <Form.Text
                 path="documentNumber"
                 placeholder="Número de documento"
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-            </PathProvider>
+            </Form.Scope>
           </div>
         </div>
 
@@ -279,31 +274,31 @@ export function ClientForm({
             Datos Básicos
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PathProvider value="user" autoCleanup>
-              <Input.Text
+            <Form.Scope path="user" autoCleanup>
+              <Form.Text
                 path="email"
-                email
+                type="email"
                 placeholder="correo@ejemplo.com"
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-              <Input.Text
+              <Form.Text
                 path="phone"
                 placeholder="+1 234 567 8900"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-              <Input.Text
+              <Form.Text
                 path="address"
                 placeholder="Dirección Física"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-            </PathProvider>
+            </Form.Scope>
           </div>
         </div>
 
         {/* Dynamic Personal/Company Information */}
         {isCompany ? (
-          <PathProvider key="company" value={["user", "company"]} autoCleanup>
+          <Form.Scope key="company" path={["user", "company"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
@@ -317,22 +312,22 @@ export function ClientForm({
                 Información de Empresa
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input.Text
+                <Form.Text
                   path="legalName"
                   placeholder="Razón Social"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.Text
+                <Form.Text
                   path="tradeName"
                   placeholder="Nombre Comercial"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
             </div>
-          </PathProvider>
+          </Form.Scope>
         ) : (
-          <PathProvider key="person" value={["user", "person"]} autoCleanup>
+          <Form.Scope key="person" path={["user", "person"]} autoCleanup>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg
@@ -350,26 +345,26 @@ export function ClientForm({
                 Información Personal
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input.Text
+                <Form.Text
                   path="firstName"
                   placeholder="Juan"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.Text
+                <Form.Text
                   path="lastName"
                   placeholder="Pérez"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.DateTime
+                <Form.DateTime
                   path="birthdate"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
             </div>
-          </PathProvider>
+          </Form.Scope>
         )}
 
         {/* Client Information */}
@@ -390,7 +385,7 @@ export function ClientForm({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tipo de Cliente
               </label>
-              <Select.Int
+              <Form.Select.Int
                 path="typeId"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900 hover:border-gray-400"
               >
@@ -406,14 +401,14 @@ export function ClientForm({
                     {type.name}
                   </option>
                 ))}
-              </Select.Int>
+              </Form.Select.Int>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Estado
               </label>
               <div className="flex items-center pt-2">
-                <Checkbox
+                <Form.Checkbox
                   path="active"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />

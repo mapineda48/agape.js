@@ -125,7 +125,7 @@ export default function NewOrderPage(props: Props) {
           Volver a Órdenes
         </button>
 
-        <Form<CreatePurchaseOrderInput>
+        <Form.Root<CreatePurchaseOrderInput>
           state={initialState as CreatePurchaseOrderInput}
         >
           <OrderForm suppliers={props.suppliers} items={itemsForForm}>
@@ -146,7 +146,7 @@ export default function NewOrderPage(props: Props) {
               {isSubmitting ? "Creando..." : "Crear Orden"}
             </Submit>
           </OrderForm>
-        </Form>
+        </Form.Root>
       </div>
     </div>
   );

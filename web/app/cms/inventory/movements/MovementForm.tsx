@@ -1,10 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
-import Form, { useAppDispatch, setAtPath } from "@/components/form";
-import * as Input from "@/components/form/Input";
+import { Form, useAppDispatch, setAtPath } from "@/components/form";
 import Decimal from "@utils/data/Decimal";
-import { useInputArray } from "@/components/form/hooks";
 
-import Select from "@/components/form/Select";
 import Submit from "@/components/ui/submit";
 import {
   createInventoryMovement,
@@ -43,12 +40,12 @@ interface MovementFormState {
 
 export function MovementForm(props: Props) {
   return (
-    <Form<MovementFormState>
+    <Form.Root<MovementFormState>
       state={props.initialData as MovementFormState}
       className="max-w-7xl mx-auto space-y-6"
     >
       <MovementFormContent {...props} />
-    </Form>
+    </Form.Root>
   );
 }
 
@@ -140,7 +137,7 @@ function GeneralInfoCard({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Tipo de Movimiento
           </label>
-          <Select.Int
+          <Form.Select.Int
             path="movementTypeId"
             required
             className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
@@ -152,13 +149,13 @@ function GeneralInfoCard({
                 {t.name}
               </option>
             ))}
-          </Select.Int>
+          </Form.Select.Int>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Fecha
           </label>
-          <Input.DateTime
+          <Form.DateTime
             path="movementDate"
             required
             className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
@@ -168,7 +165,7 @@ function GeneralInfoCard({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Observación
           </label>
-          <Input.TextArea
+          <Form.TextArea
             path="observation"
             rows={2}
             className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
@@ -180,7 +177,7 @@ function GeneralInfoCard({
 }
 
 function DetailsCard() {
-  const details = useInputArray("details");
+  const details = Form.useArray("details");
   // Assuming we preload items for selection or use a smart selector
   // For simplicity, I'll fetch items once in a shared state or context, but here I'll just use a local fetch for the select options
   const [items, setItems] = useState<Item[]>([]);
@@ -222,7 +219,7 @@ function DetailsCard() {
                   <label className="block text-xs font-medium text-gray-500 mb-1">
                     Item
                   </label>
-                  <Select.Int
+                  <Form.Select.Int
                     path="itemId"
                     required
                     className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -233,13 +230,13 @@ function DetailsCard() {
                         {i.fullName} ({i.code})
                       </option>
                     ))}
-                  </Select.Int>
+                  </Form.Select.Int>
                 </div>
                 <div className="w-32">
                   <label className="block text-xs font-medium text-gray-500 mb-1">
                     Cantidad
                   </label>
-                  <Input.Decimal
+                  <Form.Decimal
                     path="quantity"
                     required
                     placeholder="0"
@@ -251,7 +248,7 @@ function DetailsCard() {
                   <label className="block text-xs font-medium text-gray-500 mb-1">
                     Costo Unit
                   </label>
-                  <Input.Decimal
+                  <Form.Decimal
                     path="unitCost"
                     placeholder="0.00"
                     className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"

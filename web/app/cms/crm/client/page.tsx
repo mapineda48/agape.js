@@ -66,7 +66,7 @@ export default function EditClientPage(props: Props) {
           </div>
 
           {/* Form */}
-          <Form<UpsertClientPayload> state={initialData}>
+          <Form.Root<UpsertClientPayload> state={initialData}>
             <ClientForm
               clientTypes={props.clientTypes}
               documentTypes={props.documentTypes}
@@ -91,7 +91,7 @@ export default function EditClientPage(props: Props) {
                 Guardar Cliente
               </Submit>
             </ClientForm>
-          </Form>
+          </Form.Root>
         </div>
       </div>
     </Fragment>

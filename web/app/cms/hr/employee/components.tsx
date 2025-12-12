@@ -1,21 +1,16 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useFormReset } from "@/components/form";
-import Input from "@/components/form/Input";
+import { Form } from "@/components/form";
 import { useNotificacion } from "@/components/ui/notification";
 import { useRouter } from "@/components/router/router-hook";
 import { getUserByDocument } from "@agape/core/user";
 import { getEmployeeByDocument } from "@agape/hr/employee";
-import Checkbox from "@/components/form/CheckBox";
-import PathProvider from "@/components/form/paths";
-import { useSelector } from "@/components/form/hooks";
 import Image from "@/components/util/image";
 import DateTime from "@utils/data/DateTime";
 import { type UpsertEmployeePayload } from "@agape/hr/employee";
 import { type DocumentType } from "@agape/core/documentType";
-import Select from "@/components/form/Select";
 
 function ImageProfile({ initialAvatar }: { initialAvatar?: string | null }) {
-  const avatar = useSelector((state: UpsertEmployeePayload) => state.avatar);
+  const avatar = Form.useSelector((state: UpsertEmployeePayload) => state.avatar);
   const [preview, setPreview] = useState<string | null>(
     typeof avatar === "string" ? avatar : initialAvatar || null
   );
@@ -46,7 +41,7 @@ function ImageProfile({ initialAvatar }: { initialAvatar?: string | null }) {
         )}
       </div>
       <div className="mt-4">
-        <Input.File
+        <Form.File
           path="avatar"
           accept="image/*"
           className="hidden"
@@ -99,7 +94,7 @@ export function EmployeeForm({
 }: EmployeeFormProps) {
   const notify = useNotificacion();
   const { navigate } = useRouter();
-  const { merge, setAt } = useFormReset();
+  const { merge, setAt } = Form.useForm();
 
   // Filter document types for persons only
   const personDocumentTypes = useMemo(() => {
@@ -107,10 +102,10 @@ export function EmployeeForm({
   }, [documentTypes]);
 
   // Watch fields for validation
-  const documentTypeId = useSelector(
+  const documentTypeId = Form.useSelector(
     (state: UpsertEmployeePayload) => state.user?.documentTypeId
   );
-  const documentNumber = useSelector(
+  const documentNumber = Form.useSelector(
     (state: UpsertEmployeePayload) => state.user?.documentNumber
   );
 
@@ -290,12 +285,12 @@ export function EmployeeForm({
             Identificación
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PathProvider value="user" autoCleanup>
+            <Form.Scope path="user" autoCleanup>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tipo de Documento
                 </label>
-                <Select.Int
+                <Form.Select.Int
                   path="documentTypeId"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
                 >
@@ -305,25 +300,25 @@ export function EmployeeForm({
                       {type.name}
                     </option>
                   ))}
-                </Select.Int>
+                </Form.Select.Int>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Número de Documento
                 </label>
-                <Input.Text
+                <Form.Text
                   path="documentNumber"
                   placeholder="Número de documento"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
-            </PathProvider>
+            </Form.Scope>
           </div>
         </div>
 
         {/* Personal Information */}
-        <PathProvider value="user" autoCleanup>
+        <Form.Scope path="user" autoCleanup>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg
@@ -342,45 +337,45 @@ export function EmployeeForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Person-specific fields */}
-              <PathProvider value="person">
-                <Input.Text
+              <Form.Scope value="person">
+                <Form.Text
                   path="firstName"
                   placeholder="Juan"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.Text
+                <Form.Text
                   path="lastName"
                   placeholder="Pérez"
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <Input.DateTime
+                <Form.DateTime
                   path="birthdate"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-              </PathProvider>
+              </Form.Scope>
               {/* User-level contact fields */}
-              <Input.Text
+              <Form.Text
                 path="email"
                 email
                 placeholder="juan.perez@example.com"
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-              <Input.Text
+              <Form.Text
                 path="phone"
                 placeholder="+1 234 567 8900"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-              <Input.Text
+              <Form.Text
                 path="address"
                 placeholder="Calle Principal 123"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
           </div>
-        </PathProvider>
+        </Form.Scope>
 
         {/* Work Information */}
         <div>
@@ -406,7 +401,7 @@ export function EmployeeForm({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Fecha de Contratación
               </label>
-              <Input.DateTime
+              <Form.DateTime
                 path="hireDate"
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
@@ -417,7 +412,7 @@ export function EmployeeForm({
                 Estado
               </label>
               <div className="flex items-center pt-2">
-                <Checkbox
+                <Form.Checkbox
                   path="isActive"
                   materialize
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"

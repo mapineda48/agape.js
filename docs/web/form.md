@@ -19,37 +19,60 @@ Importa el objeto unificado `Form` para acceder a todos los componentes.
 ```tsx
 import { Form } from "@/components/form";
 
+// Define una interfaz para tipar el estado del formulario
+interface UserFormState {
+  user: {
+    name: string;
+    age: number;
+  };
+}
+
 function UserForm() {
-  const handleSubmit = async (data) => {
+  const handleSubmit = async (data: UserFormState) => {
     console.log("Enviando:", data);
   };
 
   return (
-    // state: Inicializa el store (solo en el primer render)
-    <Form.Root state={{ user: { name: "", age: 18 } }}>
+    // ⚠️ IMPORTANTE: Siempre especifica el tipo genérico en Form.Root y Form.Submit
+    <Form.Root<UserFormState> state={{ user: { name: "", age: 18 } }}>
       <Form.Scope path="user">
         <h3>Información Personal</h3>
         <Form.Text path="name" placeholder="Nombre completo" />
         <Form.Int path="age" min={0} />
       </Form.Scope>
 
-      <Form.Submit onSubmit={handleSubmit}>Guardar Usuario</Form.Submit>
+      <Form.Submit<UserFormState> onSubmit={handleSubmit}>
+        Guardar Usuario
+      </Form.Submit>
     </Form.Root>
   );
 }
 ```
 
+> ⚠️ **Importante sobre Tipado**: Siempre utiliza el tipo genérico en `Form.Root<T>` y `Form.Submit<T>` para garantizar type-safety. Esto asegura que:
+>
+> - El `state` inicial tenga la estructura correcta
+> - El callback `onSubmit` reciba datos con el tipo correcto
+> - Los errores de tipado se detecten en tiempo de compilación
+
 ---
 
 ## 📚 API Reference: Contenedores
 
-### `<Form.Root>`
+### `<Form.Root<T>>`
 
 El contenedor principal. Provee el contexto del store y el bus de eventos.
 
+**Sintaxis con Tipado (Recomendada):**
+
+```tsx
+<Form.Root<MyFormType> state={initialState}>{/* children */}</Form.Root>
+```
+
 | Prop       | Tipo        | Descripción                                                                                               |
 | :--------- | :---------- | :-------------------------------------------------------------------------------------------------------- |
-| `state`    | `object`    | Estado inicial del formulario. **Nota:** Cambiar esta prop después del montaje no reinicia el formulario. |
+| `T`        | `type`      | **Tipo genérico obligatorio**. Define la estructura del estado del formulario.                            |
+| `state`    | `T`         | Estado inicial del formulario. **Nota:** Cambiar esta prop después del montaje no reinicia el formulario. |
 | `children` | `ReactNode` | Componentes hijos.                                                                                        |
 
 ### `<Form.Scope>`
@@ -99,16 +122,23 @@ Componentes nativos `<select>` conectados al store.
 
 ## ⚡ API Reference: Botones
 
-### `<Form.Submit>`
+### `<Form.Submit<T>>`
 
 Botón de envío con gestión automática de estado de carga y manejo de errores.
 
-| Prop              | Tipo                  | Descripción                                                                                     |
-| :---------------- | :-------------------- | :---------------------------------------------------------------------------------------------- |
-| `onSubmit`        | `(data) => Promise`   | Función ejecutada al enviar. Recibe el objeto plano (`data`). Debe retornar una Promesa.        |
-| `onSuccess`       | `(payload) => void`   | Ejecutada si `onSubmit` resuelve exitosamente.                                                  |
-| `onError`         | `(error) => void`     | Ejecutada si `onSubmit` lanza un error. El error se captura internamente para no romper la app. |
-| `onLoadingChange` | `(isLoading) => void` | Callback para notificar cambios en el estado de carga.                                          |
+**Sintaxis con Tipado (Recomendada):**
+
+```tsx
+<Form.Submit<MyFormType> onSubmit={handleSubmit}>Guardar</Form.Submit>
+```
+
+| Prop              | Tipo                   | Descripción                                                                                     |
+| :---------------- | :--------------------- | :---------------------------------------------------------------------------------------------- |
+| `T`               | `type`                 | **Tipo genérico obligatorio**. Debe coincidir con el tipo usado en `Form.Root<T>`.              |
+| `onSubmit`        | `(data: T) => Promise` | Función ejecutada al enviar. Recibe el objeto plano tipado (`data`). Debe retornar una Promesa. |
+| `onSuccess`       | `(payload) => void`    | Ejecutada si `onSubmit` resuelve exitosamente.                                                  |
+| `onError`         | `(error) => void`      | Ejecutada si `onSubmit` lanza un error. El error se captura internamente para no romper la app. |
+| `onLoadingChange` | `(isLoading) => void`  | Callback para notificar cambios en el estado de carga.                                          |
 
 ---
 
