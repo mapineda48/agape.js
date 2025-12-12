@@ -1,0 +1,340 @@
+import { Fragment, type ReactNode } from "react";
+
+/**
+ * Tipos de decisiones que el usuario puede tomar cuando hay conflictos de documento.
+ */
+export type DocumentDecisionType = 
+  | "existing_client"      // El documento ya corresponde a un cliente
+  | "existing_user"        // Existe usuario pero no cliente
+  | "not_found_in_edit"    // En edición, el documento no existe
+  | "validation_error";    // Error al validar
+
+/**
+ * Acciones disponibles para cada tipo de decisión.
+ */
+export type DocumentDecisionAction = 
+  | "view_client"          // Ver el cliente existente
+  | "continue_editing"     // Continuar editando el formulario actual
+  | "convert_to_client"    // Convertir usuario existente a cliente
+  | "create_new"           // Crear nuevo cliente con este documento
+  | "revert_document"      // Revertir al documento original
+  | "retry"                // Reintentar la validación
+  | "cancel";              // Cancelar/cerrar modal
+
+interface ExistingClientData {
+  id: number;
+  name: string;
+}
+
+interface ExistingUserData {
+  id: number;
+  name: string;
+  hasPersonData: boolean;
+  hasCompanyData: boolean;
+}
+
+interface ValidationErrorData {
+  message: string;
+}
+
+interface NotFoundData {
+  documentTypeId: number;
+  documentNumber: string;
+}
+
+export type DocumentDecisionData = 
+  | { type: "existing_client"; client: ExistingClientData }
+  | { type: "existing_user"; user: ExistingUserData }
+  | { type: "not_found_in_edit"; data: NotFoundData }
+  | { type: "validation_error"; error: ValidationErrorData };
+
+interface DocumentValidationModalProps {
+  isOpen: boolean;
+  decision: DocumentDecisionData | null;
+  onAction: (action: DocumentDecisionAction) => void;
+}
+
+/**
+ * Modal de decisión para conflictos de documento.
+ * Evita navegaciones automáticas y permite al operador tomar decisiones explícitas.
+ */
+export function DocumentValidationModal({
+  isOpen,
+  decision,
+  onAction,
+}: DocumentValidationModalProps) {
+  if (!isOpen || !decision) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={() => onAction("cancel")}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className={`px-6 py-4 ${getHeaderStyles(decision.type)}`}>
+          <div className="flex items-center gap-3">
+            {getIcon(decision.type)}
+            <h3 className="text-lg font-semibold text-white">
+              {getTitle(decision.type)}
+            </h3>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-5">
+          {renderContent(decision)}
+        </div>
+
+        {/* Actions */}
+        <div className="px-6 py-4 bg-gray-50 flex flex-wrap gap-3 justify-end">
+          {renderActions(decision, onAction)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getHeaderStyles(type: DocumentDecisionData["type"]): string {
+  switch (type) {
+    case "existing_client":
+      return "bg-gradient-to-r from-amber-500 to-orange-500";
+    case "existing_user":
+      return "bg-gradient-to-r from-blue-500 to-cyan-500";
+    case "not_found_in_edit":
+      return "bg-gradient-to-r from-purple-500 to-pink-500";
+    case "validation_error":
+      return "bg-gradient-to-r from-red-500 to-rose-500";
+  }
+}
+
+function getIcon(type: DocumentDecisionData["type"]): ReactNode {
+  const iconClass = "h-6 w-6 text-white";
+  
+  switch (type) {
+    case "existing_client":
+      return (
+        <svg className={iconClass} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+      );
+    case "existing_user":
+      return (
+        <svg className={iconClass} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+        </svg>
+      );
+    case "not_found_in_edit":
+      return (
+        <svg className={iconClass} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        </svg>
+      );
+    case "validation_error":
+      return (
+        <svg className={iconClass} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+      );
+  }
+}
+
+function getTitle(type: DocumentDecisionData["type"]): string {
+  switch (type) {
+    case "existing_client":
+      return "Cliente Existente";
+    case "existing_user":
+      return "Usuario Encontrado";
+    case "not_found_in_edit":
+      return "Documento No Encontrado";
+    case "validation_error":
+      return "Error de Validación";
+  }
+}
+
+function renderContent(decision: DocumentDecisionData): ReactNode {
+  switch (decision.type) {
+    case "existing_client":
+      return (
+        <div className="space-y-3">
+          <p className="text-gray-700">
+            Ya existe un cliente registrado con este documento:
+          </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p className="font-medium text-amber-900">{decision.client.name}</p>
+            <p className="text-sm text-amber-700">ID: {decision.client.id}</p>
+          </div>
+          <p className="text-sm text-gray-600">
+            ¿Qué deseas hacer?
+          </p>
+        </div>
+      );
+    
+    case "existing_user":
+      return (
+        <div className="space-y-3">
+          <p className="text-gray-700">
+            Este documento corresponde a un usuario existente en el sistema, pero aún no está registrado como cliente.
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="font-medium text-blue-900">{decision.user.name}</p>
+            <p className="text-sm text-blue-700">
+              Tipo: {decision.user.hasPersonData ? "Persona Natural" : "Empresa"}
+            </p>
+          </div>
+          <p className="text-sm text-gray-600">
+            ¿Deseas usar estos datos para crear el cliente?
+          </p>
+        </div>
+      );
+    
+    case "not_found_in_edit":
+      return (
+        <div className="space-y-3">
+          <p className="text-gray-700">
+            El documento ingresado no corresponde a ningún cliente existente en el sistema.
+          </p>
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+            <p className="text-sm text-purple-700">
+              Documento: <span className="font-mono">{decision.data.documentNumber}</span>
+            </p>
+          </div>
+          <p className="text-sm text-gray-600">
+            ¿Deseas crear un nuevo cliente con este documento o revertir al documento original?
+          </p>
+        </div>
+      );
+    
+    case "validation_error":
+      return (
+        <div className="space-y-3">
+          <p className="text-gray-700">
+            No se pudo verificar si el documento ya existe en el sistema.
+          </p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-700">{decision.error.message}</p>
+          </div>
+          <p className="text-sm text-gray-600">
+            Puedes reintentar la validación o continuar sin verificar.
+          </p>
+        </div>
+      );
+  }
+}
+
+function renderActions(
+  decision: DocumentDecisionData,
+  onAction: (action: DocumentDecisionAction) => void
+): ReactNode {
+  const secondaryBtn = "px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all";
+  const primaryBtn = "px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all";
+  
+  switch (decision.type) {
+    case "existing_client":
+      return (
+        <Fragment>
+          <button
+            type="button"
+            onClick={() => onAction("cancel")}
+            className={secondaryBtn}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction("continue_editing")}
+            className={secondaryBtn}
+          >
+            Continuar Editando
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction("view_client")}
+            className={`${primaryBtn} bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 focus:ring-amber-500`}
+          >
+            Ver Cliente
+          </button>
+        </Fragment>
+      );
+    
+    case "existing_user":
+      return (
+        <Fragment>
+          <button
+            type="button"
+            onClick={() => onAction("cancel")}
+            className={secondaryBtn}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction("continue_editing")}
+            className={secondaryBtn}
+          >
+            No, Empezar Vacío
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction("convert_to_client")}
+            className={`${primaryBtn} bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 focus:ring-blue-500`}
+          >
+            Sí, Usar Datos
+          </button>
+        </Fragment>
+      );
+    
+    case "not_found_in_edit":
+      return (
+        <Fragment>
+          <button
+            type="button"
+            onClick={() => onAction("cancel")}
+            className={secondaryBtn}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction("revert_document")}
+            className={secondaryBtn}
+          >
+            Revertir Documento
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction("create_new")}
+            className={`${primaryBtn} bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 focus:ring-purple-500`}
+          >
+            Crear Nuevo Cliente
+          </button>
+        </Fragment>
+      );
+    
+    case "validation_error":
+      return (
+        <Fragment>
+          <button
+            type="button"
+            onClick={() => onAction("continue_editing")}
+            className={secondaryBtn}
+          >
+            Continuar Sin Verificar
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction("retry")}
+            className={`${primaryBtn} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 focus:ring-red-500`}
+          >
+            Reintentar
+          </button>
+        </Fragment>
+      );
+  }
+}
+
+export default DocumentValidationModal;
