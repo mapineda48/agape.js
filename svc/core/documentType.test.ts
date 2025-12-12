@@ -53,9 +53,14 @@ describe("documentType service", () => {
       const result = await listDocumentTypes({ activeOnly: true });
 
       expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBe(1);
-      expect(result[0].name).toBe("Cédula");
-      expect(result[0].isEnabled).toBe(true);
+      expect(result.length).toBeGreaterThanOrEqual(1);
+      // Verificar que CC está presente y está habilitado
+      const ccDoc = result.find((d) => d.code === "CC");
+      expect(ccDoc).toBeDefined();
+      expect(ccDoc!.name).toBe("Cédula");
+      expect(ccDoc!.isEnabled).toBe(true);
+      // Verificar que todos los documentos son activos
+      expect(result.every((d) => d.isEnabled)).toBe(true);
     });
 
     it("should return all document types when activeOnly is false", async () => {

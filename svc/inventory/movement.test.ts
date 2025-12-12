@@ -175,21 +175,16 @@ beforeAll(async () => {
 
   // 7. Crear usuario (necesitamos crear user primero)
   const { user } = await import("#models/core/user");
-  const { documentType: coreDocType } = await import(
-    "#models/core/documentType"
-  );
+  const { upsertDocumentType: upsertIdDocType } = await import("#svc/core/documentType");
 
-  // Crear tipo de documento de identidad
-  const [idDocType] = await db
-    .insert(coreDocType)
-    .values({
-      code: "CC",
-      name: "Cédula de Ciudadanía",
-      isEnabled: true,
-      appliesToPerson: true,
-      appliesToCompany: false,
-    })
-    .returning();
+  // Crear tipo de documento de identidad usando el servicio (para evitar duplicados)
+  const [idDocType] = await upsertIdDocType({
+    code: "CC",
+    name: "Cédula de Ciudadanía",
+    isEnabled: true,
+    appliesToPerson: true,
+    appliesToCompany: false,
+  });
 
   // Crear usuario base
   const [createdUser] = await db
@@ -914,6 +909,7 @@ describe("createInventoryMovement service", () => {
         .from(inventoryMovement);
 
       // Intentar crear movimiento de salida con cantidad mayor al stock
+      // Con autoPost: true, la validación de stock ocurre al momento de crear
       await expect(
         createInventoryMovement({
           movementTypeId: movementTypeExitId, // factor = -1, affectsStock = true
@@ -922,6 +918,7 @@ describe("createInventoryMovement service", () => {
           details: [
             { itemId, locationId, quantity: 10 }, // Pide 10, solo hay 5
           ],
+          autoPost: true, // La validación de stock ocurre al postear
         })
       ).rejects.toThrow(/Stock insuficiente/);
 
@@ -956,6 +953,7 @@ describe("createInventoryMovement service", () => {
 
       // 1. Crear ENTRADA para establecer stock y capas
       // Esto simula el proceso real: primero entra, luego sale.
+      // Con autoPost: true, el stock se actualiza inmediatamente
       await createInventoryMovement({
         movementTypeId: movementTypeEntryId,
         movementDate: new DateTime(),
@@ -963,9 +961,11 @@ describe("createInventoryMovement service", () => {
         details: [
           { itemId, locationId, quantity: 100, unitCost: new Decimal("10.00") },
         ],
+        autoPost: true,
       });
 
       // 2. Crear movimiento de salida con cantidad válida (50)
+      // Con autoPost: true, la validación de stock y actualización ocurren inmediatamente
       const result = await createInventoryMovement({
         movementTypeId: movementTypeExitId, // factor = -1, affectsStock = true
         movementDate: new DateTime(),
@@ -973,6 +973,7 @@ describe("createInventoryMovement service", () => {
         details: [
           { itemId, locationId, quantity: 50 }, // Pide 50, hay 100
         ],
+        autoPost: true,
       });
 
       expect(result).toBeDefined();

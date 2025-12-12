@@ -215,10 +215,19 @@ export async function upsertDocumentType(
     return result as [IDocumentType];
   }
 
-  // Insertar nuevo
+  // Insertar nuevo o actualizar si el código ya existe (upsert real)
   const result = await db
     .insert(documentType)
     .values(data as NewDocumentType)
+    .onConflictDoUpdate({
+      target: documentType.code,
+      set: {
+        name: data.name,
+        isEnabled: data.isEnabled,
+        appliesToPerson: data.appliesToPerson,
+        appliesToCompany: data.appliesToCompany,
+      },
+    })
     .returning();
 
   return result as [IDocumentType];
