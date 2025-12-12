@@ -286,6 +286,16 @@ CREATE TABLE "agape_app_development_demo"."finance_accounts_receivable" (
 	"pending_amount" numeric(10, 2) NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "agape_app_development_demo"."finance_currency" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"code" varchar(3) NOT NULL,
+	"full_name" varchar(80) NOT NULL,
+	"symbol" varchar(5) DEFAULT '$' NOT NULL,
+	"exchange_rate" numeric(10, 2) DEFAULT 1 NOT NULL,
+	"is_base" boolean DEFAULT false NOT NULL,
+	"is_enabled" boolean DEFAULT true NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "agape_app_development_demo"."finance_gl_account" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"code" varchar(20) NOT NULL,
@@ -576,7 +586,9 @@ CREATE TABLE "agape_app_development_demo"."inventory_item" (
 	"uom_id" integer NOT NULL,
 	"min_stock" numeric(10, 2),
 	"max_stock" numeric(10, 2),
-	"reorder_point" numeric(10, 2)
+	"reorder_point" numeric(10, 2),
+	"requires_lot" boolean DEFAULT false NOT NULL,
+	"requires_serial" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "agape_app_development_demo"."inventory_location" (
@@ -945,6 +957,7 @@ CREATE INDEX "ix_crm_order_date" ON "agape_app_development_demo"."crm_order" USI
 CREATE INDEX "ix_crm_order_status" ON "agape_app_development_demo"."crm_order" USING btree ("status");--> statement-breakpoint
 CREATE UNIQUE INDEX "ux_accounts_payable_invoice" ON "agape_app_development_demo"."finance_accounts_payable" USING btree ("purchase_invoice_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "ux_accounts_receivable_invoice" ON "agape_app_development_demo"."finance_accounts_receivable" USING btree ("sales_invoice_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "ux_finance_currency_code" ON "agape_app_development_demo"."finance_currency" USING btree ("code");--> statement-breakpoint
 CREATE UNIQUE INDEX "ux_finance_gl_account_code" ON "agape_app_development_demo"."finance_gl_account" USING btree ("code");--> statement-breakpoint
 CREATE INDEX "ix_finance_gl_account_type" ON "agape_app_development_demo"."finance_gl_account" USING btree ("type");--> statement-breakpoint
 CREATE INDEX "ix_finance_gl_account_parent" ON "agape_app_development_demo"."finance_gl_account" USING btree ("parent_id");--> statement-breakpoint

@@ -1,2 +1,0 @@
-ALTER TABLE "agape_app_development_demo"."inventory_item" ADD COLUMN "requires_lot" boolean DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."inventory_item" ADD COLUMN "requires_serial" boolean DEFAULT false NOT NULL;

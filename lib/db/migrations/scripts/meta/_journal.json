@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1765401170081,
-      "tag": "0000_outstanding_fantastic_four",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1765548578390,
-      "tag": "0001_unknown_cardiac",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765549045774,
-      "tag": "0002_brief_the_anarchist",
+      "when": 1765550469166,
+      "tag": "0000_shiny_randall",
       "breakpoints": true
     }
   ]
