@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from "react";
+import { useMemo, useRef, useState, useCallback, type ReactNode } from "react";
 import { Form } from "@/components/form";
 import { useNotificacion } from "@/components/ui/notification";
 import { getUserByDocument } from "@agape/core/user";
@@ -11,7 +11,8 @@ import {
 import type { ClientType } from "@agape/crm/clientType";
 import type { DocumentType } from "@agape/core/documentType";
 import DateTime from "@utils/data/DateTime";
-import DocumentValidationModal, {
+import {
+  useDocumentValidationModal,
   type DocumentDecisionData,
   type DocumentDecisionAction,
 } from "./DocumentValidationModal";
@@ -90,10 +91,11 @@ export function ClientForm({
   const notify = useNotificacion();
   const { navigate } = useRouter();
   const { setAt, getValues } = Form.useForm();
+  const showValidationModal = useDocumentValidationModal();
 
-  // Estado para el modal de decisión
-  const [modalDecision, setModalDecision] = useState<DocumentDecisionData | null>(null);
-  
+  // Ref para guardar la decisión actual del modal (para handlers)
+  const currentDecisionRef = useRef<DocumentDecisionData | null>(null);
+
   // Estado de validación
   const [validationState, setValidationState] = useState<ValidationState>({
     isValidating: false,
@@ -150,168 +152,11 @@ export function ClientForm({
   const requiresCompany = Boolean(isCompany && !expectsPerson);
 
   /**
-   * Valida el documento y muestra el modal apropiado.
-   */
-  const validateDocument = useCallback(async () => {
-    if (!documentTypeId || !documentNumber) return;
-
-    const currentTypeId = Number(documentTypeId);
-    const currentDocNumber = String(documentNumber);
-
-    const ref = initialValuesRef.current!;
-    const isFirstRun = !ref.hasRun;
-    const hadInitialData = ref.captured;
-    const valuesUnchanged =
-      ref.documentTypeId === currentTypeId &&
-      ref.documentNumber === currentDocNumber;
-
-    ref.hasRun = true;
-
-    if (isFirstRun && hadInitialData && valuesUnchanged) {
-      return;
-    }
-
-    setValidationState({ isValidating: true, hasError: false });
-
-    try {
-      // Buscar cliente existente
-      const existingClient = await getClientByDocument(
-        currentTypeId,
-        currentDocNumber
-      );
-
-      if (existingClient) {
-        // En edición, si es el mismo cliente, no mostrar nada
-        if (isEdit && existingClient.id === clientId) {
-          setValidationState({ isValidating: false, hasError: false });
-          return;
-        }
-
-        // Mostrar modal en lugar de navegar automáticamente
-        const clientName = existingClient.person
-          ? `${existingClient.person.firstName} ${existingClient.person.lastName}`.trim()
-          : existingClient.company?.legalName || "Cliente";
-
-        setModalDecision({
-          type: "existing_client",
-          client: {
-            id: existingClient.id,
-            name: clientName,
-          },
-        });
-        setValidationState({ isValidating: false, hasError: false });
-        return;
-      }
-
-      // Buscar usuario existente (no cliente)
-      const user = await getUserByDocument(currentTypeId, currentDocNumber);
-
-      if (user) {
-        // Verificar compatibilidad de tipo
-        if (requiresPerson && !user.person) {
-          notify({
-            payload:
-              "El documento ingresado corresponde a una empresa, no a una persona.",
-            type: "error",
-          });
-          setValidationState({ isValidating: false, hasError: false });
-          return;
-        }
-
-        if (requiresCompany && !user.company) {
-          notify({
-            payload:
-              "El documento ingresado corresponde a una persona, no a una empresa.",
-            type: "error",
-          });
-          setValidationState({ isValidating: false, hasError: false });
-          return;
-        }
-
-        // Guardar datos para cargar después de confirmación
-        pendingUserDataRef.current = {
-          id: user.id,
-          person: user.person
-            ? {
-                firstName: user.person.firstName,
-                lastName: user.person.lastName,
-                birthdate: user.person.birthdate,
-              }
-            : undefined,
-          company: user.company
-            ? {
-                legalName: user.company.legalName,
-                tradeName: user.company.tradeName,
-              }
-            : undefined,
-        };
-
-        // Construir nombre para el modal
-        const userName = user.person
-          ? `${user.person.firstName} ${user.person.lastName}`.trim()
-          : user.company?.legalName || "Usuario";
-
-        // Mostrar modal para decidir si usar los datos
-        setModalDecision({
-          type: "existing_user",
-          user: {
-            id: user.id,
-            name: userName,
-            hasPersonData: !!user.person,
-            hasCompanyData: !!user.company,
-          },
-        });
-        setValidationState({ isValidating: false, hasError: false });
-      } else if (isEdit) {
-        // En edición, el documento no existe - mostrar modal de confirmación
-        setModalDecision({
-          type: "not_found_in_edit",
-          data: {
-            documentTypeId: currentTypeId,
-            documentNumber: currentDocNumber,
-          },
-        });
-        setValidationState({ isValidating: false, hasError: false });
-      } else {
-        // En creación, documento disponible - todo bien
-        setValidationState({ isValidating: false, hasError: false });
-      }
-    } catch (error) {
-      // Mostrar error en lugar de solo console.error
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "Error de conexión. Intenta de nuevo.";
-      
-      setValidationState({
-        isValidating: false,
-        hasError: true,
-        errorMessage,
-      });
-
-      // También mostrar modal para decisión
-      setModalDecision({
-        type: "validation_error",
-        error: { message: errorMessage },
-      });
-    }
-  }, [
-    documentTypeId,
-    documentNumber,
-    isEdit,
-    clientId,
-    notify,
-    requiresPerson,
-    requiresCompany,
-  ]);
-
-  /**
    * Maneja las acciones del modal de decisión.
+   * Recibe el decision directamente del modal vía Portal.
    */
   const handleModalAction = useCallback(
-    (action: DocumentDecisionAction) => {
-      const decision = modalDecision;
-      setModalDecision(null);
-
+    (decision: DocumentDecisionData, action: DocumentDecisionAction) => {
       switch (action) {
         case "view_client":
           // Navegar al cliente existente
@@ -329,7 +174,7 @@ export function ClientForm({
           // Cargar datos del usuario existente
           if (pendingUserDataRef.current) {
             const userData = pendingUserDataRef.current;
-            
+
             if (userData.person) {
               setAt(["user", "person"], {
                 firstName: userData.person.firstName,
@@ -387,7 +232,7 @@ export function ClientForm({
           // Reintentar la validación
           setValidationState({ isValidating: false, hasError: false });
           // Usar setTimeout para permitir que se cierre el modal primero
-          setTimeout(() => validateDocument(), 100);
+          setTimeout(() => validateDocumentInternal(), 100);
           break;
 
         case "cancel":
@@ -396,8 +241,182 @@ export function ClientForm({
           break;
       }
     },
-    [modalDecision, navigate, setAt, notify, clientTypes, documentTypes, validateDocument]
+    [navigate, setAt, notify, clientTypes, documentTypes]
   );
+
+  /**
+   * Muestra el modal de decisión usando el sistema de Portal.
+   */
+  const showDecisionModal = useCallback(
+    (decision: DocumentDecisionData) => {
+      currentDecisionRef.current = decision;
+      showValidationModal({
+        decision,
+        onAction: (action) => handleModalAction(decision, action),
+      });
+    },
+    [showValidationModal, handleModalAction]
+  );
+
+  /**
+   * Valida el documento y muestra el modal apropiado.
+   * Función interna que no depende de validateDocument para evitar referencias circulares.
+   */
+  const validateDocumentInternal = useCallback(async () => {
+    if (!documentTypeId || !documentNumber) return;
+
+    const currentTypeId = Number(documentTypeId);
+    const currentDocNumber = String(documentNumber);
+
+    const ref = initialValuesRef.current!;
+    const isFirstRun = !ref.hasRun;
+    const hadInitialData = ref.captured;
+    const valuesUnchanged =
+      ref.documentTypeId === currentTypeId &&
+      ref.documentNumber === currentDocNumber;
+
+    ref.hasRun = true;
+
+    if (isFirstRun && hadInitialData && valuesUnchanged) {
+      return;
+    }
+
+    setValidationState({ isValidating: true, hasError: false });
+
+    try {
+      // Buscar cliente existente
+      const existingClient = await getClientByDocument(
+        currentTypeId,
+        currentDocNumber
+      );
+
+      if (existingClient) {
+        // En edición, si es el mismo cliente, no mostrar nada
+        if (isEdit && existingClient.id === clientId) {
+          setValidationState({ isValidating: false, hasError: false });
+          return;
+        }
+
+        // Mostrar modal en lugar de navegar automáticamente
+        const clientName = existingClient.person
+          ? `${existingClient.person.firstName} ${existingClient.person.lastName}`.trim()
+          : existingClient.company?.legalName || "Cliente";
+
+        showDecisionModal({
+          type: "existing_client",
+          client: {
+            id: existingClient.id,
+            name: clientName,
+          },
+        });
+        setValidationState({ isValidating: false, hasError: false });
+        return;
+      }
+
+      // Buscar usuario existente (no cliente)
+      const user = await getUserByDocument(currentTypeId, currentDocNumber);
+
+      if (user) {
+        // Verificar compatibilidad de tipo
+        if (requiresPerson && !user.person) {
+          notify({
+            payload:
+              "El documento ingresado corresponde a una empresa, no a una persona.",
+            type: "error",
+          });
+          setValidationState({ isValidating: false, hasError: false });
+          return;
+        }
+
+        if (requiresCompany && !user.company) {
+          notify({
+            payload:
+              "El documento ingresado corresponde a una persona, no a una empresa.",
+            type: "error",
+          });
+          setValidationState({ isValidating: false, hasError: false });
+          return;
+        }
+
+        // Guardar datos para cargar después de confirmación
+        pendingUserDataRef.current = {
+          id: user.id,
+          person: user.person
+            ? {
+              firstName: user.person.firstName,
+              lastName: user.person.lastName,
+              birthdate: user.person.birthdate,
+            }
+            : undefined,
+          company: user.company
+            ? {
+              legalName: user.company.legalName,
+              tradeName: user.company.tradeName,
+            }
+            : undefined,
+        };
+
+        // Construir nombre para el modal
+        const userName = user.person
+          ? `${user.person.firstName} ${user.person.lastName}`.trim()
+          : user.company?.legalName || "Usuario";
+
+        // Mostrar modal para decidir si usar los datos
+        showDecisionModal({
+          type: "existing_user",
+          user: {
+            id: user.id,
+            name: userName,
+            hasPersonData: !!user.person,
+            hasCompanyData: !!user.company,
+          },
+        });
+        setValidationState({ isValidating: false, hasError: false });
+      } else if (isEdit) {
+        // En edición, el documento no existe - mostrar modal de confirmación
+        showDecisionModal({
+          type: "not_found_in_edit",
+          data: {
+            documentTypeId: currentTypeId,
+            documentNumber: currentDocNumber,
+          },
+        });
+        setValidationState({ isValidating: false, hasError: false });
+      } else {
+        // En creación, documento disponible - todo bien
+        setValidationState({ isValidating: false, hasError: false });
+      }
+    } catch (error) {
+      // Mostrar error en lugar de solo console.error
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Error de conexión. Intenta de nuevo.";
+
+      setValidationState({
+        isValidating: false,
+        hasError: true,
+        errorMessage,
+      });
+
+      // También mostrar modal para decisión
+      showDecisionModal({
+        type: "validation_error",
+        error: { message: errorMessage },
+      });
+    }
+  }, [
+    documentTypeId,
+    documentNumber,
+    isEdit,
+    clientId,
+    notify,
+    requiresPerson,
+    requiresCompany,
+    showDecisionModal,
+  ]);
+
+  // Alias para compatibilidad con los handlers existentes
+  const validateDocument = validateDocumentInternal;
 
   /**
    * Handler para el evento onBlur del campo de documento.
@@ -449,12 +468,7 @@ export function ClientForm({
 
   return (
     <>
-      {/* Modal de decisión */}
-      <DocumentValidationModal
-        isOpen={modalDecision !== null}
-        decision={modalDecision}
-        onAction={handleModalAction}
-      />
+      {/* El modal de decisión ahora se maneja a través del sistema de Portal */}
 
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Photo Section */}
@@ -507,7 +521,7 @@ export function ClientForm({
                 />
               </Form.Scope>
             </div>
-            
+
             {/* Indicador de validación */}
             <div className="mt-3">
               <ValidationStatus
