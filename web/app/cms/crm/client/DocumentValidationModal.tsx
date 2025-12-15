@@ -76,13 +76,17 @@ function DocumentValidationContent({
     if (onClose) onClose();
   };
 
+  const { bgColor, iconBgColor, iconColor } = getColorScheme(decision.type);
+
   return (
     <>
-      {/* Header */}
-      <div className={`px-6 py-4 ${getHeaderStyles(decision.type)}`}>
+      {/* Header - Clean design matching app palette */}
+      <div className={`px-6 py-4 ${bgColor}`}>
         <div className="flex items-center gap-3">
-          {getIcon(decision.type)}
-          <h3 className="text-lg font-semibold text-white">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconBgColor}`}>
+            {getIcon(decision.type, iconColor)}
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {getTitle(decision.type)}
           </h3>
         </div>
@@ -99,22 +103,44 @@ function DocumentValidationContent({
   );
 }
 
-function getHeaderStyles(type: DocumentDecisionData["type"]): string {
+/**
+ * Color scheme based on app's official palette
+ * Primary: blue (info/user), Warning: amber (existing client), Danger: red (error), Secondary: slate (not found)
+ */
+function getColorScheme(type: DocumentDecisionData["type"]): {
+  bgColor: string;
+  iconBgColor: string;
+  iconColor: string;
+} {
   switch (type) {
     case "existing_client":
-      return "bg-gradient-to-r from-amber-500 to-orange-500";
+      return {
+        bgColor: "bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50",
+        iconBgColor: "bg-amber-100 dark:bg-amber-800/40",
+        iconColor: "h-5 w-5 text-amber-600 dark:text-amber-400",
+      };
     case "existing_user":
-      return "bg-gradient-to-r from-blue-500 to-cyan-500";
+      return {
+        bgColor: "bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800/50",
+        iconBgColor: "bg-blue-100 dark:bg-blue-800/40",
+        iconColor: "h-5 w-5 text-blue-600 dark:text-blue-400",
+      };
     case "not_found_in_edit":
-      return "bg-gradient-to-r from-purple-500 to-pink-500";
+      return {
+        bgColor: "bg-slate-50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700/50",
+        iconBgColor: "bg-slate-100 dark:bg-slate-700/40",
+        iconColor: "h-5 w-5 text-slate-600 dark:text-slate-400",
+      };
     case "validation_error":
-      return "bg-gradient-to-r from-red-500 to-rose-500";
+      return {
+        bgColor: "bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800/50",
+        iconBgColor: "bg-red-100 dark:bg-red-800/40",
+        iconColor: "h-5 w-5 text-red-600 dark:text-red-400",
+      };
   }
 }
 
-function getIcon(type: DocumentDecisionData["type"]): ReactNode {
-  const iconClass = "h-6 w-6 text-white";
-
+function getIcon(type: DocumentDecisionData["type"], iconClass: string): ReactNode {
   switch (type) {
     case "existing_client":
       return (
@@ -243,10 +269,10 @@ function renderContent(decision: DocumentDecisionData): ReactNode {
             El documento ingresado no corresponde a ningún cliente existente en
             el sistema.
           </p>
-          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-lg p-3">
-            <p className="text-sm text-purple-700 dark:text-purple-400">
+          <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 rounded-lg p-3">
+            <p className="text-sm text-slate-700 dark:text-slate-400">
               Documento:{" "}
-              <span className="font-mono">{decision.data.documentNumber}</span>
+              <span className="font-mono font-medium">{decision.data.documentNumber}</span>
             </p>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -278,9 +304,16 @@ function renderActions(
   onAction: (action: DocumentDecisionAction) => void
 ): ReactNode {
   const secondaryBtn =
-    "px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 focus:ring-blue-500 transition-all";
-  const primaryBtn =
-    "px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all";
+    "px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 focus:ring-blue-500 transition-colors";
+
+  // Primary buttons using app's color palette (solid colors, no gradients)
+  const primaryBtnBase =
+    "px-4 py-2.5 text-sm font-semibold text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors";
+
+  const amberBtn = `${primaryBtnBase} bg-amber-600 hover:bg-amber-700 active:bg-amber-800 focus:ring-amber-500`;
+  const blueBtn = `${primaryBtnBase} bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:ring-blue-500`;
+  const slateBtn = `${primaryBtnBase} bg-slate-600 hover:bg-slate-700 active:bg-slate-800 focus:ring-slate-500`;
+  const redBtn = `${primaryBtnBase} bg-red-600 hover:bg-red-700 active:bg-red-800 focus:ring-red-500`;
 
   switch (decision.type) {
     case "existing_client":
@@ -303,7 +336,7 @@ function renderActions(
           <button
             type="button"
             onClick={() => onAction("view_client")}
-            className={`${primaryBtn} bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 focus:ring-amber-500`}
+            className={amberBtn}
           >
             Ver Cliente
           </button>
@@ -330,7 +363,7 @@ function renderActions(
           <button
             type="button"
             onClick={() => onAction("convert_to_client")}
-            className={`${primaryBtn} bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 focus:ring-blue-500`}
+            className={blueBtn}
           >
             Sí, Usar Datos
           </button>
@@ -357,7 +390,7 @@ function renderActions(
           <button
             type="button"
             onClick={() => onAction("create_new")}
-            className={`${primaryBtn} bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 focus:ring-purple-500`}
+            className={slateBtn}
           >
             Crear Nuevo Cliente
           </button>
@@ -377,7 +410,7 @@ function renderActions(
           <button
             type="button"
             onClick={() => onAction("retry")}
-            className={`${primaryBtn} bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 focus:ring-red-500`}
+            className={redBtn}
           >
             Reintentar
           </button>
