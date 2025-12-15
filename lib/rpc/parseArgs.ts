@@ -1,89 +1,183 @@
+/**
+ * Parse Arguments Module
+ *
+ * Parses incoming RPC request arguments from either:
+ * - MessagePack encoded body
+ * - Multipart form-data with files and MessagePack payload
+ */
+
 import os from "node:os";
-import { IncomingForm } from "formidable";
-import { decode } from "#utils/msgpack";
 import path from "node:path";
 import fs from "node:fs";
-import type { Request } from "express";
+import { IncomingForm, type Part, type File as FormidableFile } from "formidable";
+import { decode } from "#utils/msgpack";
+import type { RpcRequest, UploadedFileMetadata } from "./types";
+import { CONTENT_TYPES } from "./constants";
 
-const uploadDir = os.tmpdir();
+/** Directory for temporary file uploads */
+const UPLOAD_DIR = os.tmpdir();
 
-export async function parseArgs(req: Request): Promise<unknown[]> {
+/**
+ * Parses request arguments from an RPC request.
+ *
+ * Supports two content types:
+ * 1. `application/msgpack`: Direct MessagePack-encoded array of arguments
+ * 2. `multipart/form-data`: Form with files and a MessagePack payload part
+ *
+ * @param req - The Express request object
+ * @returns Promise resolving to an array of parsed arguments
+ * @throws Error if content type is unsupported
+ */
+export async function parseArgs(req: RpcRequest): Promise<unknown[]> {
     const contentType = req.headers["content-type"];
 
-    const payload = req.body;
-
-    if (contentType === "application/msgpack") {
-        return Promise.resolve(decode<unknown[]>(payload));
+    if (contentType === CONTENT_TYPES.MSGPACK) {
+        return parseMsgpackBody(req.body);
     }
 
-    if (!contentType?.startsWith("multipart/form-data")) {
-        throw new Error("unsupport content type");
+    if (contentType?.startsWith(CONTENT_TYPES.MULTIPART)) {
+        return parseMultipartForm(req);
     }
 
-    const uploadedFiles: any[] = [];
-    const chunks: Buffer[] = [];
+    throw new Error(`Unsupported content type: ${contentType}`);
+}
 
-    const form = new IncomingForm({
-        uploadDir,    // usa el tempdir del sistema
-        keepExtensions: true       // conserva la extensión original
-    });
+/**
+ * Decodes a MessagePack-encoded body.
+ *
+ * @param body - Raw buffer containing MessagePack data
+ * @returns Decoded array of arguments
+ */
+function parseMsgpackBody(body: Buffer): unknown[] {
+    return decode<unknown[]>(body);
+}
 
-    // 2) Intercepta el part msgpack: decodifica en memoria y NO lo guarda
-    form.onPart = function (part) {
-        if (part.mimetype !== 'application/msgpack') {
-            // Para todo lo demás, usa el handler por defecto (dispara fileBegin, etc.)
+/**
+ * Parses a multipart form-data request.
+ *
+ * The form is expected to contain:
+ * - One `application/msgpack` part with the main payload
+ * - Zero or more file parts that will be injected into the payload
+ *
+ * @param req - The Express request object
+ * @returns Promise resolving to parsed arguments with injected files
+ */
+function parseMultipartForm(req: RpcRequest): Promise<unknown[]> {
+    const uploadedFiles: UploadedFileMetadata[] = [];
+    const msgpackChunks: Buffer[] = [];
+
+    const form = createFormParser();
+
+    // Handle msgpack part separately - decode in memory without saving
+    form.onPart = function (part: Part) {
+        if (part.mimetype === CONTENT_TYPES.MSGPACK) {
+            collectMsgpackData(part, msgpackChunks);
+        } else {
+            // Use default handler for file parts (triggers fileBegin, etc.)
             this._handlePart(part);
-            return;
         }
-
-        part.on('data', chunk => chunks.push(chunk));
     };
 
-    // Antes de que empiece la escritura, cambia la ruta al tempdir+UUID
-    form.on('fileBegin', (fieldName, file) => {
-
-        const ext = path.extname(file.originalFilename ?? "");             // .jpg, .png, .pdf…
-        const newName = crypto.randomUUID() + ext;                  // e.g. 'f47ac10b-58cc-4372-a567-0e02b2c3d479.pdf'
-        const filepath = path.join(uploadDir, newName);
-        file.filepath = path.join(uploadDir, newName);
-
-        // Guardamos metadata para inyectarlo luego
-        uploadedFiles.push({
-            paths: JSON.parse(decodeURIComponent(fieldName)),
-            file: {
-                name: newName,
-                type: file.mimetype,
-                stream: () => fs.createReadStream(filepath)
-            }
-        });
+    // Intercept file writes to rename with UUID and track metadata
+    form.on("fileBegin", (fieldName: string, file: FormidableFile) => {
+        handleFileBegin(fieldName, file, uploadedFiles);
     });
 
-
-    return new Promise((res, rej) => {
-        form.parse(req, (formError) => {
-            if (formError) {
-                rej(formError)
+    return new Promise((resolve, reject) => {
+        form.parse(req, (error: Error | null) => {
+            if (error) {
+                reject(error);
                 return;
             }
 
             try {
-                const msgpackBuffer = Buffer.concat(chunks);
-                const payload: any = decode<unknown[]>(new Uint8Array(msgpackBuffer));
-
-                for (const uploadedFile of uploadedFiles) {
-                    const { paths, file } = uploadedFile;
-
-                    const path = paths[paths.length - 1];
-
-                    const obj = paths.slice(0, -1).reduce((acc: any, key: any) => acc[key], payload);
-
-                    obj[path] = file;
-                }
-
-                res(payload);
-            } catch (error) {
-                rej(error);
+                const payload = decodeMsgpackChunks(msgpackChunks);
+                injectFilesIntoPayload(payload, uploadedFiles);
+                resolve(payload);
+            } catch (parseError) {
+                reject(parseError);
             }
         });
-    })
+    });
+}
+
+/**
+ * Creates a configured formidable form parser.
+ */
+function createFormParser(): InstanceType<typeof IncomingForm> {
+    return new IncomingForm({
+        uploadDir: UPLOAD_DIR,
+        keepExtensions: true,
+    });
+}
+
+/**
+ * Collects MessagePack data chunks from a form part.
+ */
+function collectMsgpackData(part: Part, chunks: Buffer[]): void {
+    part.on("data", (chunk: Buffer) => chunks.push(chunk));
+}
+
+/**
+ * Handles the beginning of a file upload.
+ *
+ * Generates a unique filename and tracks metadata for later injection.
+ */
+function handleFileBegin(
+    fieldName: string,
+    file: FormidableFile,
+    uploadedFiles: UploadedFileMetadata[]
+): void {
+    const extension = path.extname(file.originalFilename ?? "");
+    const uniqueName = `${crypto.randomUUID()}${extension}`;
+    const filepath = path.join(UPLOAD_DIR, uniqueName);
+
+    file.filepath = filepath;
+
+    // Parse the field name as JSON to get the path array
+    const paths = JSON.parse(decodeURIComponent(fieldName));
+
+    uploadedFiles.push({
+        paths,
+        file: {
+            name: uniqueName,
+            type: file.mimetype,
+            stream: () => fs.createReadStream(filepath),
+        },
+    });
+}
+
+/**
+ * Decodes collected MessagePack chunks into a payload array.
+ */
+function decodeMsgpackChunks(chunks: Buffer[]): unknown[] {
+    const buffer = Buffer.concat(chunks);
+    return decode<unknown[]>(new Uint8Array(buffer));
+}
+
+/**
+ * Injects uploaded files into the payload at their specified paths.
+ *
+ * Each file's `paths` property specifies the location in the payload
+ * where the file object should be placed.
+ *
+ * @param payload - The decoded payload array (mutated in place)
+ * @param uploadedFiles - Array of file metadata with path information
+ */
+function injectFilesIntoPayload(
+    payload: unknown[],
+    uploadedFiles: UploadedFileMetadata[]
+): void {
+    for (const { paths, file } of uploadedFiles) {
+        const targetKey = paths[paths.length - 1];
+        const parentPath = paths.slice(0, -1);
+
+        // Navigate to the parent object
+        const parent = parentPath.reduce<Record<string | number, unknown>>(
+            (current, key) => current[key] as Record<string | number, unknown>,
+            payload as unknown as Record<string | number, unknown>
+        );
+
+        parent[targetKey] = file;
+    }
 }

@@ -125,7 +125,7 @@ const { default: auth } = await import("#lib/access/middleware");
 const { default: rpc } = await import("#lib/rpc/middleware");
 
 app.use(auth(AGAPE_SECRET));
-app.use(rpc);
+app.post("/*path", rpc);
 
 if (!isDevelopment) {
   // Path to frontend Vite build output
