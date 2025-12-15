@@ -54,7 +54,7 @@ const modalVariants = {
     scale: 1,
     y: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       damping: 25,
       stiffness: 300,
     },
@@ -65,7 +65,7 @@ const modalVariants = {
     y: 10,
     transition: {
       duration: 0.2,
-      ease: "easeOut",
+      ease: "easeOut" as const,
     },
   },
 };

@@ -92,7 +92,7 @@ function DocumentValidationContent({
       <div className="px-6 py-5">{renderContent(decision)}</div>
 
       {/* Actions */}
-      <div className="px-6 py-4 bg-gray-50 flex flex-wrap gap-3 justify-end">
+      <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700/50 flex flex-wrap gap-3 justify-end">
         {renderActions(decision, handleAction)}
       </div>
     </>
@@ -205,32 +205,32 @@ function renderContent(decision: DocumentDecisionData): ReactNode {
     case "existing_client":
       return (
         <div className="space-y-3">
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             Ya existe un cliente registrado con este documento:
           </p>
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="font-medium text-amber-900">{decision.client.name}</p>
-            <p className="text-sm text-amber-700">ID: {decision.client.id}</p>
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg p-3">
+            <p className="font-medium text-amber-900 dark:text-amber-200">{decision.client.name}</p>
+            <p className="text-sm text-amber-700 dark:text-amber-400">ID: {decision.client.id}</p>
           </div>
-          <p className="text-sm text-gray-600">¿Qué deseas hacer?</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">¿Qué deseas hacer?</p>
         </div>
       );
 
     case "existing_user":
       return (
         <div className="space-y-3">
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             Este documento corresponde a un usuario existente en el sistema,
             pero aún no está registrado como cliente.
           </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="font-medium text-blue-900">{decision.user.name}</p>
-            <p className="text-sm text-blue-700">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg p-3">
+            <p className="font-medium text-blue-900 dark:text-blue-200">{decision.user.name}</p>
+            <p className="text-sm text-blue-700 dark:text-blue-400">
               Tipo:{" "}
               {decision.user.hasPersonData ? "Persona Natural" : "Empresa"}
             </p>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             ¿Deseas usar estos datos para crear el cliente?
           </p>
         </div>
@@ -239,17 +239,17 @@ function renderContent(decision: DocumentDecisionData): ReactNode {
     case "not_found_in_edit":
       return (
         <div className="space-y-3">
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             El documento ingresado no corresponde a ningún cliente existente en
             el sistema.
           </p>
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-            <p className="text-sm text-purple-700">
+          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-lg p-3">
+            <p className="text-sm text-purple-700 dark:text-purple-400">
               Documento:{" "}
               <span className="font-mono">{decision.data.documentNumber}</span>
             </p>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             ¿Deseas crear un nuevo cliente con este documento o revertir al
             documento original?
           </p>
@@ -259,13 +259,13 @@ function renderContent(decision: DocumentDecisionData): ReactNode {
     case "validation_error":
       return (
         <div className="space-y-3">
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-gray-300">
             No se pudo verificar si el documento ya existe en el sistema.
           </p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-sm text-red-700">{decision.error.message}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg p-3">
+            <p className="text-sm text-red-700 dark:text-red-400">{decision.error.message}</p>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Puedes reintentar la validación o continuar sin verificar.
           </p>
         </div>
@@ -278,9 +278,9 @@ function renderActions(
   onAction: (action: DocumentDecisionAction) => void
 ): ReactNode {
   const secondaryBtn =
-    "px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all";
+    "px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 focus:ring-blue-500 transition-all";
   const primaryBtn =
-    "px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all";
+    "px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all";
 
   switch (decision.type) {
     case "existing_client":
