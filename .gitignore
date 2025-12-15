@@ -46,8 +46,7 @@ coverage/
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/*
-!.vscode/launch.json
+.vscode/
 *.swp
 *.swo
 
