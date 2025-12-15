@@ -19,9 +19,9 @@ export function ValidationStatus({
 
   if (isValidating) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm animate-pulse">
+      <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-700 text-sm animate-pulse">
         <svg
-          className="h-4 w-4 animate-spin"
+          className="h-4 w-4 animate-spin text-indigo-700"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"

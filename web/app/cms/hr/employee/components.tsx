@@ -252,7 +252,7 @@ export function EmployeeForm({
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       {/* Photo Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-12">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-12">
         <ImageProfile initialAvatar={initialAvatar} />
       </div>
 
@@ -262,7 +262,7 @@ export function EmployeeForm({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <svg
-              className="h-5 w-5 mr-2 text-blue-600"
+              className="h-5 w-5 mr-2 text-indigo-600"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -285,7 +285,7 @@ export function EmployeeForm({
                 </label>
                 <Form.Select.Int
                   path="documentTypeId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
                   <option value="">Seleccionar tipo...</option>
                   {personDocumentTypes.map((type) => (
@@ -303,7 +303,7 @@ export function EmployeeForm({
                   path="documentNumber"
                   placeholder="Número de documento"
                   required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </div>
             </Form.Scope>
@@ -315,7 +315,7 @@ export function EmployeeForm({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg
-                className="h-5 w-5 mr-2 text-blue-600"
+                className="h-5 w-5 mr-2 text-indigo-600"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
@@ -335,17 +335,17 @@ export function EmployeeForm({
                   path="firstName"
                   placeholder="Juan"
                   required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
                 <Form.Text
                   path="lastName"
                   placeholder="Pérez"
                   required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
                 <Form.DateTime
                   path="birthdate"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </Form.Scope>
             </div>
@@ -379,7 +379,7 @@ export function EmployeeForm({
               <Form.DateTime
                 path="hireDate"
                 required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
             <div>
@@ -390,7 +390,7 @@ export function EmployeeForm({
                 <Form.Checkbox
                   path="isActive"
                   materialize
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
                 <span className="ml-2 text-sm text-gray-700">Activo</span>
               </div>

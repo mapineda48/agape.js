@@ -48,7 +48,7 @@ export default function NewEmployeePage(props: Props) {
 
   return (
     <Fragment>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
@@ -70,7 +70,7 @@ export default function NewEmployeePage(props: Props) {
               </svg>
               Volver a Empleados
             </button>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Nuevo Empleado
             </h1>
             <p className="text-gray-600 mt-2">
@@ -84,7 +84,7 @@ export default function NewEmployeePage(props: Props) {
               <button
                 type="button"
                 onClick={() => navigate("../employees")}
-                className="px-6 py-2.5 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                className="px-6 py-2.5 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
               >
                 Cancelar
               </button>
@@ -102,11 +102,11 @@ export default function NewEmployeePage(props: Props) {
                       ...data,
                       ...(data.hireDate
                         ? {
-                            hireDate:
-                              data.hireDate instanceof DateTime
-                                ? data.hireDate
-                                : new DateTime(data.hireDate),
-                          }
+                          hireDate:
+                            data.hireDate instanceof DateTime
+                              ? data.hireDate
+                              : new DateTime(data.hireDate),
+                        }
                         : {}),
                       user: {
                         ...data.user,
@@ -117,8 +117,8 @@ export default function NewEmployeePage(props: Props) {
                             data.user.person.birthdate instanceof DateTime
                               ? data.user.person.birthdate
                               : data.user.person.birthdate
-                              ? new DateTime(data.user.person.birthdate)
-                              : undefined,
+                                ? new DateTime(data.user.person.birthdate)
+                                : undefined,
                         },
                       },
                     };
@@ -133,7 +133,7 @@ export default function NewEmployeePage(props: Props) {
                     });
                   }
                 }}
-                className="px-6 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                className="px-6 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
               >
                 Guardar Empleado
               </Submit>

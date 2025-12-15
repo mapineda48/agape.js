@@ -121,9 +121,9 @@ function getColorScheme(type: DocumentDecisionData["type"]): {
       };
     case "existing_user":
       return {
-        bgColor: "bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800/50",
-        iconBgColor: "bg-blue-100 dark:bg-blue-800/40",
-        iconColor: "h-5 w-5 text-blue-600 dark:text-blue-400",
+        bgColor: "bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800/50",
+        iconBgColor: "bg-indigo-100 dark:bg-indigo-800/40",
+        iconColor: "h-5 w-5 text-indigo-600 dark:text-indigo-400",
       };
     case "not_found_in_edit":
       return {
@@ -249,9 +249,9 @@ function renderContent(decision: DocumentDecisionData): ReactNode {
             Este documento corresponde a un usuario existente en el sistema,
             pero aún no está registrado como cliente.
           </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg p-3">
-            <p className="font-medium text-blue-900 dark:text-blue-200">{decision.user.name}</p>
-            <p className="text-sm text-blue-700 dark:text-blue-400">
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/50 rounded-lg p-3">
+            <p className="font-medium text-indigo-900 dark:text-indigo-200">{decision.user.name}</p>
+            <p className="text-sm text-indigo-700 dark:text-indigo-400">
               Tipo:{" "}
               {decision.user.hasPersonData ? "Persona Natural" : "Empresa"}
             </p>
@@ -304,14 +304,14 @@ function renderActions(
   onAction: (action: DocumentDecisionAction) => void
 ): ReactNode {
   const secondaryBtn =
-    "px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 focus:ring-blue-500 transition-colors";
+    "px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 transition-colors";
 
   // Primary buttons using app's color palette (solid colors, no gradients)
   const primaryBtnBase =
     "px-4 py-2.5 text-sm font-semibold text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors";
 
   const amberBtn = `${primaryBtnBase} bg-amber-600 hover:bg-amber-700 active:bg-amber-800 focus:ring-amber-500`;
-  const blueBtn = `${primaryBtnBase} bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:ring-blue-500`;
+  const blueBtn = `${primaryBtnBase} bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:ring-indigo-500`;
   const slateBtn = `${primaryBtnBase} bg-slate-600 hover:bg-slate-700 active:bg-slate-800 focus:ring-slate-500`;
   const redBtn = `${primaryBtnBase} bg-red-600 hover:bg-red-700 active:bg-red-800 focus:ring-red-500`;
 

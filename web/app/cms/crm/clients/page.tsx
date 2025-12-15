@@ -101,12 +101,12 @@ export default function ClientsPage(props: Props) {
 
   return (
     <Fragment>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Clientes
               </h1>
               <p className="text-gray-600 mt-2">
@@ -115,7 +115,7 @@ export default function ClientsPage(props: Props) {
             </div>
             <button
               onClick={() => navigate("../client")}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-105"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
             >
               <svg
                 className="-ml-1 mr-2 h-5 w-5"
@@ -159,7 +159,7 @@ export default function ClientsPage(props: Props) {
                   <input
                     type="text"
                     placeholder="Nombre del cliente..."
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition"
                     onChange={(e) => debouncedSearch(e.target.value)}
                   />
                 </div>
@@ -171,7 +171,7 @@ export default function ClientsPage(props: Props) {
                   Tipo de Cliente
                 </label>
                 <select
-                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition"
+                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition"
                   value={filters.typeId ?? ""}
                   onChange={(e) =>
                     updateFilter({
@@ -199,7 +199,7 @@ export default function ClientsPage(props: Props) {
                   <label className="inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       checked={filters.isActive === true}
                       onChange={(e) =>
                         updateFilter({
@@ -214,7 +214,7 @@ export default function ClientsPage(props: Props) {
                   <label className="inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       checked={filters.isActive === false}
                       onChange={(e) =>
                         updateFilter({
@@ -327,7 +327,7 @@ function ClientRow({
 }) {
   return (
     <tr
-      className="hover:bg-blue-50 cursor-pointer transition-colors"
+      className="hover:bg-indigo-50 cursor-pointer transition-colors"
       onClick={onEdit}
     >
       <td className="px-6 py-4 whitespace-nowrap">
@@ -335,12 +335,12 @@ function ClientRow({
           <div className="flex-shrink-0 h-12 w-12">
             {client.photoUrl ? (
               <Image
-                className="h-12 w-12 rounded-full object-cover ring-2 ring-blue-100"
+                className="h-12 w-12 rounded-full object-cover ring-2 ring-indigo-100"
                 src={client.photoUrl}
                 alt={`${client.firstName} ${client.lastName}`}
               />
             ) : (
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center ring-2 ring-blue-100">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center ring-2 ring-indigo-100">
                 <span className="text-white font-semibold text-lg">
                   {client?.firstName?.[0]}
                   {client?.lastName?.[0]}
@@ -363,22 +363,20 @@ function ClientRow({
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
           {client.typeName || "Sin tipo"}
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-            client.active
+          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${client.active
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
-          }`}
+            }`}
         >
           <span
-            className={`h-2 w-2 rounded-full mr-2 ${
-              client.active ? "bg-green-400" : "bg-gray-400"
-            }`}
+            className={`h-2 w-2 rounded-full mr-2 ${client.active ? "bg-green-400" : "bg-gray-400"
+              }`}
           />
           {client.active ? "Activo" : "Inactivo"}
         </span>
@@ -389,7 +387,7 @@ function ClientRow({
             e.stopPropagation();
             onEdit();
           }}
-          className="text-blue-600 hover:text-blue-900 font-semibold transition-colors"
+          className="text-indigo-600 hover:text-indigo-900 font-semibold transition-colors"
         >
           Editar
         </button>

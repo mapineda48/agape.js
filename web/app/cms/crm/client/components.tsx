@@ -472,7 +472,7 @@ export function ClientForm({
 
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Photo Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-12">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-12">
           <ImageClient />
         </div>
 
@@ -482,7 +482,7 @@ export function ClientForm({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg
-                className="h-5 w-5 mr-2 text-blue-600"
+                className="h-5 w-5 mr-2 text-indigo-600"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -503,7 +503,7 @@ export function ClientForm({
                   path="documentTypeId"
                   required
                   onChange={handleDocumentTypeChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 >
                   <option value="">Seleccionar tipo...</option>
                   {enabledDocumentTypes.map((type) => (
@@ -517,7 +517,7 @@ export function ClientForm({
                   placeholder="Número de documento"
                   required
                   onBlur={handleDocumentBlur}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </Form.Scope>
             </div>
@@ -544,7 +544,7 @@ export function ClientForm({
                   </span>
                 )}
                 {expectsPerson && !isCompany && (
-                  <span className="inline-flex items-center gap-1 text-blue-700 bg-blue-50 px-2 py-1 rounded">
+                  <span className="inline-flex items-center gap-1 text-indigo-700 bg-indigo-50 px-2 py-1 rounded">
                     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                     </svg>
@@ -561,7 +561,7 @@ export function ClientForm({
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <svg
-                    className="h-5 w-5 mr-2 text-blue-600"
+                    className="h-5 w-5 mr-2 text-indigo-600"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="currentColor"
@@ -575,12 +575,12 @@ export function ClientForm({
                     path="legalName"
                     placeholder="Razón Social"
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                   <Form.Text
                     path="tradeName"
                     placeholder="Nombre Comercial"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                 </div>
               </div>
@@ -590,7 +590,7 @@ export function ClientForm({
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <svg
-                    className="h-5 w-5 mr-2 text-blue-600"
+                    className="h-5 w-5 mr-2 text-indigo-600"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -608,18 +608,18 @@ export function ClientForm({
                     path="firstName"
                     placeholder="Juan"
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                   <Form.Text
                     path="lastName"
                     placeholder="Pérez"
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                   <Form.DateTime
                     path="birthdate"
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                 </div>
               </div>
@@ -646,7 +646,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="typeId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900 hover:border-gray-400"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900 hover:border-gray-400"
                 >
                   <option value={0} className="text-gray-500 bg-white py-2">
                     Seleccionar tipo...
@@ -655,7 +655,7 @@ export function ClientForm({
                     <option
                       key={type.id}
                       value={type.id}
-                      className="text-gray-900 bg-white py-2 hover:bg-blue-50"
+                      className="text-gray-900 bg-white py-2 hover:bg-indigo-50"
                     >
                       {type.name}
                     </option>
@@ -669,7 +669,7 @@ export function ClientForm({
                 <div className="flex items-center pt-2">
                   <Form.Checkbox
                     path="active"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700">
                     Cliente Activo
@@ -703,7 +703,7 @@ export function ClientForm({
                     path="email"
                     type="email"
                     placeholder="correo@ejemplo.com"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                 </div>
                 <div>
@@ -713,7 +713,7 @@ export function ClientForm({
                   <Form.Text
                     path="phone"
                     placeholder="+57 1 234 5678"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                 </div>
                 <div>
@@ -723,7 +723,7 @@ export function ClientForm({
                   <Form.Text
                     path="mobile"
                     placeholder="+57 300 123 4567"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                 </div>
                 <div>
@@ -733,7 +733,7 @@ export function ClientForm({
                   <Form.Text
                     path="whatsapp"
                     placeholder="+57 300 123 4567"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                   />
                 </div>
               </div>
@@ -761,7 +761,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="priceListId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
                   <option value="">Lista por defecto</option>
                   {priceLists.map((pl) => (
@@ -779,7 +779,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="paymentTermsId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
                   <option value="">Condiciones por defecto</option>
                   {paymentTerms.map((pt) => (
@@ -797,7 +797,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="salespersonId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
                   <option value="">Sin vendedor asignado</option>
                   {salespersons.map((sp) => (
@@ -816,7 +816,7 @@ export function ClientForm({
                 <Form.Decimal
                   path="creditLimit"
                   placeholder="0.00"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </div>
 
@@ -830,7 +830,7 @@ export function ClientForm({
                   placeholder="30"
                   min={0}
                   max={365}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </div>
 
@@ -842,7 +842,7 @@ export function ClientForm({
                 <Form.Text
                   path="clientCode"
                   placeholder="CLI-001"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </div>
             </div>
