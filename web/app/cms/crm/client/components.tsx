@@ -17,9 +17,36 @@ import DocumentValidationModal, {
 } from "./DocumentValidationModal";
 import ValidationStatus from "./ValidationStatus";
 
+/**
+ * Tipos para catálogos comerciales
+ */
+interface PriceListOption {
+  id: number;
+  code: string;
+  fullName: string;
+}
+
+interface PaymentTermsOption {
+  id: number;
+  code: string;
+  fullName: string;
+  dueDays: number;
+}
+
+interface SalespersonOption {
+  id: number;
+  fullName: string;
+}
+
 interface ClientFormProps {
   clientTypes: ClientType[];
   documentTypes: DocumentType[];
+  /** Listas de precios disponibles */
+  priceLists?: PriceListOption[];
+  /** Condiciones de pago disponibles */
+  paymentTerms?: PaymentTermsOption[];
+  /** Vendedores disponibles */
+  salespersons?: SalespersonOption[];
   children?: ReactNode;
   isEdit?: boolean;
   clientId?: number;
@@ -53,6 +80,9 @@ interface FoundUserData {
 export function ClientForm({
   clientTypes,
   documentTypes,
+  priceLists = [],
+  paymentTerms = [],
+  salespersons = [],
   children,
   isEdit = false,
   clientId,
@@ -631,6 +661,175 @@ export function ClientForm({
                     Cliente Activo
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg
+                className="h-5 w-5 mr-2 text-green-600"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
+              Información de Contacto
+            </h3>
+            <Form.Scope path="contacts" autoCleanup>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Principal
+                  </label>
+                  <Form.Text
+                    path="email"
+                    type="email"
+                    placeholder="correo@ejemplo.com"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Teléfono Fijo
+                  </label>
+                  <Form.Text
+                    path="phone"
+                    placeholder="+57 1 234 5678"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Teléfono Móvil
+                  </label>
+                  <Form.Text
+                    path="mobile"
+                    placeholder="+57 300 123 4567"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    WhatsApp
+                  </label>
+                  <Form.Text
+                    path="whatsapp"
+                    placeholder="+57 300 123 4567"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+            </Form.Scope>
+          </div>
+
+          {/* Commercial Conditions */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg
+                className="h-5 w-5 mr-2 text-amber-600"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+              Condiciones Comerciales
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Price List */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lista de Precios
+                </label>
+                <Form.Select.Int
+                  path="priceListId"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
+                >
+                  <option value="">Lista por defecto</option>
+                  {priceLists.map((pl) => (
+                    <option key={pl.id} value={pl.id}>
+                      {pl.fullName}
+                    </option>
+                  ))}
+                </Form.Select.Int>
+              </div>
+
+              {/* Payment Terms */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Condiciones de Pago
+                </label>
+                <Form.Select.Int
+                  path="paymentTermsId"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
+                >
+                  <option value="">Condiciones por defecto</option>
+                  {paymentTerms.map((pt) => (
+                    <option key={pt.id} value={pt.id}>
+                      {pt.fullName} ({pt.dueDays} días)
+                    </option>
+                  ))}
+                </Form.Select.Int>
+              </div>
+
+              {/* Salesperson */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Vendedor Asignado
+                </label>
+                <Form.Select.Int
+                  path="salespersonId"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-gray-900"
+                >
+                  <option value="">Sin vendedor asignado</option>
+                  {salespersons.map((sp) => (
+                    <option key={sp.id} value={sp.id}>
+                      {sp.fullName}
+                    </option>
+                  ))}
+                </Form.Select.Int>
+              </div>
+
+              {/* Credit Limit */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Límite de Crédito
+                </label>
+                <Form.Decimal
+                  path="creditLimit"
+                  placeholder="0.00"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+
+              {/* Credit Days */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Días de Crédito
+                </label>
+                <Form.Int
+                  path="creditDays"
+                  placeholder="30"
+                  min={0}
+                  max={365}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+
+              {/* Client Code */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Código de Cliente
+                </label>
+                <Form.Text
+                  path="clientCode"
+                  placeholder="CLI-001"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
               </div>
             </div>
           </div>

@@ -99,6 +99,14 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/inventory/movementType.ts"
             ),
+            "@agape/catalogs/price_list": path.resolve(
+              __dirname,
+              "./web/test/mocks/catalogs/price_list.ts"
+            ),
+            "@agape/finance/payment_terms": path.resolve(
+              __dirname,
+              "./web/test/mocks/finance/payment_terms.ts"
+            ),
           },
         },
       },

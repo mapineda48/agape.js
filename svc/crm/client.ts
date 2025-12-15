@@ -4,9 +4,16 @@ import person from "#models/core/person";
 import company from "#models/core/company";
 import { user } from "#models/core/user";
 import clientType from "#models/crm/client_type";
+import { priceList } from "#models/catalogs/price_list";
+import { paymentTerms } from "#models/finance/payment_terms";
+import employee from "#models/hr/employee";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { and, count, eq, sql, desc } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { upsertUser, type IUser } from "#svc/core/user";
+import { upsertContactMethod, listContactMethods } from "#svc/core/contactMethod";
+import { createUserAddressWithAddress } from "#svc/core/address";
+import Decimal from "#utils/data/Decimal";
 import type {
   ClientDto,
   GetClientByIdResult,
@@ -14,7 +21,11 @@ import type {
   ListClientsResult,
   UpsertClientPayload,
   ClientRecord,
+  ClientListItem,
 } from "#utils/dto/crm/client";
+
+// Alias para la tabla person del vendedor (ya que person se usa para el cliente)
+const salespersonPerson = alias(person, "salesperson_person");
 
 /**
  * Obtiene un cliente por su ID con todos los datos relacionados.
@@ -37,6 +48,13 @@ export async function getClientById(id: number): Promise<ClientDto> {
       typeId: client.typeId,
       active: client.active,
       photo: client.photoUrl,
+      clientCode: client.clientCode,
+      // Campos comerciales
+      priceListId: client.priceListId,
+      paymentTermsId: client.paymentTermsId,
+      creditLimit: client.creditLimit,
+      creditDays: client.creditDays,
+      salespersonId: client.salespersonId,
 
       user: {
         id: user.id,
@@ -63,7 +81,28 @@ export async function getClientById(id: number): Promise<ClientDto> {
     .leftJoin(company, eq(client.id, company.id))
     .where(eq(client.id, id));
 
-  return match as ClientDto;
+  if (!match) {
+    return undefined as unknown as ClientDto;
+  }
+
+  // Traer los contactos del cliente
+  const contactMethods = await listContactMethods({
+    userId: id,
+    isActive: true,
+  });
+
+  // Convertir los contactos al formato IClientContactInfo
+  const contacts = {
+    email: contactMethods.find((c) => c.type === "email" && c.isPrimary)?.value,
+    phone: contactMethods.find((c) => c.type === "phone" && c.isPrimary)?.value,
+    mobile: contactMethods.find((c) => c.type === "mobile" && c.isPrimary)?.value,
+    whatsapp: contactMethods.find((c) => c.type === "whatsapp" && c.isPrimary)?.value,
+  };
+
+  return {
+    ...match,
+    contacts,
+  } as ClientDto;
 }
 
 /**
@@ -79,6 +118,14 @@ export async function getClientByDocument(
       typeId: client.typeId,
       active: client.active,
       photo: client.photoUrl,
+      clientCode: client.clientCode,
+      // Campos comerciales
+      priceListId: client.priceListId,
+      paymentTermsId: client.paymentTermsId,
+      creditLimit: client.creditLimit,
+      creditDays: client.creditDays,
+      salespersonId: client.salespersonId,
+
       user: {
         id: user.id,
         documentTypeId: user.documentTypeId,
@@ -140,6 +187,8 @@ export async function listClients(
     fullName,
     isActive,
     typeId,
+    salespersonId,
+    priceListId,
     includeTotalCount = false,
     pageIndex = 0,
     pageSize = 10,
@@ -148,7 +197,7 @@ export async function listClients(
   const conditions = [];
 
   if (fullName) {
-    // Buscar en nombre y apellido de persona o razón social/nombre comercial de empresa
+    // Buscar en nombre y apellido de persona o razón social/nombre comercial de empresa
     conditions.push(
       sql`(
         CONCAT(${person.firstName}, ' ', ${
@@ -168,13 +217,22 @@ export async function listClients(
     conditions.push(eq(client.typeId, typeId));
   }
 
+  if (salespersonId !== undefined) {
+    conditions.push(eq(client.salespersonId, salespersonId));
+  }
+
+  if (priceListId !== undefined) {
+    conditions.push(eq(client.priceListId, priceListId));
+  }
+
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
-  // Consulta de clientes con datos de persona y tipo
+  // Consulta de clientes con datos de persona, tipo y campos comerciales
   const queryClients = db
     .select({
       id: client.id,
       userId: client.id,
+      clientCode: client.clientCode,
       firstName: person.firstName,
       lastName: person.lastName,
       legalName: company.legalName,
@@ -185,6 +243,20 @@ export async function listClients(
       photoUrl: client.photoUrl,
       active: client.active,
       documentNumber: user.documentNumber,
+      // Campos comerciales
+      priceListId: client.priceListId,
+      priceListName: priceList.fullName,
+      paymentTermsId: client.paymentTermsId,
+      paymentTermsName: paymentTerms.fullName,
+      creditLimit: client.creditLimit,
+      creditDays: client.creditDays,
+      salespersonId: client.salespersonId,
+      // Nombre del vendedor usando alias de la tabla person
+      salespersonName: sql<string | null>`CONCAT(${salespersonPerson.firstName}, ' ', ${salespersonPerson.lastName})`,
+      // Contacto principal (placeholder - se llenará después si es necesario)
+      primaryEmail: sql<string | null>`NULL`,
+      primaryPhone: sql<string | null>`NULL`,
+      // Timestamps
       createdAt: client.createdAt,
       updatedAt: client.updatedAt,
     })
@@ -193,6 +265,11 @@ export async function listClients(
     .leftJoin(person, eq(client.id, person.id))
     .leftJoin(company, eq(client.id, company.id))
     .leftJoin(clientType, eq(client.typeId, clientType.id))
+    .leftJoin(priceList, eq(client.priceListId, priceList.id))
+    .leftJoin(paymentTerms, eq(client.paymentTermsId, paymentTerms.id))
+    // JOIN con employee y luego con el alias de person para obtener el nombre del vendedor
+    .leftJoin(employee, eq(client.salespersonId, employee.id))
+    .leftJoin(salespersonPerson, eq(employee.id, salespersonPerson.id))
     .where(whereClause)
     .orderBy(desc(client.id))
     .limit(pageSize)
@@ -201,7 +278,7 @@ export async function listClients(
   // Si no se necesita el conteo total, retornar solo clientes
   if (!includeTotalCount) {
     const clients = await queryClients;
-    return { clients };
+    return { clients: clients as ClientListItem[] };
   }
 
   // Consulta de conteo
@@ -219,7 +296,7 @@ export async function listClients(
     queryCount,
   ]);
 
-  return { clients, totalCount };
+  return { clients: clients as ClientListItem[], totalCount };
 }
 
 /**
@@ -228,17 +305,23 @@ export async function listClients(
  * Si `id` está presente, actualiza el cliente existente.
  * Si no tiene `id`, crea un nuevo cliente.
  *
+ * Maneja automáticamente:
+ * - Datos de usuario (persona o empresa)
+ * - Foto del cliente
+ * - Campos comerciales (lista de precios, condiciones de pago, etc.)
+ * - Métodos de contacto (email, teléfono, móvil)
+ * - Direcciones (facturación, envío)
+ *
  * @param payload - Datos del cliente a insertar o actualizar
  * @returns El cliente creado o actualizado con sus datos relacionados
  *
  * @example
  * ```ts
- * // Crear nuevo cliente
+ * // Crear nuevo cliente con campos comerciales
  * const newClient = await upsertClient({
  *   user: {
  *     documentTypeId: 1,
  *     documentNumber: "123456",
- *     email: "john@example.com",
  *     person: {
  *       firstName: "John",
  *       lastName: "Doe",
@@ -246,32 +329,55 @@ export async function listClients(
  *   },
  *   typeId: 1,
  *   active: true,
- * });
- *
- * // Actualizar cliente existente
- * const updated = await upsertClient({
- *   id: 1,
- *   user: { ... },
- *   typeId: 2,
- *   active: false,
+ *   priceListId: 1,
+ *   paymentTermsId: 1,
+ *   creditLimit: 5000000,
+ *   contacts: {
+ *     email: "john@example.com",
+ *     phone: "+57 1 234 5678",
+ *     mobile: "+57 300 123 4567",
+ *   },
  * });
  * ```
  */
 export async function upsertClient(
   payload: UpsertClientPayload
 ): Promise<ClientRecord> {
-  const { id, photo, user: userDto, ...clientData } = payload;
+  const {
+    id,
+    photo,
+    user: userDto,
+    contacts,
+    addresses,
+    creditLimit,
+    ...clientData
+  } = payload;
 
   // Paso 1: Upsert del usuario (persona o compañía)
   const userRecord = await upsertUser(userDto as any);
 
-  // Paso 2: Upsert del registro de cliente
+  // Convertir creditLimit a Decimal si es necesario
+  let creditLimitDecimal: Decimal | null = null;
+  if (creditLimit !== undefined && creditLimit !== null) {
+    creditLimitDecimal =
+      creditLimit instanceof Decimal
+        ? creditLimit
+        : new Decimal(String(creditLimit));
+  }
+
+  // Paso 2: Upsert del registro de cliente con campos comerciales
   const [clientRecord] = await db
     .insert(client)
     .values({
       id: userRecord.id,
       typeId: clientData.typeId,
       active: clientData.active ?? true,
+      clientCode: clientData.clientCode ?? null,
+      priceListId: clientData.priceListId ?? null,
+      paymentTermsId: clientData.paymentTermsId ?? null,
+      creditLimit: creditLimitDecimal,
+      creditDays: clientData.creditDays ?? null,
+      salespersonId: clientData.salespersonId ?? null,
       photoUrl: null,
     })
     .onConflictDoUpdate({
@@ -279,11 +385,87 @@ export async function upsertClient(
       set: {
         typeId: clientData.typeId,
         active: clientData.active ?? true,
+        clientCode: clientData.clientCode ?? null,
+        priceListId: clientData.priceListId ?? null,
+        paymentTermsId: clientData.paymentTermsId ?? null,
+        creditLimit: creditLimitDecimal,
+        creditDays: clientData.creditDays ?? null,
+        salespersonId: clientData.salespersonId ?? null,
       },
     })
     .returning();
 
-  // Paso 3: Manejar subida de foto si se proporciona
+  // Paso 3: Manejar métodos de contacto si se proporcionan
+  if (contacts) {
+    const contactPromises: Promise<any>[] = [];
+
+    if (contacts.email) {
+      contactPromises.push(
+        upsertContactMethod({
+          userId: userRecord.id,
+          type: "email",
+          value: contacts.email,
+          isPrimary: true,
+          label: "Principal",
+        })
+      );
+    }
+
+    if (contacts.phone) {
+      contactPromises.push(
+        upsertContactMethod({
+          userId: userRecord.id,
+          type: "phone",
+          value: contacts.phone,
+          isPrimary: true,
+          label: "Principal",
+        })
+      );
+    }
+
+    if (contacts.mobile) {
+      contactPromises.push(
+        upsertContactMethod({
+          userId: userRecord.id,
+          type: "mobile",
+          value: contacts.mobile,
+          isPrimary: true,
+          label: "Principal",
+        })
+      );
+    }
+
+    if (contacts.whatsapp && contacts.whatsapp !== contacts.mobile) {
+      contactPromises.push(
+        upsertContactMethod({
+          userId: userRecord.id,
+          type: "whatsapp",
+          value: contacts.whatsapp,
+          isPrimary: true,
+          label: "Principal",
+        })
+      );
+    }
+
+    await Promise.all(contactPromises);
+  }
+
+  // Paso 4: Manejar direcciones si se proporcionan
+  if (addresses && addresses.length > 0) {
+    const addressPromises = addresses.map((addr) =>
+      createUserAddressWithAddress({
+        userId: userRecord.id,
+        type: addr.type,
+        isDefault: addr.isDefault,
+        label: addr.label,
+        address: addr.address,
+      })
+    );
+
+    await Promise.all(addressPromises);
+  }
+
+  // Paso 5: Manejar subida de foto si se proporciona
   if (photo) {
     let photoUrl: string;
 
@@ -327,4 +509,6 @@ export type {
   UpsertClientPayload,
   ClientRecord,
   GetClientByDocumentResult,
+  IClientAddress,
 } from "#utils/dto/crm/client";
+

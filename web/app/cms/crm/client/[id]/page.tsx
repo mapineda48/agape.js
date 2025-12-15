@@ -53,6 +53,16 @@ export default function EditClientPage(props: Props) {
     typeId: props.client.typeId || 0,
     active: props.client.active,
     photo: props.client.photo || undefined,
+    // Campos comerciales
+    clientCode: props.client.clientCode ?? undefined,
+    priceListId: props.client.priceListId ?? undefined,
+    paymentTermsId: props.client.paymentTermsId ?? undefined,
+    creditLimit: props.client.creditLimit ?? undefined,
+    creditDays: props.client.creditDays ?? undefined,
+    salespersonId: props.client.salespersonId ?? undefined,
+    // Información de contacto
+    contacts: props.client.contacts ?? undefined,
+    // Usuario (persona o empresa)
     user: {
       id: props.client.id,
       documentTypeId: props.client.user.documentTypeId,
