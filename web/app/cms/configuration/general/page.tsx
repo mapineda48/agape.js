@@ -8,6 +8,7 @@ import {
   upsertClientType,
   deleteClientType,
 } from "@agape/crm/clientType";
+import { listDocumentTypes, type IDocumentType } from "@agape/core/documentType";
 import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
 import CheckBox from "@/components/form/CheckBox";
@@ -19,6 +20,8 @@ import {
 import PortalModal from "@/components/ui/PortalModal";
 import { useConfirmModal } from "@/components/ui/PortalConfirm";
 import NumberingMethods from "./Numbering";
+import SystemConfig from "./SystemConfig";
+import DocumentTypesList from "./DocumentTypes";
 
 interface ClientType {
   id: number;
@@ -35,10 +38,14 @@ interface ClientTypeFormState {
 }
 
 export async function onInit() {
-  const [clientTypes] = await Promise.all([listClientTypes()]);
+  const [clientTypes, documentTypes] = await Promise.all([
+    listClientTypes(),
+    listDocumentTypes({ activeOnly: false }),
+  ]);
 
   return {
     clientTypes,
+    documentTypes,
   };
 }
 
@@ -64,6 +71,7 @@ const useClientTypeModal = createPortalHook(ClientTypeModalWrapper);
 
 export default function GeneralConfigurationPage(props: {
   clientTypes: ClientType[];
+  documentTypes: IDocumentType[];
 }) {
   const notify = useNotificacion();
   const [clientTypes, setClientTypes] = useState<ClientType[]>(
@@ -116,12 +124,10 @@ export default function GeneralConfigurationPage(props: {
               Configuración General
             </p>
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
-              Catálogo maestro de CRM
+              Sistema y catálogos maestros
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 max-w-2xl">
-              Administra los tipos de cliente y métodos de numeración. Los
-              cambios se reflejan en formularios y flujos de alta de manera
-              inmediata.
+              Administra la configuración del sistema, tipos de documento, tipos de cliente y métodos de numeración.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -132,8 +138,8 @@ export default function GeneralConfigurationPage(props: {
               muted={loading}
             />
             <StatChip
-              label="Clientes activos"
-              value={clientTypes.filter((t) => t.isEnabled).length}
+              label="Tipos de documento"
+              value={props.documentTypes.length}
               tone="blue"
               muted={loading}
             />
@@ -141,10 +147,16 @@ export default function GeneralConfigurationPage(props: {
         </div>
       </div>
 
+      {/* System Configuration */}
+      <SystemConfig />
+
+      {/* Document Types and Client Types */}
       <div className="grid gap-6 xl:grid-cols-2">
+        <DocumentTypesList documentTypes={props.documentTypes} />
+
         <TypePanel
           title="Tipos de Cliente"
-          description="Estados que se usan en formularios y embudos de CRM."
+          description="Clasificaciones para segmentar clientes en el CRM."
           tone="indigo"
           loading={loading}
           onCreate={() => openCreate()}
@@ -165,9 +177,10 @@ export default function GeneralConfigurationPage(props: {
             ))}
           </div>
         </TypePanel>
-
-        <NumberingMethods />
       </div>
+
+      {/* Numbering Methods */}
+      <NumberingMethods />
     </div>
   );
 }
