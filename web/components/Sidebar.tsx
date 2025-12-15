@@ -14,6 +14,7 @@ import {
   MoonIcon,
   Bars3Icon,
   TruckIcon,
+  BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { useTheme } from "./ThemeProvider";
 import { logout, session } from "@agape/security/access";
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { path: "/cms/hr", icon: UserCircleIcon, label: "Colaboradores" },
   { path: "/cms/crm/clients", icon: UsersIcon, label: "Clientes" },
   { path: "/cms/purchasing/orders", icon: TruckIcon, label: "Compras" },
+  { path: "/cms/invoicing", icon: BanknotesIcon, label: "Facturación" },
   { path: "/cms/inventory/products", icon: CubeIcon, label: "Inventario" },
   { path: "/cms/configuration", icon: CogIcon, label: "Configuración" },
 ];

@@ -107,6 +107,10 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/finance/payment_terms.ts"
             ),
+            "@agape/finance/purchase_invoice": path.resolve(
+              __dirname,
+              "./web/test/mocks/finance/purchase_invoice.ts"
+            ),
           },
         },
       },
