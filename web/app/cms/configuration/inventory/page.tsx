@@ -2,6 +2,10 @@ import {
   listCategories,
   type ICategoryWithCounts as Category,
 } from "@agape/catalogs/category";
+import {
+  listPriceLists,
+  type IPriceListWithUsage,
+} from "@agape/catalogs/price_list";
 import { listLocations } from "@agape/inventory/location";
 import { listMovementTypes } from "@agape/inventory/movementType";
 import {
@@ -12,6 +16,7 @@ import CategoryList from "./Category";
 import LocationList from "./Location";
 import MovementTypeList from "./MovementType";
 import UnitsOfMeasureList from "./UnitsOfMeasure";
+import PriceListsList from "./PriceLists";
 
 interface Location {
   id?: number;
@@ -32,11 +37,12 @@ interface MovementType {
 }
 
 export async function onInit() {
-  const [categories, locations, movementTypes, unitsOfMeasure] = await Promise.all([
+  const [categories, locations, movementTypes, unitsOfMeasure, priceLists] = await Promise.all([
     listCategories({ includeSubcategoryCount: true }),
     listLocations(),
     listMovementTypes(),
     listUnitOfMeasures({ activeOnly: false }),
+    listPriceLists({ activeOnly: false, includeUsageInfo: true }),
   ]);
 
   return {
@@ -44,6 +50,7 @@ export async function onInit() {
     locations,
     movementTypes,
     unitsOfMeasure,
+    priceLists,
   };
 }
 
@@ -52,6 +59,7 @@ export default function InventoryPage(props: {
   locations: Location[];
   movementTypes: MovementType[];
   unitsOfMeasure: IUnitOfMeasure[];
+  priceLists: IPriceListWithUsage[];
 }) {
   return (
     <div className="space-y-8">
@@ -61,11 +69,11 @@ export default function InventoryPage(props: {
             Configuración de inventario
           </p>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
-            Categorías, ubicaciones, unidades y tipos de movimiento
+            Categorías, precios, unidades y movimientos
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Mantén ordenado el catálogo para productos, ubicaciones físicas,
-            unidades de medida y flujos de entrada/salida.
+            Administra el catálogo de productos, listas de precios, unidades de medida,
+            ubicaciones y flujos de entrada/salida.
           </p>
         </div>
       </header>
@@ -73,6 +81,7 @@ export default function InventoryPage(props: {
       <div className="grid gap-6 2xl:grid-cols-5">
         <div className="2xl:col-span-3 space-y-4">
           <CategoryList categories={props.categories} />
+          <PriceListsList priceLists={props.priceLists} />
         </div>
 
         <div className="2xl:col-span-2 space-y-4">
@@ -84,4 +93,5 @@ export default function InventoryPage(props: {
     </div>
   );
 }
+
 
