@@ -32,8 +32,8 @@ export function ItemForm(props: ItemFormProps) {
   const initialType: ItemType = props.item?.good
     ? "good"
     : props.item?.service
-    ? "service"
-    : "good";
+      ? "service"
+      : "good";
 
   return (
     <Form.Root<ItemFormState>
@@ -108,18 +108,16 @@ function TypeSelector(props: {
           <button
             type="button"
             onClick={() => props.onChange("good")}
-            className={`relative flex flex-col items-center p-6 rounded-xl border-2 transition-all ${
-              props.value === "good"
-                ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+            className={`relative flex flex-col items-center p-6 rounded-xl border-2 transition-all ${props.value === "good"
+                ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
                 : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-            }`}
+              }`}
           >
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                props.value === "good"
-                  ? "bg-blue-500 text-white"
+              className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${props.value === "good"
+                  ? "bg-indigo-500 text-white"
                   : "bg-gray-100 text-gray-500"
-              }`}
+                }`}
             >
               <svg
                 className="w-6 h-6"
@@ -136,9 +134,8 @@ function TypeSelector(props: {
               </svg>
             </div>
             <span
-              className={`font-medium ${
-                props.value === "good" ? "text-blue-700" : "text-gray-700"
-              }`}
+              className={`font-medium ${props.value === "good" ? "text-indigo-700" : "text-gray-700"
+                }`}
             >
               Producto
             </span>
@@ -148,7 +145,7 @@ function TypeSelector(props: {
             {props.value === "good" && (
               <div className="absolute top-3 right-3">
                 <svg
-                  className="w-5 h-5 text-blue-500"
+                  className="w-5 h-5 text-indigo-500"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -165,18 +162,16 @@ function TypeSelector(props: {
           <button
             type="button"
             onClick={() => props.onChange("service")}
-            className={`relative flex flex-col items-center p-6 rounded-xl border-2 transition-all ${
-              props.value === "service"
+            className={`relative flex flex-col items-center p-6 rounded-xl border-2 transition-all ${props.value === "service"
                 ? "border-purple-500 bg-purple-50 ring-2 ring-purple-200"
                 : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-            }`}
+              }`}
           >
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                props.value === "service"
+              className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${props.value === "service"
                   ? "bg-purple-500 text-white"
                   : "bg-gray-100 text-gray-500"
-              }`}
+                }`}
             >
               <svg
                 className="w-6 h-6"
@@ -193,9 +188,8 @@ function TypeSelector(props: {
               </svg>
             </div>
             <span
-              className={`font-medium ${
-                props.value === "service" ? "text-purple-700" : "text-gray-700"
-              }`}
+              className={`font-medium ${props.value === "service" ? "text-purple-700" : "text-gray-700"
+                }`}
             >
               Servicio
             </span>
@@ -245,12 +239,11 @@ function BasicInfoCard(props: { itemType: ItemType }) {
           <Input.Text
             path="fullName"
             required
-            placeholder={`Ej: ${
-              props.itemType === "good"
+            placeholder={`Ej: ${props.itemType === "good"
                 ? "Camiseta Premium Algodon"
                 : "Consultoria Empresarial"
-            }`}
-            className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+              }`}
+            className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
           />
         </div>
 
@@ -260,12 +253,11 @@ function BasicInfoCard(props: { itemType: ItemType }) {
           </label>
           <Input.Text
             path="slogan"
-            placeholder={`Ej: ${
-              props.itemType === "good"
+            placeholder={`Ej: ${props.itemType === "good"
                 ? "La mejor calidad para tu dia a dia"
                 : "Soluciones profesionales para tu negocio"
-            }`}
-            className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+              }`}
+            className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
           />
         </div>
 
@@ -277,7 +269,7 @@ function BasicInfoCard(props: { itemType: ItemType }) {
             path="description"
             rows={4}
             placeholder={`Describe las caracteristicas y beneficios del ${typeLabel}...`}
-            className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+            className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
           />
         </div>
       </div>
@@ -288,9 +280,9 @@ function BasicInfoCard(props: { itemType: ItemType }) {
 function GoodDetailsCard() {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 bg-blue-50/50">
+      <div className="p-6 border-b border-gray-100 bg-indigo-50/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -332,7 +324,7 @@ function GoodDetailsCard() {
               path="good.minStock"
               autoCleanup
               placeholder="0"
-              className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
             />
             <p className="mt-1 text-xs text-gray-500">
               Alerta cuando baje de este nivel
@@ -347,7 +339,7 @@ function GoodDetailsCard() {
               path="good.maxStock"
               autoCleanup
               placeholder="0"
-              className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
             />
             <p className="mt-1 text-xs text-gray-500">
               Capacidad maxima de almacenamiento
@@ -362,7 +354,7 @@ function GoodDetailsCard() {
               path="good.reorderPoint"
               autoCleanup
               placeholder="0"
-              className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
             />
             <p className="mt-1 text-xs text-gray-500">
               Nivel de stock para generar orden de compra
@@ -392,7 +384,7 @@ function GoodUomSelect() {
     <select
       value={uomId ?? 1}
       onChange={(e) => setUomId(parseInt(e.target.value, 10))}
-      className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+      className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
     >
       {units.map((u) => (
         <option key={u.id} value={u.id}>
@@ -515,7 +507,7 @@ function StatusPriceCard() {
               materialize
               defaultChecked
               path="isEnabled"
-              className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              className="h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
             />
             <label className="ml-3 block text-sm font-medium text-gray-900">
               Item Habilitado
@@ -534,7 +526,7 @@ function StatusPriceCard() {
             <Input.Decimal
               path="basePrice"
               required
-              className="w-full rounded-lg border-gray-300 pl-7 focus:border-blue-500 focus:ring-blue-500"
+              className="w-full rounded-lg border-gray-300 pl-7 focus:border-indigo-500 focus:ring-indigo-500"
               placeholder="0.00"
             />
           </div>
@@ -548,7 +540,7 @@ function StatusPriceCard() {
             path="rating"
             min={0}
             max={5}
-            className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
           />
           <p className="mt-1 text-xs text-gray-500">Valor entre 0 y 5</p>
         </div>
@@ -594,7 +586,7 @@ function InsertUpdate(props: { itemType: ItemType; onSuccess?: () => void }) {
 
   const buttonColor =
     props.itemType === "good"
-      ? "bg-blue-600 hover:bg-blue-700 shadow-blue-500/30"
+      ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30"
       : "bg-purple-600 hover:bg-purple-700 shadow-purple-500/30";
 
   const buttonLabel =

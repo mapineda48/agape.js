@@ -118,7 +118,7 @@ export default function CatalogPage(props: Props) {
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Catalogo
               </h1>
               <p className="text-gray-500 mt-1">
@@ -127,7 +127,7 @@ export default function CatalogPage(props: Props) {
             </div>
             <button
               onClick={() => navigate("../product")}
-              className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
             >
               <svg
                 className="-ml-1 mr-2 h-5 w-5"
@@ -167,7 +167,7 @@ export default function CatalogPage(props: Props) {
                 <input
                   type="text"
                   placeholder="Buscar en catalogo..."
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition shadow-sm"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition shadow-sm"
                   onChange={(e) => debouncedSearch(e.target.value)}
                 />
               </div>
@@ -203,7 +203,7 @@ export default function CatalogPage(props: Props) {
                     }
                     isActive={filters.type === "good"}
                     onClick={() => updateFilter({ type: "good" })}
-                    color="blue"
+                    color="indigo"
                   />
                   <TypeFilterButton
                     label="Servicios"
@@ -236,11 +236,10 @@ export default function CatalogPage(props: Props) {
                 </h3>
                 <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
                   <div
-                    className={`cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      filters.categoryId === undefined
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-colors ${filters.categoryId === undefined
+                      ? "bg-indigo-50 text-indigo-700"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                     onClick={() => updateFilter({ categoryId: undefined })}
                   >
                     Todas
@@ -248,11 +247,10 @@ export default function CatalogPage(props: Props) {
                   {props.categories.map((cat) => (
                     <div key={cat.id}>
                       <div
-                        className={`cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-colors flex justify-between items-center ${
-                          filters.categoryId === cat.id
-                            ? "bg-blue-50 text-blue-700"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-colors flex justify-between items-center ${filters.categoryId === cat.id
+                          ? "bg-indigo-50 text-indigo-700"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={() => updateFilter({ categoryId: cat.id })}
                       >
                         <span>{cat.fullName}</span>
@@ -275,7 +273,7 @@ export default function CatalogPage(props: Props) {
                     <input
                       type="number"
                       placeholder="Min"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-lg"
+                      className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-lg"
                       value={priceRange.min}
                       onChange={(e) => {
                         setPriceRange({ ...priceRange, min: e.target.value });
@@ -291,7 +289,7 @@ export default function CatalogPage(props: Props) {
                     <input
                       type="number"
                       placeholder="Max"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-lg"
+                      className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-lg"
                       value={priceRange.max}
                       onChange={(e) => {
                         setPriceRange({ ...priceRange, max: e.target.value });
@@ -311,11 +309,10 @@ export default function CatalogPage(props: Props) {
                   {[5, 4, 3, 2, 1].map((star) => (
                     <div
                       key={star}
-                      className={`flex items-center cursor-pointer px-2 py-1.5 rounded-lg transition-colors ${
-                        filters.rating === star
-                          ? "bg-yellow-50"
-                          : "hover:bg-gray-50"
-                      }`}
+                      className={`flex items-center cursor-pointer px-2 py-1.5 rounded-lg transition-colors ${filters.rating === star
+                        ? "bg-yellow-50"
+                        : "hover:bg-gray-50"
+                        }`}
                       onClick={() =>
                         updateFilter({
                           rating: filters.rating === star ? undefined : star,
@@ -326,9 +323,8 @@ export default function CatalogPage(props: Props) {
                         {[...Array(5)].map((_, i) => (
                           <svg
                             key={i}
-                            className={`h-4 w-4 ${
-                              i < star ? "text-yellow-400" : "text-gray-300"
-                            }`}
+                            className={`h-4 w-4 ${i < star ? "text-yellow-400" : "text-gray-300"
+                              }`}
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 20 20"
                             fill="currentColor"
@@ -354,7 +350,7 @@ export default function CatalogPage(props: Props) {
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       checked={filters.isEnabled === true}
                       onChange={(e) =>
                         updateFilter({
@@ -367,7 +363,7 @@ export default function CatalogPage(props: Props) {
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       checked={filters.isEnabled === false}
                       onChange={(e) =>
                         updateFilter({
@@ -453,21 +449,20 @@ function TypeFilterButton(props: {
   icon: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
-  color?: "blue" | "purple";
+  color?: "indigo" | "purple";
 }) {
   const activeClass =
     props.color === "purple"
       ? "bg-purple-50 text-purple-700 border-purple-200"
-      : "bg-blue-50 text-blue-700 border-blue-200";
+      : "bg-indigo-50 text-indigo-700 border-indigo-200";
 
   return (
     <button
       type="button"
-      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
-        props.isActive
-          ? activeClass
-          : "text-gray-600 hover:bg-gray-100 border-transparent"
-      }`}
+      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${props.isActive
+        ? activeClass
+        : "text-gray-600 hover:bg-gray-100 border-transparent"
+        }`}
       onClick={props.onClick}
     >
       {props.icon}
@@ -529,11 +524,10 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
         )}
         <div className="absolute top-3 left-3">
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-md ${
-              isService
-                ? "bg-purple-100/90 text-purple-800"
-                : "bg-blue-100/90 text-blue-800"
-            }`}
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-md ${isService
+              ? "bg-purple-100/90 text-purple-800"
+              : "bg-indigo-100/90 text-indigo-800"
+              }`}
           >
             {isService ? (
               <>
@@ -574,11 +568,10 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
         </div>
         <div className="absolute top-3 right-3">
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-md ${
-              item.isEnabled
-                ? "bg-green-100/90 text-green-800"
-                : "bg-gray-100/90 text-gray-800"
-            }`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium backdrop-blur-md ${item.isEnabled
+              ? "bg-green-100/90 text-green-800"
+              : "bg-gray-100/90 text-gray-800"
+              }`}
           >
             {item.isEnabled ? "Activo" : "Inactivo"}
           </span>
@@ -589,9 +582,8 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-2">
           <p
-            className={`text-xs font-medium uppercase tracking-wide ${
-              isService ? "text-purple-600" : "text-blue-600"
-            }`}
+            className={`text-xs font-medium uppercase tracking-wide ${isService ? "text-purple-600" : "text-indigo-600"
+              }`}
           >
             {item.category || (isService ? "Servicio" : "Producto")}
           </p>
@@ -610,11 +602,10 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
           </div>
         </div>
         <h3
-          className={`text-lg font-bold text-gray-900 mb-2 line-clamp-2 transition-colors ${
-            isService
-              ? "group-hover:text-purple-600"
-              : "group-hover:text-blue-600"
-          }`}
+          className={`text-lg font-bold text-gray-900 mb-2 line-clamp-2 transition-colors ${isService
+            ? "group-hover:text-purple-600"
+            : "group-hover:text-indigo-600"
+            }`}
         >
           {item.fullName}
         </h3>
@@ -623,11 +614,10 @@ function ItemCard({ item, onEdit }: { item: GetItem; onEdit: () => void }) {
             ${item.basePrice.toString()}
           </span>
           <button
-            className={`text-sm font-medium transition-colors ${
-              isService
-                ? "text-purple-600 hover:text-purple-800"
-                : "text-blue-600 hover:text-blue-800"
-            }`}
+            className={`text-sm font-medium transition-colors ${isService
+              ? "text-purple-600 hover:text-purple-800"
+              : "text-indigo-600 hover:text-indigo-800"
+              }`}
             onClick={(e) => {
               e.stopPropagation();
               onEdit();

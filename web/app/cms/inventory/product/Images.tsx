@@ -143,11 +143,10 @@ export default function InputImages() {
             key={idx}
             type="button"
             onClick={() => setCurrentIndex(idx)}
-            className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-              currentIndex === idx
-                ? "border-blue-500 ring-2 ring-blue-200 ring-offset-1"
+            className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${currentIndex === idx
+                ? "border-indigo-500 ring-2 ring-indigo-200 ring-offset-1"
                 : "border-transparent hover:border-gray-300"
-            }`}
+              }`}
           >
             <Image
               src={img}
@@ -158,7 +157,7 @@ export default function InputImages() {
         ))}
 
         {/* Upload Button */}
-        <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors group">
+        <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors group">
           <input
             type="file"
             multiple
@@ -174,7 +173,7 @@ export default function InputImages() {
               currentTarget.value = "";
             }}
           />
-          <div className="p-2 bg-blue-100 text-blue-600 rounded-full mb-1 group-hover:scale-110 transition-transform">
+          <div className="p-2 bg-indigo-100 text-indigo-600 rounded-full mb-1 group-hover:scale-110 transition-transform">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -188,7 +187,7 @@ export default function InputImages() {
               />
             </svg>
           </div>
-          <span className="text-xs font-medium text-gray-600 group-hover:text-blue-700">
+          <span className="text-xs font-medium text-gray-600 group-hover:text-indigo-700">
             Agregar
           </span>
         </label>

@@ -54,7 +54,7 @@ function ClientTypeModalWrapper(
       <ClientTypeForm
         item={props.item}
         onSave={props.onSave}
-        onClose={() => {}}
+        onClose={() => { }}
       />
     </PortalModal>
   );
@@ -416,7 +416,7 @@ function StatChip({
   const tones: Record<"indigo" | "blue", string> = {
     indigo:
       "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200",
-    blue: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200",
+    blue: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
   };
 
   return (

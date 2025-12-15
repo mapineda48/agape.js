@@ -83,7 +83,7 @@ function SeriesModalWrapper(
         series={props.series}
         documentTypeId={props.documentTypeId}
         onSave={props.onSave}
-        onClose={() => {}}
+        onClose={() => { }}
       />
     </PortalModal>
   );
@@ -270,7 +270,7 @@ function DocumentTypeModalWrapper(
       <DocumentTypeForm
         item={props.item}
         onSave={props.onSave}
-        onClose={() => {}}
+        onClose={() => { }}
       />
     </PortalModal>
   );
@@ -291,17 +291,17 @@ function DocumentTypeForm({
 
   const initialState: DocumentTypeFormState = item
     ? {
-        ...item,
-        module: item.module ?? "",
-        description: item.description ?? "",
-      }
+      ...item,
+      module: item.module ?? "",
+      description: item.description ?? "",
+    }
     : {
-        code: "",
-        name: "",
-        module: "",
-        description: "",
-        isEnabled: true,
-      };
+      code: "",
+      name: "",
+      module: "",
+      description: "",
+      isEnabled: true,
+    };
 
   // Series handling
   const [seriesList, setSeriesList] = useState<DocumentSeries[]>([]);
@@ -479,7 +479,7 @@ function DocumentTypeForm({
                         <span className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                           {item.seriesCode}
                           {item.isDefault && (
-                            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full dark:bg-blue-900/40 dark:text-blue-200">
+                            <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full dark:bg-indigo-900/40 dark:text-indigo-200">
                               Default
                             </span>
                           )}
@@ -544,7 +544,7 @@ function FilterModalWrapper(
       <FilterForm
         search={props.search}
         onApply={props.onApply}
-        onClose={() => {}}
+        onClose={() => { }}
       />
     </PortalModal>
   );
