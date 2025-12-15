@@ -23,59 +23,78 @@ export default function ConfirmModal({
   cancelText = "Cancelar",
   variant = "primary",
 }: ConfirmModalProps) {
+  const handleConfirm = () => {
+    onConfirm();
+    onClose();
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="sm">
-      <div className="p-6">
-        <div className="flex items-start">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="sm"
+      hideCloseButton
+      footer={
+        <Modal.Footer>
+          <button
+            type="button"
+            className={clsx(
+              "inline-flex justify-center rounded-lg px-4 py-2.5",
+              "text-sm font-medium transition-all duration-200",
+              "border border-gray-300 bg-white text-gray-700",
+              "hover:bg-gray-50 active:bg-gray-100",
+              "dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200",
+              "dark:hover:bg-gray-700 dark:active:bg-gray-600",
+              "focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2",
+              "dark:focus:ring-offset-gray-900"
+            )}
+            onClick={onClose}
+          >
+            {cancelText}
+          </button>
+          <button
+            type="button"
+            className={clsx(
+              "inline-flex justify-center rounded-lg px-4 py-2.5",
+              "text-sm font-semibold text-white transition-all duration-200",
+              "focus:outline-none focus:ring-2 focus:ring-offset-2",
+              "dark:focus:ring-offset-gray-900",
+              variant === "danger"
+                ? "bg-red-600 hover:bg-red-700 active:bg-red-800 focus:ring-red-500"
+                : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:ring-indigo-500"
+            )}
+            onClick={handleConfirm}
+          >
+            {confirmText}
+          </button>
+        </Modal.Footer>
+      }
+    >
+      <Modal.Body>
+        <div className="flex items-start gap-4">
           {variant === "danger" && (
-            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
+            <div
+              className={clsx(
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-full",
+                "bg-red-100 dark:bg-red-900/30"
+              )}
+            >
               <ExclamationTriangleIcon
                 className="h-6 w-6 text-red-600 dark:text-red-400"
                 aria-hidden="true"
               />
             </div>
           )}
-          <div
-            className={clsx(
-              "mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left",
-              variant !== "danger" && "w-full"
-            )}
-          >
-            <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+          <div className={clsx("flex-1", variant !== "danger" && "text-center")}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {title}
             </h3>
-            <div className="mt-2">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {message}
-              </p>
-            </div>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {message}
+            </p>
           </div>
         </div>
-        <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-          <button
-            type="button"
-            className={clsx(
-              "inline-flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm",
-              variant === "danger"
-                ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                : "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500"
-            )}
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
-          >
-            {confirmText}
-          </button>
-          <button
-            type="button"
-            className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-            onClick={onClose}
-          >
-            {cancelText}
-          </button>
-        </div>
-      </div>
+      </Modal.Body>
     </Modal>
   );
 }
