@@ -6,7 +6,88 @@
 BEGIN;
 
 -- ============================================================
--- 0. Tipos de documento (identidad) - por seguridad (root ya lo hace)
+-- 0. Configuración del Sistema (tabla agape - key/value)
+--    Papelería Agape - Colombia
+-- ============================================================
+INSERT INTO "agape_app_development_demo"."agape" ("key", "value")
+VALUES
+    -- Información de la empresa
+    ('system.companyName', '"Papelería Agape"'),
+    ('system.companyNit', '"900555444-3"'),
+    ('system.companyAddress', '"Cra 15 # 82-34, Bogotá, Cundinamarca, Colombia"'),
+    ('system.companyPhone', '"+57 601 555 1234"'),
+    ('system.companyEmail', '"contacto@papeleriaagape.co"'),
+    ('system.companyLogo', '""'),
+    
+    -- Configuración regional
+    ('system.country', '"CO"'),
+    ('system.language', '"es"'),
+    ('system.timezone', '"America/Bogota"'),
+    ('system.currency', '"COP"'),
+    ('system.decimalPlaces', '2')
+ON CONFLICT ("key") DO UPDATE
+SET "value" = EXCLUDED."value",
+    "updated_at" = now();
+
+-- ============================================================
+-- 0.1 Departamentos HR (hr_department)
+-- ============================================================
+INSERT INTO "agape_app_development_demo"."hr_department"
+    ("code", "name", "description", "parent_id", "cost_center_code", "manager_id", "is_active")
+VALUES
+    ('ADMIN', 'Administración', 'Gerencia y administración general', NULL, 'CC-ADMIN', NULL, true),
+    ('VENTAS', 'Ventas', 'Departamento de ventas y atención al cliente', NULL, 'CC-VENTAS', NULL, true),
+    ('BODEGA', 'Bodega', 'Almacén e inventario', NULL, 'CC-BODEGA', NULL, true),
+    ('CONTA', 'Contabilidad', 'Departamento de contabilidad y finanzas', NULL, 'CC-CONTA', NULL, true),
+    ('COMPRAS', 'Compras', 'Gestión de compras y proveedores', NULL, 'CC-COMPRAS', NULL, true)
+ON CONFLICT ("code") DO UPDATE
+SET "name" = EXCLUDED."name",
+    "description" = EXCLUDED."description",
+    "cost_center_code" = EXCLUDED."cost_center_code",
+    "is_active" = EXCLUDED."is_active";
+
+-- ============================================================
+-- 0.2 Puestos de Trabajo (hr_job_position)
+-- ============================================================
+INSERT INTO "agape_app_development_demo"."hr_job_position"
+    ("code", "name", "description", "is_active")
+VALUES
+    ('GER', 'Gerente', 'Gerente general de la papelería', true),
+    ('ADMIN-AUX', 'Auxiliar Administrativo', 'Apoyo en tareas administrativas', true),
+    ('VEND', 'Vendedor', 'Vendedor de mostrador', true),
+    ('VEND-SR', 'Vendedor Senior', 'Vendedor con experiencia y mayores responsabilidades', true),
+    ('BOD-JEFE', 'Jefe de Bodega', 'Responsable del área de bodega e inventario', true),
+    ('BOD-AUX', 'Auxiliar de Bodega', 'Apoyo en bodega e inventario', true),
+    ('CONT', 'Contador', 'Contador público titulado', true),
+    ('CONT-AUX', 'Auxiliar Contable', 'Apoyo en tareas contables', true),
+    ('COMP-JEFE', 'Jefe de Compras', 'Responsable de compras y relación con proveedores', true),
+    ('CAJ', 'Cajero', 'Encargado de caja y cobros', true)
+ON CONFLICT ("code") DO UPDATE
+SET "name" = EXCLUDED."name",
+    "description" = EXCLUDED."description",
+    "is_active" = EXCLUDED."is_active";
+
+-- ============================================================
+-- 0.3 Roles de Seguridad (security_role)
+-- ============================================================
+INSERT INTO "agape_app_development_demo"."security_role"
+    ("code", "name", "description", "is_system_role", "is_active")
+VALUES
+    ('ADMIN', 'Administrador', 'Acceso completo al sistema', true, true),
+    ('GERENTE', 'Gerente', 'Acceso a reportes y configuración', false, true),
+    ('VENDEDOR', 'Vendedor', 'Acceso a ventas, clientes e inventario (solo lectura)', false, true),
+    ('BODEGUERO', 'Bodeguero', 'Acceso a inventario y movimientos', false, true),
+    ('CONTADOR', 'Contador', 'Acceso a finanzas, reportes y configuración contable', false, true),
+    ('CAJERO', 'Cajero', 'Acceso a punto de venta y cobros', false, true),
+    ('COMPRADOR', 'Comprador', 'Acceso a compras, proveedores y recepción de mercancía', false, true)
+ON CONFLICT ("code") DO UPDATE
+SET "name" = EXCLUDED."name",
+    "description" = EXCLUDED."description",
+    "is_system_role" = EXCLUDED."is_system_role",
+    "is_active" = EXCLUDED."is_active";
+
+-- ============================================================
+-- 0.4 Tipos de documento (identidad) - por seguridad (root ya lo hace)
 -- ============================================================
 INSERT INTO "agape_app_development_demo"."core_identity_document_type"
     ("code", "name", "is_enabled", "applies_to_person", "applies_to_company")
