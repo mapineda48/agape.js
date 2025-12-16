@@ -91,3 +91,138 @@ Al crear o refactorizar un servicio, sigue este flujo mental y estructural:
 | **Integridad**   | Manual en código                 | Constraints de BD (FK, Unique, Not Null)  |
 | **Errores**      | Try/Catch manual                 | Middleware de traducción (`agape.js`)     |
 | **Consistencia** | Incierta                         | Transacciones para operaciones compuestas |
+| **Tipos de Fecha** | `Date`, `string`, conversores | `DateTime` exclusivamente                 |
+| **Tipos Numéricos** | `number`, `float`            | `Decimal` para montos y precisión         |
+
+---
+
+## 5. Tipos de Datos Obligatorios
+
+### ⚠️ REGLA: Siempre usar `DateTime` y `Decimal`
+
+Los servicios **DEBEN** usar exclusivamente:
+
+- **`DateTime`** (`#utils/data/DateTime`) para todas las fechas y horas
+- **`Decimal`** (`#utils/data/Decimal`) para todos los montos y valores de precisión
+
+### ¿Por qué?
+
+El sistema RPC (Remote Procedure Call) usa `msgpackr` con extensiones personalizadas para serializar/deserializar estos tipos automáticamente:
+
+```
+┌──────────┐     msgpackr      ┌──────────┐     msgpackr      ┌──────────┐
+│ Frontend │ ────────────▶ │   RPC    │ ────────────▶ │ Backend  │
+│          │   (serialize)   │          │  (deserialize)  │          │
+├──────────┤                  ├──────────┤                  ├──────────┤
+│ DateTime │ ────────────▶ │  binary  │ ────────────▶ │ DateTime │
+│ Decimal  │   (ext: 40,41)  │  buffer  │   (ext: 40,41)  │ Decimal  │
+└──────────┘                  └──────────┘                  └──────────┘
+```
+
+### DateTime
+
+`DateTime` extiende `Date` con métodos de `date-fns`:
+
+```typescript
+import DateTime from "#utils/data/DateTime";
+
+// Crear instancias
+const now = new DateTime();                    // Ahora
+const specific = new DateTime("2024-01-15");   // Fecha específica
+const fromTimestamp = new DateTime(1705276800000); // Desde epoch
+
+// Métodos útiles
+const dueDate = now.addDays(30);               // +30 días
+const reminder = now.addHours(-2);             // -2 horas
+if (expiration.isBefore(now)) { ... }          // Comparación
+const hours = start.diffInHours(end);          // Diferencia
+
+// Para almacenar en BD (string ISO)
+const dateStr = now.toISOString().split("T")[0]; // "2024-01-15"
+```
+
+### Decimal
+
+`Decimal` extiende `decimal.js` para manejo preciso de montos:
+
+```typescript
+import Decimal from "#utils/data/Decimal";
+
+// Crear instancias
+const price = new Decimal("100.00");
+const quantity = new Decimal(5);
+
+// Operaciones precisas
+const subtotal = price.mul(quantity);          // 500.00
+const withTax = subtotal.mul(1.19);            // 595.00
+const discount = subtotal.mul(0.1);            // 50.00
+const total = withTax.sub(discount);           // 545.00
+
+// Comparaciones
+if (total.lte(0)) throw new Error("Invalid"); // Less Than or Equal
+if (total.gt(budget)) { ... }                  // Greater Than
+
+// Serialización automática a JSON: "545.00"
+```
+
+### ✅ Uso Correcto en Servicios
+
+```typescript
+export async function createInvoice(payload: CreateInvoiceInput) {
+  // ✅ El RPC ya deserializó DateTime - usar directamente
+  const issueDate = payload.issueDate ?? new DateTime();
+  
+  // ✅ Para insertar en BD, convertir a string
+  const issueDateStr = issueDate.toISOString().split("T")[0];
+  
+  // ✅ Operaciones con DateTime
+  const dueDate = issueDate.addDays(terms.dueDays);
+  
+  // ✅ Decimal viene listo para usar
+  if (payload.amount.lte(0)) {
+    throw new Error("El monto debe ser mayor a cero");
+  }
+  
+  await db.insert(invoice).values({
+    issueDate: issueDateStr,
+    amount: payload.amount,  // Decimal serializa automáticamente
+  });
+}
+```
+
+### ❌ Anti-patrones a Evitar
+
+```typescript
+// ❌ NO crear helpers de conversión - el RPC ya lo hace
+function toDateString(value: Date | string | undefined) { ... }
+
+// ❌ NO usar Date nativo
+const today = new Date();  // ❌
+const today = new DateTime(); // ✅
+
+// ❌ NO convertir DateTime a Date
+const date = new Date(payload.issueDate); // ❌
+const date = payload.issueDate; // ✅ Ya es DateTime
+
+// ❌ NO usar instanceof checks innecesarios
+if (payload.date instanceof DateTime) { ... } // ❌ Siempre será DateTime
+
+// ❌ NO usar number para montos
+const total = subtotal * 1.19;  // ❌ Error de precisión
+const total = subtotal.mul(1.19); // ✅ Precisión garantizada
+```
+
+---
+
+## 6. Resumen del "Contrato Mental"
+
+| Concepto         | Antes (Evitar)                   | Ahora (Estándar)                          |
+| :--------------- | :------------------------------- | :---------------------------------------- |
+| **Enfoque**      | CRUD (Insertar datos en tabla X) | Use Case (Registrar evento de negocio X)  |
+| **Validación**   | `if (!field) throw`              | Reglas de estado y vigencia               |
+| **Integridad**   | Manual en código                 | Constraints de BD (FK, Unique, Not Null)  |
+| **Errores**      | Try/Catch manual                 | Middleware de traducción (`agape.js`)     |
+| **Consistencia** | Incierta                         | Transacciones para operaciones compuestas |
+| **Fechas**       | `Date`, `string`, conversores    | `DateTime` exclusivamente                 |
+| **Montos**       | `number`, `float`                | `Decimal` para precisión                  |
+

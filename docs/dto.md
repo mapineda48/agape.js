@@ -15,6 +15,111 @@ Este documento describe la arquitectura de DTOs (Data Transfer Objects) utilizad
 
 ---
 
+## Tipos de Datos Especiales
+
+### ⚠️ REGLA OBLIGATORIA
+
+**Los DTOs DEBEN usar exclusivamente `DateTime` y `Decimal`** de `lib/utils/data` para representar fechas/horas y valores numéricos de precisión respectivamente.
+
+```typescript
+// ✅ CORRECTO
+import type DateTime from "../../data/DateTime";
+import type Decimal from "../../data/Decimal";
+
+interface CreateInvoiceInput {
+  issueDate?: DateTime;           // Siempre DateTime
+  dueDate?: DateTime | null;      // DateTime o null
+  totalAmount: Decimal;           // Siempre Decimal para montos
+}
+
+// ❌ INCORRECTO - NO USAR
+interface CreateInvoiceInput {
+  issueDate?: Date;               // ❌ Date nativo
+  issueDate?: string;             // ❌ string
+  issueDate?: Date | string;      // ❌ Unión con Date
+  totalAmount: number;            // ❌ number para montos
+}
+```
+
+### DateTime (`lib/utils/data/DateTime.ts`)
+
+`DateTime` es una clase que **extiende `Date`** con métodos adicionales de `date-fns` y soporte para serialización RPC.
+
+#### Características
+
+| Método | Descripción | Ejemplo |
+|--------|-------------|----------|
+| `addHours(n)` | Añade n horas | `dt.addHours(2)` |
+| `addDays(n)` | Añade n días | `dt.addDays(30)` |
+| `isBefore(date)` | Compara si es anterior | `dt.isBefore(other)` |
+| `isAfter(date)` | Compara si es posterior | `dt.isAfter(other)` |
+| `diffInHours(date)` | Diferencia en horas | `dt.diffInHours(other)` |
+| `diffInMinutes(date)` | Diferencia en minutos | `dt.diffInMinutes(other)` |
+| `clone()` | Crea una copia | `dt.clone()` |
+| `getTime()` | Epoch en ms (heredado) | `dt.getTime()` |
+| `toISOString()` | String ISO (heredado) | `dt.toISOString()` |
+
+#### Serialización RPC
+
+```typescript
+// El RPC usa msgpackr con extensión personalizada (type: 40)
+// Frontend envía: new DateTime("2024-01-15") 
+// Backend recibe: instancia DateTime lista para usar
+```
+
+#### Uso en Servicios
+
+```typescript
+// ✅ El payload ya contiene DateTime - NO crear instancias extra
+const issueDate = payload.issueDate ?? new DateTime();
+const issueDateStr = issueDate.toISOString().split("T")[0]; // Para BD
+
+// ✅ Operaciones con fechas
+const dueDate = issueDate.addDays(30);
+if (expirationDate.isBefore(new DateTime())) {
+  throw new Error("Fecha expirada");
+}
+```
+
+### Decimal (`lib/utils/data/Decimal.ts`)
+
+`Decimal` extiende `decimal.js` con configuración específica para manejo de montos y precisión numérica.
+
+#### Configuración
+
+```typescript
+// Precisión: 20 dígitos significativos
+// Redondeo: ROUND_HALF_UP (redondeo bancario)
+// toJSON(): Siempre retorna 2 decimales como string
+```
+
+#### Uso en Servicios
+
+```typescript
+// Conversión si viene como número o string
+const amount = payload.amount instanceof Decimal 
+  ? payload.amount 
+  : new Decimal(payload.amount);
+
+// Operaciones de precisión
+const total = amount.mul(quantity);          // Multiplicar
+const withTax = total.mul(1.19);             // +19% impuesto
+if (amount.lte(0)) throw new Error("...");   // Comparaciones
+
+// JSON serializa automáticamente a "100.00"
+```
+
+### ¿Por qué no usar tipos nativos?
+
+| Tipo Nativo | Problema | Solución |
+|-------------|----------|----------|
+| `Date` | No serializable por RPC, métodos limitados | `DateTime` |
+| `number` | Pérdida de precisión en operaciones decimales | `Decimal` |
+| `string` | Requiere parsing, propenso a errores | `DateTime` / `Decimal` |
+| `float` | Errores de punto flotante (0.1 + 0.2 ≠ 0.3) | `Decimal` |
+
+---
+
 ## Principios Fundamentales
 
 ### 1. Separación de Responsabilidades
@@ -175,6 +280,8 @@ export interface ListItemsParams {
 2. **Exclusión mutua con `never`**: Usar `propertyX?: never` para tipos discriminados
 3. **Constantes para validación**: Exportar arrays de valores válidos para validación runtime
 4. **Tipos opcionales explícitos**: Usar `| null` cuando el campo puede ser nulo en BD
+5. **⚠️ Siempre usar DateTime para fechas**: Nunca `Date`, `string`, ni uniones
+6. **⚠️ Siempre usar Decimal para montos**: Nunca `number` ni `float`
 
 ---
 
@@ -520,7 +627,8 @@ beforeEach(() => {
 - [ ] Crear archivo en `lib/utils/dto/[módulo]/[entidad].ts`
 - [ ] Definir interfaces con JSDoc
 - [ ] NO importar nada de `#models`, `#lib/db`, `drizzle`
-- [ ] Solo usar tipos de `lib/utils/data` (Decimal, DateTime)
+- [ ] **⚠️ Usar `DateTime` para TODOS los campos de fecha** (nunca `Date` ni `string`)
+- [ ] **⚠️ Usar `Decimal` para TODOS los montos y valores de precisión** (nunca `number`)
 - [ ] Exportar desde `lib/utils/dto/[módulo]/index.ts`
 - [ ] Actualizar `lib/utils/dto/index.ts` si es nuevo módulo
 - [ ] Importar en servicio con `#utils/dto/...`
