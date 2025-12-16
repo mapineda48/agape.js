@@ -39,7 +39,7 @@ export interface CreatePurchaseOrderInput {
   /** ID del proveedor */
   supplierId: number;
   /** Fecha de la orden (opcional, por defecto hoy) */
-  orderDate?: DateTime | Date;
+  orderDate?: DateTime;
   /** Estado de la orden (opcional, por defecto 'pending') */
   status?: PurchaseOrderStatus;
   /** Lista de ítems a ordenar */
@@ -109,9 +109,9 @@ export interface ListPurchaseOrdersParams {
   /** Filtro por estado de la orden */
   status?: PurchaseOrderStatus;
   /** Fecha de inicio del rango */
-  fromDate?: DateTime | Date;
+  fromDate?: DateTime;
   /** Fecha de fin del rango */
-  toDate?: DateTime | Date;
+  toDate?: DateTime;
   /** Si es true, incluye el conteo total de registros */
   includeTotalCount?: boolean;
   /** Índice de página (0-based) */

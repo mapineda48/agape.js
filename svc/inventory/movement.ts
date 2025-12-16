@@ -276,11 +276,13 @@ export async function createInventoryMovement(
     }
 
     // R3: Period Closing (Simple check for now)
+    // Comparar con el inicio del día siguiente para permitir movimientos de hoy
     const today = new DateTime();
-    // Set to end of today for comparison
-    const endOfToday = new Date(today.getTime());
-    endOfToday.setHours(23, 59, 59, 999);
-    if (input.movementDate.getTime() > endOfToday.getTime()) {
+    const startOfTomorrow = new DateTime(
+      today.toISOString().split("T")[0] + "T00:00:00"
+    ).addDays(1);
+
+    if (input.movementDate.getTime() >= startOfTomorrow.getTime()) {
       throw new Error("No se permiten movimientos con fecha futura");
     }
 

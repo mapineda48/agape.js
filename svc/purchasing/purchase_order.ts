@@ -127,12 +127,8 @@ export async function createPurchaseOrder(
       throw new Error(`El ítem ${disabledItem.id} está deshabilitado`);
     }
 
-    const orderDate =
-      payload.orderDate instanceof DateTime
-        ? payload.orderDate
-        : payload.orderDate instanceof Date
-        ? new DateTime(payload.orderDate)
-        : new DateTime();
+    // Usar DateTime directamente - el RPC ya lo deserializó
+    const orderDate = payload.orderDate ?? new DateTime();
 
     // Obtener número de documento usando ID temporal
     const tempExternalId = crypto.randomUUID();
@@ -312,14 +308,11 @@ export async function listPurchaseOrders(
   }
 
   if (fromDate !== undefined) {
-    const date =
-      fromDate instanceof DateTime ? fromDate : new DateTime(fromDate);
-    conditions.push(gte(purchaseOrder.orderDate, date));
+    conditions.push(gte(purchaseOrder.orderDate, fromDate));
   }
 
   if (toDate !== undefined) {
-    const date = toDate instanceof DateTime ? toDate : new DateTime(toDate);
-    conditions.push(lte(purchaseOrder.orderDate, date));
+    conditions.push(lte(purchaseOrder.orderDate, toDate));
   }
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
@@ -463,12 +456,12 @@ export async function updatePurchaseOrderStatus(
 
     // Validate state transitions
     const validTransitions: Record<PurchaseOrderStatus, PurchaseOrderStatus[]> =
-      {
-        pending: ["approved", "cancelled"],
-        approved: ["received", "cancelled"],
-        received: [], // Terminal state
-        cancelled: [], // Terminal state
-      };
+    {
+      pending: ["approved", "cancelled"],
+      approved: ["received", "cancelled"],
+      received: [], // Terminal state
+      cancelled: [], // Terminal state
+    };
 
     const allowedNextStates =
       validTransitions[currentOrder.status as PurchaseOrderStatus] || [];
