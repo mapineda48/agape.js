@@ -7,6 +7,7 @@ import initDatabase from "#lib/db";
 import bridge from "#lib/bridge/middleware";
 import logger from "#lib/log/logger";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
+import hashString from "#lib/hashString";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
@@ -17,7 +18,7 @@ const {
   AGAPE_SECRET = import.meta.filename,
   AGAPE_ADMIN = "admin",
   AGAPE_PASSWORD = "admin",
-  AGAPE_TENANT = "demo",
+  AGAPE_TENANT = import.meta.filename.endsWith(".ts") ? "agape_app_development_demo" : "agape_app_test_demo",
   AGAPE_CDN_HOST = "http://127.0.0.1:10000",
 
   DATABASE_URI = "postgresql://postgres:mypassword@localhost",
@@ -42,7 +43,7 @@ await initDatabase(DATABASE_URI, {
 // Initialize storage backend (e.g., Azure Blob or development emulator)
 const blobStorageHost = await AzureBlobStorage.connect(
   AZURE_CONNECTION_STRING,
-  AGAPE_TENANT,
+  hashString(AGAPE_TENANT),
   AGAPE_CDN_HOST
 );
 

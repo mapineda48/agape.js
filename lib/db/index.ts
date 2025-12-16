@@ -54,7 +54,9 @@ export default async function initDatabase(
     throw new Error("Tenant is required");
   }
 
-  const schemaName = prepareOrmSchema(config);
+  const schemaName = config.tenant;
+
+  Config.setSchemaName(schemaName);
 
   const pool = new Pool({ connectionString });
 
@@ -81,20 +83,6 @@ export default async function initDatabase(
   );
 
   return db;
-}
-
-function prepareOrmSchema(config: DatabaseConfig) {
-  const isTS = process.argv.some(
-    (a) => a.endsWith(".ts") || a.endsWith(".cjs")
-  );
-
-  const env = !config.dev ? "production" : isTS ? "development" : "test";
-
-  const schemaName = `agape_app_${env}_${config.tenant}`;
-
-  Config.setSchemaName(schemaName);
-
-  return schemaName;
 }
 
 /**
