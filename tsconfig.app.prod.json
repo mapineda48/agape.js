@@ -1,8 +1,14 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
+    "incremental": false,
     "outDir": "dist",
     "noEmit": false
   },
-  "exclude": ["dist", "web", "**/*.test.ts", "bin/build.ts"]
+  "exclude": [
+    "dist",
+    "web",
+    "**/*.test.ts",
+    "bin/build.ts"
+  ]
 }
