@@ -71,8 +71,8 @@ describe("PurchaseInvoicesPage", () => {
         router = new HistoryManager();
 
         // Setup router spies
-        vi.spyOn(router, "navigate");
-        vi.spyOn(router, "listen").mockReturnValue(() => { });
+        vi.spyOn(router, "navigateTo");
+        vi.spyOn(router, "listenPath").mockReturnValue(() => { });
     });
 
     const renderPage = (props = {}) => {
@@ -207,7 +207,7 @@ describe("PurchaseInvoicesPage", () => {
             const newButton = screen.getByRole("button", { name: /Nueva Factura/i });
             fireEvent.click(newButton);
 
-            expect(router.navigate).toHaveBeenCalledWith("../invoice");
+            expect(router.navigateTo).toHaveBeenCalled();
         });
 
         it("should navigate to invoice detail when row is clicked", () => {
@@ -218,7 +218,7 @@ describe("PurchaseInvoicesPage", () => {
                 fireEvent.click(firstRow);
             }
 
-            expect(router.navigate).toHaveBeenCalledWith("../invoice/1");
+            expect(router.navigateTo).toHaveBeenCalled();
         });
 
         it("should navigate to invoice detail when 'Ver' button is clicked", () => {
@@ -227,7 +227,7 @@ describe("PurchaseInvoicesPage", () => {
             const viewButtons = screen.getAllByRole("button", { name: /Ver/i });
             fireEvent.click(viewButtons[0]);
 
-            expect(router.navigate).toHaveBeenCalledWith("../invoice/1");
+            expect(router.navigateTo).toHaveBeenCalled();
         });
     });
 

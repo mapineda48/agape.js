@@ -23,7 +23,6 @@ const TABS = [
         label: "Ventas",
         icon: BanknotesIcon,
         description: "Facturas a clientes y cuentas por cobrar",
-        disabled: true, // A futuro
     },
 ];
 
@@ -38,12 +37,12 @@ export default function InvoicingLayout({ children }: InvoicingLayoutProps) {
         return unlisten;
     }, [listen]);
 
-    // Auto-redirect to first enabled tab when at root path
+    // Auto-redirect to first tab when at root path
     useEffect(() => {
         if (pathname === "" || pathname === "/") {
-            const firstEnabledTab = TABS.find((tab) => !tab.disabled);
-            if (firstEnabledTab) {
-                navigate(firstEnabledTab.path, { replace: true });
+            const firstTab = TABS[0];
+            if (firstTab) {
+                navigate(firstTab.path, { replace: true });
             }
         }
     }, [pathname, navigate]);
@@ -75,44 +74,29 @@ export default function InvoicingLayout({ children }: InvoicingLayoutProps) {
                         const isActive =
                             currentPath === tab.path ||
                             currentPath.startsWith(tab.path + "/");
-                        const isDisabled = tab.disabled;
 
                         return (
                             <div
                                 key={tab.path}
-                                onClick={() => !isDisabled && navigate(tab.path)}
+                                onClick={() => navigate(tab.path)}
                                 className={clsx(
-                                    "group flex items-center pb-4 border-b-2 transition-all duration-200",
-                                    isDisabled
-                                        ? "border-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed"
-                                        : isActive
-                                            ? "border-violet-600 text-violet-600 dark:text-violet-400 dark:border-violet-400 cursor-pointer"
-                                            : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer"
+                                    "group flex items-center pb-4 border-b-2 transition-all duration-200 cursor-pointer",
+                                    isActive
+                                        ? "border-violet-600 text-violet-600 dark:text-violet-400 dark:border-violet-400"
+                                        : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                                 )}
                             >
                                 <tab.icon
                                     className={clsx(
                                         "mr-2 h-5 w-5 transition-colors",
-                                        isDisabled
-                                            ? "text-gray-300 dark:text-gray-600"
-                                            : isActive
-                                                ? "text-violet-600 dark:text-violet-400"
-                                                : "text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300"
+                                        isActive
+                                            ? "text-violet-600 dark:text-violet-400"
+                                            : "text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300"
                                     )}
                                 />
                                 <div className="flex flex-col">
-                                    <span
-                                        className={clsx(
-                                            "font-medium text-sm",
-                                            isDisabled && "opacity-50"
-                                        )}
-                                    >
+                                    <span className="font-medium text-sm">
                                         {tab.label}
-                                        {isDisabled && (
-                                            <span className="ml-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                                                Próximamente
-                                            </span>
-                                        )}
                                     </span>
                                 </div>
                             </div>
