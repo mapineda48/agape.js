@@ -39,20 +39,6 @@ import type {
 export const SALES_ORDER_DOCUMENT_TYPE_CODE = "SALES_ORDER";
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-function toDateString(value: Date | string | undefined): string {
-  if (!value) {
-    return new Date().toISOString().split("T")[0];
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-  return value.toISOString().split("T")[0];
-}
-
-// ============================================================================
 // Service Functions
 // ============================================================================
 
@@ -87,13 +73,15 @@ export async function createSalesOrder(
       throw new Error("El cliente está inactivo");
     }
 
-    const orderDate = toDateString(payload.orderDate);
+    // Usar DateTime directamente - el RPC ya lo deserializó
+    const orderDate = payload.orderDate ?? new DateTime();
+    const orderDateStr = orderDate.toISOString().split("T")[0];
 
     // Obtener número de documento usando ID temporal
     const tempExternalId = crypto.randomUUID();
     const numbering = await getNextDocumentNumberTx(tx, {
       documentTypeCode: SALES_ORDER_DOCUMENT_TYPE_CODE,
-      today: new DateTime(orderDate),
+      today: orderDate,
       externalDocumentType: "sales_order",
       externalDocumentId: tempExternalId,
     });
@@ -103,7 +91,7 @@ export async function createSalesOrder(
       .values({
         clientId: payload.clientId,
         orderTypeId: payload.orderTypeId,
-        orderDate,
+        orderDate: orderDateStr,
         status,
         disabled: false,
         seriesId: numbering.seriesId,
@@ -168,8 +156,7 @@ export async function getSalesOrderById(
   }
 
   const clientName = orderRecord.clientFirstName
-    ? `${orderRecord.clientFirstName} ${
-        orderRecord.clientLastName ?? ""
+    ? `${orderRecord.clientFirstName} ${orderRecord.clientLastName ?? ""
       }`.trim()
     : orderRecord.clientLegalName ?? "";
 
@@ -223,13 +210,13 @@ export async function listSalesOrders(
   }
 
   if (fromDate !== undefined) {
-    const date = toDateString(fromDate);
-    conditions.push(gte(order.orderDate, date));
+    const dateStr = fromDate.toISOString().split("T")[0];
+    conditions.push(gte(order.orderDate, dateStr));
   }
 
   if (toDate !== undefined) {
-    const date = toDateString(toDate);
-    conditions.push(lte(order.orderDate, date));
+    const dateStr = toDate.toISOString().split("T")[0];
+    conditions.push(lte(order.orderDate, dateStr));
   }
 
   const whereClause = conditions.length ? and(...conditions) : undefined;

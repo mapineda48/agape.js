@@ -187,6 +187,7 @@ describe("employee service", () => {
     it("should create a new employee", async () => {
       const { upsertEmployee } = await import("./employee");
       const { upsertDocumentType } = await import("#svc/core/documentType");
+      const { default: DateTime } = await import("#utils/data/DateTime");
 
       // Crear tipo de documento
       const [docType] = await upsertDocumentType({
@@ -209,7 +210,7 @@ describe("employee service", () => {
           },
         },
         isActive: true,
-        hireDate: new Date("2023-01-15"),
+        hireDate: new DateTime("2023-01-15"),
       });
 
       expect(result).toHaveProperty("id");
@@ -315,6 +316,7 @@ describe("employee service", () => {
     it("should set hireDate to current date by default", async () => {
       const { upsertEmployee } = await import("./employee");
       const { upsertDocumentType } = await import("#svc/core/documentType");
+      const { default: DateTime } = await import("#utils/data/DateTime");
 
       const [docType] = await upsertDocumentType({
         name: "HD",
@@ -324,7 +326,7 @@ describe("employee service", () => {
         appliesToCompany: false,
       });
 
-      const before = new Date();
+      const before = new DateTime();
 
       const result = await upsertEmployee({
         user: {
@@ -334,10 +336,10 @@ describe("employee service", () => {
         },
       });
 
-      const after = new Date();
+      const after = new DateTime();
 
       // hireDate debería estar entre before y after
-      const hireDate = new Date(result.hireDate as any);
+      const hireDate = result.hireDate;
       expect(hireDate.getTime()).toBeGreaterThanOrEqual(
         before.getTime() - 1000
       );

@@ -178,7 +178,7 @@ describe("createPurchaseInvoice service", () => {
     const { createPurchaseInvoice } = await import("./purchase_invoice");
     const invoice = await createPurchaseInvoice({
       supplierId,
-      issueDate: "2024-01-01",
+      issueDate: new DateTime("2024-01-01"),
       paymentTermsId,
       totalAmount: 100,
       items: [{ itemId, quantity: 1, unitPrice: 100 }],
@@ -192,7 +192,7 @@ describe("createPurchaseInvoice service", () => {
     await expect(
       createPurchaseInvoice({
         supplierId,
-        issueDate: "2024-01-01",
+        issueDate: new DateTime("2024-01-01"),
         // Missing due date and payment terms
         totalAmount: 100,
         items: [{ itemId, quantity: 1, unitPrice: 100 }],

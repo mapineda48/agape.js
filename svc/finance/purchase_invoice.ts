@@ -47,16 +47,6 @@ function toDecimal(value: Decimal | number | string): Decimal {
   return value instanceof Decimal ? value : new Decimal(value);
 }
 
-function toDateString(value: Date | string | undefined): string {
-  if (!value) {
-    return new Date().toISOString().split("T")[0];
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-  return value.toISOString().split("T")[0];
-}
-
 // ============================================================================
 // Service Functions
 // ============================================================================
@@ -91,19 +81,19 @@ export async function createPurchaseInvoice(
       throw new Error("El monto total debe ser mayor a cero");
     }
 
-    const issueDate = toDateString(payload.issueDate);
+    // Usar DateTime directamente - el RPC ya lo deserializó
+    const issueDate = payload.issueDate ?? new DateTime();
+    const issueDateStr = issueDate.toISOString().split("T")[0];
 
     // R8: Calcular Due Date basado en Payment Terms
     let paymentTermsId = payload.paymentTermsId;
-    let computedDueDate = payload.dueDate
-      ? toDateString(payload.dueDate)
-      : null;
+    let computedDueDate: string | null = null;
 
-    if (!computedDueDate) {
+    if (payload.dueDate) {
+      computedDueDate = payload.dueDate.toISOString().split("T")[0];
+    } else {
       // Si no se proporcionó fecha, es OBLIGATORIO tener payment terms
       if (!paymentTermsId) {
-        // Intento fallback: default payment terms?
-        // Por ahora error.
         throw new Error(
           "Debe proporcionar Fecha de Vencimiento o Términos de Pago"
         );
@@ -115,8 +105,7 @@ export async function createPurchaseInvoice(
         .where(eq(paymentTerms.id, paymentTermsId));
       if (!terms) throw new Error("Términos de pago no encontrados");
 
-      const issueDateTime = new DateTime(issueDate);
-      computedDueDate = issueDateTime
+      computedDueDate = issueDate
         .addDays(terms.dueDays)
         .toISOString()
         .substring(0, 10);
@@ -208,7 +197,7 @@ export async function createPurchaseInvoice(
     const tempExternalId = crypto.randomUUID();
     const numbering = await getNextDocumentNumberTx(tx, {
       documentTypeCode: PURCHASE_INVOICE_DOCUMENT_TYPE_CODE,
-      today: new DateTime(issueDate),
+      today: issueDate,
       externalDocumentType: "purchase_invoice",
       externalDocumentId: tempExternalId,
     });
@@ -220,7 +209,7 @@ export async function createPurchaseInvoice(
         purchaseOrderId: payload.purchaseOrderId,
         goodsReceiptId: payload.goodsReceiptId,
         paymentTermsId: paymentTermsId,
-        issueDate,
+        issueDate: issueDateStr,
         dueDate: computedDueDate,
         totalAmount,
         seriesId: numbering.seriesId,
@@ -335,13 +324,13 @@ export async function listPurchaseInvoices(
   }
 
   if (fromDate !== undefined) {
-    const date = toDateString(fromDate);
-    conditions.push(gte(purchase_invoice.issueDate, date));
+    const dateStr = fromDate.toISOString().split("T")[0];
+    conditions.push(gte(purchase_invoice.issueDate, dateStr));
   }
 
   if (toDate !== undefined) {
-    const date = toDateString(toDate);
-    conditions.push(lte(purchase_invoice.issueDate, date));
+    const dateStr = toDate.toISOString().split("T")[0];
+    conditions.push(lte(purchase_invoice.issueDate, dateStr));
   }
 
   const whereClause = conditions.length ? and(...conditions) : undefined;

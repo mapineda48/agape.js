@@ -54,7 +54,7 @@ export interface UpsertEmployeePayload {
   /** Estado activo del empleado */
   isActive?: boolean;
   /** Fecha de contratación */
-  hireDate?: Date | DateTime;
+  hireDate?: DateTime;
   /** Metadatos adicionales */
   metadata?: unknown;
   /** Avatar (URL existente o File para subir) */

@@ -1,4 +1,5 @@
 import type Decimal from "../../data/Decimal";
+import type DateTime from "../../data/DateTime";
 
 /**
  * Estados válidos para una factura de venta.
@@ -39,9 +40,9 @@ export interface CreateSalesInvoiceInput {
   /** ID de la orden de venta asociada (opcional) */
   orderId?: number;
   /** Fecha de emisión (opcional, por defecto hoy) */
-  issueDate?: Date | string;
+  issueDate?: DateTime;
   /** Fecha de vencimiento (opcional) */
-  dueDate?: Date | string | null;
+  dueDate?: DateTime | null;
   /** ID de términos de pago (opcional) */
   paymentTermsId?: number;
   /** Líneas de la factura */
@@ -136,9 +137,9 @@ export interface ListSalesInvoicesParams {
   /** Filtro por estado */
   status?: SalesInvoiceStatus;
   /** Fecha de inicio del rango */
-  fromDate?: Date | string;
+  fromDate?: DateTime;
   /** Fecha de fin del rango */
-  toDate?: Date | string;
+  toDate?: DateTime;
   /** Si es true, incluye el conteo total de registros */
   includeTotalCount?: boolean;
   /** Índice de página (0-based) */

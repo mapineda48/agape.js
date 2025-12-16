@@ -178,11 +178,8 @@ export async function createGoodsReceipt(
       });
     }
 
-    // 4. Numeración
-    const receiptDate =
-      payload.receiptDate instanceof DateTime
-        ? payload.receiptDate
-        : new DateTime(payload.receiptDate ?? new Date());
+    // 4. Numeración - DateTime viene directamente del RPC
+    const receiptDate = payload.receiptDate ?? new DateTime();
 
     const tempExternalId = crypto.randomUUID();
     const numbering = await getNextDocumentNumberTx(tx, {

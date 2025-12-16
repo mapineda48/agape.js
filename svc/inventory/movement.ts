@@ -4,7 +4,7 @@ import { inventoryMovementDetail } from "#models/inventory/movement_detail";
 import { inventoryMovementType } from "#models/inventory/movement_type";
 import { documentType } from "#models/numbering/document_type";
 import { getNextDocumentNumberTx } from "#svc/numbering/getNextDocumentNumber";
-import type DateTime from "#utils/data/DateTime";
+import DateTime from "#utils/data/DateTime";
 import { eq, desc, and, gte, lte, like, count, isNotNull } from "drizzle-orm";
 import Decimal from "#utils/data/Decimal";
 import { item } from "#models/catalogs/item";
@@ -276,9 +276,11 @@ export async function createInventoryMovement(
     }
 
     // R3: Period Closing (Simple check for now)
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    if (input.movementDate.getTime() > today.getTime()) {
+    const today = new DateTime();
+    // Set to end of today for comparison
+    const endOfToday = new Date(today.getTime());
+    endOfToday.setHours(23, 59, 59, 999);
+    if (input.movementDate.getTime() > endOfToday.getTime()) {
       throw new Error("No se permiten movimientos con fecha futura");
     }
 

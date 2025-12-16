@@ -1,3 +1,5 @@
+import type DateTime from "../../data/DateTime";
+
 /**
  * Estados posibles de una orden de venta.
  */
@@ -28,7 +30,7 @@ export interface CreateSalesOrderInput {
   /** ID del tipo de orden */
   orderTypeId: number;
   /** Fecha de la orden (opcional, por defecto hoy) */
-  orderDate?: Date | string;
+  orderDate?: DateTime;
   /** Estado de la orden (opcional, por defecto 'pending') */
   status?: OrderStatus;
 }
@@ -79,9 +81,9 @@ export interface ListSalesOrdersParams {
   /** Filtro por estado de la orden */
   status?: OrderStatus;
   /** Fecha de inicio del rango */
-  fromDate?: Date | string;
+  fromDate?: DateTime;
   /** Fecha de fin del rango */
-  toDate?: Date | string;
+  toDate?: DateTime;
   /** Si es true, incluye el conteo total de registros */
   includeTotalCount?: boolean;
   /** Índice de página (0-based) */

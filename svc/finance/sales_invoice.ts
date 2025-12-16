@@ -58,16 +58,6 @@ function toDecimal(
   return value instanceof Decimal ? value : new Decimal(value);
 }
 
-function toDateString(value: Date | string | undefined): string {
-  if (!value) {
-    return new Date().toISOString().split("T")[0];
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-  return value.toISOString().split("T")[0];
-}
-
 // ============================================================================
 // Service Functions
 // ============================================================================
@@ -159,15 +149,17 @@ export async function createSalesInvoice(
       }
     }
 
-    const issueDate = toDateString(payload.issueDate);
-    const dueDate = payload.dueDate ? toDateString(payload.dueDate) : null;
+    // Usar DateTime directamente - el RPC ya lo deserializó
+    const issueDate = payload.issueDate ?? new DateTime();
+    const issueDateStr = issueDate.toISOString().split("T")[0];
+    const dueDateStr = payload.dueDate ? payload.dueDate.toISOString().split("T")[0] : null;
     const globalDiscountPercent = toDecimal(payload.globalDiscountPercent);
 
     // Obtener número de documento usando ID temporal
     const tempExternalId = crypto.randomUUID();
     const numbering = await getNextDocumentNumberTx(tx, {
       documentTypeCode: SALES_INVOICE_DOCUMENT_TYPE_CODE,
-      today: new DateTime(issueDate),
+      today: issueDate,
       externalDocumentType: "sales_invoice",
       externalDocumentId: tempExternalId,
     });
@@ -179,8 +171,8 @@ export async function createSalesInvoice(
         clientId: payload.clientId,
         orderId: payload.orderId ?? null,
         paymentTermsId: payload.paymentTermsId,
-        issueDate,
-        dueDate,
+        issueDate: issueDateStr,
+        dueDate: dueDateStr,
         status: "draft",
         subtotal: new Decimal(0),
         globalDiscountPercent,
@@ -575,13 +567,13 @@ export async function listSalesInvoices(
   }
 
   if (fromDate !== undefined) {
-    const date = toDateString(fromDate);
-    conditions.push(gte(sales_invoice.issueDate, date));
+    const dateStr = fromDate.toISOString().split("T")[0];
+    conditions.push(gte(sales_invoice.issueDate, dateStr));
   }
 
   if (toDate !== undefined) {
-    const date = toDateString(toDate);
-    conditions.push(lte(sales_invoice.issueDate, date));
+    const dateStr = toDate.toISOString().split("T")[0];
+    conditions.push(lte(sales_invoice.issueDate, dateStr));
   }
 
   const whereClause = conditions.length ? and(...conditions) : undefined;

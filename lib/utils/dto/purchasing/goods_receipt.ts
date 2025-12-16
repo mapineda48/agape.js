@@ -42,7 +42,7 @@ export interface CreateGoodsReceiptInput {
   /** ID de la orden de compra asociada (opcional) */
   purchaseOrderId?: number;
   /** Fecha de recepción (default: hoy) */
-  receiptDate?: Date | string | DateTime;
+  receiptDate?: DateTime;
   /** Observaciones generales */
   observation?: string;
   /** Usuario que recibe (si no se pasa, se inferirá del contexto o required) */

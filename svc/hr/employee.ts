@@ -27,7 +27,7 @@ interface UpsertEmployeePayload {
   id?: number;
   user: IUser;
   isActive?: boolean;
-  hireDate?: Date;
+  hireDate?: DateTime;
   metadata?: unknown;
   avatar?: string | File;
 }
@@ -127,9 +127,8 @@ export async function listEmployees(
   if (fullName) {
     conditions.push(
       sql`(
-        CONCAT(${person.firstName}, ' ', ${
-        person.lastName
-      }) ILIKE ${`%${fullName}%`}
+        CONCAT(${person.firstName}, ' ', ${person.lastName
+        }) ILIKE ${`%${fullName}%`}
       )`
     );
   }
@@ -203,14 +202,12 @@ export async function upsertEmployee(payload: UpsertEmployeePayload) {
 
   const userRecord = await upsertUser(userDto);
 
-  // Paso 2: Upsert del registro de empleado
+  // Paso 2: Upsert del registro de empleado - DateTime viene directamente del RPC
   const [employeeRecord] = await db
     .insert(employee)
     .values({
       id: userRecord.id,
-      hireDate: employeeData.hireDate
-        ? new DateTime(employeeData.hireDate)
-        : new DateTime(),
+      hireDate: employeeData.hireDate ?? new DateTime(),
       isActive: employeeData.isActive ?? true,
       avatarUrl: "", // Se actualiza despues si hay archivo
       metadata: employeeData.metadata,
@@ -221,7 +218,7 @@ export async function upsertEmployee(payload: UpsertEmployeePayload) {
         // Siempre actualizar updatedAt para evitar error de "No values to set"
         updatedAt: new DateTime(),
         ...(employeeData.hireDate
-          ? { hireDate: new DateTime(employeeData.hireDate) }
+          ? { hireDate: employeeData.hireDate }
           : {}),
         ...(employeeData.isActive !== undefined
           ? { isActive: employeeData.isActive }

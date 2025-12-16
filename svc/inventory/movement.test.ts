@@ -538,8 +538,7 @@ describe("createInventoryMovement service", () => {
       expect(movement.documentNumber).toBeGreaterThan(0);
       // El fullNumber debe tener el formato correcto (prefix + number)
       expect(movement.documentNumberFull).toBe(
-        `${seriesBefore.prefix ?? ""}${movement.documentNumber}${
-          seriesBefore.suffix ?? ""
+        `${seriesBefore.prefix ?? ""}${movement.documentNumber}${seriesBefore.suffix ?? ""
         }`
       );
     });
@@ -803,15 +802,13 @@ describe("createInventoryMovement service", () => {
         .select({ totalBefore: count() })
         .from(inventoryMovement);
 
-      // Crear fecha en el futuro (mañana)
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(12, 0, 0, 0);
+      // Crear fecha en el futuro (mañana) usando DateTime
+      const tomorrow = new DateTime().addDays(1);
 
       await expect(
         createInventoryMovement({
           movementTypeId: movementTypeEntryId,
-          movementDate: new DateTime(tomorrow),
+          movementDate: tomorrow,
           userId,
           details: [{ itemId, locationId, quantity: 1 }],
         })
@@ -844,13 +841,12 @@ describe("createInventoryMovement service", () => {
     it("should allow movementDate in the past", async () => {
       const { createInventoryMovement } = await import("./movement");
 
-      // Fecha en el pasado (hace 30 días)
-      const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 30);
+      // Fecha en el pasado (hace 30 días) usando DateTime
+      const pastDate = new DateTime().addDays(-30);
 
       const result = await createInventoryMovement({
         movementTypeId: movementTypeEntryId,
-        movementDate: new DateTime(pastDate),
+        movementDate: pastDate,
         userId,
         details: [{ itemId, locationId, quantity: 1 }],
       });

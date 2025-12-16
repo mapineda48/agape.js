@@ -1,4 +1,5 @@
 import type Decimal from "../../data/Decimal";
+import type DateTime from "../../data/DateTime";
 
 /**
  * Input para crear una factura de compra.
@@ -22,9 +23,9 @@ export interface CreatePurchaseInvoiceInput {
   /** ID del proveedor */
   supplierId: number;
   /** Fecha de emisión (opcional, por defecto hoy) */
-  issueDate?: Date | string;
+  issueDate?: DateTime;
   /** Fecha de vencimiento (opcional, si no se envía se calcula con paymentTerms) */
-  dueDate?: Date | string | null;
+  dueDate?: DateTime | null;
   /** ID de términos de pago */
   paymentTermsId?: number;
   /** ID de la OC asociada (opcional) */
@@ -77,9 +78,9 @@ export interface ListPurchaseInvoicesParams {
   /** Filtro por ID de proveedor */
   supplierId?: number;
   /** Fecha de inicio del rango */
-  fromDate?: Date | string;
+  fromDate?: DateTime;
   /** Fecha de fin del rango */
-  toDate?: Date | string;
+  toDate?: DateTime;
   /** Si es true, incluye el conteo total de registros */
   includeTotalCount?: boolean;
   /** Índice de página (0-based) */

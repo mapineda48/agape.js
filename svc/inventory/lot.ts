@@ -181,12 +181,12 @@ export async function validateLot(
 
   // Check Expiration
   if (!opts.allowExpired && lot.expirationDate) {
-    const now = new Date();
-    const expTime = (lot.expirationDate as any).getTime
-      ? (lot.expirationDate as any).getTime()
-      : new Date(lot.expirationDate as any).getTime();
+    const now = new DateTime();
+    const expDate = lot.expirationDate instanceof DateTime
+      ? lot.expirationDate
+      : new DateTime(lot.expirationDate as any);
 
-    if (expTime < now.getTime()) {
+    if (expDate.getTime() < now.getTime()) {
       throw new Error(
         `El lote ${lot.lotNumber} está vencido (Vence: ${lot.expirationDate})`
       );
