@@ -17,6 +17,9 @@ export default defineConfig({
           root: path.resolve(__dirname), // importante: raíz del repo
           include: ["svc/**/*.test.ts", "lib/**/*.test.ts"],
           exclude: ["dist", "web"],
+          sequence: {
+            groupOrder: 1,
+          },
         },
         resolve: {
           alias: {
@@ -36,6 +39,9 @@ export default defineConfig({
           globals: true,
           setupFiles: "./web/test/setup.ts",
           include: ["web/**/*.test.ts", "web/**/*.test.tsx"],
+          sequence: {
+            groupOrder: 2,
+          },
         },
         plugins: [react()],
         resolve: {
@@ -110,6 +116,10 @@ export default defineConfig({
             "@agape/finance/purchase_invoice": path.resolve(
               __dirname,
               "./web/test/mocks/finance/purchase_invoice.ts"
+            ),
+            "@agape/finance/sales_invoice": path.resolve(
+              __dirname,
+              "./web/test/mocks/finance/sales_invoice.ts"
             ),
           },
         },
