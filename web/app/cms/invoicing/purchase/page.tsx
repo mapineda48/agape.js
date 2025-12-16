@@ -121,10 +121,11 @@ export default function PurchaseInvoicesPage(props: Props) {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* Supplier Filter */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <label htmlFor="supplier-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Proveedor
                                 </label>
                                 <select
+                                    id="supplier-filter"
                                     className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent sm:text-sm transition"
                                     value={filters.supplierId ?? ""}
                                     onChange={(e) =>
@@ -149,10 +150,11 @@ export default function PurchaseInvoicesPage(props: Props) {
 
                             {/* Date From Filter */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <label htmlFor="date-from-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Desde
                                 </label>
                                 <input
+                                    id="date-from-filter"
                                     type="date"
                                     className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent sm:text-sm transition"
                                     value={

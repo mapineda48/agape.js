@@ -48,20 +48,32 @@ describe("PurchaseInvoicesPage", () => {
     const mockSuppliers: SupplierListItem[] = [
         {
             id: 1,
+            userId: 1,
             documentNumber: "123456789",
-            documentTypeName: "NIT",
+            documentTypeId: 1,
             firstName: null,
             lastName: null,
             legalName: "Proveedor ABC S.A.S.",
+            tradeName: null,
+            birthdate: null,
+            supplierTypeId: 1,
+            supplierTypeName: "Nacional",
+            registrationDate: new Date("2024-01-01") as any,
             active: true,
         },
         {
             id: 2,
+            userId: 2,
             documentNumber: "987654321",
-            documentTypeName: "CC",
+            documentTypeId: 2,
             firstName: "Juan",
             lastName: "Pérez",
             legalName: null,
+            tradeName: null,
+            birthdate: null,
+            supplierTypeId: 1,
+            supplierTypeName: "Nacional",
+            registrationDate: new Date("2024-01-01") as any,
             active: true,
         },
     ];
@@ -201,16 +213,26 @@ describe("PurchaseInvoicesPage", () => {
     });
 
     describe("Navigation", () => {
-        it("should navigate to new invoice page when 'Nueva Factura' is clicked", () => {
+        beforeEach(() => {
+            vi.useRealTimers();
+        });
+
+        afterEach(() => {
+            vi.useFakeTimers();
+        });
+
+        it("should navigate to new invoice page when 'Nueva Factura' is clicked", async () => {
             renderPage();
 
             const newButton = screen.getByRole("button", { name: /Nueva Factura/i });
             fireEvent.click(newButton);
 
-            expect(router.navigateTo).toHaveBeenCalled();
+            await waitFor(() => {
+                expect(router.navigateTo).toHaveBeenCalled();
+            });
         });
 
-        it("should navigate to invoice detail when row is clicked", () => {
+        it("should navigate to invoice detail when row is clicked", async () => {
             renderPage();
 
             const firstRow = screen.getByText("FP-001").closest("tr");
@@ -218,16 +240,20 @@ describe("PurchaseInvoicesPage", () => {
                 fireEvent.click(firstRow);
             }
 
-            expect(router.navigateTo).toHaveBeenCalled();
+            await waitFor(() => {
+                expect(router.navigateTo).toHaveBeenCalled();
+            });
         });
 
-        it("should navigate to invoice detail when 'Ver' button is clicked", () => {
+        it("should navigate to invoice detail when 'Ver' button is clicked", async () => {
             renderPage();
 
             const viewButtons = screen.getAllByRole("button", { name: /Ver/i });
             fireEvent.click(viewButtons[0]);
 
-            expect(router.navigateTo).toHaveBeenCalled();
+            await waitFor(() => {
+                expect(router.navigateTo).toHaveBeenCalled();
+            });
         });
     });
 
@@ -240,8 +266,8 @@ describe("PurchaseInvoicesPage", () => {
 
         it("should format dates correctly", () => {
             renderPage();
-            // Dates should be formatted in Spanish locale
-            expect(screen.getByText(/15 ene 2024/i)).toBeInTheDocument();
+            // Dates should be formatted in Spanish locale (15 de ene. de 2024 or similar)
+            expect(screen.getByText(/15.*ene.*2024/i)).toBeInTheDocument();
         });
     });
 });
