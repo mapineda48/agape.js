@@ -9,7 +9,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import { schema } from "../agape";
+import schema from "../schema";
 import supplier from "../purchasing/supplier";
 import purchase_order from "../purchasing/purchase_order";
 import goods_receipt from "../purchasing/goods_receipt";

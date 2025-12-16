@@ -7,7 +7,7 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import { schema } from "../agape";
+import schema from "../schema";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import { securityUser } from "./user";

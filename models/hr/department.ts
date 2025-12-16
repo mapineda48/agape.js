@@ -5,7 +5,7 @@ import {
   type InferSelectModel,
   type InferInsertModel,
 } from "drizzle-orm";
-import { schema } from "../agape";
+import schema from "../schema";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 

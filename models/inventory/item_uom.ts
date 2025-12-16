@@ -1,4 +1,4 @@
-import { schema } from "../agape";
+import schema from "../schema";
 import { serial, integer, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { inventoryItem } from "./item";

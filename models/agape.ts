@@ -1,10 +1,8 @@
-import { text, jsonb, pgSchema } from "drizzle-orm/pg-core";
+import { text, jsonb, type PgSchema } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { dateTime } from "../lib/db/custom-types";
 import DateTime from "../lib/utils/data/DateTime";
-import Config from "../lib/db/config";
-
-export const schema = pgSchema(Config.schemaName);
+import schema from "./schema";
 
 /**
  * Modelo Agape

@@ -1,4 +1,4 @@
-import { schema } from "../agape";
+import schema from "../schema";
 import {
   serial,
   varchar,

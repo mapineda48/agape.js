@@ -15,7 +15,7 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { schema } from "../agape";
+import schema from "../schema";
 import {
   decimal,
   dateTime,

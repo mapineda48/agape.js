@@ -1,5 +1,5 @@
 import { serial, integer } from "drizzle-orm/pg-core";
-import { schema } from "../agape";
+import schema from "../schema";
 import purchase_order from "./purchase_order";
 import { item } from "../catalogs/item";
 import { decimal } from "../../lib/db/custom-types";

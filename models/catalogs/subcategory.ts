@@ -1,4 +1,4 @@
-import { schema } from "../agape";
+import schema from "../schema";
 import { serial, varchar, boolean, integer } from "drizzle-orm/pg-core";
 import { category } from "./category";
 import { relations } from "drizzle-orm";

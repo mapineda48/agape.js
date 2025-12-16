@@ -1,4 +1,4 @@
-import { schema } from "../agape";
+import schema from "../schema";
 import user from "./user";
 import { integer, varchar } from "drizzle-orm/pg-core";
 import {

@@ -1,5 +1,5 @@
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
-import { schema } from "../agape";
+import schema from "../schema";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**

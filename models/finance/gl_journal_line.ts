@@ -1,6 +1,6 @@
 import { serial, integer, varchar, index, check } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import { schema } from "../agape";
+import schema from "../schema";
 import { decimal, dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import gl_journal_entry from "./gl_journal_entry";

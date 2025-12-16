@@ -7,7 +7,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import { schema } from "../agape";
+import schema from "../schema";
 import supplier from "./supplier";
 import purchase_order from "./purchase_order";
 import { dateTime } from "../../lib/db/custom-types";

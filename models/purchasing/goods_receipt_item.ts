@@ -1,6 +1,6 @@
 import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { serial, integer, index, varchar } from "drizzle-orm/pg-core";
-import { schema } from "../agape";
+import schema from "../schema";
 import goods_receipt from "./goods_receipt";
 import order_item from "./order_item";
 import { item } from "../catalogs/item";

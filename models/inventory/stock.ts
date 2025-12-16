@@ -1,4 +1,4 @@
-import { schema } from "../agape";
+import schema from "../schema";
 import { integer, primaryKey, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import inventoryItem from "./item";

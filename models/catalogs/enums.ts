@@ -1,4 +1,4 @@
-import { schema } from "../agape";
+import schema from "../schema";
 
 /**
  * Enum para los tipos de ítem en el catálogo.

@@ -1,5 +1,5 @@
 import { pgEnum } from "drizzle-orm/pg-core";
-import { schema } from "../agape";
+import schema from "../schema";
 
 // ============================================================================
 // User Type Enum

@@ -1,4 +1,4 @@
-import { schema } from "../agape";
+import schema from "../schema";
 import { integer, primaryKey } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { taxGroup } from "./tax_group";
