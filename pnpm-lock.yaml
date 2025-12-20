@@ -34,7 +34,7 @@ importers:
         version: 10.6.0
       drizzle-orm:
         specifier: ^0.44.6
-        version: 0.44.6(@types/pg@8.15.5)(pg@8.16.3)
+        version: 0.44.6(@types/pg@8.15.5)(kysely@0.28.9)(pg@8.16.3)
       express:
         specifier: ^5.1.0
         version: 5.1.0
@@ -50,6 +50,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      kysely:
+        specifier: ^0.28.9
+        version: 0.28.9
       morgan:
         specifier: ^1.10.1
         version: 1.10.1
@@ -2160,6 +2163,10 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  kysely@0.28.9:
+    resolution: {integrity: sha512-3BeXMoiOhpOwu62CiVpO6lxfq4eS6KMYfQdMsN/2kUCRNuF2YiEr7u0HLHaQU+O4Xu8YXE3bHVkwaQ85i72EuA==}
+    engines: {node: '>=20.0.0'}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -4385,9 +4392,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.6(@types/pg@8.15.5)(pg@8.16.3):
+  drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.9)(pg@8.16.3):
     optionalDependencies:
       '@types/pg': 8.15.5
+      kysely: 0.28.9
       pg: 8.16.3
 
   dunder-proto@1.0.1:
@@ -4943,6 +4951,8 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  kysely@0.28.9: {}
 
   levn@0.4.1:
     dependencies:
