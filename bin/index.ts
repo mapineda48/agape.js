@@ -1,4 +1,5 @@
 import path from "node:path";
+import { createServer } from "node:http";
 import express from "express";
 import compression from "compression";
 import helmet from "helmet";
@@ -48,6 +49,7 @@ const blobStorageHost = await AzureBlobStorage.connect(
 );
 
 const app = express();
+const httpServer = createServer(app);
 
 app.use(bridge(AGAPE_HOOK));
 
@@ -124,9 +126,18 @@ if (isDevelopment) {
  */
 const { default: auth } = await import("#lib/access/middleware");
 const { default: rpc } = await import("#lib/rpc/middleware");
+const { default: createSocketServer } = await import("#lib/socket/handler");
 
 app.use(auth(AGAPE_SECRET));
 app.post("/*path", rpc);
+
+// Initialize Socket.IO server with Redis adapter for horizontal scaling
+const socketOptions = {
+  redisUrl: CACHE_URL,
+  ...(isDevelopment && { cors: { origin: "http://localhost:5173", credentials: true } }),
+};
+await createSocketServer(httpServer, socketOptions);
+logger.scope("Socket").info("Socket.IO server initialized");
 
 if (!isDevelopment) {
   // Path to frontend Vite build output
@@ -151,6 +162,7 @@ if (!isDevelopment) {
   });
 }
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   logger.scope("Server").info(`Listening at port ${PORT}`);
 });
+

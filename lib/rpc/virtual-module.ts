@@ -2,7 +2,8 @@
  * Virtual Module Generator
  *
  * Generates JavaScript code for virtual modules that provide type-safe
- * RPC client functions for each service endpoint.
+ * RPC client functions for each service endpoint, and Socket.IO clients
+ * for socket modules.
  *
  * This script is executed by the Vite plugin to create virtual modules
  * that can be imported as `@agape/...` in the frontend.
@@ -12,6 +13,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import fs from "fs-extra";
 import { cwd, svc, toPublicUrl } from "./path";
+import { cwd as socketCwd, sockets, toPublicUrl as toSocketPublicUrl } from "../socket/path";
 import { VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_PREFIX } from "./constants";
 
 // ============================================================================
@@ -25,7 +27,7 @@ type VirtualModuleMap = Record<string, string>;
 type ModuleExports = Record<string, unknown>;
 
 // ============================================================================
-// Code Generation
+// RPC Code Generation
 // ============================================================================
 
 /**
@@ -89,6 +91,55 @@ function toVirtualModuleId(moduleUrl: string): string {
 }
 
 // ============================================================================
+// Socket Code Generation
+// ============================================================================
+
+/**
+ * Import statement for the Socket.IO client factory.
+ */
+const SOCKET_IMPORT = 'import createSocketClient from "@/utils/socket";';
+
+/**
+ * Generates the JavaScript code for a socket virtual module.
+ *
+ * @param namespace - The socket namespace (e.g., "/notifications")
+ * @param exports - The module's exports
+ * @returns Array of JavaScript lines
+ */
+function generateSocketModuleCode(
+  namespace: string,
+  exports: ModuleExports
+): string[] {
+  const lines: string[] = [SOCKET_IMPORT];
+
+  // Extract event names
+  const events: string[] = [];
+  if (exports.events && typeof exports.events === "object") {
+    events.push(...Object.keys(exports.events));
+  }
+
+  // Extract method names
+  const methods: string[] = [];
+  for (const [exportName, exportValue] of Object.entries(exports)) {
+    if (exportName === "events" || exportName === "default") {
+      continue;
+    }
+    if (typeof exportValue === "function") {
+      methods.push(exportName);
+    }
+  }
+
+  // Generate the client code
+  lines.push("");
+  lines.push(`const events = ${JSON.stringify(events)};`);
+  lines.push(`const methods = ${JSON.stringify(methods)};`);
+  lines.push("");
+  lines.push(`export default createSocketClient("${namespace}", events, methods);`);
+
+  return lines;
+}
+
+// ============================================================================
 // Module Discovery and Generation
 // ============================================================================
 
@@ -105,6 +156,30 @@ async function generateVirtualModules(): Promise<VirtualModuleMap> {
 
     const module = (await import(moduleUrl)) as ModuleExports;
     const code = generateModuleCode(publicUrl, module);
+    const virtualId = toVirtualModuleId(publicUrl);
+
+    virtualModules[virtualId] = code.join("\n");
+  }
+
+  return virtualModules;
+}
+
+/**
+ * Discovers all socket modules and generates their virtual module code.
+ */
+async function generateSocketVirtualModules(): Promise<VirtualModuleMap> {
+  const virtualModules: VirtualModuleMap = {};
+
+  for await (const relativePath of sockets) {
+    const absolutePath = path.join(socketCwd, relativePath);
+    const moduleUrl = pathToFileURL(absolutePath).href;
+    const publicUrl = toSocketPublicUrl(relativePath);
+
+    // Derive namespace from path (remove .socket or /socket suffix)
+    const namespace = publicUrl.replace(/\.socket$/, "").replace(/\/socket$/, "") || "/";
+
+    const module = (await import(moduleUrl)) as ModuleExports;
+    const code = generateSocketModuleCode(namespace, module);
     const virtualId = toVirtualModuleId(publicUrl);
 
     virtualModules[virtualId] = code.join("\n");
@@ -133,11 +208,17 @@ function addStaticModules(modules: VirtualModuleMap): void {
  */
 async function main(): Promise<void> {
   const virtualModules = await generateVirtualModules();
-  addStaticModules(virtualModules);
+  const socketModules = await generateSocketVirtualModules();
+
+  // Merge all modules
+  const allModules = { ...virtualModules, ...socketModules };
+
+  addStaticModules(allModules);
 
   // Output as JSON for the Vite plugin to consume
-  console.log(JSON.stringify(virtualModules));
+  console.log(JSON.stringify(allModules));
 }
 
 // Execute when run as a script
 await main();
+

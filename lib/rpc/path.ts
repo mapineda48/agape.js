@@ -23,7 +23,7 @@ const MODULE_EXTENSION = path.extname(__filename);
 const SERVICE_FILE_PATTERN = `**/*${MODULE_EXTENSION}`;
 
 /** Glob patterns to exclude from service discovery */
-const EXCLUDED_PATTERNS = ["**/*.d.ts", "**/*.test.ts"];
+const EXCLUDED_PATTERNS = ["**/*.d.ts", "**/*.test.ts", "**/*.socket.ts", "**/*.socket.js"];
 
 /** Root directory for service files */
 export const cwd = path.resolve("svc");
