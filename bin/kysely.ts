@@ -91,3 +91,8 @@ const dialect = new PostgresDialect({
 export const db = new Kysely<Database>({
     dialect,
 })
+
+var foo = await db.withSchema('public')
+    .selectFrom('person')
+    .selectAll()
+    .execute()
