@@ -172,11 +172,28 @@ export class HistoryManager {
    * Wraps a page element with layout components (root -> innermost).
    * Uses concretePath for RouterPathProvider to enable proper relative navigation
    * even for dynamic layouts with parameters.
+   * 
+   * If a layout exports `root: true`, it becomes the new root and all
+   * parent layouts before it are ignored. If multiple layouts have `root: true`,
+   * the innermost (closest to page) takes precedence.
    */
   private wrapWithLayouts(pathname: string, element: JSX.Element): JSX.Element {
     const layoutMatches = this.registry.getLayoutPaths(pathname);
-    let wrapped = element;
+
+    // Find the last (innermost) layout with root: true
+    // All layouts before this index will be ignored
+    let rootIndex = 0;
     for (let i = layoutMatches.length - 1; i >= 0; i--) {
+      const { pattern } = layoutMatches[i];
+      const L = this.registry.getLayout(pattern);
+      if (L?.root) {
+        rootIndex = i;
+        break;
+      }
+    }
+
+    let wrapped = element;
+    for (let i = layoutMatches.length - 1; i >= rootIndex; i--) {
       const { pattern, concretePath } = layoutMatches[i];
       const L = this.registry.getLayout(pattern);
       if (L?.Component) {

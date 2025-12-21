@@ -14,6 +14,11 @@ export interface ILayout {
   (): Promise<void>;
   Component?: (props: { children?: JSX.Element }) => JSX.Element;
   onInit?: (args: { params: RouteParams }) => Promise<Record<string, unknown>>;
+  /**
+   * If true, this layout becomes the new root, ignoring all parent layouts.
+   * This can be overridden by child layouts that also have root: true.
+   */
+  root?: boolean;
 }
 
 export type IRoute = Record<string, IPage>;
@@ -201,7 +206,7 @@ export class RouteRegistry {
     return wrapper as IPage;
   }
 
-  /** Creates a lazy ILayout that stores Component/onInit on first load */
+  /** Creates a lazy ILayout that stores Component/onInit/root on first load */
   private toLayout(loader: () => Promise<unknown>): ILayout {
     const wrapper: any = async () => {
       const module: any = await loader();
@@ -210,6 +215,8 @@ export class RouteRegistry {
         (({ children }: { children?: JSX.Element }) =>
           createElement("div", null, children));
       wrapper.onInit = module.onInit;
+      // Capture root property if exported
+      wrapper.root = module.root ?? false;
     };
     return wrapper as ILayout;
   }
