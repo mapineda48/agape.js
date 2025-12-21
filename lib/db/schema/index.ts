@@ -2,10 +2,33 @@ import ctx from "../../context";
 import { type PgSchema, pgSchema } from "drizzle-orm/pg-core";
 import Config from "./config";
 
-const schema = pgSchema<string>(Config.schemaName);
+/**
+ * Base schema instance.
+ *
+ * This represents the default (non-tenant) schema and is used when:
+ * - multitenancy is disabled, or
+ * - no tenant is present in the current execution context.
+ */
+export const schema = pgSchema<string>(Config.schemaName);
 
-function schemaCtx() {
-    if (!ctx.tenant) {
+/**
+ * Resolves the current schema for the active execution context.
+ *
+ * In a multitenant environment, each tenant maps to a PostgreSQL schema.
+ * Since Drizzle does not natively support dynamically switching schemas
+ * within the same runtime context, we manually resolve and cache
+ * the correct PgSchema per request/session.
+ *
+ * Resolution rules:
+ * - If no tenant is present, return the default schema.
+ * - If a tenant is present, return (and cache) the PgSchema for that tenant.
+ *
+ * The resolved schema is cached in ctx.session to guarantee:
+ * - Referential stability (same object instance per request)
+ * - Correct identity checks inside Drizzle
+ */
+export default function schemaCtx() {
+    if (!Config.multitenant) {
         return schema;
     }
 
@@ -21,67 +44,3 @@ function schemaCtx() {
 
     return schemaCtx;
 }
-
-/**
- * Es una envoltura que permite agregar soporte a multiples schemas en el mismo contexto, dado que la aplicacion es multitenant por esquema.
- * Esto debido a que drizzle no soporta multiples schemas en el mismo contexto o no lo hace de forma transparente.
- * 
- * @param factory 
- * @returns 
- */
-function table<T extends object>(factory: (schema: PgSchema<string>) => T) {
-
-    if (!Config.multitenant) {
-        const table = factory(schema);
-
-        return table;
-    }
-
-    console.log("Multitenant enabled");
-
-    function tableCtx() {
-        const current = ctx.session.get(factory);
-
-        if (current) {
-            return current;
-        }
-
-        const schema = schemaCtx();
-
-        const table = factory(schema);
-
-        ctx.session.set(factory, table);
-
-        return table;
-    }
-
-    const proxy = new Proxy({} as T, {
-        get(_, prop, receiver) {
-            return Reflect.get(tableCtx(), prop, receiver)
-        },
-
-        set(_, prop, value, receiver) {
-            return Reflect.set(tableCtx(), prop, value, receiver);
-        },
-
-        has(_, prop) {
-            return Reflect.has(tableCtx(), prop);
-        },
-
-        ownKeys() {
-            return Reflect.ownKeys(tableCtx());
-        },
-
-        getOwnPropertyDescriptor(_, prop) {
-            return Reflect.getOwnPropertyDescriptor(tableCtx(), prop);
-        },
-
-        getPrototypeOf() {
-            return Reflect.getPrototypeOf(tableCtx());
-        },
-    });
-
-    return proxy;
-}
-
-export default table;

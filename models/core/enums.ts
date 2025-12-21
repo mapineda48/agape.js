@@ -1,5 +1,4 @@
-import { pgEnum } from "drizzle-orm/pg-core";
-import schema from "../schema";
+import ctx from "#lib/db/schema/ctx";
 
 // ============================================================================
 // User Type Enum
@@ -28,11 +27,9 @@ import schema from "../schema";
  * const tipo2: UserType = "company";
  * ```
  */
-export const userTypeEnum = schema.enum("user_type_enum", [
-  "person",
-  "company",
-]);
-
+export const userTypeEnum = ctx((pgSchema) =>
+  pgSchema.enum("user_type_enum", ["person", "company"])
+);
 /**
  * Tipo TypeScript derivado del enum de base de datos.
  * Representa los valores posibles: "person" | "company"
