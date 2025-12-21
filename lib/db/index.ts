@@ -4,6 +4,7 @@ import applyMigrations from "./migrations/applyMigrations";
 import logger from "#lib/log/logger";
 import Config from "./schema/config";
 import { syncRootUserPg } from "./migrations/syncRootUserPg";
+import { schemaName } from "./schema/const";
 
 export let db: Database = null as any;
 
@@ -14,12 +15,12 @@ interface DatabaseConfig {
   /**
    * Tenant identifier.
    */
-  tenant?: string;
+  tenants: string[];
 
   /**
    * If true, runs migrations in development mode (if applicable).
    */
-  dev?: boolean;
+  env?: string;
 
   /**
    * If true, skips seed migrations in development mode (if applicable).
@@ -44,45 +45,34 @@ interface DatabaseConfig {
  */
 export default async function initDatabase(
   connectionString: string,
-  config: DatabaseConfig = {}
+  config: DatabaseConfig = { tenants: [] }
 ) {
   if (db) {
     throw new Error("Database already initialized");
   }
 
-  if (!config.tenant) {
-    throw new Error("Tenant is required");
-  }
+  const tenants = config.tenants.length ? config.tenants : [`agape_app_${config.env}_demo`];
 
-  const schemaName = config.tenant;
+  const enabledMultitenant = tenants.length > 1;
 
-  Config.setSchemaName(schemaName);
+  logger.scope("Database").info(`Multitenant enabled: ${enabledMultitenant}`);
+
+  Config.setSchemaName(schemaName, enabledMultitenant);
 
   const pool = new Pool({ connectionString });
 
-  if (!config.dev) {
-    // Apply database migrations to ensure schema is up-to-date.
-    await applyMigrations(pool, schemaName, config.skipSeeds);
-  } else {
-    logger
-      .scope("Database")
-      .info(
-        "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
-      );
-  }
-
-  // Initialize the Drizzle ORM instance
-  db = drizzle(pool);
+  await Promise.all(tenants.map((schema) => applyMigrations(pool, schema, config.skipSeeds)));
 
   // If root user configuration is provided, verify and sync the root user
-  await syncRootUserPg(
+  await Promise.all(tenants.map((schema) => syncRootUserPg(
     pool,
-    schemaName,
+    schema,
     config.rootUser?.username,
     config.rootUser?.password
-  );
+  )));
 
-  return db;
+  // Initialize the Drizzle ORM instance
+  return db = drizzle(pool);
 }
 
 /**

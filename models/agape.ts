@@ -2,7 +2,7 @@ import { text, jsonb, type PgSchema, pgTable } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { dateTime } from "../lib/db/custom-types";
 import DateTime from "../lib/utils/data/DateTime";
-import schema from "#lib/db/schema";
+import schema from "../lib/db/schema";
 
 /**
  * Modelo Agape

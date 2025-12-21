@@ -1,9 +1,8 @@
-import ctx from "#lib/context";
+import ctx from "../../context";
 import { type PgSchema, pgSchema } from "drizzle-orm/pg-core";
+import Config from "./config";
 
-const { NODE_ENV = import.meta.filename.endsWith(".ts") ? "development" : "test", } = process.env;
-
-const schema = pgSchema<string>(`agape_app_${NODE_ENV}_demo`);
+const schema = pgSchema<string>(Config.schemaName);
 
 function schemaCtx() {
     if (!ctx.tenant) {
@@ -31,7 +30,14 @@ function schemaCtx() {
  * @returns 
  */
 function table<T extends object>(factory: (schema: PgSchema<string>) => T) {
-    //const table = factory(schema);
+
+    if (!Config.multitenant) {
+        const table = factory(schema);
+
+        return table;
+    }
+
+    console.log("Multitenant enabled");
 
     function tableCtx() {
         const current = ctx.session.get(factory);
