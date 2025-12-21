@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import applyMigrations from "./migrations/applyMigrations";
 import logger from "#lib/log/logger";
-import Config from "./config";
+import Config from "./schema/config";
 import { syncRootUserPg } from "./migrations/syncRootUserPg";
 
 export let db: Database = null as any;

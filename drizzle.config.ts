@@ -1,5 +1,5 @@
 import { defineConfig } from "drizzle-kit";
-import Config from "./lib/db/config";
+import Config from "./lib/db/schema/config";
 
 const schemaName = "agape_app_development_demo";
 

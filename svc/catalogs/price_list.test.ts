@@ -23,7 +23,7 @@ beforeAll(async () => {
 afterAll(async () => {
   const { deleteSchema } = await import("#lib/db/migrations/applyMigrations");
   const { db } = await import("#lib/db");
-  const { default: config } = await import("#lib/db/config");
+  const { default: config } = await import("#lib/db/schema/config");
 
   await deleteSchema(config.schemaName, db.$client);
   await db.$client.end();

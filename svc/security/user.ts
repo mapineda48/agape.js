@@ -4,7 +4,7 @@ import securityUser from "#models/security/user";
 import { verifyPassword } from "#lib/access/password";
 import employee from "#models/hr/employee";
 import person from "#models/core/person";
-import type { IWebSession } from "#lib/access/session";
+import type { IContext } from "#lib/context";
 
 /**
  * Busca un usuario por credenciales y retorna la sesión si es válida.
@@ -16,7 +16,7 @@ import type { IWebSession } from "#lib/access/session";
 export async function findUser(
   username: string,
   password: string
-): Promise<IWebSession | null> {
+): Promise<IContext | null> {
   const [record] = await db
     .select({
       id: securityUser.id,

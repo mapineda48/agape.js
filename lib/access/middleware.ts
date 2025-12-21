@@ -1,7 +1,7 @@
 import express, { type Response } from "express";
 
 import Jwt from "./Jwt";
-import webSession, { initSession } from "./session";
+import ctx, { runContext } from "../context";
 import { findUser } from "#svc/security/user";
 import { decode, encode } from "#utils/msgpack";
 
@@ -86,7 +86,7 @@ export default function defineAuth(secret: string) {
 
     try {
       const verified: any = await jwt.verifyToken(token);
-      initSession(verified, next);
+      runContext(verified, next);
     } catch (error) {
       sendMsgPack(res, failLogin, 401);
     }
@@ -102,7 +102,7 @@ export default function defineAuth(secret: string) {
 
     try {
       const verified: any = await jwt.verifyToken(token);
-      initSession(verified, next);
+      runContext(verified, next);
 
       res.redirect("/cms");
     } catch (error) {
@@ -120,7 +120,7 @@ export default function defineAuth(secret: string) {
 
     try {
       const verified: any = await jwt.verifyToken(token);
-      initSession(verified, next);
+      runContext(verified, next);
     } catch (error) {
       res.redirect("/login");
     }
@@ -146,7 +146,7 @@ function sendMsgPack(res: Response, payload: unknown, status = 200) {
   res.status(status).send(body);
 }
 
-export const user = webSession;
+export const user = ctx;
 
 /**
  * Types

@@ -10,7 +10,7 @@ const db = await initDatabase("postgresql://postgres:mypassword@localhost", {
 });
 
 afterAll(async () => {
-  const { default: config } = await import("./config");
+  const { default: config } = await import("./schema/config");
   await deleteSchema(config.schemaName, db.$client);
 
   await db.$client.end();
@@ -23,7 +23,7 @@ it("Check database connection is alive", async () => {
 });
 
 it("Check migrations were applied", async () => {
-  const { default: config } = await import("./config");
+  const { default: config } = await import("./schema/config");
 
   const result = await db.execute<{ value: string[] }>(
     sql.raw(`

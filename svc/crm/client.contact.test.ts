@@ -27,7 +27,7 @@ beforeAll(async () => {
 afterAll(async () => {
   const { deleteSchema } = await import("#lib/db/migrations/applyMigrations");
   const { db } = await import("#lib/db");
-  const { default: config } = await import("#lib/db/config");
+  const { default: config } = await import("#lib/db/schema/config");
 
   await deleteSchema(config.schemaName, db.$client);
   await db.$client.end();
@@ -240,7 +240,7 @@ describe("ClientService - Contact Integration", () => {
       userId: createdClient.id,
       isActive: true,
     });
-    
+
     // Con clave compuesta, cada valor diferente es un registro diferente
     // Verificamos que solo hay un email PRIMARIO con el valor actualizado
     const primaryEmails = updatedContacts.filter((c) => c.type === "email" && c.isPrimary);

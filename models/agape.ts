@@ -1,14 +1,14 @@
-import { text, jsonb, type PgSchema } from "drizzle-orm/pg-core";
+import { text, jsonb, type PgSchema, pgTable } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { dateTime } from "../lib/db/custom-types";
 import DateTime from "../lib/utils/data/DateTime";
-import schema from "./schema";
+import schema from "#lib/db/schema";
 
 /**
  * Modelo Agape
  * Representa una entidad clave-valor genérica para configuraciones o datos globales.
  */
-export const agape = schema.table("agape", {
+export const agape = schema(({ table }) => table("agape", {
   /** Clave única de la entidad */
   key: text("key").primaryKey(),
   /** Valor en formato JSON */
@@ -19,4 +19,4 @@ export const agape = schema.table("agape", {
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
-});
+}));

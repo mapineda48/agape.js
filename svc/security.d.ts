@@ -1,4 +1,4 @@
-import type { IUserSession } from "../lib/access/session";
+import type { IUserSession } from "../lib/context";
 
 export function login(username: string, password: string): Promise<void>;
 export function isAuthenticated(): Promise<IUserSession>;
