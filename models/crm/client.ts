@@ -1,6 +1,6 @@
 import { integer, boolean, varchar } from "drizzle-orm/pg-core";
 import { sql, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import user from "../core/user";
 import client_type from "./client_type";
 import { dateTime, decimal } from "../../lib/db/custom-types";
@@ -22,7 +22,7 @@ import employee from "../hr/employee";
  * - creditDays: Días de crédito por defecto
  * - salespersonId: Vendedor/representante asignado
  */
-const client = schema.table("crm_client", {
+const client = ctx(({ table }) => table("crm_client", {
   /**
    * Identificador único del cliente.
    * Es FK a user.id (un cliente ES un user).
@@ -99,7 +99,7 @@ const client = schema.table("crm_client", {
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
-});
+}));
 
 export type Client = InferSelectModel<typeof client>;
 export type NewClient = InferInsertModel<typeof client>;

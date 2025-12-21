@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import user from "./user";
 import { integer, varchar } from "drizzle-orm/pg-core";
 import {
@@ -20,7 +20,7 @@ import companyContact from "./companyContact";
  * - **Contactos**: Una empresa puede tener múltiples personas de contacto
  *   asociadas a través de `core_company_contact`. Ver `./companyContact.ts`.
  */
-export const company = schema.table("core_company", {
+export const company = ctx(({ table }) => table("core_company", {
   /**
    * Identificador único de la empresa.
    * Es FK a user.id (una empresa ES un user).
@@ -35,7 +35,7 @@ export const company = schema.table("core_company", {
 
   /** Nombre comercial de la empresa (si aplica) */
   tradeName: varchar("trade_name", { length: 150 }),
-});
+}));
 
 /**
  * Relaciones de Company:

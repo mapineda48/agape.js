@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   varchar,
@@ -29,7 +29,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * se agregarán cuando se implemente el módulo de contabilidad (chart of accounts).
  * Por ahora, solo se define la estructura base del grupo.
  */
-export const itemAccountingGroup = schema.table(
+export const itemAccountingGroup = ctx(({ table }) => table(
   "finance_item_accounting_group",
   {
     /** Identificador único del grupo contable */
@@ -77,7 +77,7 @@ export const itemAccountingGroup = schema.table(
     /** Código único de grupo contable */
     uniqueIndex("ux_finance_item_accounting_group_code").on(table.code),
   ]
-);
+));
 
 export type ItemAccountingGroup = InferSelectModel<typeof itemAccountingGroup>;
 export type NewItemAccountingGroup = InferInsertModel<

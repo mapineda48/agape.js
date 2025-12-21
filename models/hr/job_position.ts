@@ -1,6 +1,6 @@
 import { serial, varchar, text, boolean } from "drizzle-orm/pg-core";
 import { sql, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 
@@ -22,7 +22,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * - Un "Desarrollador" (cargo) puede tener permisos de admin del sistema (security_role).
  * - Los cargos son de HR, los roles de seguridad son de IT/Sistema.
  */
-export const jobPosition = schema.table("hr_job_position", {
+export const jobPosition = ctx(({ table }) => table("hr_job_position", {
   /** Identificador único del cargo */
   id: serial("id").primaryKey(),
 
@@ -53,7 +53,7 @@ export const jobPosition = schema.table("hr_job_position", {
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
-});
+}));
 
 export type JobPosition = InferSelectModel<typeof jobPosition>;
 export type NewJobPosition = InferInsertModel<typeof jobPosition>;

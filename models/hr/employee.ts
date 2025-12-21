@@ -7,7 +7,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import person from "../core/person";
 import jobPosition from "./job_position";
 import department from "./department";
@@ -24,7 +24,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * - Agregada referencia a department (estructura organizacional)
  * - Cambiado de role a job_position (cargo de negocio vs rol de seguridad)
  */
-const employee = schema.table("hr_employee", {
+const employee = ctx(({ table }) => table("hr_employee", {
   /**
    * Identificador único del empleado.
    * Es FK a person.id (un empleado ES una persona).
@@ -71,7 +71,7 @@ const employee = schema.table("hr_employee", {
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
-});
+}));
 
 /**
  * Tabla pivote para relación many-to-many entre empleados y cargos.
@@ -81,7 +81,7 @@ const employee = schema.table("hr_employee", {
  * NOTA: Esto es para cargos de negocio (job_position), NO para roles de seguridad.
  * Los roles de seguridad se asignan a través de security_user_role.
  */
-export const employeeJobPosition = schema.table(
+export const employeeJobPosition = ctx(({ table }) => table(
   "hr_employee_job_position",
   {
     employeeId: integer("employee_id")
@@ -106,7 +106,7 @@ export const employeeJobPosition = schema.table(
     endDate: dateTime("end_date"),
   },
   (table) => [primaryKey({ columns: [table.employeeId, table.jobPositionId] })]
-);
+));
 
 // ============================================================================
 // Relaciones

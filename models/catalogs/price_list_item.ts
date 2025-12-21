@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { serial, integer, uniqueIndex, index } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { item } from "./item";
@@ -16,7 +16,7 @@ import { decimal, dateTime } from "../../lib/db/custom-types";
  * - Definir precios promocionales con fecha de inicio/fin
  * - Mantener historial de precios por vigencia
  */
-export const priceListItem = schema.table(
+export const priceListItem = ctx(({ table }) => table(
   "catalogs_price_list_item",
   {
     /** Identificador único del registro */
@@ -54,7 +54,7 @@ export const priceListItem = schema.table(
     /** Índice para búsqueda rápida por lista */
     index("ix_catalogs_price_list_item_list").on(table.priceListId),
   ]
-);
+));
 
 export type PriceListItem = InferSelectModel<typeof priceListItem>;
 export type NewPriceListItem = InferInsertModel<typeof priceListItem>;

@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   integer,
@@ -46,7 +46,7 @@ import { item } from "../catalogs/item";
  * };
  * ```
  */
-export const orderItem = schema.table(
+export const orderItem = ctx(({ table }) => table(
   "crm_order_item",
   {
     /** Identificador único de la línea */
@@ -137,7 +137,7 @@ export const orderItem = schema.table(
     /** Garantiza unicidad del número de línea dentro de la orden */
     uniqueIndex("ux_crm_order_item_line").on(table.orderId, table.lineNumber),
   ]
-);
+));
 
 // ============================================================================
 // Relaciones

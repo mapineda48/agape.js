@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   varchar,
@@ -9,7 +9,7 @@ import {
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { documentType } from "../numbering/document_type";
 
-export const inventoryMovementType = schema.table("inventory_movement_type", {
+export const inventoryMovementType = ctx(({ table }) => table("inventory_movement_type", {
   id: serial("id").primaryKey(),
 
   /** Nombre del movimiento (Entrada por compra, Salida por venta, Ajuste, etc.) */
@@ -31,7 +31,7 @@ export const inventoryMovementType = schema.table("inventory_movement_type", {
   documentTypeId: integer("document_type_id")
     .notNull()
     .references(() => documentType.id, { onDelete: "restrict" }),
-});
+}));
 
 export type InventoryMovementType = InferSelectModel<
   typeof inventoryMovementType

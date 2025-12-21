@@ -1,6 +1,6 @@
 import { integer, boolean } from "drizzle-orm/pg-core";
 import { sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import user from "../core/user";
 import supplier_type from "./supplier_type";
 import { dateTime } from "../../lib/db/custom-types";
@@ -11,7 +11,7 @@ import { dateTime } from "../../lib/db/custom-types";
  * Implementa Class Table Inheritance (CTI): PK = FK a user.id.
  * El id NO es serial porque se hereda del registro padre en user.
  */
-const supplier = schema.table("purchasing_supplier", {
+const supplier = ctx(({ table }) => table("purchasing_supplier", {
   /**
    * Identificador único del proveedor.
    * Es FK a user.id (un proveedor ES un user).
@@ -31,7 +31,7 @@ const supplier = schema.table("purchasing_supplier", {
     .notNull(),
   /** Indica si el proveedor está activo */
   active: boolean("active").default(true).notNull(),
-});
+}));
 
 export type Supplier = InferSelectModel<typeof supplier>;
 export type NewSupplier = InferInsertModel<typeof supplier>;

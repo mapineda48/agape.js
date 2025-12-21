@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   varchar,
@@ -20,7 +20,7 @@ import { itemAccountingGroup } from "../finance/item_accounting_group";
  * Maestro de ítems (Item)
  * Representa cualquier ítem vendible/comprable: producto, servicio, cargo, bundle, etc.
  */
-export const item = schema.table(
+export const item = ctx(({ table }) => table(
   "catalogs_item",
   {
     /** Identificador único del ítem */
@@ -90,7 +90,7 @@ export const item = schema.table(
     /** Código único de ítem */
     uniqueIndex("ux_catalogs_item_code").on(table.code),
   ]
-);
+));
 
 export type Item = InferSelectModel<typeof item>;
 export type NewItem = InferInsertModel<typeof item>;

@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   integer,
   bigint,
@@ -16,7 +16,7 @@ import { dateTime } from "../../lib/db/custom-types";
  * Series / numeraciones para tipos de documento.
  * Aquí se define el rango de numeración, la vigencia y el número actual.
  */
-export const documentSeries = schema.table(
+export const documentSeries = ctx(({ table }) => table(
   "numbering_document_series",
   {
     /** Identificador interno de la serie */
@@ -92,7 +92,7 @@ export const documentSeries = schema.table(
     /** Índice para monitoreo de última asignación */
     index("ix_numbering_series_last_assigned").on(table.lastAssignedAt),
   ]
-);
+));
 
 export type DocumentSeries = InferSelectModel<typeof documentSeries>;
 export type NewDocumentSeries = InferInsertModel<typeof documentSeries>;

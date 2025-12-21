@@ -7,7 +7,7 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import { securityUser } from "./user";
@@ -31,7 +31,7 @@ import { securityUser } from "./user";
  * - Un "Contador" (cargo) puede necesitar roles "Facturación" + "Reportes"
  * - Los roles de seguridad son granulares y combinables
  */
-const securityRole = schema.table("security_role", {
+const securityRole = ctx(({ table }) => table("security_role", {
   /** Identificador único del rol */
   id: serial("id").primaryKey(),
 
@@ -63,14 +63,14 @@ const securityRole = schema.table("security_role", {
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
-});
+}));
 
 /**
  * Tabla pivote para relación many-to-many entre usuarios de seguridad y roles.
  * Un usuario puede tener múltiples roles de seguridad.
  * Un rol puede estar asignado a múltiples usuarios.
  */
-export const securityUserRole = schema.table(
+export const securityUserRole = ctx(({ table }) => table(
   "security_user_role",
   {
     /** ID del usuario de seguridad */
@@ -89,7 +89,7 @@ export const securityUserRole = schema.table(
       .notNull(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.roleId] })]
-);
+));
 
 /**
  * Relaciones del rol de seguridad

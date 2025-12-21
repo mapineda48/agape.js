@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { serial, integer, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { inventoryItem } from "./item";
@@ -15,7 +15,7 @@ import { decimal } from "../../lib/db/custom-types";
  *
  * Esto permite vender en cajas y comprar en unidades, etc.
  */
-export const itemUom = schema.table(
+export const itemUom = ctx(({ table }) => table(
   "inventory_item_uom",
   {
     /** Identificador único de la conversión */
@@ -51,7 +51,7 @@ export const itemUom = schema.table(
     /** Un ítem solo puede tener una conversión por UOM */
     uniqueIndex("ux_inventory_item_uom_item_uom").on(table.itemId, table.uomId),
   ]
-);
+));
 
 export type ItemUom = InferSelectModel<typeof itemUom>;
 export type NewItemUom = InferInsertModel<typeof itemUom>;

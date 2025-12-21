@@ -11,7 +11,7 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import company from "./company";
@@ -51,7 +51,7 @@ import person from "./person";
  * };
  * ```
  */
-export const companyContact = schema.table(
+export const companyContact = ctx(({ table }) => table(
   "core_company_contact",
   {
     /** Identificador único del registro */
@@ -115,7 +115,7 @@ export const companyContact = schema.table(
       table.personId
     ),
   ]
-);
+));
 
 // ============================================================================
 // Relaciones

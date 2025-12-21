@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   integer,
@@ -15,22 +15,22 @@ import DateTime from "../../lib/utils/data/DateTime";
  * Enum de tipo de cuenta contable.
  * Clasificación según su naturaleza en el balance.
  */
-export const accountTypeEnum = schema.enum("finance_gl_account_type", [
+export const accountTypeEnum = ctx((schema) => schema.enum("finance_gl_account_type", [
   "asset", // Activo
   "liability", // Pasivo
   "equity", // Patrimonio
   "revenue", // Ingreso
   "expense", // Gasto
-]);
+]));
 
 /**
  * Enum de naturaleza de la cuenta.
  * Define si la cuenta aumenta con débitos o créditos.
  */
-export const accountNatureEnum = schema.enum("finance_gl_account_nature", [
+export const accountNatureEnum = ctx((schema) => schema.enum("finance_gl_account_nature", [
   "debit", // Naturaleza deudora (Activos, Gastos)
   "credit", // Naturaleza acreedora (Pasivos, Patrimonio, Ingresos)
-]);
+]));
 
 /**
  * Plan de Cuentas (Chart of Accounts / GL Account)
@@ -69,7 +69,7 @@ export const accountNatureEnum = schema.enum("finance_gl_account_nature", [
  * }
  * ```
  */
-export const glAccount = schema.table(
+export const glAccount = ctx(({ table }) => table(
   "finance_gl_account",
   {
     /** Identificador único */
@@ -138,7 +138,7 @@ export const glAccount = schema.table(
     /** Índice para cuentas que permiten posting */
     index("ix_finance_gl_account_posting").on(table.allowPosting),
   ]
-);
+));
 
 export type GlAccount = InferSelectModel<typeof glAccount>;
 export type NewGlAccount = InferInsertModel<typeof glAccount>;

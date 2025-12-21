@@ -1,5 +1,5 @@
 import { integer, varchar } from "drizzle-orm/pg-core";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import user from "./user";
 import { dateTime } from "../../lib/db/custom-types";
 import {
@@ -22,7 +22,7 @@ import companyContact from "./companyContact";
  *   contacto a múltiples empresas a través de `core_company_contact`.
  *   Ver `./companyContact.ts`.
  */
-export const person = schema.table("core_person", {
+export const person = ctx(({ table }) => table("core_person", {
   /**
    * Identificador único de la persona.
    * Es FK a user.id (una persona ES un user).
@@ -40,7 +40,7 @@ export const person = schema.table("core_person", {
 
   /** Fecha de nacimiento (opcional si tu dominio lo permite) */
   birthdate: dateTime("birthdate"),
-});
+}));
 
 /**
  * Relaciones de Person:

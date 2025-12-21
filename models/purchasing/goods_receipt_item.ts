@@ -1,6 +1,6 @@
 import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { serial, integer, index, varchar } from "drizzle-orm/pg-core";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import goods_receipt from "./goods_receipt";
 import order_item from "./order_item";
 import { item } from "../catalogs/item";
@@ -32,7 +32,7 @@ import { decimal } from "../../lib/db/custom-types";
  * }
  * ```
  */
-const goods_receipt_item = schema.table(
+const goods_receipt_item = ctx(({ table }) => table(
   "purchasing_goods_receipt_item",
   {
     /** Identificador único de la línea */
@@ -89,7 +89,7 @@ const goods_receipt_item = schema.table(
     /** Índice para consultas de recepción por ítem */
     index("ix_purchasing_grn_item_item").on(table.itemId),
   ]
-);
+));
 
 export type GoodsReceiptItem = InferSelectModel<typeof goods_receipt_item>;
 export type NewGoodsReceiptItem = InferInsertModel<typeof goods_receipt_item>;

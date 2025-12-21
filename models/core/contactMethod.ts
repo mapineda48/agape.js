@@ -11,7 +11,7 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import user from "./user";
@@ -51,7 +51,7 @@ import { contactMethodTypeEnum, type ContactMethodType } from "./enums";
  * };
  * ```
  */
-export const contactMethod = schema.table(
+export const contactMethod = ctx(({ table }) => table(
   "core_contact_method",
   {
     /** Identificador único del método de contacto */
@@ -121,7 +121,7 @@ export const contactMethod = schema.table(
       table.value
     ),
   ]
-);
+));
 
 // ============================================================================
 // Relaciones

@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { decimal } from "../../lib/db/custom-types";
@@ -12,7 +12,7 @@ import { decimal } from "../../lib/db/custom-types";
  * Cada impuesto tiene una tasa que se aplica sobre la base gravable.
  * Se agrupan mediante finance_tax_group para facilitar la asignación a ítems.
  */
-export const tax = schema.table(
+export const tax = ctx(({ table }) => table(
   "finance_tax",
   {
     /** Identificador único del impuesto */
@@ -40,7 +40,7 @@ export const tax = schema.table(
     /** Código único de impuesto */
     uniqueIndex("ux_finance_tax_code").on(table.code),
   ]
-);
+));
 
 export type Tax = InferSelectModel<typeof tax>;
 export type NewTax = InferInsertModel<typeof tax>;

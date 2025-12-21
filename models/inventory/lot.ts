@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   varchar,
@@ -23,7 +23,7 @@ import { dateTime } from "../../lib/db/custom-types";
  * - Gestión FIFO basada en lotes
  * - Recalls de productos
  */
-export const inventoryLot = schema.table(
+export const inventoryLot = ctx(({ table }) => table(
   "inventory_lot",
   {
     id: serial("id").primaryKey(),
@@ -95,7 +95,7 @@ export const inventoryLot = schema.table(
     /** Índice para filtrar por estado */
     index("ix_inventory_lot_status").on(table.status),
   ]
-);
+));
 
 /**
  * Estados posibles de un lote:

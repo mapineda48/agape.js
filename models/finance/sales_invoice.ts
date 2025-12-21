@@ -9,7 +9,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import order from "../crm/order";
 import client from "../crm/client";
 import { user } from "../core/user";
@@ -30,10 +30,10 @@ import { paymentTerms } from "./payment_terms";
  * - paid: Pagada completamente
  * - cancelled: Anulada
  */
-export const salesInvoiceStatusEnum = schema.enum(
+export const salesInvoiceStatusEnum = ctx((schema) => schema.enum(
   "finance_sales_invoice_status",
   ["draft", "issued", "partially_paid", "paid", "cancelled"]
-);
+));
 
 /**
  * Modelo de factura de venta (Sales Invoice)
@@ -48,7 +48,7 @@ export const salesInvoiceStatusEnum = schema.enum(
  * Las líneas de detalle están en finance_sales_invoice_item.
  * Los cobros se registran en finance_payment con asignaciones en finance_payment_allocation.
  */
-const sales_invoice = schema.table(
+const sales_invoice = ctx(({ table }) => table(
   "finance_sales_invoice",
   {
     // ========================================================================
@@ -229,7 +229,7 @@ const sales_invoice = schema.table(
     /** Índice para búsquedas por estado */
     index("ix_finance_sales_invoice_status").on(table.status),
   ]
-);
+));
 
 export type SalesInvoice = InferSelectModel<typeof sales_invoice>;
 export type NewSalesInvoice = InferInsertModel<typeof sales_invoice>;

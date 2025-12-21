@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   integer,
@@ -19,12 +19,12 @@ import { documentSeries } from "../numbering/document_series";
  * - POSTED: Contabilizado, afectó stock. No puede editarse, solo revertirse.
  * - CANCELLED: Cancelado mediante reversión. Mantiene trazabilidad.
  */
-export const inventoryMovementStatusEnum = schema.enum(
+export const inventoryMovementStatusEnum = ctx((schema) => schema.enum(
   "inventory_movement_status",
   ["draft", "posted", "cancelled"]
-);
+));
 
-export const inventoryMovement = schema.table(
+export const inventoryMovement = ctx(({ table }) => table(
   "inventory_movement",
   {
     id: serial("id").primaryKey(),
@@ -103,7 +103,7 @@ export const inventoryMovement = schema.table(
     /** Índice para buscar reversiones */
     index("ix_inventory_movement_reversed").on(table.reversedMovementId),
   ]
-);
+));
 
 export type InventoryMovement = InferSelectModel<typeof inventoryMovement>;
 export type NewInventoryMovement = InferInsertModel<typeof inventoryMovement>;

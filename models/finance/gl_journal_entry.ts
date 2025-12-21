@@ -8,7 +8,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { decimal, dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import { documentSeries } from "../numbering/document_series";
@@ -17,20 +17,20 @@ import { user } from "../core/user";
 /**
  * Enum de estado del asiento contable.
  */
-export const journalEntryStatusEnum = schema.enum(
+export const journalEntryStatusEnum = ctx((schema) => schema.enum(
   "finance_gl_journal_entry_status",
   [
     "draft", // Borrador
     "posted", // Contabilizado
     "cancelled", // Anulado
   ]
-);
+));
 
 /**
  * Enum de tipo de asiento contable.
  * Permite clasificar los asientos por su origen.
  */
-export const journalEntryTypeEnum = schema.enum(
+export const journalEntryTypeEnum = ctx((schema) => schema.enum(
   "finance_gl_journal_entry_type",
   [
     "manual", // Asiento manual
@@ -42,7 +42,7 @@ export const journalEntryTypeEnum = schema.enum(
     "closing", // Asiento de cierre
     "opening", // Asiento de apertura
   ]
-);
+));
 
 /**
  * Asiento Contable (Journal Entry Header)
@@ -74,7 +74,7 @@ export const journalEntryTypeEnum = schema.enum(
  * }
  * ```
  */
-const gl_journal_entry = schema.table(
+const gl_journal_entry = ctx(({ table }) => table(
   "finance_gl_journal_entry",
   {
     /** Identificador único del asiento */
@@ -186,7 +186,7 @@ const gl_journal_entry = schema.table(
       table.referenceId
     ),
   ]
-);
+));
 
 export type GlJournalEntry = InferSelectModel<typeof gl_journal_entry>;
 export type NewGlJournalEntry = InferInsertModel<typeof gl_journal_entry>;

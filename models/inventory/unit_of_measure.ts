@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
@@ -12,7 +12,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * - inventory_item.uomId (UOM base del ítem inventariable)
  * - inventory_item_uom (conversiones entre UOMs para un ítem)
  */
-export const unitOfMeasure = schema.table(
+export const unitOfMeasure = ctx(({ table }) => table(
   "inventory_unit_of_measure",
   {
     /** Identificador único de la unidad de medida */
@@ -34,7 +34,7 @@ export const unitOfMeasure = schema.table(
     /** Código único de UOM */
     uniqueIndex("ux_inventory_unit_of_measure_code").on(table.code),
   ]
-);
+));
 
 export type UnitOfMeasure = InferSelectModel<typeof unitOfMeasure>;
 export type NewUnitOfMeasure = InferInsertModel<typeof unitOfMeasure>;

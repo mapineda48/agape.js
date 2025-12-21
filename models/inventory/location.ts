@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import {
   serial,
   varchar,
@@ -32,7 +32,7 @@ export type LocationType = "WAREHOUSE" | "LOCATION" | "BIN";
  *   └── Zona B (LOCATION)
  *       └── Estante B-1 (BIN)
  */
-export const location = schema.table(
+export const location = ctx(({ table }) => table(
   "inventory_location",
   {
     id: serial("id").primaryKey(),
@@ -76,7 +76,7 @@ export const location = schema.table(
     /** Índice para filtrar por tipo */
     index("ix_inventory_location_type").on(table.type),
   ]
-);
+));
 
 /**
  * Nota: La FK a parentLocationId no se define aquí para evitar

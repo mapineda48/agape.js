@@ -1,5 +1,5 @@
 import { serial, integer, uniqueIndex } from "drizzle-orm/pg-core";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import purchase_invoice from "./purchase_invoice";
 import { decimal } from "../../lib/db/custom-types";
 
@@ -11,7 +11,7 @@ import { decimal } from "../../lib/db/custom-types";
  * Si en el futuro necesitas manejar cuotas/abonos, crea una tabla de movimientos
  * de pago normalizada (1:N) y mantén pendingAmount como saldo consolidado.
  */
-const accounts_payable = schema.table(
+const accounts_payable = ctx(({ table }) => table(
   "finance_accounts_payable",
   {
     /** Identificador único de la cartera por pagar */
@@ -32,6 +32,6 @@ const accounts_payable = schema.table(
      */
     uniqueIndex("ux_accounts_payable_invoice").on(table.purchaseInvoiceId),
   ]
-);
+));
 
 export default accounts_payable;

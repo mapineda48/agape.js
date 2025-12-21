@@ -1,5 +1,5 @@
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**
@@ -10,7 +10,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * Nota: Esta tabla es distinta de numeration_document_type que maneja
  * documentos de negocio (facturas, órdenes, etc.).
  */
-export const documentType = schema.table(
+export const documentType = ctx(({ table }) => table(
   "core_identity_document_type",
   {
     /** Identificador único del tipo de documento */
@@ -32,7 +32,7 @@ export const documentType = schema.table(
     appliesToCompany: boolean("applies_to_company").notNull(),
   },
   (table) => [uniqueIndex("ux_identity_document_type_code").on(table.code)]
-);
+));
 
 export type DocumentType = InferSelectModel<typeof documentType>;
 export type NewDocumentType = InferInsertModel<typeof documentType>;

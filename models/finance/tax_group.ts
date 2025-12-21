@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
@@ -15,7 +15,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * Un grupo puede contener uno o varios impuestos (relación N:M mediante tax_group_tax).
  * Los ítems del catálogo se asignan a un grupo de impuestos.
  */
-export const taxGroup = schema.table(
+export const taxGroup = ctx(({ table }) => table(
   "finance_tax_group",
   {
     /** Identificador único del grupo de impuestos */
@@ -37,7 +37,7 @@ export const taxGroup = schema.table(
     /** Código único de grupo de impuestos */
     uniqueIndex("ux_finance_tax_group_code").on(table.code),
   ]
-);
+));
 
 export type TaxGroup = InferSelectModel<typeof taxGroup>;
 export type NewTaxGroup = InferInsertModel<typeof taxGroup>;

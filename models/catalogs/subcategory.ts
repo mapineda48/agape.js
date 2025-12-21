@@ -1,4 +1,4 @@
-import schema from "../schema";
+import ctx from "../../lib/db/schema/ctx";
 import { serial, varchar, boolean, integer } from "drizzle-orm/pg-core";
 import { category } from "./category";
 import { relations } from "drizzle-orm";
@@ -8,7 +8,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * Modelo de subcategoría de catálogo (Subcategory)
  * Representa una subcategoría asociada a una categoría de catálogo.
  */
-export const subcategory = schema.table("catalogs_subcategories", {
+export const subcategory = ctx(({ table }) => table("catalogs_subcategories", {
   /** Identificador único de la subcategoría */
   id: serial("id").primaryKey(),
   /** Nombre completo de la subcategoría */
@@ -19,7 +19,7 @@ export const subcategory = schema.table("catalogs_subcategories", {
   categoryId: integer("category_id")
     .notNull()
     .references(() => category.id, { onDelete: "restrict" }),
-});
+}));
 
 export const categoryRelations = relations(category, ({ many }) => ({
   subcategories: many(subcategory),
