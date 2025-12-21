@@ -7,6 +7,8 @@ const variants = {
   primary: "bg-primary text-white hover:bg-primary/90",
   accent: "bg-accent text-white hover:bg-accent/80",
   outline: "border border-primary text-primary hover:bg-primary/10",
+  ghost: "bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300",
+  link: "text-primary underline-offset-4 hover:underline",
 };
 
 const sizes = {
@@ -34,6 +36,6 @@ export default function Button({
  */
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "accent" | "outline";
+  variant?: "primary" | "accent" | "outline" | "ghost" | "link";
   size?: "sm" | "md" | "lg";
 }
