@@ -1,17 +1,20 @@
 import { afterAll, describe, it, expect, beforeAll } from "vitest";
 
+
 /**
  * IMPORTANTE: No realizar imports de servicios en el top-level.
  * Los servicios dependen de la DB que se inicializa en beforeAll.
- */
+*/
 
 beforeAll(async () => {
   const { default: initDatabase } = await import("#lib/db");
+
   const uuid = crypto.randomUUID();
+  const schemaName = `vitest_category_${uuid}`;
 
   await initDatabase("postgresql://postgres:mypassword@localhost", {
-    tenant: `vitest_category_${uuid}`,
-    dev: false,
+    tenants: [schemaName],
+    env: "vitest",
     skipSeeds: true,
   });
 });
@@ -20,6 +23,7 @@ afterAll(async () => {
   const { deleteSchema } = await import("#lib/db/migrations/applyMigrations");
   const { db } = await import("#lib/db");
   const { default: config } = await import("#lib/db/schema/config");
+
 
   await deleteSchema(config.schemaName, db.$client);
   await db.$client.end();

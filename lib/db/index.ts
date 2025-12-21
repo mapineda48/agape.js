@@ -4,7 +4,6 @@ import applyMigrations from "./migrations/applyMigrations";
 import logger from "#lib/log/logger";
 import Config from "./schema/config";
 import { syncRootUserPg } from "./migrations/syncRootUserPg";
-import { schemaName } from "./schema/const";
 
 export let db: Database = null as any;
 
@@ -57,7 +56,7 @@ export default async function initDatabase(
 
   logger.scope("Database").info(`Multitenant enabled: ${enabledMultitenant}`);
 
-  Config.setSchemaName(schemaName, enabledMultitenant);
+  Config.setSchemaName(tenants[0], enabledMultitenant);
 
   const pool = new Pool({ connectionString });
 
@@ -72,7 +71,9 @@ export default async function initDatabase(
   )));
 
   // Initialize the Drizzle ORM instance
-  return db = drizzle(pool);
+  db = drizzle(pool);
+
+  return db;
 }
 
 /**
