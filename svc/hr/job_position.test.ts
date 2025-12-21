@@ -4,8 +4,8 @@ beforeAll(async () => {
   const { default: initDatabase } = await import("#lib/db");
   const uuid = crypto.randomUUID();
   await initDatabase("postgresql://postgres:mypassword@localhost", {
-    tenant: `vitest_hr_job_position_${uuid}`,
-    dev: false,
+    tenants: [`vitest_hr_job_position_${uuid}`],
+    env: "vitest",
     skipSeeds: true,
   });
 });

@@ -39,5 +39,7 @@ export async function findUser(
     id: record.id,
     fullName: record.fullName,
     avatarUrl: record.avatarUrl,
+    tenant: "public",
+    session: new Map()
   };
 }

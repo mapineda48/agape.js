@@ -12,8 +12,7 @@ describe("lib/context", () => {
             const testContext: IContext = {
                 id: 1,
                 fullName: "Test User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
 
             runContext(testContext, callback);
 
@@ -25,8 +24,7 @@ describe("lib/context", () => {
             const testContext: IContext = {
                 id: 1,
                 fullName: "Test User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
 
             runContext(testContext, () => {
                 executed = true;
@@ -37,8 +35,8 @@ describe("lib/context", () => {
 
         it("should handle multiple sequential contexts", () => {
             const results: number[] = [];
-            const context1: IContext = { id: 1, fullName: "User 1", avatarUrl: null };
-            const context2: IContext = { id: 2, fullName: "User 2", avatarUrl: null };
+            const context1: IContext = { id: 1, fullName: "User 1", avatarUrl: null , tenant: "test", session: new Map()};
+            const context2: IContext = { id: 2, fullName: "User 2", avatarUrl: null , tenant: "test", session: new Map()};
 
             runContext(context1, () => {
                 results.push(ctx.id);
@@ -55,8 +53,7 @@ describe("lib/context", () => {
             const originalContext: IContext = {
                 id: 1,
                 fullName: "Original Name",
-                avatarUrl: "http://example.com/avatar.jpg",
-            };
+                avatarUrl: "http://example.com/avatar.jpg", tenant: "test", session: new Map()};
 
             runContext(originalContext, () => {
                 // Modificar el contexto dentro del runContext
@@ -81,8 +78,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 42,
                     fullName: "Test User",
-                    avatarUrl: null,
-                };
+                    avatarUrl: null, tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     expect(ctx.id).toBe(42);
@@ -93,8 +89,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 1,
                     fullName: "John Doe",
-                    avatarUrl: null,
-                };
+                    avatarUrl: null, tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     expect(ctx.fullName).toBe("John Doe");
@@ -106,8 +101,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 1,
                     fullName: "John Doe",
-                    avatarUrl,
-                };
+                    avatarUrl, tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     expect(ctx.avatarUrl).toBe(avatarUrl);
@@ -118,8 +112,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 1,
                     fullName: "John Doe",
-                    avatarUrl: null,
-                };
+                    avatarUrl: null, tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     expect(ctx.avatarUrl).toBeNull();
@@ -138,8 +131,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 1,
                     fullName: "Test User",
-                    avatarUrl: null,
-                };
+                    avatarUrl: null, tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     ctx.id = 99;
@@ -151,8 +143,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 1,
                     fullName: "Original Name",
-                    avatarUrl: null,
-                };
+                    avatarUrl: null, tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     ctx.fullName = "Updated Name";
@@ -164,8 +155,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 1,
                     fullName: "Test User",
-                    avatarUrl: null,
-                };
+                    avatarUrl: null, tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     ctx.avatarUrl = "https://new-avatar.com/image.png";
@@ -177,8 +167,7 @@ describe("lib/context", () => {
                 const testContext: IContext = {
                     id: 1,
                     fullName: "Test User",
-                    avatarUrl: "https://example.com/avatar.png",
-                };
+                    avatarUrl: "https://example.com/avatar.png", tenant: "test", session: new Map()};
 
                 runContext(testContext, () => {
                     ctx.avatarUrl = null;
@@ -193,13 +182,11 @@ describe("lib/context", () => {
             const outerContext: IContext = {
                 id: 1,
                 fullName: "Outer User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
             const innerContext: IContext = {
                 id: 2,
                 fullName: "Inner User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
 
             const results: { outer: number; inner: number }[] = [];
 
@@ -223,13 +210,11 @@ describe("lib/context", () => {
             const outerContext: IContext = {
                 id: 1,
                 fullName: "Outer User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
             const innerContext: IContext = {
                 id: 2,
                 fullName: "Inner User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
 
             let outerNameAfterInner = "";
 
@@ -250,8 +235,7 @@ describe("lib/context", () => {
             const testContext: IContext = {
                 id: 123,
                 fullName: "Async User",
-                avatarUrl: "https://async.example.com/avatar.png",
-            };
+                avatarUrl: "https://async.example.com/avatar.png", tenant: "test", session: new Map()};
 
             let capturedId: number | undefined;
             let capturedName: string | undefined;
@@ -274,8 +258,7 @@ describe("lib/context", () => {
             const testContext: IContext = {
                 id: 456,
                 fullName: "Timeout User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
 
             let capturedId: number | undefined;
 
@@ -295,8 +278,7 @@ describe("lib/context", () => {
             const testContext: IContext = {
                 id: 789,
                 fullName: "Promise User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
 
             const results: number[] = [];
 
@@ -327,8 +309,7 @@ describe("lib/context", () => {
             const context: IContext = {
                 id: 1,
                 fullName: "Type Test User",
-                avatarUrl: null,
-            };
+                avatarUrl: null, tenant: "test", session: new Map()};
 
             // This test ensures the type is correctly exported and usable
             let capturedContext: Partial<IContext> = {};
