@@ -1,5 +1,7 @@
 import { afterAll, describe, it, expect, beforeAll } from "vitest";
 
+const uuid = crypto.randomUUID();
+const schemaName = `vitest_category_${uuid}`;
 
 /**
  * IMPORTANTE: No realizar imports de servicios en el top-level.
@@ -9,8 +11,6 @@ import { afterAll, describe, it, expect, beforeAll } from "vitest";
 beforeAll(async () => {
   const { default: initDatabase } = await import("#lib/db");
 
-  const uuid = crypto.randomUUID();
-  const schemaName = `vitest_category_${uuid}`;
 
   await initDatabase("postgresql://postgres:mypassword@localhost", {
     tenants: [schemaName],
@@ -22,10 +22,8 @@ beforeAll(async () => {
 afterAll(async () => {
   const { deleteSchema } = await import("#lib/db/migrations/applyMigrations");
   const { db } = await import("#lib/db");
-  const { default: config } = await import("#lib/db/schema/config");
 
-
-  await deleteSchema(config.schemaName, db.$client);
+  await deleteSchema(schemaName, db.$client);
   await db.$client.end();
 });
 
