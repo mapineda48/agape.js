@@ -207,7 +207,7 @@ function About() {
   );
 }
 
-function Store({ addToCart }: { addToCart: (item: ListItemItem) => void }) {
+function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) => void; onViewProduct: (id: number) => void }) {
   const [products, setProducts] = useState<ListItemItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -251,7 +251,10 @@ function Store({ addToCart }: { addToCart: (item: ListItemItem) => void }) {
                   transition={{ duration: 0.3 }}
                 >
                   <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden bg-white dark:bg-slate-800 rounded-3xl group">
-                    <div className="relative h-48 overflow-hidden bg-gray-100">
+                    <div
+                      className="relative h-48 overflow-hidden bg-gray-100 cursor-pointer"
+                      onClick={() => onViewProduct(product.id)}
+                    >
                       <img
                         src={image}
                         alt={product.fullName}
@@ -266,7 +269,11 @@ function Store({ addToCart }: { addToCart: (item: ListItemItem) => void }) {
                       </div>
                     </div>
                     <CardContent className="p-6">
-                      <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-1" title={product.fullName}>
+                      <h3
+                        className="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-1 cursor-pointer hover:text-primary transition-colors"
+                        title={product.fullName}
+                        onClick={() => onViewProduct(product.id)}
+                      >
                         {product.fullName}
                       </h3>
                       <div className="flex items-center justify-between mt-4">
@@ -276,7 +283,10 @@ function Store({ addToCart }: { addToCart: (item: ListItemItem) => void }) {
                         <Button
                           size="sm"
                           className="rounded-full w-10 h-10 p-0"
-                          onClick={() => addToCart(product)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(product);
+                          }}
                         >
                           <Plus className="w-5 h-5" />
                         </Button>
@@ -461,6 +471,10 @@ export default function AgapeLandingPage() {
     setCart(newCart);
   };
 
+  const handleViewProduct = (id: number) => {
+    window.location.href = `/product/${id}`;
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-black font-sans text-slate-900 selection:bg-primary/20">
       <Navbar cartCount={cart.length} onOpenCart={() => setIsCartOpen(true)} />
@@ -468,7 +482,7 @@ export default function AgapeLandingPage() {
       <main>
         <Hero />
         <About />
-        <Store addToCart={addToCart} />
+        <Store addToCart={addToCart} onViewProduct={handleViewProduct} />
       </main>
 
       <Footer />
