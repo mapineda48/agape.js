@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 
+/**
+ * This layout becomes the root for all CMS pages.
+ * It ignores the app root layout (CartProvider) since CMS doesn't need cart functionality.
+ */
+export const root = true;
+
 type LayoutProps = {
   children: React.ReactNode;
 };
