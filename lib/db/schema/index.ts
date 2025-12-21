@@ -6,8 +6,7 @@ import Config from "./config";
  * Base schema instance.
  *
  * This represents the default (non-tenant) schema and is used when:
- * - multitenancy is disabled, or
- * - no tenant is present in the current execution context.
+ * - multitenancy is disabled
  */
 export const schema = pgSchema<string>(Config.schemaName);
 
