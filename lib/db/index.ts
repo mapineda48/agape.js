@@ -1,18 +1,17 @@
-import { drizzle } from "drizzle-orm/node-postgres";
+import { Kysely, PostgresDialect, CamelCasePlugin } from "kysely";
 import { Pool } from "pg";
+import type { Database } from "#models/database";
 import applyMigrations from "./migrations/applyMigrations";
 import logger from "#lib/log/logger";
-import Config from "./config";
-import { syncRootUserPg } from "./migrations/syncRootUserPg";
 
-export let db: Database = null as any;
+export let db: Kysely<Database> = null as any;
 
 /**
  * Configuration options for the database initialization.
  */
 interface DatabaseConfig {
   /**
-   * Tenant identifier.
+   * Tenant identifier (schema name).
    */
   tenant?: string;
 
@@ -25,22 +24,13 @@ interface DatabaseConfig {
    * If true, skips seed migrations in development mode (if applicable).
    */
   skipSeeds?: boolean;
-
-  /**
-   * Configuration for the root (super user) synchronization.
-   * If provided, the system will attempt to sync the root user credentials on startup.
-   */
-  rootUser?: {
-    username: string;
-    password?: string;
-  };
 }
 
 /**
- * Initializes the database connection, applies migrations, and optionally syncs the root user.
+ * Initializes the database connection with Kysely.
  *
  * @param connectionString - The PostgreSQL connection string.
- * @param config - Optional configuration for development mode and root user sync.
+ * @param config - Optional configuration for development mode and tenant.
  */
 export default async function initDatabase(
   connectionString: string,
@@ -56,8 +46,6 @@ export default async function initDatabase(
 
   const schemaName = config.tenant;
 
-  Config.setSchemaName(schemaName);
-
   const pool = new Pool({ connectionString });
 
   if (!config.dev) {
@@ -66,26 +54,14 @@ export default async function initDatabase(
   } else {
     logger
       .scope("Database")
-      .info(
-        "Development mode: skipping migrations - Remember to use 'pnpm drizzle-kit push'"
-      );
+      .info("Development mode: skipping migrations");
   }
 
-  // Initialize the Drizzle ORM instance
-  db = drizzle(pool);
-
-  // If root user configuration is provided, verify and sync the root user
-  await syncRootUserPg(
-    pool,
-    schemaName,
-    config.rootUser?.username,
-    config.rootUser?.password
-  );
+  // Initialize the Kysely ORM instance
+  db = new Kysely<Database>({
+    dialect: new PostgresDialect({ pool }),
+    plugins: [new CamelCasePlugin()],
+  }).withSchema(schemaName);
 
   return db;
 }
-
-/**
- * Types
- */
-type Database = ReturnType<typeof drizzle>;

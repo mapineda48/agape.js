@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import fs from "fs-extra";
 import type { Pool } from "pg";
 import logger from "#lib/log/logger";
-import { toRegExp } from "#utils/toRegExp";
 import { glob } from "node:fs/promises";
 
 export default async function applyMigrations(
@@ -13,10 +12,7 @@ export default async function applyMigrations(
   skipSeeds = false,
   attempt = 0
 ) {
-  const { migrations, migrationSqlMap } = await loadMigrations(
-    schema,
-    skipSeeds
-  );
+  const { migrations, migrationSqlMap } = await loadMigrations(skipSeeds);
 
   if (attempt >= 5) {
     throw new Error(
@@ -31,7 +27,6 @@ export default async function applyMigrations(
       `Migrations: Lock acquired for schema ${schema} with key ${lockKey} threadId: ${threadId}`
     );
 
-  // libera solo si tú lo tienes; devuelve true si se liberó
   const acquired = await lock(pg, lockKey);
 
   try {
@@ -43,7 +38,10 @@ export default async function applyMigrations(
 
     logger.scope("Database").warn("Warning: Migration process started");
 
-    // Obtener migracion para iniciar el proceso de sincronizacion automatico
+    // Ensure schema exists
+    await ensureSchema(pg, schema);
+
+    // Get pending migrations
     const pendingMigrations: string[] = [];
     const appliedMigrations = await fetchAppliedMigrations(pg, schema);
 
@@ -62,10 +60,14 @@ export default async function applyMigrations(
     }
 
     // Run pending migrations
-    for (const sql of pendingMigrations) {
-      const query = await migrationSqlMap[sql]();
+    for (const migrationName of pendingMigrations) {
+      const query = await migrationSqlMap[migrationName]();
 
-      await pg.query(query);
+      // Replace schema placeholder with actual schema
+      const sql = query.replace(/\{schema\}/g, schema);
+
+      await pg.query(sql);
+      logger.scope("Database").info(`Migration applied: ${migrationName}`);
     }
 
     await saveAppliedMigrations(schema, pg, migrations);
@@ -89,6 +91,14 @@ export default async function applyMigrations(
       .info(
         `Migrations: Lock released for schema ${schema} with key ${lockKey} threadId: ${threadId}`
       );
+  }
+}
+
+async function ensureSchema(pg: Pool, schemaName: string) {
+  const exists = await schemaExists(pg, schemaName);
+  if (!exists) {
+    await pg.query(`CREATE SCHEMA "${schemaName}"`);
+    logger.scope("Database").info(`Schema created: ${schemaName}`);
   }
 }
 
@@ -158,6 +168,12 @@ async function fetchAppliedMigrations(pg: Pool, schemaName: string) {
     return [];
   }
 
+  // Check if agape table exists
+  const tableExists = await tableExistsInSchema(pg, schemaName, "agape");
+  if (!tableExists) {
+    return [];
+  }
+
   logger.scope("Database").info(`Migrations: Schema exists: ${schemaName}`);
 
   const query = `
@@ -176,24 +192,32 @@ async function fetchAppliedMigrations(pg: Pool, schemaName: string) {
   return appliedMigrations as string[];
 }
 
-async function loadMigrations(schemaName: string, skipSeeds = false) {
+async function tableExistsInSchema(
+  pg: Pool,
+  schemaName: string,
+  tableName: string
+) {
+  const query = `
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.tables
+      WHERE table_schema = $1
+      AND table_name = $2
+    ) AS exists;
+  `;
+
+  const {
+    rows: [{ exists } = {}],
+  } = await pg.query<{ exists: boolean }>(query, [schemaName, tableName]);
+
+  return exists;
+}
+
+async function loadMigrations(skipSeeds = false) {
   const migrationsDir = path.join(import.meta.dirname, "scripts");
 
-  const src = path.resolve(
-    import.meta.dirname,
-    "scripts",
-    "meta",
-    "0000_snapshot.json"
-  );
-  const snapshot = await fs.readJSON(src);
-
-  const [schema] = Object.keys(snapshot.schemas);
-
-  // Build regex to replace placeholder schema for tenant
-  const schemaRegex = toRegExp(schema);
-
   const allSqlFiles = await Array.fromAsync(
-    glob("**/*.sql", { cwd: migrationsDir })
+    glob("*.sql", { cwd: migrationsDir })
   );
 
   // Filter out seed files if skipSeeds is enabled
@@ -208,13 +232,12 @@ async function loadMigrations(schemaName: string, skipSeeds = false) {
       migrationName,
       async () => {
         const filePath = path.join(migrationsDir, fileName);
-        const rawSql = await fs.readFile(filePath, "utf8");
-        return rawSql.replace(schemaRegex, schemaName);
+        return fs.readFile(filePath, "utf8");
       },
     ] as const;
   });
 
-  const migrationSqlMap = Object.fromEntries(await Promise.all(tasks));
+  const migrationSqlMap = Object.fromEntries(tasks);
   const migrations = Object.keys(migrationSqlMap).sort();
 
   return { migrations, migrationSqlMap } as const;

@@ -1,17 +1,13 @@
-import { customType } from "drizzle-orm/pg-core";
-import Decimal from "../utils/data/Decimal";
-import DateTime from "../utils/data/DateTime";
-
-// ============================================================================
-// Interfaces para Snapshots (Desnormalización Controlada)
-// ============================================================================
+/**
+ * Interfaces para Snapshots (Desnormalización Controlada)
+ *
+ * Estos tipos se usan para preservar el estado histórico de datos
+ * en el momento de la transacción. Es CRÍTICO para la integridad legal
+ * de documentos como facturas y órdenes de venta/compra.
+ */
 
 /**
  * Snapshot de dirección para documentos transaccionales.
- *
- * Este tipo se usa para preservar el estado histórico de una dirección
- * en el momento de la transacción. Es CRÍTICO para la integridad legal
- * de documentos como facturas y órdenes de venta/compra.
  *
  * Sin snapshots, si un cliente cambia de dirección después de emitida
  * una factura, el documento histórico mostraría la dirección nueva,
@@ -47,27 +43,3 @@ export interface AddressSnapshot {
   /** Etiqueta identificadora (ej: "Oficina Principal") */
   label?: string;
 }
-
-export const decimal = customType<{ data: Decimal; driverData: string }>({
-  dataType() {
-    return "numeric(10, 2)";
-  },
-  toDriver(value: Decimal): string {
-    return value.toString();
-  },
-  fromDriver(value: string): Decimal {
-    return new Decimal(value);
-  },
-});
-
-export const dateTime = customType<{ data: DateTime; driverData: string }>({
-  dataType() {
-    return "timestamp with time zone";
-  },
-  toDriver(value: DateTime): string {
-    return value.toISOString();
-  },
-  fromDriver(value: string): DateTime {
-    return new DateTime(value);
-  },
-});

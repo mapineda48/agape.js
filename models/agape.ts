@@ -1,22 +1,30 @@
-import { text, jsonb, type PgSchema } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
-import { dateTime } from "../lib/db/custom-types";
-import DateTime from "../lib/utils/data/DateTime";
-import schema from "./schema";
-
 /**
  * Modelo Agape
- * Representa una entidad clave-valor genérica para configuraciones o datos globales.
+ *
+ * Representa una entidad clave-valor genérica para configuraciones
+ * o datos globales del sistema.
  */
-export const agape = schema.table("agape", {
-  /** Clave única de la entidad */
-  key: text("key").primaryKey(),
+import type {
+  ColumnType,
+  Selectable,
+  Insertable,
+  Updateable,
+} from "./types";
+
+export interface AgapeTable {
+  /** Clave única de la entidad (PK) */
+  key: string;
+
   /** Valor en formato JSON */
-  value: jsonb("value").notNull(),
+  value: unknown;
+
   /** Fecha de creación */
-  createdAt: dateTime("created_at").default(sql`now()`),
+  createdAt: ColumnType<Date, Date | undefined, never>;
+
   /** Fecha de última actualización */
-  updatedAt: dateTime("updated_at")
-    .default(sql`now()`)
-    .$onUpdate(() => new DateTime()),
-});
+  updatedAt: ColumnType<Date, Date | undefined, Date | undefined>;
+}
+
+export type Agape = Selectable<AgapeTable>;
+export type NewAgape = Insertable<AgapeTable>;
+export type AgapeUpdate = Updateable<AgapeTable>;

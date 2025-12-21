@@ -7,7 +7,7 @@ import type {
     Updateable,
 } from 'kysely'
 import { Pool } from 'pg'
-import { Kysely, PostgresDialect } from 'kysely'
+import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely'
 
 export interface Database {
     person: PersonTable
@@ -81,7 +81,8 @@ const dialect = new PostgresDialect({
         user: 'admin',
         port: 5434,
         max: 10,
-    })
+    }),
+
 })
 
 // Database interface is passed to Kysely's constructor, and from now on, Kysely 
@@ -90,6 +91,7 @@ const dialect = new PostgresDialect({
 // to communicate with your database.
 export const db = new Kysely<Database>({
     dialect,
+    plugins: [new CamelCasePlugin()],
 })
 
 var foo = await db.withSchema('public')
