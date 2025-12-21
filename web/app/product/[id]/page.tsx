@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "@/components/router/router-hook";
 import { getPublicProductById } from "@agape/public/products";
-import type { IItemRecord } from "@utils/dto/catalogs/item";
+import type { IItemRecord, ListItemItem } from "@utils/dto/catalogs/item";
 import Button from "@/components/ui/button";
+import { useCart, CartDrawer } from "@/components/cart";
 
 /**
  * Product detail page - displays full product information
@@ -30,6 +31,7 @@ export default function ProductDetailPage() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [addedToCart, setAddedToCart] = useState(false);
+    const { addItem, totalItems, openCart } = useCart();
 
     const productId = Number(params.id);
 
@@ -63,7 +65,20 @@ export default function ProductDetailPage() {
     };
 
     const handleAddToCart = () => {
-        // TODO: Integrate with cart context/state
+        if (!product) return;
+        // Convert IItemRecord to ListItemItem format for cart
+        const cartItem: ListItemItem = {
+            id: product.id,
+            code: product.code,
+            fullName: product.fullName,
+            isEnabled: product.isEnabled,
+            type: product.type,
+            basePrice: product.basePrice,
+            category: null,
+            images: product.images,
+            rating: product.rating ?? 0,
+        };
+        addItem(cartItem, quantity);
         setAddedToCart(true);
         setTimeout(() => setAddedToCart(false), 2000);
     };
@@ -123,8 +138,17 @@ export default function ProductDetailPage() {
                         </span>
                     </div>
 
-                    <Button variant="ghost" className="relative p-2">
+                    <Button variant="ghost" className="relative p-2" onClick={openCart}>
                         <ShoppingCart className="w-5 h-5" />
+                        {totalItems > 0 && (
+                            <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            >
+                                {totalItems}
+                            </motion.span>
+                        )}
                     </Button>
                 </div>
             </header>
@@ -376,6 +400,7 @@ export default function ProductDetailPage() {
                     </motion.div>
                 </div>
             </main>
+            <CartDrawer />
         </div>
     );
 }

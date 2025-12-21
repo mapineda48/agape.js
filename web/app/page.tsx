@@ -1,31 +1,24 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ShoppingCart,
-  Menu,
-  X,
   Plus,
   ArrowRight,
   Star,
   Check,
   Package,
-  Trash2,
 } from "lucide-react";
 import { getPublicProducts } from "@agape/public/products";
 import type { ListItemItem } from "@utils/dto/catalogs/item";
 import Button from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { createPortal } from "react-dom";
+import { useCart, CartDrawer } from "@/components/cart";
+import { useRouter } from "@/components/router/router-hook";
 
 // --- Components ---
 
-function Navbar({
-  cartCount,
-  onOpenCart,
-}: {
-  cartCount: number;
-  onOpenCart: () => void;
-}) {
+function Navbar() {
+  const { totalItems, openCart } = useCart();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -37,8 +30,8 @@ function Navbar({
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-        ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm py-4"
-        : "bg-transparent py-6"
+          ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm py-4"
+          : "bg-transparent py-6"
         }`}
     >
       <div className="container mx-auto px-6 flex items-center justify-between">
@@ -70,19 +63,15 @@ function Navbar({
           >
             Tienda
           </a>
-          <Button
-            variant="ghost"
-            className="relative p-2"
-            onClick={onOpenCart}
-          >
+          <Button variant="ghost" className="relative p-2" onClick={openCart}>
             <ShoppingCart className="w-6 h-6" />
-            {cartCount > 0 && (
+            {totalItems > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
               >
-                {cartCount}
+                {totalItems}
               </motion.span>
             )}
           </Button>
@@ -120,14 +109,18 @@ function Hero() {
             </span>
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-300 mb-8 max-w-lg leading-relaxed">
-            Descubre nuestra colección exclusiva de artículos de papelería,
-            arte y oficina. Calidad premium para tus mejores ideas.
+            Descubre nuestra colección exclusiva de artículos de papelería, arte
+            y oficina. Calidad premium para tus mejores ideas.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
               size="lg"
               className="rounded-full px-8 text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
-              onClick={() => document.getElementById("store")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() =>
+                document
+                  .getElementById("store")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
             >
               Ver productos
               <ArrowRight className="ml-2 w-4 h-4" />
@@ -136,7 +129,11 @@ function Hero() {
               variant="outline"
               size="lg"
               className="rounded-full px-8 text-base border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-              onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() =>
+                document
+                  .getElementById("about")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
             >
               Conócenos
             </Button>
@@ -160,7 +157,9 @@ function Hero() {
                 <Check className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">Envío Gratis</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  Envío Gratis
+                </p>
                 <p className="text-xs text-slate-500">En pedidos +$50k</p>
               </div>
             </div>
@@ -176,20 +175,35 @@ function About() {
     <section id="about" className="py-24 bg-white dark:bg-slate-950">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 dark:text-white">¿Quiénes somos?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 dark:text-white">
+            ¿Quiénes somos?
+          </h2>
           <div className="h-1 w-20 bg-primary mx-auto rounded-full mb-6"></div>
           <p className="text-slate-600 dark:text-slate-400 text-lg">
-            En <span className="font-bold text-primary">Agape</span>, nos apasiona el arte de crear.
-            Desde cuadernos artesanales hasta los mejores bolígrafos importados,
-            seleccionamos cada producto pensando en inspirarte.
+            En <span className="font-bold text-primary">Agape</span>, nos
+            apasiona el arte de crear. Desde cuadernos artesanales hasta los
+            mejores bolígrafos importados, seleccionamos cada producto pensando
+            en inspirarte.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            { title: "Calidad Premium", icon: "✨", desc: "Solo las mejores marcas y materiales duraderos." },
-            { title: "Diseño Moderno", icon: "🎨", desc: "Productos que combinan funcionalidad y estética." },
-            { title: "Envío Rápido", icon: "🚀", desc: "Recibe tus compras en la puerta de tu casa en tiempo récord." }
+            {
+              title: "Calidad Premium",
+              icon: "✨",
+              desc: "Solo las mejores marcas y materiales duraderos.",
+            },
+            {
+              title: "Diseño Moderno",
+              icon: "🎨",
+              desc: "Productos que combinan funcionalidad y estética.",
+            },
+            {
+              title: "Envío Rápido",
+              icon: "🚀",
+              desc: "Recibe tus compras en la puerta de tu casa en tiempo récord.",
+            },
           ].map((item, i) => (
             <motion.div
               key={i}
@@ -197,7 +211,9 @@ function About() {
               className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <div className="text-4xl mb-4">{item.icon}</div>
-              <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">{item.title}</h3>
+              <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">
+                {item.title}
+              </h3>
               <p className="text-slate-500 dark:text-slate-400">{item.desc}</p>
             </motion.div>
           ))}
@@ -207,9 +223,11 @@ function About() {
   );
 }
 
-function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) => void; onViewProduct: (id: number) => void }) {
+function Store() {
   const [products, setProducts] = useState<ListItemItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addItem } = useCart();
+  const { navigate } = useRouter();
 
   useEffect(() => {
     getPublicProducts().then((res) => {
@@ -218,12 +236,18 @@ function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) =
     });
   }, []);
 
+  const handleViewProduct = (id: number) => {
+    navigate(`/product/${id}`);
+  };
+
   return (
     <section id="store" className="py-24 bg-slate-50 dark:bg-slate-900/50">
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 text-slate-900 dark:text-white">Nuestra Colección</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2 text-slate-900 dark:text-white">
+              Nuestra Colección
+            </h2>
             <p className="text-slate-500">Explora lo último en papelería.</p>
           </div>
           {/* Filtros podrían ir aquí */}
@@ -232,14 +256,18 @@ function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) =
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <div key={n} className="h-80 rounded-2xl bg-white dark:bg-slate-800 animate-pulse shadow-sm"></div>
+              <div
+                key={n}
+                className="h-80 rounded-2xl bg-white dark:bg-slate-800 animate-pulse shadow-sm"
+              ></div>
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {products.map((product) => {
               const images = product.images as string[];
-              const image = images && images.length > 0 ? images[0] : "/placeholder.svg";
+              const image =
+                images && images.length > 0 ? images[0] : "/placeholder.svg";
 
               return (
                 <motion.div
@@ -253,7 +281,7 @@ function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) =
                   <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden bg-white dark:bg-slate-800 rounded-3xl group">
                     <div
                       className="relative h-48 overflow-hidden bg-gray-100 cursor-pointer"
-                      onClick={() => onViewProduct(product.id)}
+                      onClick={() => handleViewProduct(product.id)}
                     >
                       <img
                         src={image}
@@ -263,16 +291,19 @@ function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) =
                       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm dark:bg-slate-900/90 text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
                         {product.rating > 0 ? (
                           <span className="flex items-center gap-1 text-yellow-500">
-                            <Star className="w-3 h-3 fill-current" /> {product.rating}
+                            <Star className="w-3 h-3 fill-current" />{" "}
+                            {product.rating}
                           </span>
-                        ) : "Nuevo"}
+                        ) : (
+                          "Nuevo"
+                        )}
                       </div>
                     </div>
                     <CardContent className="p-6">
                       <h3
                         className="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-1 cursor-pointer hover:text-primary transition-colors"
                         title={product.fullName}
-                        onClick={() => onViewProduct(product.id)}
+                        onClick={() => handleViewProduct(product.id)}
                       >
                         {product.fullName}
                       </h3>
@@ -285,7 +316,7 @@ function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) =
                           className="rounded-full w-10 h-10 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
-                            addToCart(product);
+                            addItem(product);
                           }}
                         >
                           <Plus className="w-5 h-5" />
@@ -303,113 +334,6 @@ function Store({ addToCart, onViewProduct }: { addToCart: (item: ListItemItem) =
   );
 }
 
-function CartDrawer({
-  isOpen,
-  onClose,
-  cart,
-  removeFromCart
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  cart: ListItemItem[];
-  removeFromCart: (idx: number) => void;
-}) {
-  // Calculamos total
-  const total = cart.reduce((sum, item) => sum + Number(item.basePrice), 0);
-
-  return createPortal(
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
-          />
-          {/* Drawer */}
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl z-[70] flex flex-col"
-          >
-            <div className="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" /> Tu Carrito
-              </h2>
-              <Button variant="ghost" size="sm" onClick={onClose} className="rounded-full w-8 h-8 p-0">
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                  <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
-                  <p>Tu carrito está vacío.</p>
-                  <Button variant="link" onClick={onClose}>Ir a comprar</Button>
-                </div>
-              ) : (
-                cart.map((item, index) => (
-                  <motion.div
-                    layout
-                    key={`${item.id}-${index}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl"
-                  >
-                    <div className="w-16 h-16 rounded-lg bg-white overflow-hidden shrink-0">
-                      <img
-                        src={(item.images as string[])?.[0] || "/placeholder.svg"}
-                        className="w-full h-full object-cover"
-                        alt=""
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm text-slate-900 dark:text-white truncate">{item.fullName}</h4>
-                      <p className="text-primary font-bold text-sm">${Number(item.basePrice).toLocaleString()}</p>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(index)}
-                      className="text-slate-400 hover:text-red-500 transition-colors p-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                ))
-              )}
-            </div>
-
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-slate-500">Total</span>
-                <span className="text-2xl font-black text-slate-900 dark:text-white">
-                  ${total.toLocaleString()}
-                </span>
-              </div>
-              <Button
-                className="w-full rounded-xl h-12 text-lg shadow-lg shadow-primary/20"
-                disabled={cart.length === 0}
-                onClick={() => {
-                  alert("Iniciando pasarela de pagos... (Demo)");
-                  // Aquí iría la lógica de redirección a Stripe/Wompi/etc.
-                }}
-              >
-                Proceder al pago
-              </Button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-}
-
 function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-400 py-12">
@@ -417,22 +341,49 @@ function Footer() {
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div>
             <h3 className="text-white font-bold text-lg mb-4">agape.store</h3>
-            <p className="text-sm leading-relaxed">Tu aliado en creatividad y organización. Productos de calidad para mentes brillantes.</p>
+            <p className="text-sm leading-relaxed">
+              Tu aliado en creatividad y organización. Productos de calidad para
+              mentes brillantes.
+            </p>
           </div>
           <div>
             <h4 className="text-white font-bold mb-4">Enlaces</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Inicio</a></li>
-              <li><a href="#store" className="hover:text-white transition-colors">Tienda</a></li>
-              <li><a href="#about" className="hover:text-white transition-colors">Nosotros</a></li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Inicio
+                </a>
+              </li>
+              <li>
+                <a href="#store" className="hover:text-white transition-colors">
+                  Tienda
+                </a>
+              </li>
+              <li>
+                <a href="#about" className="hover:text-white transition-colors">
+                  Nosotros
+                </a>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="text-white font-bold mb-4">Ayuda</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Envíos</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Devoluciones</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contacto</a></li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Envíos
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Devoluciones
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Contacto
+                </a>
+              </li>
             </ul>
           </div>
           <div>
@@ -446,8 +397,13 @@ function Footer() {
           </div>
         </div>
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <p>© {new Date().getFullYear()} Agape Stationery. Todos los derechos reservados.</p>
-          <a href="/cms" className="hover:text-white transition-colors">Acceso Interno (CMS)</a>
+          <p>
+            © {new Date().getFullYear()} Agape Stationery. Todos los derechos
+            reservados.
+          </p>
+          <a href="/cms" className="hover:text-white transition-colors">
+            Acceso Interno (CMS)
+          </a>
         </div>
       </div>
     </footer>
@@ -457,42 +413,19 @@ function Footer() {
 // --- Main Page Component ---
 
 export default function AgapeLandingPage() {
-  const [cart, setCart] = useState<ListItemItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const addToCart = (item: ListItemItem) => {
-    setCart([...cart, item]);
-    setIsCartOpen(true);
-  };
-
-  const removeFromCart = (index: number) => {
-    const newCart = [...cart];
-    newCart.splice(index, 1);
-    setCart(newCart);
-  };
-
-  const handleViewProduct = (id: number) => {
-    window.location.href = `/product/${id}`;
-  };
-
   return (
     <div className="min-h-screen bg-white dark:bg-black font-sans text-slate-900 selection:bg-primary/20">
-      <Navbar cartCount={cart.length} onOpenCart={() => setIsCartOpen(true)} />
+      <Navbar />
 
       <main>
         <Hero />
         <About />
-        <Store addToCart={addToCart} onViewProduct={handleViewProduct} />
+        <Store />
       </main>
 
       <Footer />
 
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cart={cart}
-        removeFromCart={removeFromCart}
-      />
+      <CartDrawer />
     </div>
   );
 }

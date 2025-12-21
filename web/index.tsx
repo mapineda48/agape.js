@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import EventEmitter from "@/components/util/event-emitter";
 import PortalProvider from "@/components/util/portal.tsx";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { CartProvider } from "@/components/cart";
 import App from "@/app";
 import "@/utils/error";
 import "./index.css";
@@ -18,7 +19,9 @@ createRoot(document.getElementById("root")!).render(
     <EventEmitter>
       <PortalProvider>
         <ThemeProvider>
-          <App />
+          <CartProvider>
+            <App />
+          </CartProvider>
         </ThemeProvider>
       </PortalProvider>
     </EventEmitter>
