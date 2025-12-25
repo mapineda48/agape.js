@@ -31,6 +31,12 @@ type ChatEvents = {
     "user:typing": { sender: string };
     /** Client notifies they stopped typing (e.g. sent message) */
     "user:typing:stop": { sender: string };
+    /** Internal: socket connected */
+    "socket:connect": Record<string, never>;
+    /** Internal: socket disconnected */
+    "socket:disconnect": Record<string, never>;
+    /** Server broadcasts current online users count */
+    "users:count": { count: number };
 };
 
 // ============================================================================
@@ -38,6 +44,19 @@ type ChatEvents = {
 // ============================================================================
 
 const socket = registerNamespace<ChatEvents>();
+
+// Track online users count
+let onlineUsers = 0;
+
+socket.on("socket:connect", () => {
+    onlineUsers++;
+    socket.emit("users:count", { count: onlineUsers });
+});
+
+socket.on("socket:disconnect", () => {
+    onlineUsers = Math.max(0, onlineUsers - 1);
+    socket.emit("users:count", { count: onlineUsers });
+});
 
 // Handle typing status
 socket.on("user:typing", (payload) => {

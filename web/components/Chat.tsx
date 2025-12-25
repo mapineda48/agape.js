@@ -24,6 +24,7 @@ export default function Chat() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [text, setText] = useState("");
     const [typingUser, setTypingUser] = useState<string | null>(null);
+    const [onlineUsers, setOnlineUsers] = useState(0);
     const [myId] = useState(() => Math.random().toString(36).substring(7));
     const [connection, setConnection] = useState<any>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -67,10 +68,15 @@ export default function Chat() {
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         });
 
+        const unsubUsersCount = conn.on("users:count", (payload: { count: number }) => {
+            setOnlineUsers(payload.count);
+        });
+
         return () => {
             unsubMessage();
             unsubTyping();
             unsubTypingStop();
+            unsubUsersCount();
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
             conn.disconnect();
         };
@@ -133,6 +139,9 @@ export default function Chat() {
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                                 <h3 className="font-semibold">Public Global Chat</h3>
+                                <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                                    {onlineUsers} online
+                                </span>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}

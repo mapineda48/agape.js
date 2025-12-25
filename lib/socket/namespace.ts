@@ -73,6 +73,16 @@ export class NamespaceManager {
 
         // Handle new client connections
         this.nsp.on("connection", (socket) => {
+            // Emit connection event via mitt
+            const connectEvent = this.getOrRegisterInternalEvent("socket:connect");
+            emitter.emit(connectEvent, {});
+
+            // Handle disconnection
+            socket.on("disconnect", () => {
+                const disconnectEvent = this.getOrRegisterInternalEvent("socket:disconnect");
+                emitter.emit(disconnectEvent, {});
+            });
+
             // Use onAny to capture all events from this socket
             socket.onAny((event: string, data: unknown) => {
                 const internalEvent = this.getOrRegisterInternalEvent(event);
