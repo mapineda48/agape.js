@@ -26,6 +26,15 @@ export default function Chat() {
     const [myId] = useState(() => Math.random().toString(36).substring(7));
     const [connection, setConnection] = useState<any>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const isOpenRef = useRef(isOpen);
+
+    // Sync ref with state
+    useEffect(() => {
+        isOpenRef.current = isOpen;
+        if (isOpen) {
+            setUnreadCount(0);
+        }
+    }, [isOpen]);
 
     // Initialize socket connection
     useEffect(() => {
@@ -34,7 +43,7 @@ export default function Chat() {
 
         const unsub = conn.on("message:received", (msg: ChatMessage) => {
             setMessages((prev) => [...prev, msg]);
-            if (!isOpen) {
+            if (!isOpenRef.current) {
                 setUnreadCount((prev) => prev + 1);
             }
         });
@@ -44,13 +53,6 @@ export default function Chat() {
             conn.disconnect();
         };
     }, []);
-
-    // Clear unread count when opening
-    useEffect(() => {
-        if (isOpen) {
-            setUnreadCount(0);
-        }
-    }, [isOpen]);
 
     // Auto-scroll to bottom
     useEffect(() => {
