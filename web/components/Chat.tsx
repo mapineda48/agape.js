@@ -23,10 +23,13 @@ export default function Chat() {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [text, setText] = useState("");
+    const [typingUser, setTypingUser] = useState<string | null>(null);
     const [myId] = useState(() => Math.random().toString(36).substring(7));
     const [connection, setConnection] = useState<any>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const isOpenRef = useRef(isOpen);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastEmitRef = useRef<number>(0);
 
     // Sync ref with state
     useEffect(() => {
@@ -41,25 +44,63 @@ export default function Chat() {
         const conn = socket.connect();
         setConnection(conn);
 
-        const unsub = conn.on("message:received", (msg: ChatMessage) => {
+        const unsubMessage = conn.on("message:received", (msg: ChatMessage) => {
             setMessages((prev) => [...prev, msg]);
             if (!isOpenRef.current) {
                 setUnreadCount((prev) => prev + 1);
             }
         });
 
+        const unsubTyping = conn.on("user:typing", (payload: { sender: string }) => {
+            if (payload.sender === `User ${myId}`) return;
+
+            setTypingUser(payload.sender);
+
+            // Clear status after 3 seconds of no typing updates
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => setTypingUser(null), 3000);
+        });
+
+        const unsubTypingStop = conn.on("user:typing:stop", (payload: { sender: string }) => {
+            if (payload.sender === `User ${myId}`) return;
+            setTypingUser(null);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        });
+
         return () => {
-            unsub();
+            unsubMessage();
+            unsubTyping();
+            unsubTypingStop();
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
             conn.disconnect();
         };
     }, []);
+
+    // Handle typing notification
+    useEffect(() => {
+        if (!text || !connection) {
+            // If text is cleared (sent), immediately notify we stopped typing
+            if (connection && lastEmitRef.current > 0) {
+                connection.emit("user:typing:stop", { sender: `User ${myId}` });
+                lastEmitRef.current = 0;
+            }
+            return;
+        }
+
+        // Throttling to avoid flooding: only emit every 1.5 seconds
+        const now = Date.now();
+        if (now - lastEmitRef.current > 1500) {
+            connection.emit("user:typing", { sender: `User ${myId}` });
+            lastEmitRef.current = now;
+        }
+    }, [text, connection]);
 
     // Auto-scroll to bottom
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages, isOpen]);
+    }, [messages, isOpen, typingUser]);
 
     const handleSend = (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -69,6 +110,11 @@ export default function Chat() {
             text: text.trim(),
             sender: `User ${myId}`,
         });
+
+        // Immediately notify we stopped typing
+        connection.emit("user:typing:stop", { sender: `User ${myId}` });
+        lastEmitRef.current = 0;
+
         setText("");
     };
 
@@ -134,6 +180,25 @@ export default function Chat() {
                                 })
                             )}
                         </div>
+
+                        {/* Typing Indicator */}
+                        <AnimatePresence>
+                            {typingUser && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 5 }}
+                                    className="px-4 py-1 flex items-center gap-2 text-[11px] text-zinc-500 italic"
+                                >
+                                    <div className="flex gap-1">
+                                        <span className="w-1 h-1 bg-zinc-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                                        <span className="w-1 h-1 bg-zinc-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                                        <span className="w-1 h-1 bg-zinc-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                                    </div>
+                                    {typingUser} is typing...
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Input Area */}
                         <form

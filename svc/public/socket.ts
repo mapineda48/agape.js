@@ -27,6 +27,10 @@ type ChatEvents = {
     "message:send": { text: string; sender: string };
     /** Server broadcasts message to all clients */
     "message:received": ChatMessage;
+    /** Client notifies they are typing */
+    "user:typing": { sender: string };
+    /** Client notifies they stopped typing (e.g. sent message) */
+    "user:typing:stop": { sender: string };
 };
 
 // ============================================================================
@@ -34,6 +38,15 @@ type ChatEvents = {
 // ============================================================================
 
 const socket = registerNamespace<ChatEvents>();
+
+// Handle typing status
+socket.on("user:typing", (payload) => {
+    socket.emit("user:typing", payload);
+});
+
+socket.on("user:typing:stop", (payload) => {
+    socket.emit("user:typing:stop", payload);
+});
 
 // Handle incoming chat messages
 socket.on("message:send", (payload) => {
