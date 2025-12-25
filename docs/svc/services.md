@@ -226,3 +226,155 @@ const total = subtotal.mul(1.19); // ✅ Precisión garantizada
 | **Fechas**       | `Date`, `string`, conversores    | `DateTime` exclusivamente                 |
 | **Montos**       | `number`, `float`                | `Decimal` para precisión                  |
 
+---
+
+## 7. WebSockets en Tiempo Real
+
+`agape.js` proporciona una API de WebSockets tipo-segura basada en Socket.IO para comunicación bidireccional en tiempo real.
+
+### Definir un Namespace en el Servidor
+
+Crea un archivo `socket.ts` dentro de cualquier módulo de `svc/`:
+
+```typescript
+// svc/notifications/socket.ts
+import { registerNamespace } from "#lib/socket/namespace";
+
+// 1. Define los eventos y sus payloads
+type NotificationEvents = {
+    "notification:new": { id: string; message: string; timestamp: DateTime };
+    "notification:read": { id: string };
+    "user:typing": void;  // Evento sin payload
+};
+
+// 2. Exporta el namespace tipado
+export default registerNamespace<NotificationEvents>();
+```
+
+El namespace se registra automáticamente en la ruta `/notifications` (basado en la ubicación del archivo).
+
+### Emitir Eventos desde el Servidor
+
+Usa el namespace exportado para emitir eventos a todos los clientes conectados:
+
+```typescript
+// svc/notifications/index.ts
+import socket from "./socket";
+
+export async function createNotification(payload: CreateNotificationInput) {
+    const notification = await db.insert(notifications).values(payload).returning();
+    
+    // Emitir a todos los clientes conectados
+    socket.emit("notification:new", {
+        id: notification.id,
+        message: notification.message,
+        timestamp: new DateTime(),
+    });
+    
+    return notification;
+}
+```
+
+### Escuchar Eventos del Cliente en el Servidor
+
+```typescript
+// svc/notifications/socket.ts
+import { registerNamespace } from "#lib/socket/namespace";
+
+type Events = { "notification:read": { id: string } };
+
+const socket = registerNamespace<Events>();
+
+// Escuchar cuando el cliente marca una notificación como leída
+socket.on("notification:read", async (payload) => {
+    await db.update(notifications)
+        .set({ readAt: new DateTime() })
+        .where(eq(notifications.id, payload.id));
+});
+
+export default socket;
+```
+
+### Conectarse desde el Cliente (Browser)
+
+El sistema genera automáticamente módulos virtuales para cada `socket.ts`:
+
+```typescript
+// En un componente React
+import socket from "@agape/notifications/socket";
+
+function NotificationProvider({ children }) {
+    useEffect(() => {
+        // 1. Establecer conexión
+        const connection = socket.connect();
+        
+        // 2. Suscribirse a eventos (tipado automático)
+        const unsubscribe = connection.on("notification:new", (payload) => {
+            // TypeScript conoce: payload.id, payload.message, payload.timestamp
+            showToast(payload.message);
+        });
+        
+        // 3. Emitir eventos al servidor
+        connection.emit("notification:read", { id: "123" });
+        
+        // 4. Cleanup al desmontar
+        return () => {
+            unsubscribe();
+            connection.disconnect();
+        };
+    }, []);
+    
+    return children;
+}
+```
+
+### API del Cliente: `ConnectedSocket`
+
+| Método | Descripción |
+|--------|-------------|
+| `connect()` | Establece la conexión WebSocket. Retorna una instancia conectada. |
+| `on(event, handler)` | Suscribe a un evento. Retorna función `unsubscribe`. |
+| `off(event, handler?)` | Desuscribe de un evento. Si no se pasa handler, remueve todos. |
+| `emit(event, payload)` | Envía un evento al servidor. |
+| `disconnect()` | Cierra la conexión y limpia recursos. |
+
+### Buenas Prácticas
+
+```typescript
+// ✅ Siempre hacer cleanup
+useEffect(() => {
+    const connection = socket.connect();
+    const unsub = connection.on("event", handler);
+    return () => {
+        unsub();
+        connection.disconnect();
+    };
+}, []);
+
+// ✅ Definir tipos explícitos para eventos
+type ChatEvents = {
+    "message:new": { userId: string; text: string };
+    "message:deleted": { messageId: string };
+};
+
+// ❌ Evitar eventos sin tipado
+socket.emit("unknown-event" as any, data); // No hacer esto
+```
+
+### Resumen del Flujo
+
+```
+┌─────────────────┐                          ┌─────────────────┐
+│    Cliente      │                          │    Servidor     │
+│  (Browser)      │                          │  (svc/*.ts)     │
+├─────────────────┤                          ├─────────────────┤
+│                 │   socket.connect()       │                 │
+│  import socket  │ ─────────────────────▶   │  registerNs()   │
+│                 │                          │                 │
+│   .on(event)    │ ◀───── emit(event) ───── │  socket.emit()  │
+│   .emit(event)  │ ─────── emit(event) ───▶ │  socket.on()    │
+│                 │                          │                 │
+│  .disconnect()  │ ─────────────────────▶   │  (cleanup)      │
+└─────────────────┘                          └─────────────────┘
+```
+
