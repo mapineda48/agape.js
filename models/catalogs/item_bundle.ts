@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import {
   serial,
   integer,
@@ -30,7 +30,7 @@ import { decimal } from "../../lib/db/custom-types";
  * Nota: El ítem padre debe ser de un tipo especial (podría agregarse
  * 'bundle' al enum itemTypeEnum en el futuro).
  */
-export const itemBundle = ctx(({ table }) => table(
+export const itemBundle = schema.table(
   "catalogs_item_bundle",
   {
     /** Identificador único del registro de componente */
@@ -66,7 +66,7 @@ export const itemBundle = ctx(({ table }) => table(
     /** Índice para búsqueda por componente (¿en qué bundles está este ítem?) */
     index("ix_catalogs_item_bundle_component").on(table.componentItemId),
   ]
-));
+);
 
 export type ItemBundle = InferSelectModel<typeof itemBundle>;
 export type NewItemBundle = InferInsertModel<typeof itemBundle>;

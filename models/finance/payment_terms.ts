@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import {
   serial,
   varchar,
@@ -30,7 +30,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * { code: "NET30", fullName: "Neto 30 días", dueDays: 30 }
  * ```
  */
-export const paymentTerms = ctx(({ table }) => table(
+export const paymentTerms = schema.table(
   "finance_payment_terms",
   {
     /** Identificador único */
@@ -71,7 +71,7 @@ export const paymentTerms = ctx(({ table }) => table(
     /** Código único de condición de pago */
     uniqueIndex("ux_finance_payment_terms_code").on(table.code),
   ]
-));
+);
 
 export type PaymentTerms = InferSelectModel<typeof paymentTerms>;
 export type NewPaymentTerms = InferInsertModel<typeof paymentTerms>;

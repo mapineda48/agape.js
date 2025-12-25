@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { deleteSchema } from "./migrations/applyMigrations";
 
 const db = await initDatabase("postgresql://postgres:mypassword@localhost", {
-  tenants: ["vitest"],
+  tenant: "vitest",
   env: "vitest",
   skipSeeds: true,
 });

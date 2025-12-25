@@ -5,7 +5,7 @@ import {
   type InferSelectModel,
   type InferInsertModel,
 } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 
@@ -31,7 +31,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * - Puede vincularse a un centro de costo
  * - Tiene un gerente/responsable (opcional)
  */
-export const department = ctx(({ table }) => table("hr_department", {
+export const department = schema.table("hr_department", {
   /** Identificador único del departamento */
   id: serial("id").primaryKey(),
 
@@ -76,7 +76,7 @@ export const department = ctx(({ table }) => table("hr_department", {
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
-}));
+});
 
 /**
  * Relaciones del departamento:

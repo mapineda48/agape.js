@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { integer, primaryKey, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import inventoryItem from "./item";
@@ -21,7 +21,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * 2. Evitar problemas con NULLs en PKs (lotId siempre debe tener valor aquí).
  * 3. Trazabilidad exacta de qué lotes están en qué bodega.
  */
-export const stockLot = ctx(({ table }) => table(
+export const stockLot = schema.table(
   "inventory_stock_lot",
   {
     /** Referencia al ítem maestro inventariable */
@@ -69,7 +69,7 @@ export const stockLot = ctx(({ table }) => table(
     /** Índice para consultar stock por ubicación */
     index("ix_inventory_stock_lot_location").on(table.locationId),
   ]
-));
+);
 
 export type StockLot = InferSelectModel<typeof stockLot>;
 export type NewStockLot = InferInsertModel<typeof stockLot>;

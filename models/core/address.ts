@@ -11,7 +11,7 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import user from "./user";
@@ -37,7 +37,7 @@ import { addressTypeEnum, type AddressType } from "./enums";
  * };
  * ```
  */
-export const address = ctx(({ table }) => table("core_address", {
+export const address = schema.table("core_address", {
   /** Identificador único de la dirección */
   id: serial("id").primaryKey(),
 
@@ -78,7 +78,7 @@ export const address = ctx(({ table }) => table("core_address", {
   updatedAt: dateTime("updated_at")
     .default(sql`now()`)
     .$onUpdate(() => new DateTime()),
-}));
+});
 
 /**
  * Tabla pivote para asociar direcciones a usuarios/entidades
@@ -99,7 +99,7 @@ export const address = ctx(({ table }) => table("core_address", {
  * };
  * ```
  */
-export const userAddress = ctx(({ table }) => table(
+export const userAddress = schema.table(
   "core_user_address",
   {
     /** Identificador único del registro */
@@ -146,7 +146,7 @@ export const userAddress = ctx(({ table }) => table(
       table.type
     ),
   ]
-));
+);
 
 // ============================================================================
 // Relaciones

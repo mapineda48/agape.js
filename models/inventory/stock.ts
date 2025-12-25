@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { integer, primaryKey, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import inventoryItem from "./item";
@@ -14,7 +14,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  *
  * PK: (item_id, location_id)
  */
-export const stock = ctx(({ table }) => table(
+export const stock = schema.table(
   "inventory_stock",
   {
     /** Referencia al ítem maestro inventariable */
@@ -51,7 +51,7 @@ export const stock = ctx(({ table }) => table(
      */
     primaryKey({ columns: [table.itemId, table.locationId] }),
   ]
-));
+);
 
 /**
  * Nota: Si se requiere stock desglosado por lote, considerar crear

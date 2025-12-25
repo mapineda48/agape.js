@@ -7,7 +7,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import supplier from "./supplier";
 import purchase_order from "./purchase_order";
 import { dateTime } from "../../lib/db/custom-types";
@@ -15,10 +15,10 @@ import { documentSeries } from "../numbering/document_series";
 import employee from "../hr/employee";
 import DateTime from "../../lib/utils/data/DateTime";
 
-export const goodsReceiptStatusEnum = ctx((schema) => schema.enum(
+export const goodsReceiptStatusEnum = schema.enum(
   "purchasing_goods_receipt_status",
   ["draft", "posted", "cancelled"]
-));
+);
 
 /**
  * Documento de Recepción de Mercancía (Goods Receipt / GRN)
@@ -43,7 +43,7 @@ export const goodsReceiptStatusEnum = ctx((schema) => schema.enum(
  * }
  * ```
  */
-const goods_receipt = ctx(({ table }) => table(
+const goods_receipt = schema.table(
   "purchasing_goods_receipt",
   {
     /** Identificador único del documento de recepción */
@@ -112,7 +112,7 @@ const goods_receipt = ctx(({ table }) => table(
     /** Índice para búsquedas por proveedor */
     index("ix_purchasing_goods_receipt_supplier").on(table.supplierId),
   ]
-));
+);
 
 export type GoodsReceipt = InferSelectModel<typeof goods_receipt>;
 export type NewGoodsReceipt = InferInsertModel<typeof goods_receipt>;

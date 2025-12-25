@@ -1,19 +1,19 @@
 import { boolean, serial, varchar } from "drizzle-orm/pg-core";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**
  * Modelo de tipo de cliente (ClientType)
  * Representa los diferentes tipos de clientes.
  */
-const client_type = ctx(({ table }) => table("crm_client_type", {
+const client_type = schema.table("crm_client_type", {
   /** Identificador único del tipo de cliente */
   id: serial("id").primaryKey(),
   /** Nombre del tipo de cliente (ej: 'Retail', 'Wholesale', 'VIP') */
   name: varchar("name", { length: 50 }).notNull(),
   /** Indica si el tipo de cliente está habilitado */
   isEnabled: boolean("is_enabled").default(false).notNull(),
-}));
+});
 
 export type ClientType = InferSelectModel<typeof client_type>;
 export type NewClientType = InferInsertModel<typeof client_type>;

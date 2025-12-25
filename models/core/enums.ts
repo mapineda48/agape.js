@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 
 // ============================================================================
 // User Type Enum
@@ -27,9 +27,7 @@ import ctx from "../../lib/db/schema/ctx";
  * const tipo2: UserType = "company";
  * ```
  */
-export const userTypeEnum = ctx((pgSchema) =>
-  pgSchema.enum("user_type_enum", ["person", "company"])
-);
+export const userTypeEnum = schema.enum("user_type_enum", ["person", "company"]);
 /**
  * Tipo TypeScript derivado del enum de base de datos.
  * Representa los valores posibles: "person" | "company"
@@ -68,13 +66,13 @@ export const USER_TYPE_VALUES = userTypeEnum.enumValues;
  * const tipo2: AddressType = "shipping";
  * ```
  */
-export const addressTypeEnum = ctx((pgSchema) => pgSchema.enum("address_type_enum", [
+export const addressTypeEnum = schema.enum("address_type_enum", [
   "billing",
   "shipping",
   "main",
   "branch",
   "other",
-]));
+]);
 
 /**
  * Tipo TypeScript derivado del enum de tipo de dirección.
@@ -116,7 +114,7 @@ export const ADDRESS_TYPE_VALUES = addressTypeEnum.enumValues;
  * const tipo2: ContactMethodType = "whatsapp";
  * ```
  */
-export const contactMethodTypeEnum = ctx((pgSchema) => pgSchema.enum("contact_method_type_enum", [
+export const contactMethodTypeEnum = schema.enum("contact_method_type_enum", [
   "email",
   "phone",
   "mobile",
@@ -124,7 +122,7 @@ export const contactMethodTypeEnum = ctx((pgSchema) => pgSchema.enum("contact_me
   "telegram",
   "fax",
   "other",
-]));
+]);
 
 /**
  * Tipo TypeScript derivado del enum de método de contacto.

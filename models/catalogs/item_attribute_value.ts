@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import {
   serial,
   varchar,
@@ -21,7 +21,7 @@ import { itemAttribute } from "./item_attribute";
  *
  * Estos valores se usan para definir las variantes de un ítem.
  */
-export const itemAttributeValue = ctx(({ table }) => table(
+export const itemAttributeValue = schema.table(
   "catalogs_item_attribute_value",
   {
     /** Identificador único del valor de atributo */
@@ -56,7 +56,7 @@ export const itemAttributeValue = ctx(({ table }) => table(
     /** Índice para búsqueda por atributo */
     index("ix_catalogs_item_attribute_value_attr").on(table.attributeId),
   ]
-));
+);
 
 export type ItemAttributeValue = InferSelectModel<typeof itemAttributeValue>;
 export type NewItemAttributeValue = InferInsertModel<typeof itemAttributeValue>;

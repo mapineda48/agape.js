@@ -8,7 +8,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { decimal, dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import { documentSeries } from "../numbering/document_series";
@@ -20,10 +20,10 @@ import { paymentMethod } from "./payment_method";
  * - receipt: Recibo de cobro (dinero que entra - cliente paga)
  * - disbursement: Desembolso (dinero que sale - pagamos a proveedor)
  */
-export const paymentTypeEnum = ctx((schema) => schema.enum("finance_payment_type", [
+export const paymentTypeEnum = schema.enum("finance_payment_type", [
   "receipt", // Cobro a cliente
   "disbursement", // Pago a proveedor
-]));
+]);
 
 /**
  * Enum de estado del pago.
@@ -31,11 +31,11 @@ export const paymentTypeEnum = ctx((schema) => schema.enum("finance_payment_type
  * - posted: Aplicado/Contabilizado
  * - cancelled: Anulado
  */
-export const paymentStatusEnum = ctx((schema) => schema.enum("finance_payment_status", [
+export const paymentStatusEnum = schema.enum("finance_payment_status", [
   "draft",
   "posted",
   "cancelled",
-]));
+]);
 
 /**
  * Pago / Cobranza (Payment)
@@ -67,7 +67,7 @@ export const paymentStatusEnum = ctx((schema) => schema.enum("finance_payment_st
  * }
  * ```
  */
-const payment = ctx(({ table }) => table(
+const payment = schema.table(
   "finance_payment",
   {
     /** Identificador único del pago */
@@ -178,7 +178,7 @@ const payment = ctx(({ table }) => table(
     /** Índice para búsquedas por estado */
     index("ix_finance_payment_status").on(table.status),
   ]
-));
+);
 
 export type Payment = InferSelectModel<typeof payment>;
 export type NewPayment = InferInsertModel<typeof payment>;

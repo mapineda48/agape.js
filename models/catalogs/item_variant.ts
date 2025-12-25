@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import {
   serial,
   varchar,
@@ -30,7 +30,7 @@ import { decimal } from "../../lib/db/custom-types";
  * Los atributos específicos de cada variante se definen en
  * `catalogs_item_variant_attribute_value`.
  */
-export const itemVariant = ctx(({ table }) => table(
+export const itemVariant = schema.table(
   "catalogs_item_variant",
   {
     /** Identificador único de la variante */
@@ -63,7 +63,7 @@ export const itemVariant = ctx(({ table }) => table(
     /** Índice para búsqueda por ítem padre */
     index("ix_catalogs_item_variant_parent").on(table.parentItemId),
   ]
-));
+);
 
 export type ItemVariant = InferSelectModel<typeof itemVariant>;
 export type NewItemVariant = InferInsertModel<typeof itemVariant>;

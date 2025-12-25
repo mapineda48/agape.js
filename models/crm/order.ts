@@ -15,7 +15,7 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import {
   decimal,
   dateTime,
@@ -36,13 +36,13 @@ import employee from "../hr/employee";
  * Valores: pending (pendiente), confirmed (confirmado), shipped (enviado),
  * delivered (entregado), cancelled (cancelado).
  */
-export const orderStatusEnum = ctx((schema) => schema.enum("crm_order_status", [
+export const orderStatusEnum = schema.enum("crm_order_status", [
   "pending",
   "confirmed",
   "shipped",
   "delivered",
   "cancelled",
-]));
+]);
 
 /**
  * Modelo de orden de cliente (Order / Sales Order)
@@ -56,7 +56,7 @@ export const orderStatusEnum = ctx((schema) => schema.enum("crm_order_status", [
  *
  * Las líneas de detalle se almacenan en la tabla relacionada `crm_order_item`.
  */
-const order = ctx(({ table }) => table(
+const order = schema.table(
   "crm_order",
   {
     // ========================================================================
@@ -298,7 +298,7 @@ const order = ctx(({ table }) => table(
     /** Índice para búsquedas por estado */
     index("ix_crm_order_status").on(table.status),
   ]
-));
+);
 
 // ============================================================================
 // Relaciones

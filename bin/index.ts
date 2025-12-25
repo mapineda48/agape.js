@@ -25,19 +25,16 @@ const {
   AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true",
   CACHE_URL = "redis://localhost:6379",
 
-  VIRTUAL_HOST = ""
 } = process.env;
 
 const isProduction = NODE_ENV === "production";
 const isTest = NODE_ENV === "test";
 const isDevelopment = NODE_ENV === "development";
 
-const tenants = VIRTUAL_HOST.split(",").filter(Boolean);
-
 // Initialize DB connection and models (required before importing model-dependent logic like auth)
 await initDatabase(DATABASE_URI, {
   env: NODE_ENV,
-  tenants,
+  tenant: AGAPE_TENANT,
   rootUser: {
     username: AGAPE_ADMIN,
     password: AGAPE_PASSWORD,

@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import employee from "../hr/employee";
 import { dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
@@ -34,7 +34,7 @@ import { securityUserRole } from "./role";
  * - Salt único por usuario (bcrypt lo maneja automáticamente)
  * - Implementar rate limiting a nivel de servicio
  */
-export const securityUser = ctx(({ table }) => table(
+export const securityUser = schema.table(
   "security_user",
   {
     /** Identificador único del usuario de acceso */
@@ -174,7 +174,7 @@ export const securityUser = ctx(({ table }) => table(
      */
     uniqueIndex("ux_security_user_employee_id").on(table.employeeId),
   ]
-));
+);
 
 /**
  * Relaciones de SecurityUser:

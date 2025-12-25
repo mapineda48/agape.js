@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { integer, primaryKey } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { taxGroup } from "./tax_group";
@@ -14,7 +14,7 @@ import { tax } from "./tax";
  * - Grupo "Productos Gravados" → contiene IVA 19%
  * - Grupo "Servicios Profesionales" → contiene IVA 19% + Retención 11%
  */
-export const taxGroupTax = ctx(({ table }) => table(
+export const taxGroupTax = schema.table(
   "finance_tax_group_tax",
   {
     /** Grupo de impuestos */
@@ -31,7 +31,7 @@ export const taxGroupTax = ctx(({ table }) => table(
     /** PK compuesta: un impuesto solo puede estar una vez en cada grupo */
     primaryKey({ columns: [table.taxGroupId, table.taxId] }),
   ]
-));
+);
 
 export type TaxGroupTax = InferSelectModel<typeof taxGroupTax>;
 export type NewTaxGroupTax = InferInsertModel<typeof taxGroupTax>;

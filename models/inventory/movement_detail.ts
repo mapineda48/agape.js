@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { serial, integer, index } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { inventoryMovement } from "./movement";
@@ -17,7 +17,7 @@ import { decimal } from "../../lib/db/custom-types";
  * - A qué costo
  * - De qué lote (para trazabilidad)
  */
-export const inventoryMovementDetail = ctx(({ table }) => table(
+export const inventoryMovementDetail = schema.table(
   "inventory_movement_detail",
   {
     id: serial("id").primaryKey(),
@@ -79,7 +79,7 @@ export const inventoryMovementDetail = ctx(({ table }) => table(
     /** Índice para consultas por lote */
     index("ix_inventory_movement_detail_lot").on(table.lotId),
   ]
-));
+);
 
 export type InventoryMovementDetail = InferSelectModel<
   typeof inventoryMovementDetail

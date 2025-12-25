@@ -1,6 +1,6 @@
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
 import { serial, integer, index, varchar } from "drizzle-orm/pg-core";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import sales_invoice from "./sales_invoice";
 import order_item from "../crm/order_item";
 import { item } from "../catalogs/item";
@@ -31,7 +31,7 @@ import { tax } from "./tax";
  * }
  * ```
  */
-const sales_invoice_item = ctx(({ table }) => table(
+const sales_invoice_item = schema.table(
   "finance_sales_invoice_item",
   {
     /** Identificador único de la línea */
@@ -118,7 +118,7 @@ const sales_invoice_item = ctx(({ table }) => table(
     /** Índice para análisis de ventas por ítem */
     index("ix_finance_si_item_item").on(table.itemId),
   ]
-));
+);
 
 export type SalesInvoiceItem = InferSelectModel<typeof sales_invoice_item>;
 export type NewSalesInvoiceItem = InferInsertModel<typeof sales_invoice_item>;

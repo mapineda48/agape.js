@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import {
   integer,
   bigint,
@@ -15,7 +15,7 @@ import { dateTime } from "../../lib/db/custom-types";
  * Registro histórico de números asignados por serie.
  * Permite auditoría y evitar duplicados en (serie, número).
  */
-export const documentSequence = ctx(({ table }) => table(
+export const documentSequence = schema.table(
   "numbering_document_sequence",
   {
     /** Identificador interno de la fila */
@@ -66,7 +66,7 @@ export const documentSequence = ctx(({ table }) => table(
     /** Búsquedas típicas por serie */
     index("ix_numbering_sequence_series").on(table.seriesId),
   ]
-));
+);
 
 export type DocumentSequence = InferSelectModel<typeof documentSequence>;
 export type NewDocumentSequence = InferInsertModel<typeof documentSequence>;

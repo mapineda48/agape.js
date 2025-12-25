@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
 import { dateTime } from "../../lib/db/custom-types";
@@ -25,7 +25,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * { code: "TRANSFER", fullName: "Transferencia Bancaria", requiresReference: true }
  * ```
  */
-export const paymentMethod = ctx(({ table }) => table(
+export const paymentMethod = schema.table(
   "finance_payment_method",
   {
     /** Identificador único */
@@ -72,7 +72,7 @@ export const paymentMethod = ctx(({ table }) => table(
     /** Código único de método de pago */
     uniqueIndex("ux_finance_payment_method_code").on(table.code),
   ]
-));
+);
 
 export type PaymentMethod = InferSelectModel<typeof paymentMethod>;
 export type NewPaymentMethod = InferInsertModel<typeof paymentMethod>;

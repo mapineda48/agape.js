@@ -1,6 +1,6 @@
 import { serial, integer, varchar, index, check } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { decimal, dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import gl_journal_entry from "./gl_journal_entry";
@@ -42,7 +42,7 @@ import { glAccount } from "./gl_account";
  * }
  * ```
  */
-const gl_journal_line = ctx(({ table }) => table(
+const gl_journal_line = schema.table(
   "finance_gl_journal_line",
   {
     /** Identificador único de la línea */
@@ -115,7 +115,7 @@ const gl_journal_line = ctx(({ table }) => table(
       sql`(debit_amount > 0 AND credit_amount = 0) OR (debit_amount = 0 AND credit_amount > 0)`
     ),
   ]
-));
+);
 
 export type GlJournalLine = InferSelectModel<typeof gl_journal_line>;
 export type NewGlJournalLine = InferInsertModel<typeof gl_journal_line>;

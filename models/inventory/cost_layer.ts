@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { serial, integer, index } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { inventoryItem } from "./item";
@@ -24,7 +24,7 @@ import { decimal, dateTime } from "../../lib/db/custom-types";
  * 3. Venta 80 unidades → Consume de capa 1 (remaining=20)
  * 4. Venta 30 unidades → Consume 20 de capa 1 + 10 de capa 2
  */
-export const inventoryCostLayer = ctx(({ table }) => table(
+export const inventoryCostLayer = schema.table(
   "inventory_cost_layer",
   {
     id: serial("id").primaryKey(),
@@ -95,7 +95,7 @@ export const inventoryCostLayer = ctx(({ table }) => table(
     /** Índice para encontrar capas con stock disponible */
     index("ix_inventory_cost_layer_remaining").on(table.remainingQuantity),
   ]
-));
+);
 
 export type InventoryCostLayer = InferSelectModel<typeof inventoryCostLayer>;
 export type NewInventoryCostLayer = InferInsertModel<typeof inventoryCostLayer>;

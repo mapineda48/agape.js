@@ -9,7 +9,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import supplier from "../purchasing/supplier";
 import purchase_order from "../purchasing/purchase_order";
 import goods_receipt from "../purchasing/goods_receipt";
@@ -29,7 +29,7 @@ import { paymentTerms } from "./payment_terms";
  *
  * Las líneas de detalle están en finance_purchase_invoice_item
  */
-const purchase_invoice = ctx(({ table }) => table(
+const purchase_invoice = schema.table(
   "finance_purchase_invoice",
   {
     /** Identificador único de la factura */
@@ -130,7 +130,7 @@ const purchase_invoice = ctx(({ table }) => table(
     /** Índice para búsquedas por serie */
     index("ix_finance_purchase_invoice_series").on(table.seriesId),
   ]
-));
+);
 
 export type PurchaseInvoice = InferSelectModel<typeof purchase_invoice>;
 export type NewPurchaseInvoice = InferInsertModel<typeof purchase_invoice>;

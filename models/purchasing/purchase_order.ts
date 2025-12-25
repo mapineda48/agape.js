@@ -6,21 +6,21 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import supplier from "./supplier";
 import { dateTime } from "../../lib/db/custom-types";
 import { documentSeries } from "../numbering/document_series";
 
-export const purchaseOrderStatusEnum = ctx((schema) => schema.enum(
+export const purchaseOrderStatusEnum = schema.enum(
   "purchasing_purchase_order_status",
   ["pending", "approved", "received", "cancelled"]
-));
+);
 
 /**
  * Modelo de orden de compra (PurchaseOrder)
  * Representa una orden de compra realizada a un proveedor.
  */
-const purchase_order = ctx(({ table }) => table(
+const purchase_order = schema.table(
   "purchasing_purchase_order",
   {
     /** Identificador único de la orden de compra */
@@ -55,7 +55,7 @@ const purchase_order = ctx(({ table }) => table(
     /** Índice para búsquedas por serie */
     index("ix_purchasing_order_series").on(table.seriesId),
   ]
-));
+);
 
 export type PurchaseOrder = InferSelectModel<typeof purchase_order>;
 export type NewPurchaseOrder = InferInsertModel<typeof purchase_order>;

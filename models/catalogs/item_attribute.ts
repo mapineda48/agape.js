@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
@@ -11,7 +11,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * Cada atributo puede tener múltiples valores definidos en `catalogs_item_attribute_value`.
  * Los atributos se combinan para crear variantes (SKUs hijos) en `catalogs_item_variant`.
  */
-export const itemAttribute = ctx(({ table }) => table(
+export const itemAttribute = schema.table(
   "catalogs_item_attribute",
   {
     /** Identificador único del atributo */
@@ -33,7 +33,7 @@ export const itemAttribute = ctx(({ table }) => table(
     /** Código único de atributo */
     uniqueIndex("ux_catalogs_item_attribute_code").on(table.code),
   ]
-));
+);
 
 export type ItemAttribute = InferSelectModel<typeof itemAttribute>;
 export type NewItemAttribute = InferInsertModel<typeof itemAttribute>;

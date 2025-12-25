@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { type InferSelectModel, type InferInsertModel, sql } from "drizzle-orm";
 import { decimal } from "../../lib/db/custom-types";
@@ -23,7 +23,7 @@ import { decimal } from "../../lib/db/custom-types";
  * { code: "USD", fullName: "Dólar Estadounidense", isBase: false, symbol: "$" }
  * ```
  */
-export const currency = ctx(({ table }) => table(
+export const currency = schema.table(
   "finance_currency",
   {
     /** Identificador único de la moneda */
@@ -65,7 +65,7 @@ export const currency = ctx(({ table }) => table(
     /** Código único de moneda */
     uniqueIndex("ux_finance_currency_code").on(table.code),
   ]
-));
+);
 
 export type Currency = InferSelectModel<typeof currency>;
 export type NewCurrency = InferInsertModel<typeof currency>;

@@ -1,5 +1,5 @@
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**
@@ -9,7 +9,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * Nota: Esta tabla es distinta de core_identity_document_type que maneja
  * documentos de identificación personal (CC, NIT, PAS, etc.).
  */
-export const documentType = ctx(({ table }) => table(
+export const documentType = schema.table(
   "numbering_document_type",
   {
     /** Identificador interno del tipo de documento */
@@ -41,7 +41,7 @@ export const documentType = ctx(({ table }) => table(
     /** Evitamos tipos de documento duplicados por código */
     uniqueIndex("ux_numbering_document_type_code").on(table.code),
   ]
-));
+);
 
 export type DocumentType = InferSelectModel<typeof documentType>;
 export type NewDocumentType = InferInsertModel<typeof documentType>;

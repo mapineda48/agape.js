@@ -1,6 +1,6 @@
 import { serial, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { decimal, dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import payment from "./payment";
@@ -43,7 +43,7 @@ import purchase_invoice from "./purchase_invoice";
  * }
  * ```
  */
-const payment_allocation = ctx(({ table }) => table(
+const payment_allocation = schema.table(
   "finance_payment_allocation",
   {
     /** Identificador único de la asignación */
@@ -117,7 +117,7 @@ const payment_allocation = ctx(({ table }) => table(
       table.purchaseInvoiceId
     ),
   ]
-));
+);
 
 export type PaymentAllocation = InferSelectModel<typeof payment_allocation>;
 export type NewPaymentAllocation = InferInsertModel<typeof payment_allocation>;

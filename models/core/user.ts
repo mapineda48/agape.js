@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import {
   serial,
   varchar,
@@ -44,7 +44,7 @@ import contactMethod from "./contactMethod";
  * hacia atrás, pero se recomienda usar los modelos de `contactMethod` y
  * `userAddress` para nuevas implementaciones.
  */
-export const user = ctx(({ table }) => table(
+export const user = schema.table(
   "user",
   {
     /** Identificador único de la entidad */
@@ -111,7 +111,7 @@ export const user = ctx(({ table }) => table(
       table.documentNumber
     ),
   ]
-));
+);
 
 /**
  * Relaciones de DocumentType:

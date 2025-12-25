@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
@@ -11,7 +11,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * En ERPs típicos, esto permite tener múltiples precios por ítem
  * según el contexto de venta (canal, tipo de cliente, promociones).
  */
-export const priceList = ctx(({ table }) => table(
+export const priceList = schema.table(
   "catalogs_price_list",
   {
     /** Identificador único de la lista de precios */
@@ -36,7 +36,7 @@ export const priceList = ctx(({ table }) => table(
     /** Código único de lista de precios */
     uniqueIndex("ux_catalogs_price_list_code").on(table.code),
   ]
-));
+);
 
 export type PriceList = InferSelectModel<typeof priceList>;
 export type NewPriceList = InferInsertModel<typeof priceList>;

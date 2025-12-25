@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 
 /**
  * Enum para los tipos de ítem en el catálogo.
@@ -19,10 +19,10 @@ import ctx from "../../lib/db/schema/ctx";
  * const tipo2: ItemType = "service";
  * ```
  */
-export const itemTypeEnum = ctx((schema) => schema.enum("catalogs_item_type", [
+export const itemTypeEnum = schema.enum("catalogs_item_type", [
   "good", // bien físico
   "service", // servicio
-]));
+]);
 
 /**
  * Tipo TypeScript derivado del enum de base de datos.

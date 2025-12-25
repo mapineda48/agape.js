@@ -13,7 +13,7 @@ beforeAll(async () => {
   const uuid = crypto.randomUUID();
 
   await initDatabase("postgresql://postgres:mypassword@localhost", {
-    tenants: [`vitest_movementtype_${uuid}`],
+    tenant: `vitest_movementtype_${uuid}`,
     env: "vitest",
     skipSeeds: true,
   });

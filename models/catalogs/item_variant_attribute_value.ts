@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { integer, primaryKey, index } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { itemVariant } from "./item_variant";
@@ -19,7 +19,7 @@ import { itemAttributeValue } from "./item_attribute_value";
  * - Consultar variantes por atributos específicos.
  * - Generar filtros dinámicos en el catálogo.
  */
-export const itemVariantAttributeValue = ctx(({ table }) => table(
+export const itemVariantAttributeValue = schema.table(
   "catalogs_item_variant_attribute_value",
   {
     /** Variante a la que pertenece esta combinación */
@@ -38,7 +38,7 @@ export const itemVariantAttributeValue = ctx(({ table }) => table(
     /** Índice para búsqueda por valor de atributo */
     index("ix_catalogs_item_variant_attr_value").on(table.attributeValueId),
   ]
-));
+);
 
 export type ItemVariantAttributeValue = InferSelectModel<
   typeof itemVariantAttributeValue

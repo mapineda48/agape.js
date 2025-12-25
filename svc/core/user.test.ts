@@ -11,7 +11,7 @@ beforeAll(async () => {
 
   // 1. Inicializar la DB
   await initDatabase("postgresql://postgres:mypassword@localhost", {
-    tenants: [`vitest_user_${uuid}`],
+    tenant: `vitest_user_${uuid}`,
     env: "vitest",
     skipSeeds: true,
   });

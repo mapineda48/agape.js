@@ -1,4 +1,4 @@
-import ctx from "../../lib/db/schema/ctx";
+import { schema } from "../schema";
 import { integer, boolean } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { item } from "../catalogs/item";
@@ -9,7 +9,7 @@ import { unitOfMeasure } from "./unit_of_measure";
  * Detalle de inventario para bienes físicos que manejan stock.
  * Un registro por bien físico inventariable.
  */
-export const inventoryItem = ctx(({ table }) => table("inventory_item", {
+export const inventoryItem = schema.table("inventory_item", {
   /** FK al ítem maestro (1:1) */
   itemId: integer("item_id")
     .primaryKey()
@@ -40,7 +40,7 @@ export const inventoryItem = ctx(({ table }) => table("inventory_item", {
    * Ej: equipos electrónicos, vehículos.
    */
   requiresSerial: boolean("requires_serial").notNull().default(false),
-}));
+});
 
 export type InventoryItem = InferSelectModel<typeof inventoryItem>;
 export type NewInventoryItem = InferInsertModel<typeof inventoryItem>;

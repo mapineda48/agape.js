@@ -1,7 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import applyMigrations from "./migrations/applyMigrations";
-import logger from "#lib/log/logger";
 import Config from "./schema/config";
 import { syncRootUserPg } from "./migrations/syncRootUserPg";
 
@@ -14,7 +13,7 @@ interface DatabaseConfig {
   /**
    * Tenant identifier.
    */
-  tenants: string[];
+  tenant?: string;
 
   /**
    * If true, runs migrations in development mode (if applicable).
@@ -44,31 +43,27 @@ interface DatabaseConfig {
  */
 export default async function initDatabase(
   connectionString: string,
-  config: DatabaseConfig = { tenants: [] }
+  config: DatabaseConfig = {}
 ) {
   if (db) {
     throw new Error("Database already initialized");
   }
 
-  const tenants = config.tenants.length ? config.tenants : [`agape_app_${config.env}_demo`];
+  const tenant = config.tenant || `agape_app_${config.env}_demo`;
 
-  const enabledMultitenant = tenants.length > 1;
-
-  logger.scope("Database").info(`Multitenant enabled: ${enabledMultitenant}`);
-
-  Config.setSchemaName(tenants[0], enabledMultitenant);
+  Config.setSchemaName(tenant);
 
   const pool = new Pool({ connectionString });
 
-  await Promise.all(tenants.map((schema) => applyMigrations(pool, schema, config.skipSeeds)));
+  await applyMigrations(pool, tenant, config.skipSeeds);
 
   // If root user configuration is provided, verify and sync the root user
-  await Promise.all(tenants.map((schema) => syncRootUserPg(
+  await syncRootUserPg(
     pool,
-    schema,
+    tenant,
     config.rootUser?.username,
     config.rootUser?.password
-  )));
+  );
 
   // Initialize the Drizzle ORM instance
   db = drizzle(pool);
