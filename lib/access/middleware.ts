@@ -52,15 +52,16 @@ export default function defineAuth(secret: string) {
 
       const payload = await jwt.verifyToken(refreshToken);
 
-      delete payload.exp;
-      delete payload.iat;
+      // Remover claims estándar de JWT antes de regenerar
+      // jose los añadirá automáticamente con valores actualizados
+      const { exp, iat, iss, aud, nbf, jti, sub, ...userData } = payload;
 
-      const token = await jwt.generateToken(payload);
+      const token = await jwt.generateToken(userData);
 
       res.clearCookie(AuthTokenCookie);
       res.cookie(AuthTokenCookie, token, cookieOptions); // Establecer la cookie
 
-      sendMsgPack(res, payload);
+      sendMsgPack(res, userData);
     } catch (error) {
       console.error(error);
       res.clearCookie(AuthTokenCookie);
