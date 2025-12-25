@@ -11,7 +11,7 @@ import type { Request, Response, NextFunction } from "express";
 import { encode } from "#utils/msgpack";
 import parseError from "./error";
 import { parseArgs } from "./parseArgs";
-import { cwd, svc, toPublicUrl } from "./path";
+import { cwd, findServices, toPublicUrl } from "./path";
 import { CONTENT_TYPES, HTTP_STATUS } from "./constants";
 
 // ============================================================================
@@ -42,7 +42,7 @@ const rpcEndpoints = new Map<string, ServiceFunction>();
  * Registers all service functions as RPC endpoints.
  */
 async function registerServiceEndpoints(): Promise<void> {
-  for await (const relativePath of svc) {
+  for await (const relativePath of findServices()) {
     const absolutePath = path.join(cwd, relativePath);
     const moduleUrl = pathToFileURL(absolutePath).href;
     const publicUrl = toPublicUrl(relativePath);

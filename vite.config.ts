@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import vitePluginRpc from "./lib/rpc/vite-plugin";
+import vitePluginRpc from "./lib/vite/vite-plugin";
 
 const cwd = process.cwd();
 

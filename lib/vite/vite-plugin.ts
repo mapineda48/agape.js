@@ -13,7 +13,7 @@
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 import type { Plugin } from "vite";
-import { VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_PREFIX } from "./constants";
+import { VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_PREFIX } from "../rpc/constants";
 
 // ============================================================================
 // Types
@@ -34,7 +34,7 @@ const execAsync = promisify(exec);
  * Runs the virtual-module.ts script using tsx with the app tsconfig.
  */
 const GENERATE_MODULES_CMD =
-  "tsx --tsconfig tsconfig.app.json lib/rpc/virtual-module.ts";
+  "tsx --tsconfig tsconfig.app.json lib/vite/virtual-module.ts";
 
 /**
  * Executes the virtual module generator and parses the output.

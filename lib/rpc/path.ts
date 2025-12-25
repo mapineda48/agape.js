@@ -36,10 +36,12 @@ export const cwd = path.resolve("svc");
  * Async iterable of service file paths relative to the services directory.
  * Excludes TypeScript declaration files and test files.
  */
-export const svc = glob(SERVICE_FILE_PATTERN, {
-  cwd,
-  exclude: EXCLUDED_PATTERNS,
-});
+export function findServices() {
+  return glob(SERVICE_FILE_PATTERN, {
+    cwd,
+    exclude: EXCLUDED_PATTERNS,
+  });
+}
 
 // ============================================================================
 // Path Conversion Utilities

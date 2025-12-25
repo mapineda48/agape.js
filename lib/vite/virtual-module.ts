@@ -11,8 +11,9 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import fs from "fs-extra";
-import { cwd, svc, toPublicUrl } from "./path";
-import { VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_PREFIX } from "./constants";
+import { cwd, findServices, toPublicUrl } from "../rpc/path";
+import { VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_PREFIX } from "../rpc/constants";
+import { NamespaceManager } from "../socket/namespace";
 
 // ============================================================================
 // Types
@@ -32,6 +33,7 @@ type ModuleExports = Record<string, unknown>;
  * Import statement for the RPC client factory.
  */
 const RPC_IMPORT = 'import makeRcp from "@/utils/rpc";';
+const SOCKET_IMPORT = 'import makeSocket from "@/utils/socket";';
 
 /**
  * Generates the JavaScript code for a virtual module.
@@ -47,20 +49,41 @@ function generateModuleCode(
   moduleUrl: string,
   exports: ModuleExports
 ): string[] {
-  const lines: string[] = [RPC_IMPORT];
+  const lines: string[] = [];
 
   for (const [exportName, exportValue] of Object.entries(exports)) {
-    if (typeof exportValue !== "function") {
+    if (typeof exportValue === "function") {
+      if (!lines.includes(RPC_IMPORT)) {
+        lines.unshift(RPC_IMPORT);
+      }
+
+      const endpoint = getEndpointUrl(moduleUrl, exportName);
+
+      if (exportName === "default") {
+        lines.push(`export default makeRcp("${endpoint}");`);
+      } else {
+        lines.push(`export const ${exportName} = makeRcp("${endpoint}");`);
+      }
+
       continue;
     }
 
-    const endpoint = getEndpointUrl(moduleUrl, exportName);
+    if (exportValue instanceof NamespaceManager) {
+      if (!lines.includes(SOCKET_IMPORT)) {
+        lines.unshift(SOCKET_IMPORT);
+      }
 
-    if (exportName === "default") {
-      lines.push(`export default makeRcp("${endpoint}");`);
-    } else {
-      lines.push(`export const ${exportName} = makeRcp("${endpoint}");`);
+      const endpoint = getEndpointUrl(moduleUrl, exportName);
+
+      if (exportName === "default") {
+        lines.push(`export default makeSocket("${endpoint}");`);
+      } else {
+        lines.push(`export const ${exportName} = makeSocket("${endpoint}");`);
+      }
+
+      continue;
     }
+
   }
 
   return lines;
@@ -98,7 +121,7 @@ function toVirtualModuleId(moduleUrl: string): string {
 async function generateVirtualModules(): Promise<VirtualModuleMap> {
   const virtualModules: VirtualModuleMap = {};
 
-  for await (const relativePath of svc) {
+  for await (const relativePath of findServices()) {
     const absolutePath = path.join(cwd, relativePath);
     const moduleUrl = pathToFileURL(absolutePath).href;
     const publicUrl = toPublicUrl(relativePath);
