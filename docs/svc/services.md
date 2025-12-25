@@ -232,12 +232,24 @@ const total = subtotal.mul(1.19); // ✅ Precisión garantizada
 
 `agape.js` proporciona una API de WebSockets tipo-segura basada en Socket.IO para comunicación bidireccional en tiempo real.
 
+### Autenticación
+
+Los namespaces de WebSocket siguen la misma política de autenticación que el RPC:
+
+| Ubicación | Ruta | Autenticación |
+|-----------|------|---------------|
+| `svc/public/socket.ts` | `/public` | ❌ No requerida |
+| `svc/notifications/socket.ts` | `/notifications` | ✅ Cookie JWT válida |
+| `svc/chat/socket.ts` | `/chat` | ✅ Cookie JWT válida |
+
+> **Importante**: Los clientes que intenten conectarse a un namespace autenticado sin una cookie válida recibirán un error `Authentication required` y la conexión será rechazada.
+
 ### Definir un Namespace en el Servidor
 
 Crea un archivo `socket.ts` dentro de cualquier módulo de `svc/`:
 
 ```typescript
-// svc/notifications/socket.ts
+// svc/notifications/socket.ts (AUTENTICADO - requiere login)
 import { registerNamespace } from "#lib/socket/namespace";
 
 // 1. Define los eventos y sus payloads
@@ -251,7 +263,18 @@ type NotificationEvents = {
 export default registerNamespace<NotificationEvents>();
 ```
 
-El namespace se registra automáticamente en la ruta `/notifications` (basado en la ubicación del archivo).
+```typescript
+// svc/public/socket.ts (PÚBLICO - sin autenticación)
+import { registerNamespace } from "#lib/socket/namespace";
+
+type PublicEvents = {
+    "status:changed": { online: boolean };
+};
+
+export default registerNamespace<PublicEvents>();
+```
+
+El namespace se registra automáticamente en la ruta basada en la ubicación del archivo.
 
 ### Emitir Eventos desde el Servidor
 

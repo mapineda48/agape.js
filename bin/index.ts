@@ -136,6 +136,7 @@ app.post("/*path", rpc);
 // Initialize Socket.IO server with Redis adapter for horizontal scaling
 const socketOptions = {
   redisUrl: CACHE_URL,
+  jwtSecret: AGAPE_SECRET,
   ...(isDevelopment && { cors: { origin: "http://localhost:5173", credentials: true } }),
 };
 await createSocketServer(httpServer, socketOptions);

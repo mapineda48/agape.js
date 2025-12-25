@@ -4,6 +4,10 @@
  * Creates and configures the Socket.IO server, automatically registering
  * namespaces from socket module files in svc/. Supports Redis adapter for
  * horizontal scaling across multiple server instances.
+ * 
+ * Authentication:
+ * - Namespaces under /public/* are public (no authentication required)
+ * - All other namespaces require valid JWT cookie authentication
  */
 
 import path from "node:path";
@@ -12,9 +16,11 @@ import type { Server as HttpServer } from "node:http";
 import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { cwd, findServices, toPublicUrl } from "../rpc/path";
-import { Server } from "socket.io";
+import { Server, type Namespace } from "socket.io";
 import { NamespaceManager } from "./namespace"
 import logger from "#lib/log/logger";
+import Jwt from "#lib/access/Jwt";
+import { getCookie } from "#lib/access/middleware";
 
 // ============================================================================
 // Types
@@ -24,6 +30,8 @@ import logger from "#lib/log/logger";
 interface SocketServerOptions {
     /** Redis URL for pub/sub adapter (enables horizontal scaling) */
     redisUrl?: string;
+    /** JWT secret for authenticating non-public namespaces */
+    jwtSecret?: string;
     /** Additional Socket.IO server options */
     [key: string]: unknown;
 }
@@ -53,14 +61,14 @@ export function getSocketServer(): Server {
  * Creates and configures the Socket.IO server.
  *
  * @param httpServer - The HTTP server to attach Socket.IO to
- * @param options - Socket server options including optional redisUrl
+ * @param options - Socket server options including optional redisUrl and jwtSecret
  * @returns The configured Socket.IO server instance
  */
 export default async function createSocketServer(
     httpServer: HttpServer,
     options: SocketServerOptions = {}
 ): Promise<Server> {
-    const { redisUrl, ...socketOptions } = options;
+    const { redisUrl, jwtSecret, ...socketOptions } = options;
 
     const io = new Server(httpServer, {
         transports: ["websocket"],
@@ -81,16 +89,25 @@ export default async function createSocketServer(
     // Store global reference
     ioInstance = io;
 
+    // Create JWT instance if secret provided (for authenticated namespaces)
+    const jwt = jwtSecret ? new Jwt(jwtSecret) : null;
+
     // Register all socket namespaces
-    await registerSocketNamespaces(io);
+    await registerSocketNamespaces(io, jwt);
 
     return io;
 }
 
 /**
  * Registers all socket namespaces from socket module files.
+ * 
+ * Authentication middleware is applied to namespaces NOT under /public.
+ * Public namespaces allow unauthenticated connections.
+ * 
+ * @param io - Socket.IO server instance
+ * @param jwt - JWT instance for authentication (null = all public)
  */
-async function registerSocketNamespaces(io: Server): Promise<void> {
+async function registerSocketNamespaces(io: Server, jwt: Jwt | null): Promise<void> {
     logger.scope("Socket").info("Registering socket namespaces");
 
     for await (const relativePath of findServices()) {
@@ -104,10 +121,38 @@ async function registerSocketNamespaces(io: Server): Promise<void> {
         for (const [exportName, exportValue] of Object.entries(module)) {
             if (exportValue instanceof NamespaceManager) {
                 const endpoint = getEndpointPath(publicUrl, exportName);
+                const isPublic = endpoint.startsWith("/public");
 
-                logger.scope("Socket").info(`Registering socket namespace: ${endpoint}`);
+                logger.scope("Socket").info(
+                    `Registering socket namespace: ${endpoint} (${isPublic ? "public" : "authenticated"})`
+                );
 
-                exportValue.connect(io.of(endpoint));
+                const nsp = io.of(endpoint);
+
+                // Apply authentication middleware for non-public namespaces
+                if (!isPublic && jwt) {
+                    nsp.use(async (socket, next) => {
+                        try {
+                            const cookieHeader = socket.handshake.headers.cookie;
+                            const token = getCookie(cookieHeader);
+
+                            if (!token) {
+                                return next(new Error("Authentication required"));
+                            }
+
+                            const payload = await jwt.verifyToken(token);
+
+                            // Attach user data to socket for later use
+                            socket.data.user = payload;
+                            next();
+                        } catch (error) {
+                            logger.scope("Socket").warn(`Auth failed for ${endpoint}: ${error}`);
+                            next(new Error("Authentication failed"));
+                        }
+                    });
+                }
+
+                exportValue.connect(nsp);
                 break;
             }
         }
