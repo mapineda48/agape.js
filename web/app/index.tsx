@@ -1,6 +1,7 @@
 import { type JSX, useEffect, useMemo, useState } from "react";
 import { HistoryManager, HistoryContext } from "../components/router/router";
 import ErrorBoundary from "../components/util/error-boundary";
+import Chat from "../components/Chat";
 
 /**
  * Routes component for React apps. Subscribes to router events
@@ -23,6 +24,7 @@ export default function Routes() {
   return (
     <HistoryContext.Provider value={router}>
       <ErrorBoundary>{state}</ErrorBoundary>
+      <Chat />
     </HistoryContext.Provider>
   );
 }

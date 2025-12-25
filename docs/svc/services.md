@@ -384,6 +384,38 @@ type ChatEvents = {
 socket.emit("unknown-event" as any, data); // No hacer esto
 ```
 
+### Ejemplo: Chat Global Público
+
+Un caso de uso común para namespaces públicos es un chat global que no requiere persistencia:
+
+**Servidor (`svc/public/socket.ts`):**
+```typescript
+const socket = registerNamespace<ChatEvents>();
+
+socket.on("message:send", (payload) => {
+    socket.emit("message:received", {
+        id: Math.random().toString(36),
+        text: payload.text,
+        sender: payload.sender,
+        timestamp: Date.now(),
+    });
+});
+
+export default socket;
+```
+
+**Cliente (`web/components/Chat.tsx`):**
+```typescript
+import socket from "@agape/public/socket";
+
+const connection = socket.connect();
+connection.on("message:received", (msg) => {
+    setMessages(prev => [...prev, msg]);
+});
+
+connection.emit("message:send", { text: "Hola!", sender: "Usuario1" });
+```
+
 ### Resumen del Flujo
 
 ```

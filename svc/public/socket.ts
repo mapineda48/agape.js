@@ -1,18 +1,8 @@
 /**
- * Public Socket Namespace
+ * Public Socket Namespace: Global Chat
  *
- * Provides real-time communication for public-facing features
- * that don't require authentication.
- *
- * @example
- * // Client usage:
- * import socket from "@agape/public/socket";
- *
- * const connection = socket.connect();
- *
- * connection.on("user:created", ({ id, name }) => {
- *     console.log(`New user: ${name} (${id})`);
- * });
+ * Provides real-time communication for a public global chat.
+ * Broadcasts messages to all connected clients without persistence.
  */
 
 import { registerNamespace } from "#lib/socket/namespace";
@@ -21,17 +11,39 @@ import { registerNamespace } from "#lib/socket/namespace";
 // Event Types
 // ============================================================================
 
+/** Message structure */
+export interface ChatMessage {
+    id: string;
+    text: string;
+    sender: string;
+    timestamp: number;
+}
+
 /**
- * Events emitted by this socket namespace.
- * Define the payload structure for each event.
+ * Events emitted/received by this socket namespace.
  */
-type ServerEvents = {
-    /** Emitted when a new user is created */
-    "user:created": { id: string; name: string };
+type ChatEvents = {
+    /** Client sends a message to the server */
+    "message:send": { text: string; sender: string };
+    /** Server broadcasts message to all clients */
+    "message:received": ChatMessage;
 };
 
 // ============================================================================
-// Namespace Export
+// Namespace Export & Logic
 // ============================================================================
 
-export default registerNamespace<ServerEvents>();
+const socket = registerNamespace<ChatEvents>();
+
+// Handle incoming chat messages
+socket.on("message:send", (payload) => {
+    // Broadcast the message back to all clients
+    socket.emit("message:received", {
+        id: Math.random().toString(36).substring(2, 11),
+        text: payload.text,
+        sender: payload.sender,
+        timestamp: Date.now(),
+    });
+});
+
+export default socket;
