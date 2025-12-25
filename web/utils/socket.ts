@@ -60,7 +60,9 @@ export interface SocketClientFactory {
 function wrapEventHandler(handler: (data: unknown) => void): (data: unknown) => void {
     return (data: unknown) => {
         if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
-            handler(decode(data as Uint8Array));
+            const decoded = decode(data as Uint8Array);
+            // msgpackr wraps emitted args in an array
+            handler(Array.isArray(decoded) ? decoded[0] : decoded);
         } else {
             handler(data);
         }

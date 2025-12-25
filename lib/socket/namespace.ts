@@ -80,7 +80,8 @@ export class NamespaceManager {
                 // Decode msgpack if binary data, otherwise pass through
                 if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
                     const decoded = decode(data as Uint8Array);
-                    emitter.emit(internalEvent, decoded);
+                    // Standard Socket.IO emit with msgpackr wraps args in an array [payload]
+                    emitter.emit(internalEvent, Array.isArray(decoded) ? decoded[0] : decoded);
                 } else {
                     emitter.emit(internalEvent, data);
                 }
