@@ -1,11 +1,13 @@
 import { type JSX, useEffect, useMemo, useState } from "react";
 import { HistoryManager, HistoryContext } from "../components/router/router";
 import ErrorBoundary from "../components/util/error-boundary";
-import Chat from "./Chat";
 
 /**
  * Routes component for React apps. Subscribes to router events
  * and updates local state with the current page element.
+ * 
+ * Note: Global UI components (Chat, CartDrawer) are now rendered
+ * in the root layout (_layout.tsx), not here.
  */
 export default function Routes() {
   const [state, setState] = useState<null | JSX.Element>(null);
@@ -24,7 +26,6 @@ export default function Routes() {
   return (
     <HistoryContext.Provider value={router}>
       <ErrorBoundary>{state}</ErrorBoundary>
-      <Chat />
     </HistoryContext.Provider>
   );
 }
