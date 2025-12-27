@@ -130,6 +130,31 @@ export class CacheManager {
   }
 
   /**
+   * Atomically increment a counter. Returns new value.
+   * If key doesn't exist, it's created with value 1.
+   */
+  public async incr(key: string): Promise<number> {
+    return this.client.incr(key);
+  }
+
+  /**
+   * Atomically decrement a counter. Returns new value.
+   * If key doesn't exist, it's created with value -1.
+   * Use with caution - can go negative.
+   */
+  public async decr(key: string): Promise<number> {
+    return this.client.decr(key);
+  }
+
+  /**
+   * Get a numeric value from cache. Returns 0 if key doesn't exist.
+   */
+  public async getNumber(key: string): Promise<number> {
+    const value = await this.client.get(key);
+    return value ? parseInt(value, 10) : 0;
+  }
+
+  /**
    * Wrapper estándar: cachea y retorna el valor ya deserializado (T).
    */
   public cache<T, A extends unknown[]>(

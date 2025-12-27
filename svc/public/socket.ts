@@ -6,6 +6,7 @@
  */
 
 import { registerNamespace } from "#lib/socket/namespace";
+import { CacheManager } from "#lib/services/cache/CacheManager";
 
 // ============================================================================
 // Event Types
@@ -45,17 +46,20 @@ type ChatEvents = {
 
 const socket = registerNamespace<ChatEvents>();
 
-// Track online users count
-let onlineUsers = 0;
+// Redis key for online users counter (stateless across replicas)
+const ONLINE_USERS_KEY = "public:chat:online_users";
 
-socket.on("socket:connect", () => {
-    onlineUsers++;
-    socket.emit("users:count", { count: onlineUsers });
+socket.on("socket:connect", async () => {
+    const cache = CacheManager.get();
+    const count = await cache.incr(ONLINE_USERS_KEY);
+    socket.emit("users:count", { count });
 });
 
-socket.on("socket:disconnect", () => {
-    onlineUsers = Math.max(0, onlineUsers - 1);
-    socket.emit("users:count", { count: onlineUsers });
+socket.on("socket:disconnect", async () => {
+    const cache = CacheManager.get();
+    const count = await cache.decr(ONLINE_USERS_KEY);
+    // Ensure count doesn't go below 0
+    socket.emit("users:count", { count: Math.max(0, count) });
 });
 
 // Handle typing status

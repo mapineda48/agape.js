@@ -9,6 +9,8 @@ const mockRedisClient = {
     del: vi.fn().mockResolvedValue(1),
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue("OK"),
+    incr: vi.fn().mockResolvedValue(1),
+    decr: vi.fn().mockResolvedValue(0),
     on: vi.fn(),
     withCommandOptions: vi.fn().mockReturnThis(),
 };
@@ -169,6 +171,70 @@ describe("lib/services/cache/CacheManager", () => {
             await instance.setBuffer("test-key", testBuffer, 0);
 
             expect(mockRedisClient.set).toHaveBeenCalledWith("test-key", testBuffer);
+        });
+    });
+
+    describe("incr()", () => {
+        it("should increment a counter and return new value", async () => {
+            mockRedisClient.incr.mockResolvedValueOnce(5);
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.incr("counter-key");
+            expect(mockRedisClient.incr).toHaveBeenCalledWith("counter-key");
+            expect(result).toBe(5);
+        });
+
+        it("should return 1 when key does not exist", async () => {
+            mockRedisClient.incr.mockResolvedValueOnce(1);
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.incr("new-counter");
+            expect(result).toBe(1);
+        });
+    });
+
+    describe("decr()", () => {
+        it("should decrement a counter and return new value", async () => {
+            mockRedisClient.decr.mockResolvedValueOnce(4);
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.decr("counter-key");
+            expect(mockRedisClient.decr).toHaveBeenCalledWith("counter-key");
+            expect(result).toBe(4);
+        });
+
+        it("should return -1 when key does not exist", async () => {
+            mockRedisClient.decr.mockResolvedValueOnce(-1);
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.decr("new-counter");
+            expect(result).toBe(-1);
+        });
+
+        it("should return 0 when decrementing from 1", async () => {
+            mockRedisClient.decr.mockResolvedValueOnce(0);
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.decr("counter-at-one");
+            expect(result).toBe(0);
+        });
+    });
+
+    describe("getNumber()", () => {
+        it("should return 0 when key does not exist", async () => {
+            mockRedisClient.get.mockResolvedValueOnce(null);
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.getNumber("nonexistent-key");
+            expect(result).toBe(0);
+        });
+
+        it("should return parsed integer when key exists", async () => {
+            mockRedisClient.get.mockResolvedValueOnce("42");
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.getNumber("existing-key");
+            expect(result).toBe(42);
+        });
+
+        it("should handle negative values", async () => {
+            mockRedisClient.get.mockResolvedValueOnce("-5");
+            const instance = CacheManager.init("redis://localhost:6379");
+            const result = await instance.getNumber("negative-key");
+            expect(result).toBe(-5);
         });
     });
 
