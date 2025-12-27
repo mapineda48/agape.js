@@ -1,5 +1,5 @@
 import React from "react";
-import { CartProvider } from "@/components/cart";
+import { CartProvider } from "@/app/cart";
 
 type LayoutProps = {
     children: React.ReactNode;

@@ -18,7 +18,7 @@ import { useRouter } from "@/components/router/router-hook";
 import { getPublicProductById } from "@agape/public/products";
 import type { IItemRecord, ListItemItem } from "@utils/dto/catalogs/item";
 import Button from "@/components/ui/button";
-import { useCart, CartDrawer } from "@/components/cart";
+import { useCart, CartDrawer } from "@/app/cart";
 
 /**
  * Product detail page - displays full product information
