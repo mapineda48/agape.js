@@ -9,6 +9,7 @@ import bridge from "#lib/bridge/middleware";
 import logger from "#lib/log/logger";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
 import hashString from "#lib/hashString";
+import { CacheManager } from "#lib/services/cache/CacheManager";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
@@ -48,6 +49,9 @@ const blobStorageHost = await AzureBlobStorage.connect(
   hashString(AGAPE_TENANT),
   AGAPE_CDN_HOST
 );
+
+// Initialize cache backend (e.g., Redis)
+await CacheManager.init(CACHE_URL).connect();
 
 const app = express();
 const httpServer = http.createServer(app);
