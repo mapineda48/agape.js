@@ -222,8 +222,7 @@ The VM is automatically configured via cloud-init with:
 
 | Service | Description |
 |---------|-------------|
-| `mapineda48-docker-compose` | Main Docker Compose stack |
-| `mapineda48-blobfuse2` | Blobfuse2 storage mount |
+| `mapineda48-blobfuse2` | Blobfuse2 storage mount (starts before Docker) |
 | `mapineda48-prometheus` | Prometheus metrics server |
 | `mapineda48-loki` | Loki log aggregator |
 | `mapineda48-node-exporter` | Node Exporter metrics |
@@ -231,6 +230,8 @@ The VM is automatically configured via cloud-init with:
 | `mapineda48-ngrok` | ngrok tunnel (manual start) |
 | `mapineda48.socket` | Unix socket for deployment triggers |
 | `mapineda48@.service` | Socket-activated handler |
+
+> **Note**: Docker Compose containers use `restart: unless-stopped` policy, which handles automatic restart on boot. The Docker service has a drop-in (`/etc/systemd/system/docker.service.d/mapineda48-deps.conf`) that ensures blobfuse2 is mounted before Docker starts.
 
 ### Storage Mounts
 
@@ -253,11 +254,14 @@ Blobfuse2 mounts Azure Blob Storage to `/mnt/deploy`:
 **View service status:**
 
 ```bash
-# Docker Compose stack
-sudo systemctl status mapineda48-docker-compose
+# Docker containers
+sudo docker compose -f /opt/mapineda48/compose/docker-compose.yml ps
 
 # Blobfuse2 mount
 sudo systemctl status mapineda48-blobfuse2
+
+# Docker service (includes blobfuse2 dependency)
+sudo systemctl status docker
 
 # Monitoring services
 sudo systemctl status mapineda48-prometheus
@@ -276,7 +280,12 @@ sudo systemctl status mapineda48.socket
 sudo systemctl daemon-reload && sudo systemctl restart mapineda48.socket
 
 # Restart Docker Compose stack
-sudo systemctl restart mapineda48-docker-compose
+sudo docker compose -f /opt/mapineda48/compose/docker-compose.yml restart
+
+# Full restart (stop, pull, start)
+sudo docker compose -f /opt/mapineda48/compose/docker-compose.yml down
+sudo docker compose -f /opt/mapineda48/compose/docker-compose.yml pull
+sudo docker compose -f /opt/mapineda48/compose/docker-compose.yml up -d
 ```
 
 ### Blobfuse2 Management
@@ -308,12 +317,14 @@ sudo fusermount3 -u /mnt/deploy
 sudo journalctl -u 'mapineda48*' -f
 
 # Specific service
-sudo journalctl -u mapineda48-docker-compose -f
 sudo journalctl -u mapineda48-blobfuse2 -f
 sudo journalctl -u mapineda48-loki -f
 
 # Docker daemon logs
 sudo journalctl -u docker -b
+
+# Docker Compose logs
+sudo docker compose -f /opt/mapineda48/compose/docker-compose.yml logs -f
 ```
 
 **View cloud-init logs:**
