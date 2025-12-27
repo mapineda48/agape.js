@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { listCategories as findAll } from "@agape/catalogs/category";
-import PageLayout from "@/components/cms/PageLayout";
+import PageLayout from "@/app/cms/PageLayout";
 import { useRouter } from "@/components/router/router-hook";
 
 // Animation variants

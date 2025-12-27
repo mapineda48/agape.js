@@ -1,5 +1,5 @@
 import NotFound from "@/app/NotFound";
-import PageLayout from "@/components/cms/PageLayout";
+import PageLayout from "@/app/cms/PageLayout";
 
 export default function Inventory() {
   return (
