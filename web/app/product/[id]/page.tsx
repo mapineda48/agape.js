@@ -18,7 +18,7 @@ import { useRouter } from "@/components/router/router-hook";
 import { getPublicProductById } from "@agape/public/products";
 import type { IItemRecord, ListItemItem } from "@utils/dto/catalogs/item";
 import Button from "@/components/ui/button";
-import { useCart, CartDrawer } from "@/app/cart";
+import { useCart } from "@/app/cart";
 
 /**
  * Product detail page - displays full product information
@@ -400,7 +400,6 @@ export default function ProductDetailPage() {
                     </motion.div>
                 </div>
             </main>
-            <CartDrawer />
         </div>
     );
 }

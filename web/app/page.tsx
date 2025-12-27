@@ -12,7 +12,7 @@ import { getPublicProducts } from "@agape/public/products";
 import type { ListItemItem } from "@utils/dto/catalogs/item";
 import Button from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useCart, CartDrawer } from "@/app/cart";
+import { useCart } from "@/app/cart";
 import { useRouter } from "@/components/router/router-hook";
 
 // --- Components ---
@@ -424,8 +424,6 @@ export default function AgapeLandingPage() {
       </main>
 
       <Footer />
-
-      <CartDrawer />
     </div>
   );
 }
