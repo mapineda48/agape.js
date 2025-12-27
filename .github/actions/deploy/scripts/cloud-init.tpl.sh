@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Detect run mode: develop (terminal) or terraform (piped)
 if [ -t 0 ]; then
   RUN_MODE="develop"
 else
@@ -10,88 +11,95 @@ fi
 log() {
   local msg="$*"
   if [[ "${RUN_MODE:-develop}" == "develop" ]]; then
-    echo "[LOG] $msg"
+    echo "[LOG] $msg" >&2
   fi
 }
 
+# Variables to substitute (only these will be replaced by envsubst)
 VARLIST='${AGAPE_CDN_HOST} ${AGAPE_FQDN} ${AGAPE_EMAIL_ACME} ${AGAPE_ADMIN} ${AGAPE_PASSWORD} ${AGAPE_HOOK} ${AGAPE_SECRET} ${STORAGE_ACCOUNT_NAME} ${STORAGE_ACCOUNT_KEY} ${STORAGE_CONNECTION_STRING} ${NEON_DATABASE_URI} ${NGROK_AUTHTOKEN}'
 
-
-# Directorios
+# Directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../cloud-init && pwd)"
 TEMPLATE="$SCRIPT_DIR/cloud-init.tpl.yaml"
 WRITE_DIR="$SCRIPT_DIR/write_files"
 OUTPUT="$SCRIPT_DIR/cloud-init.rendered.yaml"
 ENV_FILE="$SCRIPT_DIR/.env"
 
-# Carga .env si existe
+# Load .env if exists
 if [[ -f "$ENV_FILE" ]]; then
-  log "ℹ️  Cargando entorno desde: $ENV_FILE"
+  log "ℹ️  Loading environment from: $ENV_FILE"
   set -a
   # shellcheck disable=SC1090
   source "$ENV_FILE"
   set +a
-  log "✅ .env cargado correctamente"
+  log "✅ .env loaded successfully"
 else
-  log "⚠️ No se encontró $ENV_FILE; usando solo variables del entorno"
+  log "⚠️ $ENV_FILE not found; using only environment variables"
 fi
 
-# Verifica que exista la carpeta
+# Verify write_files directory exists
 if [[ ! -d "$WRITE_DIR" ]]; then
-  log "❌ No existe la carpeta write_files en: $WRITE_DIR"
+  log "❌ write_files directory not found: $WRITE_DIR"
   exit 1
 fi
 
-# 1) Ejecuta awk y guarda TODO en una variable
-RENDERED_AWK="$(
-  awk -v write_dir="$WRITE_DIR" '
-    BEGIN { inserted = 0 }
-    {
-      print $0
-      if ($0 ~ /write_files:/ && inserted == 0) {
-        # Genera los bloques YAML
-        while (( "find \"" write_dir "\" -type f | sort" | getline file ) > 0 ) {
-          rel = file
-          sub(write_dir "/", "", rel)
+# Function to generate write_files YAML entries
+generate_write_files() {
+  find "$WRITE_DIR" -type f | sort | while IFS= read -r file; do
+    # Get relative path from write_files directory
+    rel="${file#$WRITE_DIR/}"
+    
+    # Determine permissions based on file extension
+    if [[ "$rel" == *.sh ]]; then
+      perm="0755"
+    else
+      perm="0644"
+    fi
+    
+    # Output YAML entry
+    echo "  - path: /$rel"
+    echo "    permissions: \"$perm\""
+    echo "    content: |"
+    
+    # Read file content and indent with 6 spaces
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      echo "      $line"
+    done < "$file"
+    
+    echo ""
+  done
+}
 
-          # Detectar extensión .sh → permisos ejecutables
-          perm = "0644"
-          if (rel ~ /\.sh$/) {
-            perm = "0755"
-          }
-
-          print "  - path: /" rel
-          printf "    permissions: \"%s\"\n", perm
-          print "    content: |"
-          while (( "cat \"" file "\"" | getline line ) > 0 ) {
-            print "      " line
-          }
-          close("cat \"" file "\"")
-          print ""
-        }
-        inserted = 1
-      }
-    }
-  ' "$TEMPLATE"
-)"
-
-
-# 2) Aplica envsubst AL FINAL sobre lo producido por awk
-#    (Opción A: sustituir TODAS las variables exportadas)
-FINAL_RENDERED="$(printf '%s' "$RENDERED_AWK" | envsubst "$VARLIST")"
-
-# Leemos el JSON solo si existe algo en stdin
-if [ -t 0 ]; then
-  # stdin está conectado a una terminal → no viene de Terraform
-  log "🧪 Modo local detectado"
+# Build the rendered cloud-init
+build_cloudinit() {
+  local write_files_inserted=0
   
-    # Escribe el resultado
-    printf '%s\n' "$FINAL_RENDERED" > "$OUTPUT"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    echo "$line"
+    
+    # After write_files: line, insert all file entries
+    if [[ "$line" == "write_files:"* ]] && [[ $write_files_inserted -eq 0 ]]; then
+      generate_write_files
+      write_files_inserted=1
+    fi
+  done < "$TEMPLATE"
+}
 
-    log "✅ Archivo generado en: $OUTPUT"
+# Generate the YAML (without variable substitution first)
+log "🔧 Generating cloud-init configuration..."
+RENDERED_YAML="$(build_cloudinit)"
+
+# Apply envsubst for variable substitution
+log "🔄 Applying environment variable substitution..."
+FINAL_RENDERED="$(printf '%s' "$RENDERED_YAML" | envsubst "$VARLIST")"
+
+# Output based on run mode
+if [[ "$RUN_MODE" == "develop" ]]; then
+  log "🧪 Local mode detected"
+  printf '%s\n' "$FINAL_RENDERED" > "$OUTPUT"
+  log "✅ File generated: $OUTPUT"
 else
-  # Terraform envía JSON → stdin no está vacío
-  log "🚀 Ejecutado desde Terraform"
-
+  # Terraform mode: output JSON
+  log "🚀 Running from Terraform"
   jq -n --arg rendered "$FINAL_RENDERED" '{"rendered": $rendered}'
 fi

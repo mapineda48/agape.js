@@ -14,7 +14,7 @@ services:
     environment:
       TRUST_DOWNSTREAM_PROXY: "false"
     volumes:
-      # Certificados persistentes en Storage
+      # Persistent certificates in Storage
       - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs
       - /mnt/deploy/vm/agape.js/docker/vhost.d:/etc/nginx/vhost.d
       - /mnt/deploy/vm/agape.js/docker/html:/usr/share/nginx/html
@@ -31,11 +31,11 @@ services:
       ACME_CA_URI: https://acme-v02.api.letsencrypt.org/directory
       NGINX_PROXY_CONTAINER: mapineda48-proxy
     volumes:
-      # IMPORTANTE: mismo volumen de certs y en RW
+      # IMPORTANT: same certs volume in RW
       - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs:rw
       - /mnt/deploy/vm/agape.js/docker/vhost.d:/etc/nginx/vhost.d
       - /mnt/deploy/vm/agape.js/docker/html:/usr/share/nginx/html
-      # Estado de acme.sh persistente en Storage
+      # Persistent acme.sh state in Storage
       - /mnt/deploy/vm/agape.js/docker/acme:/etc/acme.sh
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -44,9 +44,11 @@ services:
       - nginx-proxy
     restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
-    container_name: mapineda48-redis
+  # Valkey: Open-source Redis alternative (Linux Foundation)
+  # https://valkey.io/
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: mapineda48-valkey
     networks:
       - mapineda48-net
     restart: unless-stopped
@@ -55,9 +57,7 @@ services:
     container_name: mapineda48-socket-bridge
     image: alpine/socat
     command: >
-      -d -d
-      TCP-LISTEN:8081,fork,reuseaddr
-      UNIX-CONNECT:/run/mapineda48.sock
+      -d -d TCP-LISTEN:8081,fork,reuseaddr UNIX-CONNECT:/run/mapineda48.sock
     volumes:
       - /run/mapineda48.sock:/run/mapineda48.sock:ro
     networks:
@@ -80,11 +80,12 @@ services:
       AGAPE_PASSWORD: ${AGAPE_PASSWORD}
       AGAPE_SECRET: ${AGAPE_SECRET}
       AGAPE_HOOK: ${AGAPE_HOOK}
+      CACHE_URL: redis://valkey:6379
       NODE_ENV: production
     depends_on:
       - nginx-proxy
       - nginx-proxy-acme
-      - redis
+      - valkey
     networks:
       - mapineda48-net
     restart: unless-stopped

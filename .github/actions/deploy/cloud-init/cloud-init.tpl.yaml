@@ -50,14 +50,14 @@ runcmd:
   - wget https://github.com/prometheus/prometheus/releases/download/v3.7.3/prometheus-3.7.3.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
   - tar xvfz /tmp/prometheus.tar.gz -C /tmp --strip-components=1
   - install -m 0755 /tmp/prometheus /usr/local/bin/prometheus
-  - mkdir -p /var/lib/prometheus
+  - mkdir -p /var/lib/prometheus /etc/prometheus/rules
   - systemctl enable --now mapineda48-prometheus
 
   # https://github.com/grafana/loki/releases
   - wget https://github.com/grafana/loki/releases/download/v3.5.7/loki-linux-amd64.zip -O /tmp/loki.zip
   - unzip /tmp/loki.zip -d /tmp
   - install -m 0755 /tmp/loki-linux-amd64 /usr/local/bin/loki
-  - mkdir -p /var/lib/loki/{tsdb-index,tsdb-cache,chunks,wal,compactor}
+  - mkdir -p /var/lib/loki/{tsdb-index,tsdb-cache,chunks,wal,compactor} /var/log/cadvisor
   - systemctl enable --now mapineda48-loki
 
   # Install Blobfuse2 (BEFORE Docker to ensure mount availability)

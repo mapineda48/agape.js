@@ -1,46 +1,91 @@
-# my global config
-global:
-  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
-  # scrape_timeout is set to the global default (10s).
+# Prometheus Configuration - Optimized for Single VM Monitoring
+# Based on Prometheus 3.x best practices
 
-# Alertmanager configuration
+global:
+  # Scrape interval: 15s is a good balance for most metrics
+  scrape_interval: 15s
+  # Evaluation interval for alerting rules
+  evaluation_interval: 15s
+  # Scrape timeout should be less than scrape_interval
+  scrape_timeout: 10s
+  # External labels for federation and remote write scenarios
+  external_labels:
+    environment: production
+    instance: agape-vm
+
+# Alertmanager configuration (prepared for future use)
 alerting:
   alertmanagers:
     - static_configs:
-        - targets:
+        - targets: []
           # - alertmanager:9093
 
-# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+# Rule files for alerts and recording rules
+# Recording rules can precompute expensive queries
 rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
+  - /etc/prometheus/rules/*.yml
 
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
+# Scrape configurations
 scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: "prometheus"
-
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-
+  # Prometheus self-monitoring
+  - job_name: prometheus
+    # Prometheus metrics path defaults to /metrics
     static_configs:
       - targets: ["localhost:9090"]
-       # The label name is added as a label `label_name=<label_value>` to any timeseries scraped from this config.
         labels:
-          app: "prometheus"
+          component: prometheus
+          service: monitoring
 
-  # Node Exporter (métricas del host)
-  - job_name: "node"
+  # Node Exporter - System metrics (CPU, memory, disk, network)
+  - job_name: node
     static_configs:
       - targets: ["127.0.0.1:9100"]
         labels:
-          app: "node-exporter"
+          component: node-exporter
+          service: system
+    # Longer timeout for node_exporter as it can take time on busy systems
+    scrape_timeout: 10s
+    # Relabel to extract instance from target
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):[0-9]+"
+        replacement: "${1}"
 
-  # cAdvisor (métricas de contenedores Docker)
-  - job_name: "cadvisor"
+  # cAdvisor - Container metrics (Docker containers)
+  - job_name: cadvisor
     static_configs:
       - targets: ["127.0.0.1:8080"]
         labels:
-          app: "cadvisor"
+          component: cadvisor
+          service: containers
+    # cAdvisor can be slow on systems with many containers
+    scrape_timeout: 10s
+    # Metric relabeling to reduce cardinality
+    metric_relabel_configs:
+      # Drop high-cardinality container metrics not needed
+      - source_labels: [__name__]
+        regex: "container_(network_tcp_usage_total|tasks_state|memory_failures_total)"
+        action: drop
+      # Drop metrics with blank container names (system containers)
+      - source_labels: [name]
+        regex: ""
+        action: drop
+
+  # Loki metrics endpoint for log aggregation monitoring
+  - job_name: loki
+    static_configs:
+      - targets: ["127.0.0.1:3100"]
+        labels:
+          component: loki
+          service: logging
+    metrics_path: /metrics
+
+  # Docker daemon metrics (if exposed)
+  # Uncomment if you enable Docker metrics in daemon.json
+  # - job_name: docker
+  #   static_configs:
+  #     - targets: ["127.0.0.1:9323"]
+  #       labels:
+  #         component: docker
+  #         service: containers

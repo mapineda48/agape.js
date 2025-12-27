@@ -1,9 +1,21 @@
+# Grafana Loki Configuration - Optimized for Single VM Production
+# Based on Loki 3.x best practices
+
+# Authentication disabled for single-tenant setup
 auth_enabled: false
 
+# HTTP server configuration
 server:
   http_listen_port: 3100
-  log_level: info
+  grpc_listen_port: 9096
+  log_level: warn
+  # Graceful shutdown
+  graceful_shutdown_timeout: 30s
+  # Request limits
+  http_server_read_timeout: 30s
+  http_server_write_timeout: 30s
 
+# Common configuration shared across components
 common:
   ring:
     instance_addr: 127.0.0.1
@@ -12,14 +24,53 @@ common:
   replication_factor: 1
   path_prefix: /var/lib/loki
 
+# Ingester configuration for log ingestion
 ingester:
+  # Write-ahead log for durability
   wal:
     enabled: true
     dir: /var/lib/loki/wal
+    flush_on_shutdown: true
+    replay_memory_ceiling: 256MB
+  # Chunk configuration for efficient storage
+  chunk_idle_period: 1h
+  chunk_target_size: 1572864  # ~1.5MB for better compression
+  max_chunk_age: 2h
+  chunk_retain_period: 30s
+  chunk_encoding: snappy  # Good balance of speed and compression
+  # Lifecycle management
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
 
+# Query frontend configuration
+query_range:
+  # Align queries to time intervals for better caching
+  align_queries_with_step: true
+  # Cache results for repeated queries
+  cache_results: true
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+  # Split queries by time for parallel processing
+  parallelise_shardable_queries: true
+
+# Query scheduler for better query distribution
+query_scheduler:
+  max_outstanding_requests_per_tenant: 2048
+
+# Querier configuration
+querier:
+  max_concurrent: 10
+
+# Schema configuration - defines how data is stored
 schema_config:
   configs:
-    - from: 2023-10-20
+    - from: "2024-01-01"
       store: tsdb
       object_store: filesystem
       schema: v13
@@ -27,19 +78,59 @@ schema_config:
         prefix: index_
         period: 24h
 
+# Storage configuration
 storage_config:
+  # TSDB storage for efficient index management
   tsdb_shipper:
     active_index_directory: /var/lib/loki/tsdb-index
     cache_location: /var/lib/loki/tsdb-cache
+  # Filesystem storage for chunks
   filesystem:
     directory: /var/lib/loki/chunks
 
+# Compactor for index optimization and retention
 compactor:
   working_directory: /var/lib/loki/compactor
+  compaction_interval: 10m
   retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
   delete_request_store: filesystem
 
+# Limits configuration for resource management
 limits_config:
-  retention_period: 7d
+  # Retention period (30 days for production)
+  retention_period: 720h
+  # Ingestion rate limits
+  ingestion_rate_mb: 10
+  ingestion_burst_size_mb: 20
+  # Per-stream rate limits
+  per_stream_rate_limit: 3MB
+  per_stream_rate_limit_burst: 15MB
+  # Query limits
+  query_timeout: 3m
+  max_query_length: 720h
+  max_query_lookback: 720h
+  max_query_parallelism: 32
+  # Reject old/future samples
   reject_old_samples: true
-  reject_old_samples_max_age: 168h
+  reject_old_samples_max_age: 168h  # 7 days
+  creation_grace_period: 10m
+  # Stream limits
+  max_streams_per_user: 10000
+  max_line_size: 256KB
+  max_entries_limit_per_query: 5000
+  # Label limits
+  max_label_name_length: 1024
+  max_label_value_length: 2048
+  max_label_names_per_series: 30
+
+# Table manager for index lifecycle
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 720h  # 30 days
+
+# Runtime configuration for dynamic updates
+runtime_config:
+  file: /etc/loki/runtime.yml
+  period: 10s

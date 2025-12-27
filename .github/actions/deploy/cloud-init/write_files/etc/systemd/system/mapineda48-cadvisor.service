@@ -1,10 +1,28 @@
 [Unit]
-Description=cAdvisor (container metrics)
-After=network.target
+Description=cAdvisor Container Metrics Collector
+Documentation=https://github.com/google/cadvisor
+After=docker.service
+Requires=docker.service
 
 [Service]
-ExecStart=/usr/local/bin/cadvisor --port=8080  --listen_ip=127.0.0.1
-Restart=always
+Type=simple
+User=root
+ExecStart=/usr/local/bin/cadvisor \
+    --port=8080 \
+    --listen_ip=127.0.0.1 \
+    --housekeeping_interval=15s \
+    --docker_only=true \
+    --disable_metrics=percpu,sched,process,hugetlb,referenced_memory,resctrl,cpuset,advtcp,memory_numa \
+    --store_container_labels=false \
+    --log_dir=/var/log/cadvisor
+
+# Restart configuration
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+# Security hardening
+NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
