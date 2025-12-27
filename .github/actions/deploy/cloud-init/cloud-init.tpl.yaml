@@ -79,4 +79,9 @@ runcmd:
 
   # Enable services and start Docker Compose
   - systemctl enable --now mapineda48.socket
+
+  # Set API replicas to number of processors
+  - tmp="$(mktemp)" && AGAPE_REPLICAS="$(nproc)" envsubst '${AGAPE_REPLICAS}' < /opt/mapineda48/compose/docker-compose.yml > "$tmp" && mv "$tmp" /opt/mapineda48/compose/docker-compose.yml
+
+  # Start Docker Compose
   - docker compose -f /opt/mapineda48/compose/docker-compose.yml up -d

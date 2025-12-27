@@ -66,9 +66,10 @@ services:
 
   agape-app:
     image: mapineda48/agape.js:develop
-    container_name: agape-app
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
+    deploy:
+      replicas: ${AGAPE_REPLICAS}
     environment:
       VIRTUAL_HOST: ${AGAPE_FQDN}
       LETSENCRYPT_HOST: ${AGAPE_FQDN}
