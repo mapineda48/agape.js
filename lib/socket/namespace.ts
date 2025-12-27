@@ -17,7 +17,7 @@
  * export default registerNamespace<Events>();
  */
 
-import mitt from "mitt";
+import EventEmitter from "node:events";
 import type { ConnectedSocket, EventMap } from "../utils/socket";
 import type { Namespace } from "socket.io";
 import { encode, decode } from "../utils/msgpack";
@@ -27,7 +27,7 @@ import { encode, decode } from "../utils/msgpack";
 // ============================================================================
 
 /** Internal event emitter for cross-socket communication */
-const emitter = mitt();
+const emitter = new EventEmitter();
 
 // ============================================================================
 // Namespace Manager
@@ -131,7 +131,7 @@ export class NamespaceManager {
      * @param event - The event name to stop listening for
      * @param handler - The specific handler to remove (optional)
      */
-    off(event: string, handler?: (data: unknown) => void): void {
+    off(event: string, handler: (data: unknown) => void): void {
         const internalEvent = this.getOrRegisterInternalEvent(event);
         emitter.off(internalEvent, handler);
     }
