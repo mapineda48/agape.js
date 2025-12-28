@@ -321,7 +321,8 @@ INSERT INTO "agape_app_development_demo"."numbering_document_type"
 VALUES
     ('INV_MOV', 'Movimiento de Inventario', 'Documentos de movimientos de inventario', 'inventory', true),
     ('SAL_INV', 'Factura de Venta',         'Facturación de ventas',                   'finance',   true),
-    ('PUR_INV', 'Factura de Compra',        'Facturación de compras',                  'finance',   true)
+    ('PUR_INV', 'Factura de Compra',        'Facturación de compras',                  'finance',   true),
+    ('PURCHASE_ORDER', 'Orden de Compra',   'Documentos de órdenes de compra',         'purchasing', true)
 ON CONFLICT ("code") DO UPDATE
 SET "name"        = EXCLUDED."name",
     "description" = EXCLUDED."description",
@@ -334,7 +335,7 @@ SET "name"        = EXCLUDED."name",
 -- ============================================================
 WITH doc_types AS (
     SELECT id, code FROM "agape_app_development_demo"."numbering_document_type"
-    WHERE code IN ('INV_MOV','SAL_INV','PUR_INV')
+    WHERE code IN ('INV_MOV','SAL_INV','PUR_INV','PURCHASE_ORDER')
 ),
 series_values AS (
     SELECT * FROM (VALUES
@@ -349,7 +350,10 @@ series_values AS (
         ('SAL_INV','FAC','FAC-',NULL, 1::bigint, 999999::bigint, false),
 
         -- PUR_INV
-        ('PUR_INV','COMPRA','C-',NULL, 1::bigint, 999999::bigint, true)
+        ('PUR_INV','COMPRA','C-',NULL, 1::bigint, 999999::bigint, true),
+
+        -- PURCHASE_ORDER
+        ('PURCHASE_ORDER','OC','OC-',NULL, 1::bigint, 999999::bigint, true)
     ) AS v(doc_type_code, series_code, prefix, suffix, start_number, end_number, is_default)
 )
 INSERT INTO "agape_app_development_demo"."numbering_document_series"
@@ -1003,8 +1007,11 @@ LIMIT 1;
 -- ============================================================
 UPDATE "agape_app_development_demo"."numbering_document_series" ds
 SET "current_number" = GREATEST(ds."current_number", 2)
-WHERE ds."series_code" IN ('ENTRADA','SALIDA','AJUSTE')
-  AND ds."document_type_id" = (SELECT id FROM "agape_app_development_demo"."numbering_document_type" WHERE code='INV_MOV' LIMIT 1);
+WHERE ds."series_code" IN ('ENTRADA','SALIDA','AJUSTE','OC')
+  AND ds."document_type_id" IN (
+    SELECT id FROM "agape_app_development_demo"."numbering_document_type" 
+    WHERE code IN ('INV_MOV', 'PURCHASE_ORDER')
+  );
 
 -- ============================================================
 -- Seed 02 (PARTIES) - Demo Papelería
