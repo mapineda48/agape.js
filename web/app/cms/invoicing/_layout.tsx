@@ -13,16 +13,16 @@ interface InvoicingLayoutProps {
 
 const TABS = [
     {
-        path: "purchase",
-        label: "Compras",
-        icon: ShoppingCartIcon,
-        description: "Facturas de proveedores y cuentas por pagar",
-    },
-    {
         path: "sales",
         label: "Ventas",
         icon: BanknotesIcon,
         description: "Facturas a clientes y cuentas por cobrar",
+    },
+    {
+        path: "purchase",
+        label: "Compras",
+        icon: ShoppingCartIcon,
+        description: "Facturas de proveedores y cuentas por pagar",
     },
 ];
 

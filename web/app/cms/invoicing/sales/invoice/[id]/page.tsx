@@ -123,7 +123,7 @@ export default function SalesInvoiceDetailPage({ invoice: initialInvoice }: Prop
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Back Button */}
                     <button
-                        onClick={() => navigate("../")}
+                        onClick={() => navigate("../..")}
                         className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 group"
                     >
                         <svg
@@ -362,7 +362,7 @@ export default function SalesInvoiceDetailPage({ invoice: initialInvoice }: Prop
                     {/* Actions */}
                     <div className="flex justify-between gap-4">
                         <button
-                            onClick={() => navigate("../")}
+                            onClick={() => navigate("../..")}
                             className="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition"
                         >
                             Volver al Listado

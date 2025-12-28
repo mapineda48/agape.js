@@ -9,7 +9,7 @@ export default function InvoicingPage() {
     const { navigate } = useRouter();
 
     useEffect(() => {
-        navigate("purchase", { replace: true });
+        navigate("sales", { replace: true });
     }, [navigate]);
 
     return (
