@@ -81,6 +81,7 @@ services:
       AGAPE_PASSWORD: ${AGAPE_PASSWORD}
       AGAPE_SECRET: ${AGAPE_SECRET}
       AGAPE_HOOK: ${AGAPE_HOOK}
+      RESEND_API_KEY: ${RESEND_API_KEY}
       CACHE_URL: redis://valkey:6379
       NODE_ENV: production
     depends_on:
