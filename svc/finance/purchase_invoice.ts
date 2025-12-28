@@ -15,7 +15,8 @@ import purchase_invoice_item from "#models/finance/purchase_invoice_item";
 import { paymentTerms } from "#models/finance/payment_terms";
 import goods_receipt_item from "#models/purchasing/goods_receipt_item";
 import order_item from "#models/purchasing/order_item";
-import { sum } from "drizzle-orm";
+import { item } from "#models/catalogs/item";
+import { getSystemConfig } from "#svc/config/systemConfig";
 
 // Re-export DTOs from shared module
 export type {
@@ -25,6 +26,9 @@ export type {
   ListPurchaseInvoicesParams,
   PurchaseInvoiceListItem,
   ListPurchaseInvoicesResult,
+  PurchaseInvoiceItemDetails,
+  PurchaseInvoicePdfData,
+  CompanyInfo,
 } from "#utils/dto/finance/purchase_invoice";
 
 import type {
@@ -34,6 +38,8 @@ import type {
   ListPurchaseInvoicesParams,
   PurchaseInvoiceListItem,
   ListPurchaseInvoicesResult,
+  PurchaseInvoiceItemDetails,
+  PurchaseInvoicePdfData,
 } from "#utils/dto/finance/purchase_invoice";
 
 /** Código del tipo de documento para facturas de compra */
@@ -403,5 +409,129 @@ export async function listPurchaseInvoices(
   return {
     invoices: invoicesRaw.map(buildResult),
     totalCount,
+  };
+}
+
+/**
+ * Obtiene los datos completos de una factura de compra para generar el PDF.
+ * Incluye ítems detallados, información del proveedor y datos de la empresa.
+ */
+export async function getPurchaseInvoiceForPdf(
+  id: number
+): Promise<PurchaseInvoicePdfData | undefined> {
+  // Obtener factura con datos del proveedor
+  const [invoice] = await db
+    .select({
+      id: purchase_invoice.id,
+      supplierId: purchase_invoice.supplierId,
+      issueDate: purchase_invoice.issueDate,
+      dueDate: purchase_invoice.dueDate,
+      totalAmount: purchase_invoice.totalAmount,
+      documentNumber: purchase_invoice.documentNumber,
+      seriesPrefix: documentSeries.prefix,
+      seriesSuffix: documentSeries.suffix,
+      // Supplier data
+      supplierFirstName: person.firstName,
+      supplierLastName: person.lastName,
+      supplierLegalName: company.legalName,
+      supplierDocumentType: documentType.name,
+      supplierDocumentNumber: user.documentNumber,
+    })
+    .from(purchase_invoice)
+    .innerJoin(supplier, eq(purchase_invoice.supplierId, supplier.id))
+    .innerJoin(user, eq(supplier.id, user.id))
+    .innerJoin(documentSeries, eq(purchase_invoice.seriesId, documentSeries.id))
+    .leftJoin(person, eq(supplier.id, person.id))
+    .leftJoin(company, eq(supplier.id, company.id))
+    .leftJoin(documentType, eq(user.documentTypeId, documentType.id))
+    .where(eq(purchase_invoice.id, id));
+
+  if (!invoice) {
+    return undefined;
+  }
+
+  // Obtener ítems de la factura con información del producto
+  const items = await db
+    .select({
+      id: purchase_invoice_item.id,
+      itemCode: item.code,
+      itemName: item.fullName,
+      quantity: purchase_invoice_item.quantity,
+      unitPrice: purchase_invoice_item.unitPrice,
+      discountAmount: purchase_invoice_item.discountAmount,
+      taxAmount: purchase_invoice_item.taxAmount,
+      subtotal: purchase_invoice_item.subtotal,
+      description: purchase_invoice_item.description,
+    })
+    .from(purchase_invoice_item)
+    .innerJoin(item, eq(purchase_invoice_item.itemId, item.id))
+    .where(eq(purchase_invoice_item.purchaseInvoiceId, id));
+
+  // Obtener configuración de la empresa
+  const systemConfig = await getSystemConfig();
+
+  // Calcular totales
+  let subtotal = new Decimal(0);
+  let totalDiscount = new Decimal(0);
+  let totalTax = new Decimal(0);
+
+  const itemsDetails: PurchaseInvoiceItemDetails[] = items.map((i) => {
+    const unitPrice = i.unitPrice instanceof Decimal ? i.unitPrice : new Decimal(i.unitPrice ?? 0);
+    const discountAmount = i.discountAmount instanceof Decimal ? i.discountAmount : new Decimal(i.discountAmount ?? 0);
+    const taxAmount = i.taxAmount instanceof Decimal ? i.taxAmount : new Decimal(i.taxAmount ?? 0);
+    const itemSubtotal = i.subtotal instanceof Decimal ? i.subtotal : new Decimal(i.subtotal ?? 0);
+
+    subtotal = subtotal.add(itemSubtotal);
+    totalDiscount = totalDiscount.add(discountAmount);
+    totalTax = totalTax.add(taxAmount);
+
+    return {
+      id: i.id,
+      itemCode: i.itemCode,
+      itemName: i.itemName,
+      quantity: i.quantity,
+      unitPrice,
+      discountAmount,
+      taxAmount,
+      subtotal: itemSubtotal,
+      description: i.description,
+    };
+  });
+
+  const supplierName = invoice.supplierFirstName
+    ? `${invoice.supplierFirstName} ${invoice.supplierLastName ?? ""}`.trim()
+    : invoice.supplierLegalName ?? "";
+
+  const prefix = invoice.seriesPrefix ?? "";
+  const suffix = invoice.seriesSuffix ?? "";
+  const documentNumberFull = `${prefix}${invoice.documentNumber}${suffix}`;
+
+  return {
+    id: invoice.id,
+    documentNumberFull,
+    issueDate: invoice.issueDate,
+    dueDate: invoice.dueDate,
+    supplier: {
+      id: invoice.supplierId,
+      name: supplierName,
+      documentType: invoice.supplierDocumentType,
+      documentNumber: invoice.supplierDocumentNumber,
+    },
+    company: {
+      name: systemConfig.companyName || "Mi Empresa",
+      nit: systemConfig.companyNit || "",
+      address: systemConfig.companyAddress || "",
+      phone: systemConfig.companyPhone || "",
+      email: systemConfig.companyEmail || "",
+      logo: systemConfig.companyLogo || undefined,
+    },
+    items: itemsDetails,
+    subtotal,
+    totalDiscount,
+    totalTax,
+    totalAmount: invoice.totalAmount instanceof Decimal
+      ? invoice.totalAmount
+      : new Decimal(invoice.totalAmount),
+    currency: systemConfig.currency || "COP",
   };
 }

@@ -109,3 +109,76 @@ export interface ListPurchaseInvoicesResult {
   invoices: PurchaseInvoiceListItem[];
   totalCount?: number;
 }
+
+/**
+ * Detalle de un ítem de factura de compra para PDF/visualización.
+ */
+export interface PurchaseInvoiceItemDetails {
+  id: number;
+  /** Código del producto */
+  itemCode: string;
+  /** Nombre completo del producto */
+  itemName: string;
+  /** Cantidad facturada */
+  quantity: number;
+  /** Precio unitario */
+  unitPrice: Decimal;
+  /** Descuento aplicado */
+  discountAmount: Decimal;
+  /** Monto de impuesto */
+  taxAmount: Decimal;
+  /** Subtotal de la línea */
+  subtotal: Decimal;
+  /** Descripción adicional (opcional) */
+  description: string | null;
+}
+
+/**
+ * Información de la empresa para el PDF.
+ */
+export interface CompanyInfo {
+  name: string;
+  nit: string;
+  address: string;
+  phone: string;
+  email: string;
+  logo?: string;
+}
+
+/**
+ * Datos completos de la factura de compra para generar PDF.
+ */
+export interface PurchaseInvoicePdfData {
+  /** ID de la factura */
+  id: number;
+  /** Número de documento completo */
+  documentNumberFull: string;
+  /** Fecha de emisión (formato YYYY-MM-DD) */
+  issueDate: string;
+  /** Fecha de vencimiento (formato YYYY-MM-DD) */
+  dueDate: string | null;
+  /** Datos del proveedor */
+  supplier: {
+    id: number;
+    name: string;
+    documentType: string | null;
+    documentNumber: string | null;
+    address?: string;
+    phone?: string;
+    email?: string;
+  };
+  /** Datos de la empresa (emisor) */
+  company: CompanyInfo;
+  /** Ítems de la factura */
+  items: PurchaseInvoiceItemDetails[];
+  /** Subtotal (suma de subtotales de ítems) */
+  subtotal: Decimal;
+  /** Total de descuentos */
+  totalDiscount: Decimal;
+  /** Total de impuestos */
+  totalTax: Decimal;
+  /** Monto total de la factura */
+  totalAmount: Decimal;
+  /** Moneda */
+  currency: string;
+}

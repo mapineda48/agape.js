@@ -1,8 +1,12 @@
-import { Fragment } from "react";
-import { getPurchaseInvoiceById } from "@agape/finance/purchase_invoice";
+import { Fragment, useState } from "react";
+import { getPurchaseInvoiceById, getPurchaseInvoiceForPdf } from "@agape/finance/purchase_invoice";
 import { useRouter } from "@/components/router/router-hook";
+import { usePdfViewer } from "@/components/pdf";
+import { useNotificacion } from "@/components/ui/notification";
 import type { PurchaseInvoiceDetails } from "@utils/dto/finance/purchase_invoice";
 import Decimal from "@utils/data/Decimal";
+import { DocumentArrowDownIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { DocumentTextIcon } from "@heroicons/react/24/solid";
 
 interface Props {
     invoice: PurchaseInvoiceDetails;
@@ -24,6 +28,9 @@ export async function onInit({
 
 export default function PurchaseInvoiceDetailPage({ invoice }: Props) {
     const { navigate } = useRouter();
+    const openPdfViewer = usePdfViewer();
+    const notify = useNotificacion();
+    const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
     const totalNumber =
         invoice.totalAmount instanceof Decimal
@@ -38,6 +45,27 @@ export default function PurchaseInvoiceDetailPage({ invoice }: Props) {
             month: "long",
             year: "numeric",
         });
+    };
+
+    const handleGeneratePdf = async () => {
+        setIsLoadingPdf(true);
+        try {
+            const pdfData = await getPurchaseInvoiceForPdf(invoice.id);
+            if (!pdfData) {
+                throw new Error("No se pudieron obtener los datos de la factura");
+            }
+            openPdfViewer({
+                data: pdfData,
+                title: "Factura de Compra",
+            });
+        } catch (error) {
+            notify({
+                payload: error instanceof Error ? error.message : "Error al generar el PDF",
+                type: "error",
+            });
+        } finally {
+            setIsLoadingPdf(false);
+        }
     };
 
     return (
@@ -140,7 +168,31 @@ export default function PurchaseInvoiceDetailPage({ invoice }: Props) {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex justify-end gap-4">
+                    <div className="flex flex-col sm:flex-row justify-end gap-4">
+                        {/* PDF Button - Featured */}
+                        <button
+                            onClick={handleGeneratePdf}
+                            disabled={isLoadingPdf}
+                            className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
+                        >
+                            {/* Animated shine effect */}
+                            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700 ease-out" />
+
+                            {isLoadingPdf ? (
+                                <>
+                                    <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                                    <span>Generando PDF...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <DocumentTextIcon className="h-5 w-5" />
+                                    <span>Generar PDF</span>
+                                    <DocumentArrowDownIcon className="h-4 w-4 opacity-60" />
+                                </>
+                            )}
+                        </button>
+
+                        {/* Back Button */}
                         <button
                             onClick={() => navigate("../..")}
                             className="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition"
@@ -153,3 +205,4 @@ export default function PurchaseInvoiceDetailPage({ invoice }: Props) {
         </Fragment>
     );
 }
+
