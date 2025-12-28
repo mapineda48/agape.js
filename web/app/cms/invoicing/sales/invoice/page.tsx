@@ -1,4 +1,4 @@
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { listItems } from "@agape/catalogs/item";
 import { listClients } from "@agape/crm/client";
 import { createSalesInvoice, postSalesInvoice } from "@agape/finance/sales_invoice";
@@ -44,7 +44,14 @@ export default function NewSalesInvoicePage(props: Props) {
     const { navigate } = useRouter();
     const notify = useNotificacion();
 
-    const handleSubmit = async (data: InvoiceFormState, action: "draft" | "post" = "draft") => {
+    // Ref to track which action was requested (draft or post)
+    // This is set before form submission and read by the submit handler
+    const actionRef = useRef<"draft" | "post">("draft");
+
+    const handleSubmit = async (data: InvoiceFormState) => {
+        // Read the action from ref
+        const action = actionRef.current;
+
         // Validate
         if (!data.clientId || data.clientId === 0) {
             throw new Error("Debe seleccionar un cliente");
@@ -159,15 +166,17 @@ export default function NewSalesInvoicePage(props: Props) {
                             Cancelar
                         </button>
                         <Submit<InvoiceFormState>
-                            onSubmit={(data) => handleSubmit(data, "draft")}
+                            onSubmit={handleSubmit}
                             onError={handleError}
+                            onClick={() => { actionRef.current = "draft"; }}
                             className="px-6 py-2.5 text-sm font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Guardar Borrador
                         </Submit>
                         <Submit<InvoiceFormState>
-                            onSubmit={(data) => handleSubmit(data, "post")}
+                            onSubmit={handleSubmit}
                             onError={handleError}
+                            onClick={() => { actionRef.current = "post"; }}
                             className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-700 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <DocumentCheckIcon className="h-4 w-4 mr-2" />
