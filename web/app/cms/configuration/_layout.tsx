@@ -66,9 +66,9 @@ export default function ConfigurationLayout({
   return (
     <div className="flex flex-col h-full bg-gray-50">
       {/* Header Section with Tabs */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8">
-        {/* Tabs */}
-        <div className="flex space-x-8 pt-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-8">
+        {/* Tabs - Added overflow-x-auto and hide scrollbar for better mobile UX */}
+        <div className="flex space-x-6 md:space-x-8 pt-4 overflow-x-auto scrollbar-hide">
           {TABS.map((tab) => {
             // Since currentPath is now relative, we can compare directly
             const isActive =
@@ -79,7 +79,7 @@ export default function ConfigurationLayout({
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
                 className={clsx(
-                  "group flex items-center pb-4 border-b-2 cursor-pointer transition-all duration-200",
+                  "group flex items-center pb-4 border-b-2 cursor-pointer transition-all duration-200 whitespace-nowrap flex-shrink-0",
                   isActive
                     ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
                     : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
@@ -101,7 +101,7 @@ export default function ConfigurationLayout({
       </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           <motion.div
             key={currentPath}
