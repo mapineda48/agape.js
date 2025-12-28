@@ -30,7 +30,7 @@ interface Props {
   locations: Location[];
 }
 
-export async function onInit(params: { id: string }): Promise<Props> {
+export async function onInit({ params }: { params: { id: string } }): Promise<Props> {
   const [order, locations] = await Promise.all([
     getPurchaseOrderById(Number(params.id)),
     listLocations(true),

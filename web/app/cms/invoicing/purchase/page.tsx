@@ -242,7 +242,7 @@ export default function PurchaseInvoicesPage(props: Props) {
                                             <InvoiceRow
                                                 key={invoice.id}
                                                 invoice={invoice}
-                                                onView={() => navigate(`../invoice/${invoice.id}`)}
+                                                onView={() => navigate(`./invoice/${invoice.id}`)}
                                             />
                                         ))}
                                     </tbody>

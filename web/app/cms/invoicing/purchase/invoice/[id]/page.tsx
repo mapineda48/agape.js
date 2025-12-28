@@ -46,7 +46,7 @@ export default function PurchaseInvoiceDetailPage({ invoice }: Props) {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Back Button */}
                     <button
-                        onClick={() => navigate("../invoices")}
+                        onClick={() => navigate("../..")}
                         className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 group"
                     >
                         <svg
@@ -127,8 +127,8 @@ export default function PurchaseInvoiceDetailPage({ invoice }: Props) {
                                         </h3>
                                         <p
                                             className={`text-lg font-medium ${invoice.dueDate
-                                                    ? "text-gray-900 dark:text-white"
-                                                    : "text-gray-400 dark:text-gray-500"
+                                                ? "text-gray-900 dark:text-white"
+                                                : "text-gray-400 dark:text-gray-500"
                                                 }`}
                                         >
                                             {formatDate(invoice.dueDate)}
@@ -142,7 +142,7 @@ export default function PurchaseInvoiceDetailPage({ invoice }: Props) {
                     {/* Actions */}
                     <div className="flex justify-end gap-4">
                         <button
-                            onClick={() => navigate("../invoices")}
+                            onClick={() => navigate("../..")}
                             className="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition"
                         >
                             Volver al Listado
