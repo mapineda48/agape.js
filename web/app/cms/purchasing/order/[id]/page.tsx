@@ -17,7 +17,7 @@ interface Props {
   order: PurchaseOrderDetails;
 }
 
-export async function onInit(params: { id: string }): Promise<Props> {
+export async function onInit({ params }: { params: { id: string } }): Promise<Props> {
   const order = await getPurchaseOrderById(Number(params.id));
 
   if (!order) {
