@@ -10,6 +10,7 @@ import logger from "#lib/log/logger";
 import AzureBlobStorage from "#lib/services/storage/AzureBlobStorage";
 import hashString from "#lib/hashString";
 import { CacheManager } from "#lib/services/cache/CacheManager";
+import MailManager from "#lib/services/mail/MailManager";
 
 // Load environment variables with default fallbacks (should be overridden in production via env or secrets manager)
 const {
@@ -26,6 +27,7 @@ const {
   DATABASE_URI = "postgresql://postgres:mypassword@localhost",
   AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true",
   CACHE_URL = "redis://localhost:6379",
+  RESEND_API_KEY,
 
 } = process.env;
 
@@ -52,6 +54,9 @@ const blobStorageHost = await AzureBlobStorage.connect(
 
 // Initialize cache backend (e.g., Redis)
 await CacheManager.init(CACHE_URL).connect();
+
+// Initialize mail service (optional - if RESEND_API_KEY is not set, mail will be disabled)
+MailManager.init(RESEND_API_KEY);
 
 const app = express();
 const httpServer = http.createServer(app);

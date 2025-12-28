@@ -1,27 +1,52 @@
 import logger from "#lib/log/logger";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 
-const { SENDGRID_API_KEY = "" } = process.env;
+const log = logger.scope("Mail");
 
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-  //logger.scope('Mail').info("✅ Enabled");
-} else {
-  //logger.scope('Mail').warn("❌ Disabled")
-}
+let resend: Resend | null = null;
 
 export default class MailManager {
-  public static async sendMail(msg: IMail) {
+  /**
+   * Initializes the mail service with the provided API key.
+   * If apiKey is undefined or empty, the service will be disabled.
+   */
+  public static init(apiKey: string | undefined): typeof MailManager {
+    if (apiKey) {
+      resend = new Resend(apiKey);
+      log.info("✅ Enabled");
+    } else {
+      resend = null;
+      log.warn("❌ Disabled - RESEND_API_KEY not set");
+    }
+
+    return MailManager;
+  }
+
+  private static isEnabled(): boolean {
+    return resend !== null;
+  }
+
+  public static async sendMail(msg: IMail): Promise<void> {
+    if (!MailManager.isEnabled() || !resend) {
+      throw new Error("❌ Mail service not initialized - RESEND_API_KEY is required");
+    }
+
     try {
-      await sgMail.send({
-        ...msg,
-        from: "noreply@mapineda48.de",
+      const { data, error } = await resend.emails.send({
+        from: msg.from ?? "noreply@mapineda48.de",
+        to: msg.to,
+        subject: msg.subject,
+        html: msg.html,
       });
 
-      logger.scope("Mail").info("✅ Email sent successfully");
-    } catch (error) {
-      logger.scope("Mail").error("Error sending email", error);
+      if (error) {
+        log.error("Error sending email", error);
+        throw new Error("❌ Error sending email");
+      }
 
+      log.info("✅ Email sent successfully", { id: data?.id });
+    } catch (error) {
+      log.error("Error sending email", error);
       throw new Error("❌ Error sending email");
     }
   }
@@ -31,7 +56,8 @@ export default class MailManager {
  * Types
  */
 export interface IMail {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
+  from?: string;
 }
