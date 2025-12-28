@@ -12,6 +12,7 @@ import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { Pagination } from "../../inventory/Pagination";
 import Decimal from "@utils/data/Decimal";
+import DateTime from "@utils/data/DateTime";
 
 const PAGE_SIZE = 15;
 
@@ -166,7 +167,7 @@ export default function PurchaseInvoicesPage(props: Props) {
                                     }
                                     onChange={(e) =>
                                         updateFilter({
-                                            fromDate: e.target.value || undefined,
+                                            fromDate: e?.target?.value ? new DateTime(e.target.value) : undefined,
                                         })
                                     }
                                 />

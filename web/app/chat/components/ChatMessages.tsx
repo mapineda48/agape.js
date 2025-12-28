@@ -7,7 +7,7 @@ import type { ChatMessage } from "../types";
 interface ChatMessagesProps {
     messages: ChatMessage[];
     myId: string;
-    scrollRef: RefObject<HTMLDivElement>;
+    scrollRef: RefObject<HTMLDivElement | null>;
 }
 
 /**

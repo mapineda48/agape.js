@@ -61,7 +61,7 @@ export default function NewSalesInvoicePage(props: Props) {
                     "Todos los ítems deben tener un producto seleccionado"
                 );
             }
-            if (!item.quantity || item.quantity <= 0) {
+            if (!item.quantity || Number(item.quantity) <= 0) {
                 throw new Error("Todas las cantidades deben ser mayores a cero");
             }
             if (!item.unitPrice || Number(item.unitPrice) <= 0) {
