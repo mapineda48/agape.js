@@ -279,3 +279,28 @@ export interface SalesInvoicePdfData {
   notes: string | null;
 }
 
+/**
+ * Input para enviar una factura de venta por correo electrónico.
+ * El PDF se genera en el cliente y se envía como base64.
+ */
+export interface SendSalesInvoiceEmailInput {
+  /** ID de la factura de venta */
+  salesInvoiceId: number;
+  /** Contenido del PDF en base64 */
+  pdfBase64: string;
+  /** Nombre del archivo PDF (opcional, default: "factura.pdf") */
+  pdfFilename?: string;
+}
+
+/**
+ * Resultado del envío de factura por correo.
+ */
+export interface SendSalesInvoiceEmailResult {
+  /** Indica si el correo se envió correctamente */
+  success: boolean;
+  /** Email del destinatario */
+  recipientEmail: string;
+  /** Mensaje descriptivo */
+  message: string;
+}
+

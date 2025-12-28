@@ -32,6 +32,8 @@ export type {
   SalesInvoicePdfData,
   SalesInvoiceItemPdfDetails,
   CompanyInfo,
+  SendSalesInvoiceEmailInput,
+  SendSalesInvoiceEmailResult,
 } from "#utils/dto/finance/sales_invoice";
 
 import type {
@@ -821,3 +823,156 @@ export async function getSalesInvoiceForPdf(
   };
 }
 
+// ============================================================================
+// Email Service
+// ============================================================================
+
+import type {
+  SendSalesInvoiceEmailInput,
+  SendSalesInvoiceEmailResult,
+} from "#utils/dto/finance/sales_invoice";
+import MailManager from "#lib/services/mail/MailManager";
+import {
+  generateSalesInvoiceEmailHtml,
+  generateSalesInvoiceEmailSubject,
+} from "#lib/services/mail/template/salesInvoice";
+import { contactMethod } from "#models/core/contactMethod";
+
+/**
+ * Envía una factura de venta por correo electrónico al cliente.
+ * 
+ * **Requisitos:**
+ * - La factura debe estar en estado "issued" (emitida)
+ * - El cliente debe tener un email primario registrado
+ * - El PDF se genera en el cliente y se envía como base64
+ * 
+ * @param input - Datos para el envío (ID factura, PDF en base64)
+ * @returns Resultado del envío
+ */
+export async function sendSalesInvoiceByEmail(
+  input: SendSalesInvoiceEmailInput
+): Promise<SendSalesInvoiceEmailResult> {
+  // 1. Obtener datos de la factura
+  const [invoice] = await db
+    .select({
+      id: sales_invoice.id,
+      clientId: sales_invoice.clientId,
+      status: sales_invoice.status,
+      issueDate: sales_invoice.issueDate,
+      dueDate: sales_invoice.dueDate,
+      totalAmount: sales_invoice.totalAmount,
+      documentNumber: sales_invoice.documentNumber,
+      seriesPrefix: documentSeries.prefix,
+      seriesSuffix: documentSeries.suffix,
+      // Client name
+      clientFirstName: person.firstName,
+      clientLastName: person.lastName,
+      clientLegalName: company.legalName,
+    })
+    .from(sales_invoice)
+    .innerJoin(client, eq(sales_invoice.clientId, client.id))
+    .innerJoin(documentSeries, eq(sales_invoice.seriesId, documentSeries.id))
+    .leftJoin(person, eq(client.id, person.id))
+    .leftJoin(company, eq(client.id, company.id))
+    .where(eq(sales_invoice.id, input.salesInvoiceId));
+
+  if (!invoice) {
+    throw new NotFoundError("Factura de venta no encontrada");
+  }
+
+  // 2. Validar que la factura esté emitida
+  if (invoice.status !== "issued") {
+    throw new BusinessRuleError(
+      "Solo se pueden enviar por correo facturas emitidas. Estado actual: " + invoice.status
+    );
+  }
+
+  // 3. Obtener email primario del cliente
+  const [clientEmail] = await db
+    .select({
+      email: contactMethod.value,
+    })
+    .from(contactMethod)
+    .where(
+      and(
+        eq(contactMethod.userId, invoice.clientId),
+        eq(contactMethod.type, "email"),
+        eq(contactMethod.isPrimary, true),
+        eq(contactMethod.isActive, true)
+      )
+    );
+
+  if (!clientEmail) {
+    throw new BusinessRuleError(
+      "El cliente no tiene un email primario registrado. Por favor, agregue un email al cliente."
+    );
+  }
+
+  // 4. Obtener configuración del sistema para datos de la empresa
+  const systemConfig = await getSystemConfig();
+
+  // 5. Construir nombre del cliente
+  const clientName = invoice.clientFirstName
+    ? `${invoice.clientFirstName} ${invoice.clientLastName ?? ""}`.trim()
+    : invoice.clientLegalName ?? "Cliente";
+
+  // 6. Construir número de documento completo
+  const prefix = invoice.seriesPrefix ?? "";
+  const suffix = invoice.seriesSuffix ?? "";
+  const documentNumberFull = `${prefix}${invoice.documentNumber}${suffix}`;
+
+  // 7. Formatear fechas
+  const formatDate = (dateStr: string | null): string => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr + "T00:00:00");
+    return date.toLocaleDateString("es-CO", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  // 8. Formatear total
+  const totalNumber = toDecimal(invoice.totalAmount).toNumber();
+  const totalFormatted = `$${totalNumber.toLocaleString("es-CO", {
+    minimumFractionDigits: 2,
+  })}`;
+
+  // 9. Generar contenido del email
+  const htmlContent = generateSalesInvoiceEmailHtml({
+    documentNumber: documentNumberFull,
+    clientName,
+    issueDate: formatDate(invoice.issueDate),
+    dueDate: invoice.dueDate ? formatDate(invoice.dueDate) : undefined,
+    totalAmount: totalFormatted,
+    companyName: systemConfig.companyName || "Mi Empresa",
+    companyEmail: systemConfig.companyEmail || undefined,
+    companyPhone: systemConfig.companyPhone || undefined,
+  });
+
+  const subject = generateSalesInvoiceEmailSubject(
+    documentNumberFull,
+    systemConfig.companyName || "Mi Empresa"
+  );
+
+  // 10. Enviar correo con adjunto
+  const pdfFilename = input.pdfFilename || `Factura_${documentNumberFull}.pdf`;
+
+  await MailManager.sendMailWithAttachments({
+    to: clientEmail.email,
+    subject,
+    html: htmlContent,
+    attachments: [
+      {
+        filename: pdfFilename,
+        content: input.pdfBase64,
+      },
+    ],
+  });
+
+  return {
+    success: true,
+    recipientEmail: clientEmail.email,
+    message: `Factura ${documentNumberFull} enviada exitosamente a ${clientEmail.email}`,
+  };
+}

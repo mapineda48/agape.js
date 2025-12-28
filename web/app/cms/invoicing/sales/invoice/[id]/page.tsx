@@ -1,12 +1,13 @@
 import { Fragment, useState } from "react";
-import { getSalesInvoiceById, postSalesInvoice, getSalesInvoiceForPdf } from "@agape/finance/sales_invoice";
+import { getSalesInvoiceById, postSalesInvoice, getSalesInvoiceForPdf, sendSalesInvoiceByEmail } from "@agape/finance/sales_invoice";
 import { useRouter } from "@/components/router/router-hook";
-import { usePdfViewer } from "@/components/pdf";
+import { usePdfViewer, SalesInvoicePdf } from "@/components/pdf";
 import { useNotificacion } from "@/components/ui/notification";
-import type { SalesInvoiceDetails, SalesInvoiceStatus, SalesInvoiceItemDetails } from "@utils/dto/finance/sales_invoice";
+import type { SalesInvoiceDetails, SalesInvoiceStatus, SalesInvoiceItemDetails, SalesInvoicePdfData } from "@utils/dto/finance/sales_invoice";
 import Decimal from "@utils/data/Decimal";
-import { DocumentCheckIcon, ArrowPathIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon, ArrowPathIcon, DocumentArrowDownIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { DocumentTextIcon } from "@heroicons/react/24/solid";
+import { pdf } from "@react-pdf/renderer";
 
 interface Props {
     invoice: SalesInvoiceDetails;
@@ -33,6 +34,7 @@ export default function SalesInvoiceDetailPage({ invoice: initialInvoice }: Prop
     const [invoice, setInvoice] = useState(initialInvoice);
     const [isPosting, setIsPosting] = useState(false);
     const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
 
     const handleGeneratePdf = async () => {
         setIsLoadingPdf(true);
@@ -52,6 +54,58 @@ export default function SalesInvoiceDetailPage({ invoice: initialInvoice }: Prop
             });
         } finally {
             setIsLoadingPdf(false);
+        }
+    };
+
+    const handleSendEmail = async () => {
+        if (invoice.status !== "issued") {
+            notify({
+                payload: "Solo se pueden enviar por correo facturas emitidas",
+                type: "error",
+            });
+            return;
+        }
+
+        setIsSendingEmail(true);
+        try {
+            // 1. Obtener datos para el PDF
+            const pdfData = await getSalesInvoiceForPdf(invoice.id);
+            if (!pdfData) {
+                throw new Error("No se pudieron obtener los datos de la factura");
+            }
+
+            // 2. Generar el PDF como blob
+            const pdfBlob = await pdf(<SalesInvoicePdf data={pdfData as SalesInvoicePdfData} />).toBlob();
+
+            // 3. Convertir el blob a base64
+            const pdfBase64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(pdfBlob);
+            });
+
+            // 4. Enviar al servidor
+            const result = await sendSalesInvoiceByEmail({
+                salesInvoiceId: invoice.id,
+                pdfBase64,
+                pdfFilename: `Factura_${invoice.documentNumberFull}.pdf`,
+            });
+
+            notify({
+                payload: result.message,
+                type: "success",
+            });
+        } catch (error) {
+            notify({
+                payload: error instanceof Error ? error.message : "Error al enviar el correo",
+                type: "error",
+            });
+        } finally {
+            setIsSendingEmail(false);
         }
     };
 
@@ -432,6 +486,29 @@ export default function SalesInvoiceDetailPage({ invoice: initialInvoice }: Prop
                                         <>
                                             <DocumentCheckIcon className="h-4 w-4 mr-2" />
                                             Emitir Factura
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            {invoice.status === "issued" && (
+                                <button
+                                    onClick={handleSendEmail}
+                                    disabled={isSendingEmail || isLoadingPdf}
+                                    className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
+                                >
+                                    {/* Animated shine effect */}
+                                    <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700 ease-out" />
+
+                                    {isSendingEmail ? (
+                                        <>
+                                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                                            <span>Enviando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <EnvelopeIcon className="h-5 w-5" />
+                                            <span>Enviar por Correo</span>
                                         </>
                                     )}
                                 </button>
