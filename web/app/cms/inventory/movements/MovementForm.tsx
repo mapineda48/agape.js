@@ -10,11 +10,13 @@ import {
 } from "@agape/inventory/movement";
 import { listMovementTypes } from "@agape/inventory/movementType";
 import { listItems } from "@agape/catalogs/item";
+import { listLocations } from "@agape/inventory/location";
 import DateTime from "@utils/data/DateTime";
 import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 type MovementType = Awaited<ReturnType<typeof listMovementTypes>>[number];
 type Item = Awaited<ReturnType<typeof listItems>>["items"][number];
+type Location = Awaited<ReturnType<typeof listLocations>>[number];
 
 interface Props {
   initialData?: Awaited<ReturnType<typeof getInventoryMovement>>;
@@ -187,14 +189,17 @@ function GeneralInfoCard({
 
 function DetailsCard() {
   const details = Form.useArray("details");
-  // Assuming we preload items for selection or use a smart selector
-  // For simplicity, I'll fetch items once in a shared state or context, but here I'll just use a local fetch for the select options
+  // Preload items and locations for selection
   const [items, setItems] = useState<Item[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
+    // Load items
     listItems({ pageIndex: 0, pageSize: 100 }).then((res) =>
       setItems(res.items)
     );
+    // Load locations
+    listLocations().then((res) => setLocations(res));
   }, []);
 
   return (
@@ -237,6 +242,23 @@ function DetailsCard() {
                     {items.map((i) => (
                       <option key={i.id} value={i.id}>
                         {i.fullName} ({i.code})
+                      </option>
+                    ))}
+                  </Form.Select.Int>
+                </div>
+                <div className="w-40">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Ubicación
+                  </label>
+                  <Form.Select.Int
+                    path="locationId"
+                    required
+                    className="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  >
+                    <option value="">- Ubicación -</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.code} - {loc.name}
                       </option>
                     ))}
                   </Form.Select.Int>

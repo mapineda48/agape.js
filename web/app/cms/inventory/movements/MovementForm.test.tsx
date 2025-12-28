@@ -6,6 +6,7 @@ import Form from "@/components/form";
 import { createInventoryMovement } from "@agape/inventory/movement";
 import { listMovementTypes } from "@agape/inventory/movementType";
 import { listItems } from "@agape/catalogs/item";
+import { listLocations } from "@agape/inventory/location";
 import Decimal from "@utils/data/Decimal";
 import DateTime from "@utils/data/DateTime";
 import PortalProvider from "@/components/util/portal";
@@ -15,6 +16,7 @@ import EventEmitter from "@/components/util/event-emitter";
 vi.mock("@agape/inventory/movement");
 vi.mock("@agape/inventory/movementType");
 vi.mock("@agape/catalogs/item");
+vi.mock("@agape/inventory/location");
 
 // Mock notification
 const mockNotify = vi.fn();
@@ -46,12 +48,25 @@ const mockTypes = [
 const mockItems = [
   {
     id: 1,
-    code: "I1",
-    fullName: "Item 1",
+    code: "PROD-001",
+    fullName: "Producto Test 1",
     basePrice: new Decimal(10),
     isEnabled: true,
     type: "good" as const,
   },
+  {
+    id: 2,
+    code: "PROD-002",
+    fullName: "Producto Test 2",
+    basePrice: new Decimal(25),
+    isEnabled: true,
+    type: "good" as const,
+  },
+];
+
+const mockLocations = [
+  { id: 1, code: "ALM-01", name: "Almacén Principal", isEnabled: true },
+  { id: 2, code: "ALM-02", name: "Almacén Secundario", isEnabled: true },
 ];
 
 describe("MovementForm", () => {
@@ -62,11 +77,17 @@ describe("MovementForm", () => {
 
     vi.mocked(listItems).mockResolvedValue({
       items: mockItems,
-      totalCount: 1,
+      totalCount: mockItems.length,
     } as any);
+
+    vi.mocked(listLocations).mockResolvedValue(mockLocations as any);
   });
 
-  const renderForm = () => {
+  const renderForm = (props?: Partial<Parameters<typeof MovementForm>[0]>) => {
+    const defaultProps = {
+      types: mockTypes as any,
+      onSuccess: vi.fn(),
+    };
     return render(
       createElement(
         EventEmitter,
@@ -74,76 +95,381 @@ describe("MovementForm", () => {
         createElement(
           PortalProvider,
           null,
-          createElement(MovementForm, {
-            types: mockTypes as any,
-            onSuccess: vi.fn(),
-          })
+          createElement(MovementForm, { ...defaultProps, ...props })
         )
       )
     );
   };
 
-  it("renders correctly", () => {
-    renderForm();
-    expect(screen.getByText("Información General")).toBeInTheDocument();
-    expect(screen.getByText("Detalles del Movimiento")).toBeInTheDocument();
+  describe("Rendering", () => {
+    it("renders correctly with all sections", () => {
+      renderForm();
+      expect(screen.getByText("Información General")).toBeInTheDocument();
+      expect(screen.getByText("Detalles del Movimiento")).toBeInTheDocument();
+      expect(screen.getByText("Resumen")).toBeInTheDocument();
+    });
+
+    it("renders movement type selector with options", () => {
+      renderForm();
+      expect(screen.getByText("Tipo de Movimiento")).toBeInTheDocument();
+      expect(screen.getByText("Entrada por Compra")).toBeInTheDocument();
+      expect(screen.getByText("Salida por Venta")).toBeInTheDocument();
+    });
+
+    it("renders date input", () => {
+      renderForm();
+      expect(screen.getByText("Fecha")).toBeInTheDocument();
+    });
+
+    it("renders observation field", () => {
+      renderForm();
+      expect(screen.getByText("Observación")).toBeInTheDocument();
+    });
+
+    it("renders 'Agregar Item' button", () => {
+      renderForm();
+      expect(screen.getByText("Agregar Item")).toBeInTheDocument();
+    });
+
+    it("shows 'No hay items agregados' when details are empty", () => {
+      renderForm();
+      expect(screen.getByText("No hay items agregados.")).toBeInTheDocument();
+    });
+
+    it("renders submit button with correct text for new movement", () => {
+      renderForm();
+      expect(screen.getByText("Crear Movimiento")).toBeInTheDocument();
+    });
   });
 
-  it("submits the form with correct payload", async () => {
-    // Mock createInventoryMovement to succeed
-    vi.mocked(createInventoryMovement).mockResolvedValue({
-      id: 1,
-      documentNumberFull: "MOV-001",
-    } as any);
+  describe("Adding Items", () => {
+    it("adds a detail row when 'Agregar Item' is clicked", async () => {
+      renderForm();
 
-    renderForm();
+      // Wait for items to load
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
 
-    // Wait for items to load (the component fetches items on mount)
-    await waitFor(() => {
-      expect(listItems).toHaveBeenCalled();
+      // Initial state: no items
+      expect(screen.getByText("No hay items agregados.")).toBeInTheDocument();
+
+      // Click to add item
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      // Wait for the item row to appear
+      await waitFor(() => {
+        expect(
+          screen.getByText("- Seleccionar Item -")
+        ).toBeInTheDocument();
+      });
+
+      // Should not show "No hay items" anymore
+      expect(
+        screen.queryByText("No hay items agregados.")
+      ).not.toBeInTheDocument();
     });
 
-    // Select movement type
-    const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[0], { target: { value: "1" } });
+    it("loads items in the select dropdown", async () => {
+      renderForm();
 
-    // Add item
-    fireEvent.click(screen.getByText("Agregar Item"));
+      // Add item row
+      fireEvent.click(screen.getByText("Agregar Item"));
 
-    // Wait for the item row to appear and items to be loaded in select
-    await waitFor(() => {
-      expect(screen.getByText("- Seleccionar Item -")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText("Producto Test 1 (PROD-001)")).toBeInTheDocument();
+        expect(screen.getByText("Producto Test 2 (PROD-002)")).toBeInTheDocument();
+      });
     });
 
-    // Select item - re-query comboboxes after item row is added
-    const updatedSelects = screen.getAllByRole("combobox");
-    // 0 is movement type, 1 is item
-    fireEvent.change(updatedSelects[1], { target: { value: "1" } });
+    it("loads locations in the select dropdown", async () => {
+      renderForm();
 
-    // Set quantity - look for the placeholder "0" in the quantity input
-    const quantityInput = screen.getByPlaceholderText("0");
-    fireEvent.change(quantityInput, {
-      target: { value: "10" },
+      // Add item row
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      await waitFor(() => {
+        expect(listLocations).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("ALM-01 - Almacén Principal")).toBeInTheDocument();
+        expect(screen.getByText("ALM-02 - Almacén Secundario")).toBeInTheDocument();
+      });
     });
 
-    // Submit - click the submit button
-    const submitBtn = screen.getByText("Crear Movimiento");
-    fireEvent.click(submitBtn);
+    it("shows location selector for each detail row", async () => {
+      renderForm();
 
-    await waitFor(() => {
-      expect(createInventoryMovement).toHaveBeenCalled();
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Ubicación")).toBeInTheDocument();
+        expect(screen.getByText("- Ubicación -")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Removing Items", () => {
+    it("removes a detail row when trash button is clicked", async () => {
+      renderForm();
+
+      // Add two items
+      fireEvent.click(screen.getByText("Agregar Item"));
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      await waitFor(() => {
+        const itemSelects = screen.getAllByText("- Seleccionar Item -");
+        expect(itemSelects.length).toBe(2);
+      });
+
+      // Click the first trash button
+      const trashButtons = screen.getAllByTitle("Remover linea");
+      fireEvent.click(trashButtons[0]);
+
+      await waitFor(() => {
+        const itemSelects = screen.getAllByText("- Seleccionar Item -");
+        expect(itemSelects.length).toBe(1);
+      });
+    });
+  });
+
+  describe("Form Submission", () => {
+    beforeEach(() => {
+      vi.mocked(createInventoryMovement).mockResolvedValue({
+        movementId: 1,
+        documentNumber: "MOV-001",
+        status: "draft",
+      } as any);
     });
 
-    const callArgs = vi.mocked(createInventoryMovement).mock.calls[0][0];
-    expect(callArgs).toMatchObject({
-      movementTypeId: 1,
-      userId: 1,
-      details: [
-        expect.objectContaining({
-          itemId: 1,
-          quantity: 10,
-        }),
-      ],
+    it("submits the form with correct payload including locationId", async () => {
+      renderForm();
+
+      // Wait for items and locations to load
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+        expect(listLocations).toHaveBeenCalled();
+      });
+
+      // Select movement type
+      const selects = screen.getAllByRole("combobox");
+      fireEvent.change(selects[0], { target: { value: "1" } });
+
+      // Add item
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      // Wait for the item row to appear
+      await waitFor(() => {
+        expect(screen.getByText("- Seleccionar Item -")).toBeInTheDocument();
+      });
+
+      // Get all selects after item is added
+      const updatedSelects = screen.getAllByRole("combobox");
+      // 0: movement type, 1: item, 2: location
+      fireEvent.change(updatedSelects[1], { target: { value: "1" } });
+      fireEvent.change(updatedSelects[2], { target: { value: "1" } });
+
+      // Set quantity
+      const quantityInput = screen.getByPlaceholderText("0");
+      fireEvent.change(quantityInput, { target: { value: "10" } });
+
+      // Submit
+      const submitBtn = screen.getByText("Crear Movimiento");
+      fireEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect(createInventoryMovement).toHaveBeenCalled();
+      });
+
+      const callArgs = vi.mocked(createInventoryMovement).mock.calls[0][0];
+      expect(callArgs).toMatchObject({
+        movementTypeId: 1,
+        userId: 1,
+        details: [
+          expect.objectContaining({
+            itemId: 1,
+            locationId: 1,
+            quantity: 10,
+          }),
+        ],
+      });
+    });
+
+    it("calls onSuccess after successful submission", async () => {
+      const onSuccess = vi.fn();
+      renderForm({ onSuccess });
+
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
+
+      // Fill required fields
+      const selects = screen.getAllByRole("combobox");
+      fireEvent.change(selects[0], { target: { value: "1" } });
+
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      await waitFor(() => {
+        expect(screen.getByText("- Seleccionar Item -")).toBeInTheDocument();
+      });
+
+      const updatedSelects = screen.getAllByRole("combobox");
+      fireEvent.change(updatedSelects[1], { target: { value: "1" } });
+      fireEvent.change(updatedSelects[2], { target: { value: "1" } });
+
+      const quantityInput = screen.getByPlaceholderText("0");
+      fireEvent.change(quantityInput, { target: { value: "5" } });
+
+      fireEvent.click(screen.getByText("Crear Movimiento"));
+
+      await waitFor(() => {
+        expect(onSuccess).toHaveBeenCalled();
+      });
+    });
+
+    it("submits with unit cost when provided", async () => {
+      renderForm();
+
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
+
+      const selects = screen.getAllByRole("combobox");
+      fireEvent.change(selects[0], { target: { value: "1" } });
+
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      await waitFor(() => {
+        expect(screen.getByText("- Seleccionar Item -")).toBeInTheDocument();
+      });
+
+      const updatedSelects = screen.getAllByRole("combobox");
+      fireEvent.change(updatedSelects[1], { target: { value: "1" } });
+      fireEvent.change(updatedSelects[2], { target: { value: "1" } });
+
+      const quantityInput = screen.getByPlaceholderText("0");
+      fireEvent.change(quantityInput, { target: { value: "5" } });
+
+      // Set unit cost
+      const unitCostInput = screen.getByPlaceholderText("0.00");
+      fireEvent.change(unitCostInput, { target: { value: "25.50" } });
+
+      fireEvent.click(screen.getByText("Crear Movimiento"));
+
+      await waitFor(() => {
+        expect(createInventoryMovement).toHaveBeenCalled();
+      });
+
+      const callArgs = vi.mocked(createInventoryMovement).mock.calls[0][0];
+      expect(callArgs.details[0]).toMatchObject({
+        itemId: 1,
+        locationId: 1,
+        quantity: 5,
+      });
+      // Unit cost should be passed (as Decimal or parsed value)
+      expect(callArgs.details[0].unitCost).toBeDefined();
+    });
+
+    it("submits multiple detail rows correctly", async () => {
+      renderForm();
+
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
+
+      // Select movement type
+      const selects = screen.getAllByRole("combobox");
+      fireEvent.change(selects[0], { target: { value: "2" } }); // Salida
+
+      // Add two items
+      fireEvent.click(screen.getByText("Agregar Item"));
+      fireEvent.click(screen.getByText("Agregar Item"));
+
+      await waitFor(() => {
+        const itemSelects = screen.getAllByText("- Seleccionar Item -");
+        expect(itemSelects.length).toBe(2);
+      });
+
+      const updatedSelects = screen.getAllByRole("combobox");
+      // First row: itemId (idx 1), locationId (idx 2)
+      fireEvent.change(updatedSelects[1], { target: { value: "1" } });
+      fireEvent.change(updatedSelects[2], { target: { value: "1" } });
+      // Second row: itemId (idx 3), locationId (idx 4)
+      fireEvent.change(updatedSelects[3], { target: { value: "2" } });
+      fireEvent.change(updatedSelects[4], { target: { value: "2" } });
+
+      const quantityInputs = screen.getAllByPlaceholderText("0");
+      fireEvent.change(quantityInputs[0], { target: { value: "10" } });
+      fireEvent.change(quantityInputs[1], { target: { value: "20" } });
+
+      fireEvent.click(screen.getByText("Crear Movimiento"));
+
+      await waitFor(() => {
+        expect(createInventoryMovement).toHaveBeenCalled();
+      });
+
+      const callArgs = vi.mocked(createInventoryMovement).mock.calls[0][0];
+      expect(callArgs.movementTypeId).toBe(2);
+      expect(callArgs.details).toHaveLength(2);
+      expect(callArgs.details[0]).toMatchObject({
+        itemId: 1,
+        locationId: 1,
+        quantity: 10,
+      });
+      expect(callArgs.details[1]).toMatchObject({
+        itemId: 2,
+        locationId: 2,
+        quantity: 20,
+      });
+    });
+  });
+
+  describe("Edit Mode", () => {
+    it("shows 'Guardar Cambios' button when editing", () => {
+      const initialData = {
+        id: 1,
+        movementTypeId: 1,
+        movementDate: new DateTime(),
+        details: [],
+      };
+
+      renderForm({ initialData: initialData as any });
+
+      expect(screen.getByText("Guardar Cambios")).toBeInTheDocument();
+    });
+
+    it("disables movement type selector when editing", () => {
+      const initialData = {
+        id: 1,
+        movementTypeId: 1,
+        movementDate: new DateTime(),
+        details: [],
+      };
+
+      renderForm({ initialData: initialData as any });
+
+      const selects = screen.getAllByRole("combobox");
+      expect(selects[0]).toBeDisabled();
+    });
+  });
+
+  describe("Data Loading", () => {
+    it("calls listItems on mount", async () => {
+      renderForm();
+
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalledWith({ pageIndex: 0, pageSize: 100 });
+      });
+    });
+
+    it("calls listLocations on mount", async () => {
+      renderForm();
+
+      await waitFor(() => {
+        expect(listLocations).toHaveBeenCalled();
+      });
     });
   });
 });
+
