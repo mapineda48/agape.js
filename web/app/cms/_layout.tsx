@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
+import { ThemeProvider } from "@/components/ThemeProvider";
+
 
 /**
  * This layout becomes the root for all CMS pages.
@@ -23,18 +25,20 @@ export default function Layout({ children }: LayoutProps) {
   }, [children]); // 👈 Dependencia: cada vez que children cambia
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Modern Sidebar */}
-      <Sidebar />
+    <ThemeProvider>
+      <div className="flex h-screen overflow-hidden bg-gray-50">
+        {/* Modern Sidebar */}
+        <Sidebar />
 
-      {/* Main Content - Importante no se debe estableces estilos aqui para las paginas, cada una es reposanble de sus maquetación en caso de ser necesario estilos en comun se debe establecer un componente en comun para esto */}
-      <main
-        ref={mainRef}
-        className="flex-1 relative z-0 overflow-y-auto focus:outline-none"
-      >
-        {children}
-      </main>
-    </div>
+        {/* Main Content - Importante no se debe estableces estilos aqui para las paginas, cada una es reposanble de sus maquetación en caso de ser necesario estilos en comun se debe establecer un componente en comun para esto */}
+        <main
+          ref={mainRef}
+          className="flex-1 relative z-0 overflow-y-auto focus:outline-none"
+        >
+          {children}
+        </main>
+      </div>
+    </ThemeProvider>
   );
 }
 
