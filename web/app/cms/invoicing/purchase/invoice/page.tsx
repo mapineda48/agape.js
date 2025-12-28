@@ -96,7 +96,7 @@ export default function NewPurchaseInvoicePage(props: Props) {
             type: "success",
         });
 
-        navigate(`../${invoice.id}`);
+        navigate(`./${invoice.id}`);
 
         return invoice;
     };
@@ -143,7 +143,7 @@ export default function NewPurchaseInvoicePage(props: Props) {
                     <InvoiceForm suppliers={props.suppliers} items={props.items}>
                         <button
                             type="button"
-                            onClick={() => navigate("../invoices")}
+                            onClick={() => navigate("../..")}
                             className="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition"
                         >
                             Cancelar
