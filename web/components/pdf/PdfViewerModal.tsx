@@ -4,6 +4,9 @@
  * Componente modal que utiliza el sistema de portales de la aplicación
  * para mostrar un visor de PDF con animaciones elegantes.
  * 
+ * Soporta tanto facturas de compra como de venta, detectando automáticamente
+ * el tipo basado en la estructura de los datos.
+ * 
  * Usa BlobProvider de @react-pdf/renderer para generar el PDF dinámicamente.
  */
 
@@ -14,15 +17,37 @@ import {
     type PortalInjectedProps,
 } from "@/components/util/portal";
 import PurchaseInvoicePdf from "./PurchaseInvoicePdf";
+import SalesInvoicePdf from "./SalesInvoicePdf";
 import type { PurchaseInvoicePdfData } from "@utils/dto/finance/purchase_invoice";
+import type { SalesInvoicePdfData } from "@utils/dto/finance/sales_invoice";
 import {
     XMarkIcon,
     ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { DocumentTextIcon } from "@heroicons/react/24/solid";
 
+// Tipo unión para los datos del PDF
+type InvoicePdfData = PurchaseInvoicePdfData | SalesInvoicePdfData;
+
+// Función para detectar si es una factura de venta
+function isSalesInvoice(data: InvoicePdfData): data is SalesInvoicePdfData {
+    return 'client' in data && 'status' in data;
+}
+
+// Colores para cada tipo de factura
+const invoiceColors = {
+    purchase: {
+        gradient: "from-violet-600 to-purple-600",
+        text: "text-violet-200",
+    },
+    sales: {
+        gradient: "from-emerald-600 to-teal-600",
+        text: "text-emerald-200",
+    },
+};
+
 interface PdfViewerModalProps extends PortalInjectedProps {
-    data: PurchaseInvoicePdfData;
+    data: InvoicePdfData;
     title?: string;
 }
 
@@ -32,6 +57,9 @@ interface PdfViewerModalProps extends PortalInjectedProps {
 function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalProps) {
     const [isClosing, setIsClosing] = useState(false);
     const [isOpening, setIsOpening] = useState(true);
+
+    const isSales = isSalesInvoice(data);
+    const colors = isSales ? invoiceColors.sales : invoiceColors.purchase;
 
     // Animación de apertura
     useEffect(() => {
@@ -45,6 +73,14 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
         setTimeout(() => {
             remove();
         }, 200);
+    };
+
+    // Renderizar el componente PDF apropiado
+    const renderPdfDocument = () => {
+        if (isSalesInvoice(data)) {
+            return <SalesInvoicePdf data={data} />;
+        }
+        return <PurchaseInvoicePdf data={data} />;
     };
 
     return (
@@ -83,7 +119,7 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-4 flex items-center justify-between">
+                <div className={`bg-gradient-to-r ${colors.gradient} px-6 py-4 flex items-center justify-between`}>
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-lg">
                             <DocumentTextIcon className="h-6 w-6 text-white" />
@@ -92,7 +128,7 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
                             <h2 className="text-lg font-bold text-white">
                                 {title || "Vista Previa de PDF"}
                             </h2>
-                            <p className="text-sm text-violet-200">
+                            <p className={`text-sm ${colors.text}`}>
                                 {data.documentNumberFull}
                             </p>
                         </div>
@@ -109,14 +145,14 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
 
                 {/* PDF Content */}
                 <div className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-hidden">
-                    <BlobProvider document={<PurchaseInvoicePdf data={data} />}>
+                    <BlobProvider document={renderPdfDocument()}>
                         {({ blob, url, loading, error }) => {
                             if (loading) {
                                 return (
                                     <div className="h-full flex flex-col items-center justify-center gap-4">
                                         <div className="relative">
-                                            <div className="w-16 h-16 border-4 border-violet-200 dark:border-violet-900 rounded-full" />
-                                            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-violet-600 rounded-full animate-spin" />
+                                            <div className={`w-16 h-16 border-4 ${isSales ? 'border-emerald-200 dark:border-emerald-900' : 'border-violet-200 dark:border-violet-900'} rounded-full`} />
+                                            <div className={`absolute inset-0 w-16 h-16 border-4 border-transparent ${isSales ? 'border-t-emerald-600' : 'border-t-violet-600'} rounded-full animate-spin`} />
                                         </div>
                                         <p className="text-gray-600 dark:text-gray-400 font-medium">
                                             Generando PDF...
@@ -171,6 +207,9 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
  * Hook para abrir el modal de visualización de PDF desde cualquier componente
  * que esté dentro del PortalProvider.
  * 
+ * Soporta tanto facturas de compra (PurchaseInvoicePdfData) como de venta (SalesInvoicePdfData).
+ * El tipo de factura se detecta automáticamente basado en la estructura de los datos.
+ * 
  * @example
  * ```tsx
  * import { usePdfViewer } from "@/components/pdf/PdfViewerModal";
@@ -178,7 +217,7 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
  * function MyComponent() {
  *     const openPdfViewer = usePdfViewer();
  *     
- *     const handleViewPdf = async () => {
+ *     const handleViewPurchasePdf = async () => {
  *         const data = await getPurchaseInvoiceForPdf(invoiceId);
  *         if (data) {
  *             openPdfViewer({ 
@@ -188,7 +227,22 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
  *         }
  *     };
  *     
- *     return <button onClick={handleViewPdf}>Ver PDF</button>;
+ *     const handleViewSalesPdf = async () => {
+ *         const data = await getSalesInvoiceForPdf(invoiceId);
+ *         if (data) {
+ *             openPdfViewer({ 
+ *                 data, 
+ *                 title: "Factura de Venta" 
+ *             });
+ *         }
+ *     };
+ *     
+ *     return (
+ *         <>
+ *             <button onClick={handleViewPurchasePdf}>Ver PDF Compra</button>
+ *             <button onClick={handleViewSalesPdf}>Ver PDF Venta</button>
+ *         </>
+ *     );
  * }
  * ```
  */

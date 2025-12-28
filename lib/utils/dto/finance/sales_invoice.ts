@@ -193,3 +193,89 @@ export interface PostSalesInvoiceResult {
   /** Total calculado */
   totalAmount: Decimal;
 }
+
+/**
+ * Información de la empresa para el PDF.
+ */
+export interface CompanyInfo {
+  name: string;
+  nit: string;
+  address: string;
+  phone: string;
+  email: string;
+  logo?: string;
+}
+
+/**
+ * Detalle de un ítem de factura de venta para PDF/visualización.
+ */
+export interface SalesInvoiceItemPdfDetails {
+  id: number;
+  /** Número de línea */
+  lineNumber: number;
+  /** Código del producto */
+  itemCode: string;
+  /** Nombre completo del producto */
+  itemName: string;
+  /** Cantidad facturada */
+  quantity: Decimal;
+  /** Precio unitario */
+  unitPrice: Decimal;
+  /** Porcentaje de descuento */
+  discountPercent: Decimal;
+  /** Descuento aplicado */
+  discountAmount: Decimal;
+  /** Porcentaje de impuesto */
+  taxRate: Decimal | null;
+  /** Monto de impuesto */
+  taxAmount: Decimal;
+  /** Total de la línea */
+  total: Decimal;
+  /** Descripción adicional (opcional) */
+  description: string | null;
+}
+
+/**
+ * Datos completos de la factura de venta para generar PDF.
+ */
+export interface SalesInvoicePdfData {
+  /** ID de la factura */
+  id: number;
+  /** Número de documento completo */
+  documentNumberFull: string;
+  /** Estado de la factura */
+  status: SalesInvoiceStatus;
+  /** Fecha de emisión (formato YYYY-MM-DD) */
+  issueDate: string;
+  /** Fecha de vencimiento (formato YYYY-MM-DD) */
+  dueDate: string | null;
+  /** Datos del cliente */
+  client: {
+    id: number;
+    name: string;
+    documentType: string | null;
+    documentNumber: string | null;
+    address?: string;
+    phone?: string;
+    email?: string;
+  };
+  /** Datos de la empresa (emisor) */
+  company: CompanyInfo;
+  /** Ítems de la factura */
+  items: SalesInvoiceItemPdfDetails[];
+  /** Subtotal (suma de subtotales de ítems) */
+  subtotal: Decimal;
+  /** Porcentaje de descuento global */
+  globalDiscountPercent: Decimal;
+  /** Monto de descuento global */
+  globalDiscountAmount: Decimal;
+  /** Total de impuestos */
+  taxAmount: Decimal;
+  /** Monto total de la factura */
+  totalAmount: Decimal;
+  /** Moneda */
+  currency: string;
+  /** Notas */
+  notes: string | null;
+}
+

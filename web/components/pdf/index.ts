@@ -6,4 +6,6 @@
  */
 
 export { default as PurchaseInvoicePdf } from "./PurchaseInvoicePdf";
+export { default as SalesInvoicePdf } from "./SalesInvoicePdf";
 export { default as PdfViewerModal, usePdfViewer } from "./PdfViewerModal";
+

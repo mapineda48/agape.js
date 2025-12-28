@@ -29,6 +29,9 @@ export type {
   SalesInvoiceListItem,
   ListSalesInvoicesResult,
   PostSalesInvoiceResult,
+  SalesInvoicePdfData,
+  SalesInvoiceItemPdfDetails,
+  CompanyInfo,
 } from "#utils/dto/finance/sales_invoice";
 
 import type {
@@ -680,3 +683,141 @@ export async function listSalesInvoices(
     totalCount,
   };
 }
+
+// ============================================================================
+// PDF Generation
+// ============================================================================
+
+import type {
+  SalesInvoicePdfData,
+  SalesInvoiceItemPdfDetails,
+} from "#utils/dto/finance/sales_invoice";
+import { getSystemConfig } from "#svc/config/systemConfig";
+
+/**
+ * Obtiene los datos completos de una factura de venta para generar el PDF.
+ * Incluye ítems detallados, información del cliente y datos de la empresa.
+ */
+export async function getSalesInvoiceForPdf(
+  id: number
+): Promise<SalesInvoicePdfData | undefined> {
+  // Obtener factura con datos del cliente
+  const [invoice] = await db
+    .select({
+      id: sales_invoice.id,
+      clientId: sales_invoice.clientId,
+      orderId: sales_invoice.orderId,
+      status: sales_invoice.status,
+      issueDate: sales_invoice.issueDate,
+      dueDate: sales_invoice.dueDate,
+      subtotal: sales_invoice.subtotal,
+      globalDiscountPercent: sales_invoice.globalDiscountPercent,
+      globalDiscountAmount: sales_invoice.globalDiscountAmount,
+      taxAmount: sales_invoice.taxAmount,
+      totalAmount: sales_invoice.totalAmount,
+      notes: sales_invoice.notes,
+      documentNumber: sales_invoice.documentNumber,
+      seriesPrefix: documentSeries.prefix,
+      seriesSuffix: documentSeries.suffix,
+      // Client data
+      clientFirstName: person.firstName,
+      clientLastName: person.lastName,
+      clientLegalName: company.legalName,
+      clientDocumentType: documentType.name,
+      clientDocumentNumber: user.documentNumber,
+    })
+    .from(sales_invoice)
+    .innerJoin(client, eq(sales_invoice.clientId, client.id))
+    .innerJoin(user, eq(client.id, user.id))
+    .innerJoin(documentSeries, eq(sales_invoice.seriesId, documentSeries.id))
+    .leftJoin(person, eq(client.id, person.id))
+    .leftJoin(company, eq(client.id, company.id))
+    .leftJoin(documentType, eq(user.documentTypeId, documentType.id))
+    .where(eq(sales_invoice.id, id));
+
+  if (!invoice) {
+    return undefined;
+  }
+
+  // Obtener ítems de la factura con información del producto
+  const items = await db
+    .select({
+      id: sales_invoice_item.id,
+      lineNumber: sales_invoice_item.lineNumber,
+      itemCode: item.code,
+      itemName: item.fullName,
+      quantity: sales_invoice_item.quantity,
+      unitPrice: sales_invoice_item.unitPrice,
+      discountPercent: sales_invoice_item.discountPercent,
+      discountAmount: sales_invoice_item.discountAmount,
+      taxId: sales_invoice_item.taxId,
+      taxAmount: sales_invoice_item.taxAmount,
+      total: sales_invoice_item.total,
+      description: sales_invoice_item.description,
+      taxRate: tax.rate,
+    })
+    .from(sales_invoice_item)
+    .innerJoin(item, eq(sales_invoice_item.itemId, item.id))
+    .leftJoin(tax, eq(sales_invoice_item.taxId, tax.id))
+    .where(eq(sales_invoice_item.salesInvoiceId, id))
+    .orderBy(sales_invoice_item.lineNumber);
+
+  // Obtener configuración de la empresa
+  const systemConfig = await getSystemConfig();
+
+  const itemsDetails: SalesInvoiceItemPdfDetails[] = items.map((i) => {
+    return {
+      id: i.id,
+      lineNumber: i.lineNumber,
+      itemCode: i.itemCode,
+      itemName: i.itemName,
+      quantity: toDecimal(i.quantity),
+      unitPrice: toDecimal(i.unitPrice),
+      discountPercent: toDecimal(i.discountPercent),
+      discountAmount: toDecimal(i.discountAmount),
+      taxRate: i.taxRate ? toDecimal(i.taxRate) : null,
+      taxAmount: toDecimal(i.taxAmount),
+      total: toDecimal(i.total),
+      description: i.description,
+    };
+  });
+
+  const clientName = invoice.clientFirstName
+    ? `${invoice.clientFirstName} ${invoice.clientLastName ?? ""}`.trim()
+    : invoice.clientLegalName ?? "";
+
+  const prefix = invoice.seriesPrefix ?? "";
+  const suffix = invoice.seriesSuffix ?? "";
+  const documentNumberFull = `${prefix}${invoice.documentNumber}${suffix}`;
+
+  return {
+    id: invoice.id,
+    documentNumberFull,
+    status: invoice.status as SalesInvoiceStatus,
+    issueDate: invoice.issueDate,
+    dueDate: invoice.dueDate,
+    client: {
+      id: invoice.clientId,
+      name: clientName,
+      documentType: invoice.clientDocumentType,
+      documentNumber: invoice.clientDocumentNumber,
+    },
+    company: {
+      name: systemConfig.companyName || "Mi Empresa",
+      nit: systemConfig.companyNit || "",
+      address: systemConfig.companyAddress || "",
+      phone: systemConfig.companyPhone || "",
+      email: systemConfig.companyEmail || "",
+      logo: systemConfig.companyLogo || undefined,
+    },
+    items: itemsDetails,
+    subtotal: toDecimal(invoice.subtotal),
+    globalDiscountPercent: toDecimal(invoice.globalDiscountPercent),
+    globalDiscountAmount: toDecimal(invoice.globalDiscountAmount),
+    taxAmount: toDecimal(invoice.taxAmount),
+    totalAmount: toDecimal(invoice.totalAmount),
+    currency: systemConfig.currency || "COP",
+    notes: invoice.notes,
+  };
+}
+
