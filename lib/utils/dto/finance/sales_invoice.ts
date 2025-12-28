@@ -1,5 +1,6 @@
 import type Decimal from "../../data/Decimal";
 import type DateTime from "../../data/DateTime";
+import type { CompanyInfo } from "./purchase_invoice";
 
 /**
  * Estados válidos para una factura de venta.
@@ -194,17 +195,8 @@ export interface PostSalesInvoiceResult {
   totalAmount: Decimal;
 }
 
-/**
- * Información de la empresa para el PDF.
- */
-export interface CompanyInfo {
-  name: string;
-  nit: string;
-  address: string;
-  phone: string;
-  email: string;
-  logo?: string;
-}
+// Re-export CompanyInfo from purchase_invoice to avoid duplication
+export type { CompanyInfo } from "./purchase_invoice";
 
 /**
  * Detalle de un ítem de factura de venta para PDF/visualización.
