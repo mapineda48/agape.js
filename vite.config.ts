@@ -3,7 +3,9 @@ import crypto from "node:crypto";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 import vitePluginRpc from "./lib/vite/vite-plugin";
+
 
 const cwd = process.cwd();
 
@@ -24,6 +26,22 @@ export default defineConfig({
         plugins: [["babel-plugin-react-compiler"]],
       },
     }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: path.resolve(__dirname, "node_modules/pdfjs-dist/cmaps/**/*"),
+          dest: "pdf/cmaps"
+        },
+        {
+          src: path.resolve(__dirname, "node_modules/pdfjs-dist/standard_fonts/**/*"),
+          dest: "pdf/standard_fonts"
+        },
+        {
+          src: path.resolve(__dirname, "node_modules/pdfjs-dist/wasm/**/*"),
+          dest: "pdf/wasm"
+        }
+      ]
+    })
   ],
 
   root: "web",
