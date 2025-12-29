@@ -80,6 +80,10 @@ if (isProduction) {
       contentSecurityPolicy: {
         useDefaults: true,
         directives: {
+          "script-src": [
+            ...helmet.contentSecurityPolicy.getDefaultDirectives()["script-src"],
+            "'wasm-unsafe-eval'",
+          ],
           "img-src": [
             ...helmet.contentSecurityPolicy.getDefaultDirectives()["img-src"],
             "blob:",
