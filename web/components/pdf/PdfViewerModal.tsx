@@ -7,11 +7,15 @@
  * Soporta tanto facturas de compra como de venta, detectando automáticamente
  * el tipo basado en la estructura de los datos.
  * 
- * Usa BlobProvider de @react-pdf/renderer para generar el PDF dinámicamente.
+ * Usa BlobProvider de @react-pdf/renderer para generar el PDF dinámicamente
+ * y react-pdf para renderizarlo como canvas (compatible con Android).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { BlobProvider } from "@react-pdf/renderer";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 import {
     createPortalHook,
     type PortalInjectedProps,
@@ -23,8 +27,17 @@ import type { SalesInvoicePdfData } from "@utils/dto/finance/sales_invoice";
 import {
     XMarkIcon,
     ArrowPathIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { DocumentTextIcon } from "@heroicons/react/24/solid";
+
+// Configurar el worker de PDF.js (local con Vite)
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url
+).toString();
 
 // Tipo unión para los datos del PDF
 type InvoicePdfData = PurchaseInvoicePdfData | SalesInvoicePdfData;
@@ -45,6 +58,158 @@ const invoiceColors = {
         text: "text-emerald-200",
     },
 };
+
+/**
+ * Componente interno para renderizar el PDF usando react-pdf
+ * Renderiza el PDF como canvas, compatible con Android
+ */
+interface PdfCanvasViewerProps {
+    url: string | null;
+    blob: Blob | null;
+    isSales: boolean;
+    documentNumber: string;
+}
+
+function PdfCanvasViewer({ url, blob, isSales, documentNumber }: PdfCanvasViewerProps) {
+    const [numPages, setNumPages] = useState<number>(0);
+    const [pageNumber, setPageNumber] = useState<number>(1);
+    const [pageWidth, setPageWidth] = useState<number>(600);
+    const [isPageLoading, setIsPageLoading] = useState(true);
+
+    // Ajustar el ancho según el contenedor
+    const containerRef = useCallback((node: HTMLDivElement | null) => {
+        if (node) {
+            const width = Math.min(node.clientWidth - 32, 800);
+            setPageWidth(width);
+        }
+    }, []);
+
+    const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+        setNumPages(numPages);
+        setPageNumber(1);
+    };
+
+    const goToPrevPage = () => {
+        setPageNumber((prev) => Math.max(prev - 1, 1));
+        setIsPageLoading(true);
+    };
+
+    const goToNextPage = () => {
+        setPageNumber((prev) => Math.min(prev + 1, numPages));
+        setIsPageLoading(true);
+    };
+
+    const handleDownload = () => {
+        if (blob) {
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = `${documentNumber.replace(/\//g, "-")}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+        }
+    };
+
+    if (!url) {
+        return (
+            <div className="h-full flex items-center justify-center">
+                <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="h-full flex flex-col">
+            {/* Controls Bar */}
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-200 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={goToPrevPage}
+                        disabled={pageNumber <= 1}
+                        className={`p-2 rounded-lg transition-colors ${pageNumber <= 1
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700"
+                            }`}
+                        aria-label="Página anterior"
+                    >
+                        <ChevronLeftIcon className="h-5 w-5" />
+                    </button>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[80px] text-center">
+                        {numPages > 0 ? `${pageNumber} / ${numPages}` : "..."}
+                    </span>
+                    <button
+                        onClick={goToNextPage}
+                        disabled={pageNumber >= numPages}
+                        className={`p-2 rounded-lg transition-colors ${pageNumber >= numPages
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700"
+                            }`}
+                        aria-label="Página siguiente"
+                    >
+                        <ChevronRightIcon className="h-5 w-5" />
+                    </button>
+                </div>
+
+                <button
+                    onClick={handleDownload}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSales
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        : "bg-violet-600 hover:bg-violet-700 text-white"
+                        }`}
+                >
+                    <ArrowDownTrayIcon className="h-4 w-4" />
+                    <span className="hidden sm:inline">Descargar</span>
+                </button>
+            </div>
+
+            {/* PDF Canvas */}
+            <div
+                ref={containerRef}
+                className="flex-1 overflow-auto p-4 flex justify-center"
+            >
+                <Document
+                    file={url}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    loading={
+                        <div className="flex flex-col items-center justify-center gap-4 py-12">
+                            <div className="relative">
+                                <div className={`w-12 h-12 border-4 ${isSales ? 'border-emerald-200' : 'border-violet-200'} rounded-full`} />
+                                <div className={`absolute inset-0 w-12 h-12 border-4 border-transparent ${isSales ? 'border-t-emerald-600' : 'border-t-violet-600'} rounded-full animate-spin`} />
+                            </div>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Cargando documento...</p>
+                        </div>
+                    }
+                    error={
+                        <div className="flex flex-col items-center justify-center gap-4 py-12">
+                            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                <XMarkIcon className="h-8 w-8 text-red-500" />
+                            </div>
+                            <p className="text-red-600 dark:text-red-400 text-sm">Error al cargar el PDF</p>
+                        </div>
+                    }
+                    className="max-w-full"
+                >
+                    <Page
+                        pageNumber={pageNumber}
+                        width={pageWidth}
+                        renderMode="canvas"
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                        loading={
+                            <div className="flex items-center justify-center py-8">
+                                <ArrowPathIcon className={`h-6 w-6 ${isSales ? 'text-emerald-500' : 'text-violet-500'} animate-spin`} />
+                            </div>
+                        }
+                        onRenderSuccess={() => setIsPageLoading(false)}
+                        className="shadow-lg rounded-lg overflow-hidden"
+                    />
+                </Document>
+            </div>
+        </div>
+    );
+}
 
 interface PdfViewerModalProps extends PortalInjectedProps {
     data: InvoicePdfData;
@@ -178,22 +343,12 @@ function PdfViewerModal({ data, title, remove, zIndex, style }: PdfViewerModalPr
                             }
 
                             return (
-                                <div className="h-full flex flex-col">
-                                    {/* PDF Viewer */}
-                                    <div className="flex-1 p-4 overflow-auto">
-                                        {url ? (
-                                            <iframe
-                                                src={url}
-                                                className="w-full h-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white shadow-lg"
-                                                title="Vista previa del PDF"
-                                            />
-                                        ) : (
-                                            <div className="h-full flex items-center justify-center">
-                                                <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                <PdfCanvasViewer
+                                    url={url}
+                                    blob={blob}
+                                    isSales={isSales}
+                                    documentNumber={data.documentNumberFull}
+                                />
                             );
                         }}
                     </BlobProvider>

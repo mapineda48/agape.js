@@ -1,9 +1,17 @@
 import path from "node:path";
 import crypto from "node:crypto";
-import { defineConfig } from "vite";
+import { createRequire } from "node:module";
+import { defineConfig, normalizePath } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import vitePluginRpc from "./lib/vite/vite-plugin";
+
+// Configuración para react-pdf / pdfjs-dist
+const require = createRequire(import.meta.url);
+const pdfjsDistPath = path.dirname(require.resolve("pdfjs-dist/package.json"));
+const cMapsDir = normalizePath(path.join(pdfjsDistPath, "cmaps"));
+const standardFontsDir = normalizePath(path.join(pdfjsDistPath, "standard_fonts"));
 
 const cwd = process.cwd();
 
@@ -23,6 +31,13 @@ export default defineConfig({
       babel: {
         plugins: [["babel-plugin-react-compiler"]],
       },
+    }),
+    // Copiar archivos necesarios para react-pdf / pdfjs-dist
+    viteStaticCopy({
+      targets: [
+        { src: cMapsDir, dest: "" },
+        { src: standardFontsDir, dest: "" },
+      ],
     }),
   ],
 
@@ -73,5 +88,14 @@ export default defineConfig({
         },
       },
     },
+  },
+
+  // Configuración para react-pdf y pdfjs-dist worker
+  optimizeDeps: {
+    include: ["react-pdf"],
+  },
+
+  worker: {
+    format: "es",
   },
 });
