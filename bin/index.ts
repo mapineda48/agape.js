@@ -97,6 +97,8 @@ if (isProduction) {
             ...helmet.contentSecurityPolicy.getDefaultDirectives()["font-src"],
             "https://fonts.gstatic.com",
           ],
+          "connect-src": ["'self'", "data:", "blob:"],
+          "frame-src": ["'self'", "blob:"],
         },
       },
     })
