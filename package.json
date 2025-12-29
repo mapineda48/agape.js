@@ -81,6 +81,7 @@
     "lucide-react": "^0.552.0",
     "mitt": "^3.0.1",
     "pathe": "^2.0.3",
+    "pdfjs-dist": "^5.4.530",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-redux": "^9.2.0",
