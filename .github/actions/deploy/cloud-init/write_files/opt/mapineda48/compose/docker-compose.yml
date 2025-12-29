@@ -17,8 +17,9 @@ services:
       # Persistent certificates in Azure Blob Storage (survives redeploys)
       - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs
       # Local disk: configuration from repo (recreated on each deploy)
-      - /var/lib/mapineda48/nginx/vhost.d:/etc/nginx/vhost.d
-      - /var/lib/mapineda48/nginx/html:/usr/share/nginx/html
+      - /opt/mapineda48/nginx-conf/vhost.d:/etc/nginx/vhost.d
+      - /opt/mapineda48/nginx-conf/html:/usr/share/nginx/html
+      # Docker socket for dynamic configuration
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - mapineda48-net
@@ -35,9 +36,9 @@ services:
       # Persistent certificates and ACME state in Azure Blob Storage
       - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs:rw
       - /mnt/deploy/vm/agape.js/docker/acme:/etc/acme.sh
-      # Local disk: configuration from repo (recreated on each deploy)
-      - /var/lib/mapineda48/nginx/vhost.d:/etc/nginx/vhost.d
-      - /var/lib/mapineda48/nginx/html:/usr/share/nginx/html
+      # Local disk: configuration from repo (same as nginx-proxy)
+      - /opt/mapineda48/nginx-conf/vhost.d:/etc/nginx/vhost.d
+      - /opt/mapineda48/nginx-conf/html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - mapineda48-net

@@ -126,15 +126,19 @@ if (!isDevelopment) {
   const frontendRoot = path.resolve("web/www");
   const indexHtml = path.resolve("web/index.html");
 
-  // Enable GZIP compression for responses (backup for nginx)
+  // Enable GZIP compression for responses
   app.use(compression());
 
-  // Serve static frontend assets
-  // Note: Cache headers are handled by nginx in production
-  app.use(express.static(frontendRoot));
+  // Serve static frontend assets with aggressive caching
+  // Vite includes content hash in filenames, safe to cache for 1 year
+  app.use(express.static(frontendRoot, {
+    maxAge: "1y",
+    immutable: true,
+  }));
 
   // Fallback to SPA entrypoint (for client-side routing)
   app.get(/.*/, (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=0");
     res.sendFile(indexHtml);
   });
 }

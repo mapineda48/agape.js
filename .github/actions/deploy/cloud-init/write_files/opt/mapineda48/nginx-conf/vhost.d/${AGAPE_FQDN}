@@ -3,6 +3,9 @@
 # This file is copied as ${AGAPE_FQDN} during deploy
 # ===============================================================
 
+# Quitar headers del upstream (Express) sin tocar la app
+proxy_hide_header X-Powered-By;
+
 # ---- HSTS: HTTP Strict Transport Security ----
 # NOTE: nginx-proxy with acme-companion automatically adds HSTS for SSL vhosts
 # Commenting this out to avoid duplicate header (detected by security audit)
