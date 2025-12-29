@@ -32,12 +32,10 @@ import {
     ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { DocumentTextIcon } from "@heroicons/react/24/solid";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 // Configurar el worker de PDF.js (local con Vite)
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 // Tipo unión para los datos del PDF
 type InvoicePdfData = PurchaseInvoicePdfData | SalesInvoicePdfData;
