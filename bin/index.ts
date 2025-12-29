@@ -72,6 +72,9 @@ if (isProduction) {
   // Allow Express to trust headers from Nginx reverse proxy
   // Required for req.ip, req.protocol, req.secure to work correctly
   app.set("trust proxy", 1);
+
+  // Remove X-Powered-By header (security: don't expose server info)
+  app.disable("x-powered-by");
 }
 
 

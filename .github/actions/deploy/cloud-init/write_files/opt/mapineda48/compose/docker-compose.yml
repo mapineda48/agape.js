@@ -14,10 +14,11 @@ services:
     environment:
       TRUST_DOWNSTREAM_PROXY: "false"
     volumes:
-      # Persistent certificates in Storage
+      # Persistent certificates in Azure Blob Storage (survives redeploys)
       - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs
-      - /mnt/deploy/vm/agape.js/docker/vhost.d:/etc/nginx/vhost.d
-      - /mnt/deploy/vm/agape.js/docker/html:/usr/share/nginx/html
+      # Local disk: configuration from repo (recreated on each deploy)
+      - /var/lib/mapineda48/nginx/vhost.d:/etc/nginx/vhost.d
+      - /var/lib/mapineda48/nginx/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - mapineda48-net
@@ -31,12 +32,12 @@ services:
       ACME_CA_URI: https://acme-v02.api.letsencrypt.org/directory
       NGINX_PROXY_CONTAINER: mapineda48-proxy
     volumes:
-      # IMPORTANT: same certs volume in RW
+      # Persistent certificates and ACME state in Azure Blob Storage
       - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs:rw
-      - /mnt/deploy/vm/agape.js/docker/vhost.d:/etc/nginx/vhost.d
-      - /mnt/deploy/vm/agape.js/docker/html:/usr/share/nginx/html
-      # Persistent acme.sh state in Storage
       - /mnt/deploy/vm/agape.js/docker/acme:/etc/acme.sh
+      # Local disk: configuration from repo (recreated on each deploy)
+      - /var/lib/mapineda48/nginx/vhost.d:/etc/nginx/vhost.d
+      - /var/lib/mapineda48/nginx/html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - mapineda48-net
