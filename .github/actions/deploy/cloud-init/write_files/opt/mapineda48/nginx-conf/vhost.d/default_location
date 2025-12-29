@@ -1,0 +1,15 @@
+# ===============================================================
+# Cache-Control Configuration
+# Optimized for SPA/SSR with versioned assets
+# ===============================================================
+
+# HTML files: Always revalidate (ensures users get latest app version)
+location ~* \.html$ {
+  add_header Cache-Control "public, max-age=0" always;
+}
+
+# Static assets with hash in filename: Aggressive caching
+# Applies to: JS, CSS, fonts, images
+location ~* \.(js|css|woff2|woff|ttf|otf|png|jpg|jpeg|gif|svg|webp|ico|avif)$ {
+  add_header Cache-Control "public, max-age=31536000, immutable" always;
+}

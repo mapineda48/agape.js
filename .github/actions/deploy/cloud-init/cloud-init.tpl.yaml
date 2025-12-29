@@ -67,6 +67,7 @@ runcmd:
   - apt-get install -y blobfuse2
   - systemctl enable --now mapineda48-blobfuse2
   - /opt/mapineda48/scripts/blobfuse2.sh
+  - /opt/mapineda48/scripts/nginx-init.sh
 
   # Install Docker (after blobfuse2 for drop-in to work correctly)
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg

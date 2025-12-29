@@ -2,7 +2,6 @@ import path from "node:path";
 import http from "node:http";
 import express from "express";
 import compression from "compression";
-import helmet from "helmet";
 import morgan from "morgan";
 import initDatabase from "#lib/db";
 import bridge from "#lib/bridge/middleware";
@@ -32,7 +31,6 @@ const {
 } = process.env;
 
 const isProduction = NODE_ENV === "production";
-const isTest = NODE_ENV === "test";
 const isDevelopment = NODE_ENV === "development";
 
 // Initialize DB connection and models (required before importing model-dependent logic like auth)
@@ -46,7 +44,7 @@ await initDatabase(DATABASE_URI, {
 });
 
 // Initialize storage backend (e.g., Azure Blob or development emulator)
-const blobStorageHost = await AzureBlobStorage.connect(
+await AzureBlobStorage.connect(
   AZURE_CONNECTION_STRING,
   hashString(AGAPE_TENANT),
   AGAPE_CDN_HOST
@@ -69,50 +67,13 @@ app.use(morgan(isDevelopment ? "dev" : "common"));
 // Support for raw MsgPack content
 app.use(express.raw({ type: "application/msgpack", limit: "5mb" }));
 
-// Production-specific security hardening
+// Production-specific settings
 if (isProduction) {
-  // Allow Express to trust headers from Nginx or reverse proxies
+  // Allow Express to trust headers from Nginx reverse proxy
+  // Required for req.ip, req.protocol, req.secure to work correctly
   app.set("trust proxy", 1);
-
-  // Enable Helmet with secure Content Security Policy (CSP)
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        useDefaults: true,
-        directives: {
-          "script-src": [
-            ...helmet.contentSecurityPolicy.getDefaultDirectives()["script-src"],
-            "'wasm-unsafe-eval'",
-          ],
-          "img-src": [
-            ...helmet.contentSecurityPolicy.getDefaultDirectives()["img-src"],
-            "blob:",
-            blobStorageHost,
-          ],
-          "style-src": [
-            ...helmet.contentSecurityPolicy.getDefaultDirectives()["style-src"],
-            "https://fonts.googleapis.com",
-          ],
-          "font-src": [
-            ...helmet.contentSecurityPolicy.getDefaultDirectives()["font-src"],
-            "https://fonts.gstatic.com",
-          ],
-          "connect-src": ["'self'", "data:", "blob:"],
-          "frame-src": ["'self'", "blob:"],
-        },
-      },
-    })
-  );
-
-  // Enable Permissions-Policy for restricting sensitive browser APIs
-  app.use((_req, res, next) => {
-    res.setHeader(
-      "Permissions-Policy",
-      "geolocation=(self), camera=(self), microphone=(self), fullscreen=(self)"
-    );
-    next();
-  });
 }
+
 
 // Development-only settings (e.g., CORS for Vite dev server)
 if (isDevelopment) {
@@ -162,17 +123,12 @@ if (!isDevelopment) {
   const frontendRoot = path.resolve("web/www");
   const indexHtml = path.resolve("web/index.html");
 
-  // Enable GZIP compression for all responses
+  // Enable GZIP compression for responses (backup for nginx)
   app.use(compression());
 
-  // Serve static frontend assets with long cache headers
-  app.use(
-    express.static(frontendRoot, {
-      maxAge: "1y",
-      etag: false,
-      lastModified: false,
-    })
-  );
+  // Serve static frontend assets
+  // Note: Cache headers are handled by nginx in production
+  app.use(express.static(frontendRoot));
 
   // Fallback to SPA entrypoint (for client-side routing)
   app.get(/.*/, (_req, res) => {

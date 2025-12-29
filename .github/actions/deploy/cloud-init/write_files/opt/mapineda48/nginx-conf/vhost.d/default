@@ -1,0 +1,13 @@
+# ===============================================================
+# Default vhost configuration (for unknown/unmatched hosts)
+# Applies when no VIRTUAL_HOST matches the incoming request
+# ===============================================================
+
+# Serve custom HTML for unknown hosts
+location / {
+  root /usr/share/nginx/html;
+  try_files /default.html =404;
+}
+
+# Disable directory listing
+autoindex off;
