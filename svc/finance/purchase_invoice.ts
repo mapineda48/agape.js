@@ -65,191 +65,202 @@ export async function createPurchaseInvoice(
   payload: CreatePurchaseInvoiceInput
 ): Promise<PurchaseInvoiceWithNumbering> {
   return db.transaction(async (tx) => {
-    // Validar que el proveedor exista y esté activo
-    const [supplierRecord] = await tx
-      .select({
-        id: supplier.id,
-        active: supplier.active,
-      })
-      .from(supplier)
-      .where(eq(supplier.id, payload.supplierId));
+    return createPurchaseInvoiceTx(tx, payload);
+  });
+}
 
-    if (!supplierRecord) {
-      throw new Error("El proveedor no existe");
+/**
+ * Versión interna que permite ejecutar la creación de la factura dentro de una transacción existente.
+ */
+export async function createPurchaseInvoiceTx(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  payload: CreatePurchaseInvoiceInput
+): Promise<PurchaseInvoiceWithNumbering> {
+  // Validar que el proveedor exista y esté activo
+  const [supplierRecord] = await tx
+    .select({
+      id: supplier.id,
+      active: supplier.active,
+    })
+    .from(supplier)
+    .where(eq(supplier.id, payload.supplierId));
+
+  if (!supplierRecord) {
+    throw new Error("El proveedor no existe");
+  }
+
+  if (!supplierRecord.active) {
+    throw new Error("El proveedor está inactivo");
+  }
+
+  const totalAmount = toDecimal(payload.totalAmount);
+  if (totalAmount.lte(0)) {
+    throw new Error("El monto total debe ser mayor a cero");
+  }
+
+  // Usar DateTime directamente - el RPC ya lo deserializó
+  const issueDate = payload.issueDate ?? new DateTime();
+  const issueDateStr = issueDate.toISOString().split("T")[0];
+
+  // R8: Calcular Due Date basado en Payment Terms
+  let paymentTermsId = payload.paymentTermsId;
+  let computedDueDate: string | null = null;
+
+  if (payload.dueDate) {
+    computedDueDate = payload.dueDate.toISOString().split("T")[0];
+  } else {
+    // Si no se proporcionó fecha, es OBLIGATORIO tener payment terms
+    if (!paymentTermsId) {
+      throw new Error(
+        "Debe proporcionar Fecha de Vencimiento o Términos de Pago"
+      );
     }
 
-    if (!supplierRecord.active) {
-      throw new Error("El proveedor está inactivo");
-    }
+    const [terms] = await tx
+      .select()
+      .from(paymentTerms)
+      .where(eq(paymentTerms.id, paymentTermsId));
+    if (!terms) throw new Error("Términos de pago no encontrados");
 
-    const totalAmount = toDecimal(payload.totalAmount);
-    if (totalAmount.lte(0)) {
-      throw new Error("El monto total debe ser mayor a cero");
-    }
+    computedDueDate = issueDate
+      .addDays(terms.dueDays)
+      .toISOString()
+      .substring(0, 10);
+  }
 
-    // Usar DateTime directamente - el RPC ya lo deserializó
-    const issueDate = payload.issueDate ?? new DateTime();
-    const issueDateStr = issueDate.toISOString().split("T")[0];
+  // Validar Items y R6/R7
+  if (!payload.items || payload.items.length === 0) {
+    throw new Error("La factura debe tener al menos un ítem");
+  }
 
-    // R8: Calcular Due Date basado en Payment Terms
-    let paymentTermsId = payload.paymentTermsId;
-    let computedDueDate: string | null = null;
+  const itemsToInsert = [];
+  let calculatedTotal = new Decimal(0);
 
-    if (payload.dueDate) {
-      computedDueDate = payload.dueDate.toISOString().split("T")[0];
-    } else {
-      // Si no se proporcionó fecha, es OBLIGATORIO tener payment terms
-      if (!paymentTermsId) {
+  for (const itemInput of payload.items) {
+    const qty = itemInput.quantity;
+    const price = toDecimal(itemInput.unitPrice);
+
+    if (qty <= 0) throw new Error("Cantidad debe ser mayor a 0");
+    if (price.lt(0)) throw new Error("Precio no puede ser negativo");
+
+    const subtotal = new Decimal(qty).mul(price);
+    calculatedTotal = calculatedTotal.add(subtotal); // Nota: esto es subtotal antes de impuestos/descuentos.
+    // El payload.totalAmount es el total FINAL con impuestos.
+    // Aquí simplificamos y no validamos tax mathematics a fondo, pero validamos varianza de precio unitario.
+
+    // R7: Quantity Match & R6: Price Variance
+    if (itemInput.goodsReceiptItemId) {
+      const [grItem] = await tx
+        .select()
+        .from(goods_receipt_item)
+        .where(eq(goods_receipt_item.id, itemInput.goodsReceiptItemId));
+      if (!grItem)
         throw new Error(
-          "Debe proporcionar Fecha de Vencimiento o Términos de Pago"
+          `Ítem de recepción ${itemInput.goodsReceiptItemId} no encontrado`
+        );
+
+      // R7
+      if (qty > grItem.quantity) {
+        throw new Error(
+          `Cantidad facturada (${qty}) excede la recibida (${grItem.quantity}) para ítem ${grItem.itemId}`
         );
       }
 
-      const [terms] = await tx
-        .select()
-        .from(paymentTerms)
-        .where(eq(paymentTerms.id, paymentTermsId));
-      if (!terms) throw new Error("Términos de pago no encontrados");
-
-      computedDueDate = issueDate
-        .addDays(terms.dueDays)
-        .toISOString()
-        .substring(0, 10);
-    }
-
-    // Validar Items y R6/R7
-    if (!payload.items || payload.items.length === 0) {
-      throw new Error("La factura debe tener al menos un ítem");
-    }
-
-    const itemsToInsert = [];
-    let calculatedTotal = new Decimal(0);
-
-    for (const itemInput of payload.items) {
-      const qty = itemInput.quantity;
-      const price = toDecimal(itemInput.unitPrice);
-
-      if (qty <= 0) throw new Error("Cantidad debe ser mayor a 0");
-      if (price.lt(0)) throw new Error("Precio no puede ser negativo");
-
-      const subtotal = new Decimal(qty).mul(price);
-      calculatedTotal = calculatedTotal.add(subtotal); // Nota: esto es subtotal antes de impuestos/descuentos.
-      // El payload.totalAmount es el total FINAL con impuestos.
-      // Aquí simplificamos y no validamos tax mathematics a fondo, pero validamos varianza de precio unitario.
-
-      // R7: Quantity Match & R6: Price Variance
-      if (itemInput.goodsReceiptItemId) {
-        const [grItem] = await tx
-          .select()
-          .from(goods_receipt_item)
-          .where(eq(goods_receipt_item.id, itemInput.goodsReceiptItemId));
-        if (!grItem)
-          throw new Error(
-            `Ítem de recepción ${itemInput.goodsReceiptItemId} no encontrado`
-          );
-
-        // R7
-        if (qty > grItem.quantity) {
-          throw new Error(
-            `Cantidad facturada (${qty}) excede la recibida (${grItem.quantity}) para ítem ${grItem.itemId}`
-          );
-        }
-
-        // R6
-        // Tolerancia de precio? Digamos 5%
-        const variance = price.sub(new Decimal(grItem.unitCost)).abs();
-        const threshold = new Decimal(grItem.unitCost).mul(0.05); // 5%
-        if (variance.gt(threshold)) {
-          // Warning o Error. Usuario pidió "Exigir autorización". Lanzamos error.
-          throw new Error(
-            `Variación de precio detectada para ítem ${grItem.itemId}. Factura: ${price}, Recepción: ${grItem.unitCost}. Excede límite.`
-          );
-        }
-      } else if (itemInput.orderItemId) {
-        const [poItem] = await tx
-          .select()
-          .from(order_item)
-          .where(eq(order_item.id, itemInput.orderItemId));
-        if (!poItem)
-          throw new Error(
-            `Ítem de orden ${itemInput.orderItemId} no encontrado`
-          );
-
-        // R7 vs Orden (si facturamos directo)
-        if (qty > poItem.quantity)
-          throw new Error(`Cantidad facturada excede orden`);
-
-        // R6
-        const variance = price.sub(new Decimal(poItem.unitPrice)).abs();
-        const threshold = new Decimal(poItem.unitPrice).mul(0.05);
-        if (variance.gt(threshold)) {
-          throw new Error(`Variación de precio vs Orden detectada`);
-        }
+      // R6
+      // Tolerancia de precio? Digamos 5%
+      const variance = price.sub(new Decimal(grItem.unitCost)).abs();
+      const threshold = new Decimal(grItem.unitCost).mul(0.05); // 5%
+      if (variance.gt(threshold)) {
+        // Warning o Error. Usuario pidió "Exigir autorización". Lanzamos error.
+        throw new Error(
+          `Variación de precio detectada para ítem ${grItem.itemId}. Factura: ${price}, Recepción: ${grItem.unitCost}. Excede límite.`
+        );
       }
+    } else if (itemInput.orderItemId) {
+      const [poItem] = await tx
+        .select()
+        .from(order_item)
+        .where(eq(order_item.id, itemInput.orderItemId));
+      if (!poItem)
+        throw new Error(
+          `Ítem de orden ${itemInput.orderItemId} no encontrado`
+        );
 
-      itemsToInsert.push({
-        itemId: itemInput.itemId,
-        quantity: qty,
-        unitPrice: price,
-        orderItemId: itemInput.orderItemId,
-        goodsReceiptItemId: itemInput.goodsReceiptItemId,
-        taxId: itemInput.taxId,
-        subtotal: subtotal,
-        // discount, taxAmount defaulted
-      });
+      // R7 vs Orden (si facturamos directo)
+      if (qty > poItem.quantity)
+        throw new Error(`Cantidad facturada excede orden`);
+
+      // R6
+      const variance = price.sub(new Decimal(poItem.unitPrice)).abs();
+      const threshold = new Decimal(poItem.unitPrice).mul(0.05);
+      if (variance.gt(threshold)) {
+        throw new Error(`Variación de precio vs Orden detectada`);
+      }
     }
 
-    // Obtener número de documento usando ID temporal
-    const tempExternalId = crypto.randomUUID();
-    const numbering = await getNextDocumentNumberTx(tx, {
-      documentTypeCode: PURCHASE_INVOICE_DOCUMENT_TYPE_CODE,
-      today: issueDate,
-      externalDocumentType: "purchase_invoice",
-      externalDocumentId: tempExternalId,
+    itemsToInsert.push({
+      itemId: itemInput.itemId,
+      quantity: qty,
+      unitPrice: price,
+      orderItemId: itemInput.orderItemId,
+      goodsReceiptItemId: itemInput.goodsReceiptItemId,
+      taxId: itemInput.taxId,
+      subtotal: subtotal,
+      // discount, taxAmount defaulted
     });
+  }
 
-    const [invoice] = await tx
-      .insert(purchase_invoice)
-      .values({
-        supplierId: payload.supplierId,
-        purchaseOrderId: payload.purchaseOrderId,
-        goodsReceiptId: payload.goodsReceiptId,
-        paymentTermsId: paymentTermsId,
-        issueDate: issueDateStr,
-        dueDate: computedDueDate,
-        totalAmount,
-        seriesId: numbering.seriesId,
-        documentNumber: numbering.assignedNumber,
-      })
-      .returning();
-
-    // Actualizar externalDocumentId en document_sequence con el ID real
-    await tx
-      .update(documentSequence)
-      .set({ externalDocumentId: invoice.id.toString() })
-      .where(
-        and(
-          eq(documentSequence.seriesId, numbering.seriesId),
-          eq(documentSequence.assignedNumber, numbering.assignedNumber)
-        )
-      );
-
-    // Insertar Items
-    if (itemsToInsert.length > 0) {
-      await tx.insert(purchase_invoice_item).values(
-        itemsToInsert.map((i) => ({
-          purchaseInvoiceId: invoice.id,
-          ...i,
-        }))
-      );
-    }
-
-    return {
-      ...invoice,
-      documentNumberFull: numbering.fullNumber,
-    };
+  // Obtener número de documento usando ID temporal
+  const tempExternalId = crypto.randomUUID();
+  const numbering = await getNextDocumentNumberTx(tx, {
+    documentTypeCode: PURCHASE_INVOICE_DOCUMENT_TYPE_CODE,
+    today: issueDate,
+    externalDocumentType: "purchase_invoice",
+    externalDocumentId: tempExternalId,
   });
+
+  const [invoice] = await tx
+    .insert(purchase_invoice)
+    .values({
+      supplierId: payload.supplierId,
+      purchaseOrderId: payload.purchaseOrderId,
+      goodsReceiptId: payload.goodsReceiptId,
+      paymentTermsId: paymentTermsId,
+      issueDate: issueDateStr,
+      dueDate: computedDueDate,
+      totalAmount,
+      seriesId: numbering.seriesId,
+      documentNumber: numbering.assignedNumber,
+    })
+    .returning();
+
+  // Actualizar externalDocumentId en document_sequence con el ID real
+  await tx
+    .update(documentSequence)
+    .set({ externalDocumentId: invoice.id.toString() })
+    .where(
+      and(
+        eq(documentSequence.seriesId, numbering.seriesId),
+        eq(documentSequence.assignedNumber, numbering.assignedNumber)
+      )
+    );
+
+  // Insertar Items
+  if (itemsToInsert.length > 0) {
+    await tx.insert(purchase_invoice_item).values(
+      itemsToInsert.map((i) => ({
+        purchaseInvoiceId: invoice.id,
+        ...i,
+      }))
+    );
+  }
+
+  return {
+    ...invoice,
+    documentNumberFull: numbering.fullNumber,
+  };
 }
+
 
 /**
  * Obtiene una factura de compra por su ID con todos los detalles.

@@ -102,10 +102,16 @@ export default function ReceiveOrderPage(props: Props) {
         })),
       });
 
+      let message = `Mercancía recibida. Movimiento: ${result.movementNumber}`;
+      if (result.purchaseInvoiceNumber) {
+        message += `. Factura de compra generada: ${result.purchaseInvoiceNumber}`;
+      }
+
       notify({
-        payload: `Mercancía recibida. Movimiento: ${result.movementNumber}`,
+        payload: message,
         type: "success",
       });
+
 
       navigate(`../../order/${props.order.id}`);
     } catch (error) {

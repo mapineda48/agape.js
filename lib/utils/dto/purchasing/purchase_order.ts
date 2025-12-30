@@ -192,4 +192,9 @@ export interface ReceivePurchaseOrderResult {
   inventoryMovementId: number;
   /** Número completo del documento de movimiento */
   movementNumber: string;
+  /** ID de la factura de compra generada automáticamente */
+  purchaseInvoiceId?: number;
+  /** Número completo de la factura de compra generada */
+  purchaseInvoiceNumber?: string;
 }
+

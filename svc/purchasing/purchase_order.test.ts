@@ -39,6 +39,9 @@ beforeAll(async () => {
   const { PURCHASE_ORDER_DOCUMENT_TYPE_CODE } = await import(
     "./purchase_order"
   );
+  const { PURCHASE_INVOICE_DOCUMENT_TYPE_CODE } = await import(
+    "#svc/finance/purchase_invoice"
+  );
 
   // Create document type for identification
   const [documentType] = await upsertDocumentType({
@@ -190,6 +193,39 @@ beforeAll(async () => {
     isActive: true,
     isDefault: true,
   });
+
+  // Create business document type for purchase invoices
+  const purchaseInvoiceDocType = await upsertBusinessDocType({
+    code: PURCHASE_INVOICE_DOCUMENT_TYPE_CODE,
+    name: "Factura de Compra",
+    isEnabled: true,
+  });
+
+  // Create document series for purchase invoice document type
+  await upsertDocumentSeries({
+    documentTypeId: purchaseInvoiceDocType.id,
+    seriesCode: `PI-SERIE-${uuid.slice(0, 6)}`,
+    prefix: "FC-",
+    suffix: "",
+    startNumber: 1,
+    endNumber: 99999,
+    validFrom: new DateTime("2024-01-01"),
+    validTo: new DateTime("2030-12-31"),
+    isActive: true,
+    isDefault: true,
+  });
+
+  // Create default payment terms
+  const { paymentTerms } = await import("#models/finance/payment_terms");
+  await db.insert(paymentTerms).values({
+    code: "CASH",
+
+    fullName: "Contado",
+    dueDays: 0,
+    isDefault: true,
+    isEnabled: true,
+  });
+
 
   // Create movement type for purchase entries
   const [purchaseMovementType] = await upsertMovementType({

@@ -16,6 +16,8 @@ import { eq, inArray, and, gte, lte, count, desc, sql } from "drizzle-orm";
 import { createInventoryMovement } from "#svc/inventory/movement";
 import { inventoryMovementType } from "#models/inventory/movement_type";
 import { getNextDocumentNumberTx } from "#svc/numbering/getNextDocumentNumber";
+import { createPurchaseInvoiceTx } from "#svc/finance/purchase_invoice";
+import { paymentTerms } from "#models/finance/payment_terms";
 
 /** Código del tipo de documento para órdenes de compra */
 export const PURCHASE_ORDER_DOCUMENT_TYPE_CODE = "PURCHASE_ORDER";
@@ -626,6 +628,70 @@ export async function receivePurchaseOrder(
     const suffix = seriesInfo?.suffix ?? "";
     const documentNumberFull = `${prefix}${currentOrder.documentNumber}${suffix}`;
 
+    // 8. Generate Purchase Invoice automatically
+    let purchaseInvoiceId: number | undefined;
+    let purchaseInvoiceNumber: string | undefined;
+
+    try {
+      // Get default payment terms
+      const [defaultTerms] = await tx
+        .select()
+        .from(paymentTerms)
+        .where(eq(paymentTerms.isEnabled, true))
+        .orderBy(desc(paymentTerms.isDefault))
+        .limit(1);
+
+      if (!defaultTerms) {
+        console.warn("No default payment terms found. Automated invoice generation might fail.");
+      }
+
+      const invoiceItems = orderItems
+        .map((oi) => {
+          const receivedItem = input.receivedItems?.find(
+            (ri) => ri.orderItemId === oi.id
+          );
+
+          const quantity = receivedItem?.receivedQuantity ?? oi.quantity;
+          const unitPrice = receivedItem?.unitCost
+            ? toDecimal(receivedItem.unitCost)
+            : oi.unitPrice;
+
+          return {
+            itemId: oi.itemId,
+            quantity,
+            unitPrice,
+            orderItemId: oi.id,
+          };
+        })
+        .filter((item) => item.quantity > 0);
+
+      const invoiceTotal = invoiceItems.reduce(
+        (acc, item) => acc.add(item.unitPrice.mul(item.quantity)),
+        new Decimal(0)
+      );
+
+
+      const invoice = await createPurchaseInvoiceTx(tx, {
+        supplierId: currentOrder.supplierId,
+        purchaseOrderId: currentOrder.id,
+        issueDate: new DateTime(),
+        totalAmount: invoiceTotal,
+        paymentTermsId: defaultTerms?.id,
+        items: invoiceItems,
+      });
+
+      purchaseInvoiceId = invoice.id;
+      purchaseInvoiceNumber = invoice.documentNumberFull;
+    } catch (error) {
+      // We don't want to fail the reception if invoice generation fails,
+      // but the user requested it to be automatic.
+      // Given the requirement, maybe we SHOULD fail if we can't generate it?
+      // Or at least log it.
+      console.error("Failed to generate automated purchase invoice:", error);
+      // If we want it to be strictly atomic and required, we should re-throw.
+      throw new Error(`Error al generar factura automática: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
     return {
       order: {
         ...updatedOrder,
@@ -634,6 +700,8 @@ export async function receivePurchaseOrder(
       },
       inventoryMovementId: movement.id,
       movementNumber: movement.documentNumberFull,
+      purchaseInvoiceId,
+      purchaseInvoiceNumber,
     };
   });
 }
