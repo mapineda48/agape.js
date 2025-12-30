@@ -38,12 +38,6 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 // Configurar el worker de PDF.js (local con Vite)
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-const options: pdfjs.GlobalWorkerOptions = {
-    cMapUrl: "/pdf/cmaps/",
-    standardFontDataUrl: "/pdf/standard_fonts/",
-    wasmUrl: "/pdf/wasm/",
-};
-
 // Tipo unión para los datos del PDF
 type InvoicePdfData = PurchaseInvoicePdfData | SalesInvoicePdfData;
 
@@ -176,7 +170,6 @@ function PdfCanvasViewer({ url, blob, isSales, documentNumber }: PdfCanvasViewer
             >
                 <Document
                     file={url}
-                    options={options}
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading={
                         <div className="flex flex-col items-center justify-center gap-4 py-12">
