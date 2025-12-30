@@ -102,42 +102,64 @@ describe("MovementForm", () => {
   };
 
   describe("Rendering", () => {
-    it("renders correctly with all sections", () => {
+    it("renders correctly with all sections", async () => {
       renderForm();
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+        expect(listLocations).toHaveBeenCalled();
+      });
       expect(screen.getByText("Información General")).toBeInTheDocument();
       expect(screen.getByText("Detalles del Movimiento")).toBeInTheDocument();
       expect(screen.getByText("Resumen")).toBeInTheDocument();
     });
 
-    it("renders movement type selector with options", () => {
+    it("renders movement type selector with options", async () => {
       renderForm();
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
       expect(screen.getByText("Tipo de Movimiento")).toBeInTheDocument();
       expect(screen.getByText("Entrada por Compra")).toBeInTheDocument();
       expect(screen.getByText("Salida por Venta")).toBeInTheDocument();
     });
 
-    it("renders date input", () => {
+    it("renders date input", async () => {
       renderForm();
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
       expect(screen.getByText("Fecha")).toBeInTheDocument();
     });
 
-    it("renders observation field", () => {
+    it("renders observation field", async () => {
       renderForm();
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
       expect(screen.getByText("Observación")).toBeInTheDocument();
     });
 
-    it("renders 'Agregar Item' button", () => {
+    it("renders 'Agregar Item' button", async () => {
       renderForm();
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
       expect(screen.getByText("Agregar Item")).toBeInTheDocument();
     });
 
-    it("shows 'No hay items agregados' when details are empty", () => {
+    it("shows 'No hay items agregados' when details are empty", async () => {
       renderForm();
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
       expect(screen.getByText("No hay items agregados.")).toBeInTheDocument();
     });
 
-    it("renders submit button with correct text for new movement", () => {
+    it("renders submit button with correct text for new movement", async () => {
       renderForm();
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
       expect(screen.getByText("Crear Movimiento")).toBeInTheDocument();
     });
   });
@@ -426,7 +448,7 @@ describe("MovementForm", () => {
   });
 
   describe("Edit Mode", () => {
-    it("shows 'Guardar Cambios' button when editing", () => {
+    it("shows 'Guardar Cambios' button when editing", async () => {
       const initialData = {
         id: 1,
         movementTypeId: 1,
@@ -435,11 +457,15 @@ describe("MovementForm", () => {
       };
 
       renderForm({ initialData: initialData as any });
+
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
 
       expect(screen.getByText("Guardar Cambios")).toBeInTheDocument();
     });
 
-    it("disables movement type selector when editing", () => {
+    it("disables movement type selector when editing", async () => {
       const initialData = {
         id: 1,
         movementTypeId: 1,
@@ -448,6 +474,10 @@ describe("MovementForm", () => {
       };
 
       renderForm({ initialData: initialData as any });
+
+      await waitFor(() => {
+        expect(listItems).toHaveBeenCalled();
+      });
 
       const selects = screen.getAllByRole("combobox");
       expect(selects[0]).toBeDisabled();

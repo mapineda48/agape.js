@@ -47,7 +47,10 @@ export default function FormProvider<T extends object | any[] = object>({
             console.log("[Form] Submit payload", payload);
           }
 
-          emitter.emit(evt.SUBMIT, payload);
+          emitter.emit(evt.SUBMIT, {
+            payload,
+            submitter: e.nativeEvent instanceof SubmitEvent ? e.nativeEvent.submitter : null,
+          });
         }}
       />
     </Context.Provider>
@@ -72,4 +75,9 @@ type Core = Omit<JSX.IntrinsicElements["form"], "action" | "onSubmit">;
 export interface EventForm {
   SUBMIT: symbol;
   SUBMIT_SUCCESS: symbol;
+}
+
+export interface SubmitEventPayload<T> {
+  payload: T;
+  submitter?: HTMLElement | null;
 }

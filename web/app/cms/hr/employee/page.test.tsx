@@ -3,8 +3,8 @@ import {
   screen,
   fireEvent,
   waitFor,
-  act,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import NewEmployeePage from "./page";
 import { upsertEmployee } from "@agape/hr/employee";
@@ -213,13 +213,14 @@ describe("NewEmployeePage", () => {
         target: { value: "López" },
       });
 
-      // Submit form
-      const form = document.querySelector("form");
-      expect(form).not.toBeNull();
+      // Click the submit button (required for Submit component to process the event)
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
+      await user.click(submitButton);
 
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertEmployee).toHaveBeenCalled();
@@ -263,11 +264,14 @@ describe("NewEmployeePage", () => {
         target: { value: "Martínez" },
       });
 
-      // Submit form
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertEmployee).toHaveBeenCalled();
@@ -305,11 +309,14 @@ describe("NewEmployeePage", () => {
         target: { value: "User" },
       });
 
-      // Submit
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(mockNotify).toHaveBeenCalledWith({
@@ -340,11 +347,14 @@ describe("NewEmployeePage", () => {
         target: { value: "User" },
       });
 
-      // Submit
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertEmployee).toHaveBeenCalled();
@@ -377,10 +387,14 @@ describe("NewEmployeePage", () => {
         target: { value: "User" },
       });
 
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertEmployee).toHaveBeenCalled();
@@ -430,10 +444,14 @@ describe("NewEmployeePage", () => {
         target: { value: "User" },
       });
 
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("../employees");

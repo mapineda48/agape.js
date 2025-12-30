@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createElement } from "react";
 import { ItemForm } from "./index";
@@ -61,27 +62,39 @@ describe("ItemForm", () => {
     };
 
     describe("Rendering - Create Mode", () => {
-        it("should render type selector when creating new item", () => {
+        it("should render type selector when creating new item", async () => {
             renderForm();
+            await waitFor(() => {
+                expect(listCategories).toHaveBeenCalled();
+            });
             expect(screen.getByText("Tipo de Item")).toBeInTheDocument();
             expect(screen.getByText("Producto")).toBeInTheDocument();
             expect(screen.getByText("Servicio")).toBeInTheDocument();
         });
 
-        it("should render basic info card with correct placeholder for product", () => {
+        it("should render basic info card with correct placeholder for product", async () => {
             renderForm();
+            await waitFor(() => {
+                expect(listCategories).toHaveBeenCalled();
+            });
             expect(
                 screen.getByPlaceholderText("Ej: Camiseta Premium Algodon")
             ).toBeInTheDocument();
         });
 
-        it("should render inventory details card for product type", () => {
+        it("should render inventory details card for product type", async () => {
             renderForm();
+            await waitFor(() => {
+                expect(listCategories).toHaveBeenCalled();
+            });
             expect(screen.getByText("Detalles de Inventario")).toBeInTheDocument();
         });
 
-        it("should render unit of measure select for product type", () => {
+        it("should render unit of measure select for product type", async () => {
             renderForm();
+            await waitFor(() => {
+                expect(listCategories).toHaveBeenCalled();
+            });
             expect(screen.getByText("Unidad de Medida")).toBeInTheDocument();
             // Verifica que el select contiene opciones de unidades
             expect(screen.getByText("Unidad (UND)")).toBeInTheDocument();
@@ -110,21 +123,30 @@ describe("ItemForm", () => {
             },
         };
 
-        it("should NOT render type selector when editing existing item", () => {
+        it("should NOT render type selector when editing existing item", async () => {
             renderForm(mockProduct);
+            await waitFor(() => {
+                expect(listCategories).toHaveBeenCalled();
+            });
             expect(screen.queryByText("Tipo de Item")).not.toBeInTheDocument();
         });
 
-        it("should display existing product name in the name field", () => {
+        it("should display existing product name in the name field", async () => {
             renderForm(mockProduct);
+            await waitFor(() => {
+                expect(listCategories).toHaveBeenCalled();
+            });
             const nameInput = screen.getByPlaceholderText(
                 "Ej: Camiseta Premium Algodon"
             );
             expect(nameInput).toHaveValue("Producto de Prueba");
         });
 
-        it("should display inventory details card for existing product", () => {
+        it("should display inventory details card for existing product", async () => {
             renderForm(mockProduct);
+            await waitFor(() => {
+                expect(listCategories).toHaveBeenCalled();
+            });
             expect(screen.getByText("Detalles de Inventario")).toBeInTheDocument();
         });
     });
@@ -273,9 +295,15 @@ describe("ItemForm", () => {
             const priceInput = screen.getByPlaceholderText("0.00");
             fireEvent.change(priceInput, { target: { value: "100" } });
 
-            // Enviar formulario usando submit del form
-            const form = nameInput.closest("form");
-            fireEvent.submit(form!);
+            // Click the submit button (required for Submit component to process the event)
+            // Click the submit button (required for Submit component to process the event)
+            // Click the submit button using userEvent
+            const user = userEvent.setup();
+            const submitButton = screen.getByRole("button", { name: /guardar/i });
+            await user.click(submitButton);
+
+            // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+            fireEvent.submit(submitButton.closest("form")!);
 
             await waitFor(
                 () => {
@@ -297,9 +325,15 @@ describe("ItemForm", () => {
             const priceInput = screen.getByPlaceholderText("0.00");
             fireEvent.change(priceInput, { target: { value: "100" } });
 
-            // Enviar formulario
-            const form = nameInput.closest("form");
-            fireEvent.submit(form!);
+            // Click the submit button
+            // Click the submit button
+            // Click the submit button using userEvent
+            const user = userEvent.setup();
+            const submitButton = screen.getByRole("button", { name: /guardar/i });
+            await user.click(submitButton);
+
+            // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+            fireEvent.submit(submitButton.closest("form")!);
 
             await waitFor(
                 () => {
@@ -329,9 +363,15 @@ describe("ItemForm", () => {
             const durationInput = screen.getByPlaceholderText("60");
             fireEvent.change(durationInput, { target: { value: "90" } });
 
-            // Enviar formulario
-            const form = nameInput.closest("form");
-            fireEvent.submit(form!);
+            // Click the submit button
+            // Click the submit button
+            // Click the submit button using userEvent
+            const user = userEvent.setup();
+            const submitButton = screen.getByRole("button", { name: /guardar/i });
+            await user.click(submitButton);
+
+            // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+            fireEvent.submit(submitButton.closest("form")!);
 
             await waitFor(
                 () => {

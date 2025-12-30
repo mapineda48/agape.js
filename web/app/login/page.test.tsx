@@ -28,8 +28,8 @@ describe("LoginForm", () => {
     router = new HistoryManager();
 
     // Mock navegación
-    vi.spyOn(router, "navigateTo").mockImplementation(() => {});
-    vi.spyOn(router, "listenPath").mockReturnValue(() => {});
+    vi.spyOn(router, "navigateTo").mockImplementation(() => { });
+    vi.spyOn(router, "listenPath").mockReturnValue(() => { });
     vi.spyOn(router, "pathname", "get").mockReturnValue("/login");
   });
 
@@ -155,12 +155,11 @@ describe("LoginForm", () => {
       fireEvent.change(usernameInput, { target: { value: "admin" } });
       fireEvent.change(passwordInput, { target: { value: "password123" } });
 
-      // Submit form
-      const form = usernameInput.closest("form");
-      expect(form).not.toBeNull();
+      // Click the submit button (required for Submit component to process the event)
+      const submitButton = screen.getByRole("button", { name: /iniciar sesión/i });
 
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -184,11 +183,11 @@ describe("LoginForm", () => {
       fireEvent.change(usernameInput, { target: { value: "admin" } });
       fireEvent.change(passwordInput, { target: { value: "password123" } });
 
-      // Submit form
-      const form = usernameInput.closest("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /iniciar sesión/i });
 
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -211,11 +210,11 @@ describe("LoginForm", () => {
       fireEvent.change(usernameInput, { target: { value: "admin" } });
       fireEvent.change(passwordInput, { target: { value: "wrongpassword" } });
 
-      // Submit form
-      const form = usernameInput.closest("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /iniciar sesión/i });
 
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {

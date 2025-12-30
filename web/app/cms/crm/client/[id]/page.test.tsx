@@ -3,11 +3,12 @@ import {
   screen,
   fireEvent,
   waitFor,
-  act,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import EditClientPage from "./page";
-import { upsertClient, getClientById } from "@agape/crm/client";
+import { upsertClient, getClientById, getClientByDocument } from "@agape/crm/client";
+import { getUserByDocument } from "@agape/core/user";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import type { DocumentType } from "@agape/core/documentType";
@@ -119,6 +120,9 @@ describe("EditClientPage", () => {
     vi.clearAllMocks();
     (useRouter as any).mockReturnValue({ navigate: mockNavigate });
     (useNotificacion as any).mockReturnValue(mockNotify);
+    // Configure mocks for services used in ClientForm to prevent async errors
+    (getClientByDocument as any).mockResolvedValue(null);
+    (getUserByDocument as any).mockResolvedValue(null);
   });
 
   const renderWithProviders = (ui: React.ReactNode) => {
@@ -355,11 +359,13 @@ describe("EditClientPage", () => {
         target: { value: "Carlos" },
       });
 
-      // Submit
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button to set internal state
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar cambios/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertClient).toHaveBeenCalled();
@@ -400,11 +406,13 @@ describe("EditClientPage", () => {
         target: { value: "+57 1 555 6666" },
       });
 
-      // Submit
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar cambios/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertClient).toHaveBeenCalled();
@@ -433,11 +441,13 @@ describe("EditClientPage", () => {
         target: { value: "CLIENTE-ABC" },
       });
 
-      // Submit
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar cambios/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertClient).toHaveBeenCalled();
@@ -464,11 +474,13 @@ describe("EditClientPage", () => {
         target: { value: "60" },
       });
 
-      // Submit
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar cambios/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(upsertClient).toHaveBeenCalled();
@@ -524,11 +536,13 @@ describe("EditClientPage", () => {
         />
       );
 
-      // Submit
-      const form = document.querySelector("form");
-      await act(async () => {
-        fireEvent.submit(form!);
-      });
+      // Click the submit button using userEvent
+      const user = userEvent.setup();
+      const submitButton = screen.getByRole("button", { name: /guardar cambios/i });
+      await user.click(submitButton);
+
+      // Manually trigger submit because JSDOM sometimes fails to trigger it from click
+      fireEvent.submit(submitButton.closest("form")!);
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("../../clients");

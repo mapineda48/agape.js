@@ -275,10 +275,10 @@ describe("EditEmployeePage", () => {
       const nameInput = screen.getByDisplayValue("Juan");
       fireEvent.change(nameInput, { target: { value: "Juan Modified" } });
 
-      // Submit
-      const form = document.querySelector("form");
+      // Click the submit button (required for Submit component to process the event)
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -314,10 +314,10 @@ describe("EditEmployeePage", () => {
       // Toggle isActive off
       fireEvent.click(screen.getByRole("checkbox"));
 
-      // Submit
-      const form = document.querySelector("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -351,9 +351,10 @@ describe("EditEmployeePage", () => {
         />
       );
 
-      const form = document.querySelector("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -373,9 +374,10 @@ describe("EditEmployeePage", () => {
         />
       );
 
-      const form = document.querySelector("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -394,9 +396,10 @@ describe("EditEmployeePage", () => {
         />
       );
 
-      const form = document.querySelector("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -416,9 +419,10 @@ describe("EditEmployeePage", () => {
         />
       );
 
-      const form = document.querySelector("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -439,9 +443,10 @@ describe("EditEmployeePage", () => {
         />
       );
 
-      const form = document.querySelector("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
@@ -467,9 +472,10 @@ describe("EditEmployeePage", () => {
       const select = screen.getByRole("combobox");
       fireEvent.change(select, { target: { value: "" } });
 
-      const form = document.querySelector("form");
+      // Click the submit button
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {

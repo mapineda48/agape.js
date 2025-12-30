@@ -204,10 +204,10 @@ describe("CreateClientPage", () => {
       // 4. Client Type
       fireEvent.change(selects[1], { target: { value: "1" } }); // VIP
 
-      // Submit
-      const form = document.querySelector("form");
+      // Click the submit button (required for Submit component to process the event)
+      const submitButton = screen.getByRole("button", { name: /guardar/i });
       await act(async () => {
-        fireEvent.submit(form!);
+        fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
