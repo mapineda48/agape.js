@@ -22,24 +22,43 @@ import clsx from "clsx";
 import { useHistory } from "./router/router";
 import { factoryHook } from "../hook/useBreakpointValue";
 
-// Navigation Items
-const NAV_ITEMS = [
-  { path: "/cms", icon: HomeIcon, label: "Inicio" },
-  { path: "/cms/report", icon: ChartBarIcon, label: "Reportes" },
-  { path: "/cms/hr", icon: UserCircleIcon, label: "Colaboradores" },
-  { path: "/cms/crm/clients", icon: UsersIcon, label: "Clientes" },
-  { path: "/cms/sales/orders", icon: BanknotesIcon, label: "Ventas" },
-  { path: "/cms/purchasing/orders", icon: TruckIcon, label: "Compras" },
-  { path: "/cms/invoicing", icon: BanknotesIcon, label: "Facturación" },
-  { path: "/cms/inventory/movements", icon: CubeIcon, label: "Inventario" },
-  { path: "/cms/configuration", icon: CogIcon, label: "Configuración" },
+// Navigation Structure
+const NAV_SECTIONS = [
+  {
+    label: "Dashboard",
+    items: [
+      { path: "/cms", icon: HomeIcon, label: "Inicio", exact: true },
+      { path: "/cms/report", icon: ChartBarIcon, label: "Reportes", activePath: "/cms/report" },
+    ],
+  },
+  {
+    label: "Operaciones",
+    items: [
+      { path: "/cms/sales/orders", icon: BanknotesIcon, label: "Ventas", activePath: "/cms/sales" },
+      { path: "/cms/purchasing/orders", icon: TruckIcon, label: "Compras", activePath: "/cms/purchasing" },
+      { path: "/cms/invoicing", icon: BanknotesIcon, label: "Facturación", activePath: "/cms/invoicing" },
+      { path: "/cms/inventory/movements", icon: CubeIcon, label: "Inventario", activePath: "/cms/inventory" },
+    ],
+  },
+  {
+    label: "Catálogos",
+    items: [
+      { path: "/cms/crm/clients", icon: UsersIcon, label: "Clientes", activePath: "/cms/crm" },
+      { path: "/cms/hr", icon: UserCircleIcon, label: "Colaboradores", activePath: "/cms/hr" },
+    ],
+  },
+  {
+    label: "Sistema",
+    items: [
+      { path: "/cms/configuration", icon: CogIcon, label: "Configuración", activePath: "/cms/configuration" },
+    ],
+  },
 ];
 
 const useBreakpointValue = factoryHook({
   xs: true,
   xl: false,
 });
-1;
 
 export default function Sidebar() {
   const router = useHistory();
@@ -159,56 +178,76 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4">
-          {NAV_ITEMS.map((item) => {
-            const isActive = currentPath === item.path;
-            return (
-              <div
-                key={item.path}
-                onClick={() => {
-                  router.navigateTo(item.path);
-                  if (breakpoint.isMobile) {
-                    setIsCollapsed(true);
-                  }
-                }}
-                className={clsx(
-                  "flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 group relative overflow-hidden",
-                  isActive
-                    ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
-                )}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
-                <item.icon
-                  className={clsx(
-                    "w-6 h-6 relative z-10 transition-colors",
-                    isActive
-                      ? "text-indigo-600 dark:text-indigo-400"
-                      : "group-hover:text-gray-900 dark:group-hover:text-gray-200"
-                  )}
-                />
-                <AnimatePresence>
-                  {!isCollapsed && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: "auto" }}
-                      exit={{ opacity: 0, width: 0 }}
-                      className="ml-3 font-medium whitespace-nowrap relative z-10"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+        <nav className="flex-1 px-4 space-y-6 overflow-y-auto py-4">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.label} className="space-y-1">
+              {!isCollapsed && (
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="px-4 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2 mt-4 first:mt-0"
+                >
+                  {section.label}
+                </motion.h3>
+              )}
+              {section.items.map((item) => {
+                const isActive = item.exact
+                  ? currentPath === item.path
+                  : currentPath.startsWith(item.activePath || item.path);
+
+                return (
+                  <div
+                    key={item.path}
+                    onClick={() => {
+                      router.navigateTo(item.path);
+                      if (breakpoint.isMobile) {
+                        setIsCollapsed(true);
+                      }
+                    }}
+                    className={clsx(
+                      "flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 group relative overflow-hidden",
+                      isActive
+                        ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                        : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
+                    )}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl"
+                        initial={false}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                    <item.icon
+                      className={clsx(
+                        "w-6 h-6 relative z-10 transition-colors",
+                        isActive
+                          ? "text-indigo-600 dark:text-indigo-400"
+                          : "group-hover:text-gray-900 dark:group-hover:text-gray-200"
+                      )}
+                    />
+                    <AnimatePresence>
+                      {!isCollapsed && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: "auto" }}
+                          exit={{ opacity: 0, width: 0 }}
+                          className="ml-3 font-medium whitespace-nowrap relative z-10"
+                        >
+                          {item.label}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* User Profile */}
