@@ -176,9 +176,10 @@ params = { postId: "10", commentId: "20" };
 Una página o layout puede exportar una función opcional:
 
 ```tsx
-export async function onInit({ params }) {
+export async function onInit({ params, query }) {
   return {
     product: await fetchProduct(params.id),
+    sort: query.sort || 'asc'
   };
 }
 ```
@@ -186,7 +187,7 @@ export async function onInit({ params }) {
 El router la ejecuta antes de renderizar la página.
 
 ✔️ Funciona igual para páginas y layouts.
-✔️ Siempre recibe `{ params }`.
+✔️ Siempre recibe `{ params, query }`.
 ✔️ Aunque no declares parámetros, los recibe vacíos.
 
 El resultado se pasa al componente mediante un store interno.
@@ -292,5 +293,5 @@ pages/
 2. **Usa `useRouter()` para navegar y leer parámetros.**
 3. **Crea páginas con `page.tsx`, layouts con `_layout.tsx`.**
 4. **Los parámetros se definen como `[param]`.**
-5. **`onInit` permite cargar datos antes del render.**
+5. **`onInit` permite cargar datos y leer query params antes del render.**
 6. **La navegación soporta rutas absolutas, relativas, y directorios (`../`, `./`).**
