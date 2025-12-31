@@ -880,18 +880,54 @@ SELECT
     ci.id                AS item_id,
     loc.id               AS location_id,
     NULL                 AS lot_id,
-    v.qty                AS quantity,
-    v.unit_cost          AS unit_cost,
-    (v.qty * v.unit_cost) AS total_cost
+    (v.qty_wh + v.qty_st) AS quantity,
+    ci.base_price * 0.7  AS unit_cost,
+    ((v.qty_wh + v.qty_st) * ci.base_price * 0.7) AS total_cost
 FROM (VALUES
-    ('LAP-HB',     'WH-PRIN', 150::numeric,  450::numeric),
-    ('BOL-AZ',     'WH-PRIN', 100::numeric,  900::numeric),
-    ('CUE-ARG100', 'WH-PRIN',  50::numeric, 8500::numeric),
-    ('RES-CAR75',  'WH-PRIN',  10::numeric,18000::numeric),
-    ('MAR-NEG',    'WH-PRIN',  40::numeric, 2600::numeric)
-) AS v(item_code, location_code, qty, unit_cost)
+    ('LAP-HB',     120::numeric,  17::numeric),
+    ('BOL-AZ',      90::numeric,  12::numeric),
+    ('MAR-NEG',     30::numeric,   6::numeric),
+    ('RES-AMA',     25::numeric,   5::numeric),
+    ('COR-LIQ',     20::numeric,   4::numeric),
+    ('CUE-ARG100',  40::numeric,   8::numeric),
+    ('LIB-POC',     35::numeric,   7::numeric),
+    ('RES-CAR75',    8::numeric,   1::numeric),
+    ('CAR-COL',     60::numeric,  10::numeric),
+    ('OPA-BL',      20::numeric,   4::numeric),
+    ('CIN-TRA12',   25::numeric,   6::numeric),
+    ('PEG-BAR40',   18::numeric,   4::numeric),
+    ('TIE-ESC',     10::numeric,   2::numeric),
+    ('REG-30',      40::numeric,   8::numeric),
+    ('BOR-BLA',     70::numeric,  12::numeric),
+    ('SAC-MET',     25::numeric,   5::numeric)
+) AS v(item_code, qty_wh, qty_st)
 JOIN "agape_app_development_demo"."catalogs_item" ci ON ci.code = v.item_code
-JOIN "agape_app_development_demo"."inventory_location" loc ON loc.code = v.location_code;
+CROSS JOIN (SELECT id FROM "agape_app_development_demo"."inventory_location" WHERE code='WH-PRIN') AS loc;
+
+
+-- ------------------------------------------------------------
+-- 5.1.1 CAPAS DE COSTO iniciales (FIFO)
+-- ------------------------------------------------------------
+INSERT INTO "agape_app_development_demo"."inventory_cost_layer"
+    ("item_id", "location_id", "lot_id", "original_quantity", "remaining_quantity", "unit_cost", "source_movement_id", "created_at")
+SELECT
+    d.item_id,
+    d.location_id,
+    d.lot_id,
+    d.quantity,
+    d.quantity,
+    d.unit_cost,
+    d.movement_id,
+    m.movement_date
+FROM "agape_app_development_demo"."inventory_movement_detail" d
+JOIN "agape_app_development_demo"."inventory_movement" m ON m.id = d.movement_id
+WHERE m.document_number_full = (
+    SELECT COALESCE(prefix,'') || '1' || COALESCE(suffix,'') 
+    FROM "agape_app_development_demo"."numbering_document_series" 
+    WHERE series_code='ENTRADA' 
+    AND document_type_id = (SELECT id FROM "agape_app_development_demo"."numbering_document_type" WHERE code='INV_MOV' LIMIT 1)
+)
+ON CONFLICT DO NOTHING;
 
 
 -- ------------------------------------------------------------

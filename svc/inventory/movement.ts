@@ -1,6 +1,7 @@
 import { db } from "#lib/db";
 import { inventoryMovement } from "#models/inventory/movement";
 import { inventoryMovementDetail } from "#models/inventory/movement_detail";
+import { inventoryLot } from "#models/inventory/lot";
 import { inventoryMovementType } from "#models/inventory/movement_type";
 import { documentType } from "#models/numbering/document_type";
 import { getNextDocumentNumberTx } from "#svc/numbering/getNextDocumentNumber";
@@ -811,12 +812,17 @@ export async function getInventoryMovement(id: number) {
       // Include type info if needed
       movementTypeName: inventoryMovementType.name,
       movementTypeFactor: inventoryMovementType.factor,
+      // Employee info
+      employeeName: person.firstName,
+      employeeLastName: person.lastName,
     })
     .from(inventoryMovement)
     .innerJoin(
       inventoryMovementType,
       eq(inventoryMovement.movementTypeId, inventoryMovementType.id)
     )
+    .innerJoin(employee, eq(inventoryMovement.employeeId, employee.id))
+    .leftJoin(person, eq(employee.id, person.id))
     .where(eq(inventoryMovement.id, id));
 
   if (!movement) {
@@ -835,14 +841,17 @@ export async function getInventoryMovement(id: number) {
       itemName: item.fullName,
       itemCode: item.code,
       locationName: location.name,
+      lotNumber: inventoryLot.lotNumber,
     })
     .from(inventoryMovementDetail)
     .innerJoin(item, eq(inventoryMovementDetail.itemId, item.id))
     .leftJoin(location, eq(inventoryMovementDetail.locationId, location.id))
+    .leftJoin(inventoryLot, eq(inventoryMovementDetail.lotId, inventoryLot.id))
     .where(eq(inventoryMovementDetail.movementId, id));
 
   return {
     ...movement,
+    employeeFullName: `${movement.employeeName ?? ""} ${movement.employeeLastName ?? ""}`.trim() || "N/A",
     userId: movement.employeeId, // Map employeeId back to userId for DTO compatibility
     details,
   };
