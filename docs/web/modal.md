@@ -509,3 +509,74 @@ showChild({ ... }); // ✅ Usará z-index automático
 - [ ] Usar `Modal.Footer` para botones de acción
 - [ ] Probar apertura/cierre con animación
 - [ ] Probar modales anidados si aplica
+
+---
+
+## Pruebas de Unidad
+
+Para validar si un modal se muestra correctamente en una prueba de unidad, debemos considerar que los modales se renderizan fuera del contenedor principal de la prueba (dentro de `document.body`) mediante un Portal.
+
+### Lo mínimo necesario para validar un Modal
+
+Para probar un componente que abre un modal, sigue este patrón:
+
+```tsx
+import { render, screen, waitFor, act } from "@testing-library/react";
+import PortalProvider from "@/components/util/portal";
+import MyPage from "./MyPage";
+
+describe("MyPage Modal Integration", () => {
+  it("debe mostrar el modal cuando se hace clic en el botón", async () => {
+    // 1. Renderizar envuelto en el PortalProvider
+    render(
+      <PortalProvider>
+        <MyPage />
+      </PortalProvider>
+    );
+
+    // 2. Disparar la acción que abre el modal
+    const openButton = screen.getByText("Abrir Modal");
+    act(() => {
+      openButton.click();
+    });
+
+    // 3. Esperar a que el contenido del modal aparezca en el DOM
+    // Nota: Buscamos en todo el documento (screen), no solo en el root
+    await waitFor(() => {
+      expect(screen.getByText("Mi Modal")).toBeInTheDocument();
+      expect(screen.getByText("Contenido del formulario...")).toBeInTheDocument();
+    });
+  });
+
+  it("debe cerrar el modal al hacer clic en cancelar", async () => {
+    render(
+      <PortalProvider>
+        <MyPage />
+      </PortalProvider>
+    );
+
+    // Abrir modal
+    act(() => { screen.getByText("Abrir Modal").click(); });
+
+    // Esperar que esté visible
+    await screen.findByText("Mi Modal");
+
+    // 4. Cerrar el modal
+    const cancelButton = screen.getByText("Cancelar");
+    act(() => {
+      cancelButton.click();
+    });
+
+    // 5. Validar que desaparece del DOM
+    await waitFor(() => {
+      expect(screen.queryByText("Mi Modal")).not.toBeInTheDocument();
+    });
+  });
+});
+```
+
+### Puntos clave para el testing:
+- **`PortalProvider`**: Siempre envuelve tu componente con `PortalProvider` en el `render`, de lo contrario `createPortalHook` fallará.
+- **`waitFor` / `findBy`**: Los modales pueden tener pequeñas transiciones o delays de microtask, usa siempre funciones asíncronas para buscarlos.
+- **`document.body`**: Aunque `@testing-library/react` busca en todo el body por defecto, recuerda que el modal **no** estará dentro del `container` que devuelve `render(...)`.
+- **`act(() => ...)`**: Asegúrate de envolver las interacciones que provocan cambios de estado en `act`.
