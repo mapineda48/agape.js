@@ -7,13 +7,19 @@ export type ModuleType = Record<string, () => Promise<unknown>>;
 export interface IPage {
   (): Promise<void>;
   Component?: () => JSX.Element;
-  onInit?: (args: { params: RouteParams }) => Promise<Record<string, unknown>>;
+  onInit?: (args: {
+    params: RouteParams;
+    query: Record<string, string>;
+  }) => Promise<Record<string, unknown>>;
 }
 
 export interface ILayout {
   (): Promise<void>;
   Component?: (props: { children?: JSX.Element }) => JSX.Element;
-  onInit?: (args: { params: RouteParams }) => Promise<Record<string, unknown>>;
+  onInit?: (args: {
+    params: RouteParams;
+    query: Record<string, string>;
+  }) => Promise<Record<string, unknown>>;
   /**
    * If true, this layout becomes the new root, ignoring all parent layouts.
    * This can be overridden by child layouts that also have root: true.

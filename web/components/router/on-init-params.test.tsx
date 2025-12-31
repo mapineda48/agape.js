@@ -34,16 +34,17 @@ describe("Router onInit Params", () => {
     // Spy on console.error to suppress debug logs
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     render(createElement(HistoryContext.Provider, { value: router }, null));
 
-    router.listenPage(() => {});
+    router.listenPage(() => { });
 
     await waitFor(
       () => {
         expect(onInitSpy).toHaveBeenCalledWith({
           params: { id: "123" },
+          query: {},
         });
       },
       { timeout: 3000 }
@@ -79,15 +80,16 @@ describe("Router onInit Params", () => {
 
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     render(createElement(HistoryContext.Provider, { value: router }, null));
-    router.listenPage(() => {});
+    router.listenPage(() => { });
 
     await waitFor(
       () => {
         expect(onInitSpy).toHaveBeenCalledWith({
           params: { id: "456" },
+          query: {},
         });
       },
       { timeout: 3000 }
@@ -115,15 +117,16 @@ describe("Router onInit Params", () => {
 
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     render(createElement(HistoryContext.Provider, { value: router }, null));
-    router.listenPage(() => {});
+    router.listenPage(() => { });
 
     await waitFor(
       () => {
         expect(onInitSpy).toHaveBeenCalledWith({
           params: { postId: "10", commentId: "20" },
+          query: {},
         });
       },
       { timeout: 3000 }
@@ -152,16 +155,103 @@ describe("Router onInit Params", () => {
 
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     render(createElement(HistoryContext.Provider, { value: router }, null));
-    router.listenPage(() => {});
+    router.listenPage(() => { });
 
     await waitFor(
       () => {
         // It is called with { params: {} } even if it doesn't use it
         expect(onInitSpy).toHaveBeenCalledWith({
           params: {},
+          query: {},
+        });
+      },
+      { timeout: 3000 }
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should pass query params from initial URL to onInit", async () => {
+    const onInitSpy = vi.fn().mockResolvedValue({});
+
+    const pageLoader = vi.fn().mockResolvedValue({
+      default: () => <div>Search Page</div>,
+      onInit: onInitSpy,
+    });
+
+    const pageModules = {
+      "./search/page.tsx": pageLoader,
+    };
+
+    const router = new HistoryManager(pageModules, {});
+    // Initial history with query params
+    const mockHistory = createMockHistory("/search?q=foo&sort=asc");
+    // @ts-ignore
+    router.navigator.history = mockHistory;
+
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => { });
+
+    render(createElement(HistoryContext.Provider, { value: router }, null));
+    router.listenPage(() => { });
+
+    await waitFor(
+      () => {
+        expect(onInitSpy).toHaveBeenCalledWith({
+          params: {},
+          query: { q: "foo", sort: "asc" },
+        });
+      },
+      { timeout: 3000 }
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should pass query params from navigateTo calls to onInit", async () => {
+    const onInitSpy = vi.fn().mockResolvedValue({});
+
+    const pageLoader = vi.fn().mockResolvedValue({
+      default: () => <div>Search Page</div>,
+      onInit: onInitSpy,
+    });
+
+    const pageModules = {
+      "./search/page.tsx": pageLoader,
+    };
+
+    const router = new HistoryManager(pageModules, {});
+    const mockHistory = createMockHistory("/search");
+    // @ts-ignore
+    router.navigator.history = mockHistory;
+
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => { });
+
+    render(createElement(HistoryContext.Provider, { value: router }, null));
+
+    let rendered = false;
+    router.listenPage(() => { rendered = true; });
+
+    // Wait for initial render
+    await waitFor(() => expect(rendered).toBe(true));
+
+    // Clear initial call
+    onInitSpy.mockClear();
+
+    // Navigate with query params
+    router.navigateTo("/search?query=bar&page=2");
+
+    await waitFor(
+      () => {
+        expect(onInitSpy).toHaveBeenCalledWith({
+          params: {},
+          query: { query: "bar", page: "2" },
         });
       },
       { timeout: 3000 }

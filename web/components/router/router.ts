@@ -95,7 +95,9 @@ export class HistoryManager {
     });
 
     // Primera navegación al path actual
-    this.navigateTo(this.navigator.pathname, { replace: true });
+    const initialPath =
+      this.navigator.pathname + this.navigator.history.location.search;
+    this.navigateTo(initialPath, { replace: true });
 
     return unlisten;
   }
@@ -110,7 +112,13 @@ export class HistoryManager {
       // 1) Auth gates
       pathname = await this.authGuard.check(pathname, ctx);
 
-      const result = this.registry.getPageWithParams(pathname);
+      // Parse actual path and query from the pathname string
+      // Use a dummy base because pathname might be relative or just absolute path
+      const url = new URL(pathname, "http://dummy");
+      const cleanPath = url.pathname;
+      const query = Object.fromEntries(url.searchParams);
+
+      const result = this.registry.getPageWithParams(cleanPath);
 
       // 2) Not found: sólo cambia history y limpia params
       if (!result) {
@@ -127,7 +135,7 @@ export class HistoryManager {
       }
 
       // 4) Lazy-load all required layouts for the path
-      const layoutMatches = this.registry.getLayoutPaths(pathname);
+      const layoutMatches = this.registry.getLayoutPaths(cleanPath);
       for (const { pattern } of layoutMatches) {
         const layout = this.registry.getLayout(pattern);
         if (layout && !layout.Component) {
@@ -139,12 +147,12 @@ export class HistoryManager {
       //    priority: page > innermost layout > ... > root
       if (!ctx.state) {
         if (page.onInit) {
-          ctx.state = await page.onInit({ params });
+          ctx.state = await page.onInit({ params, query });
         } else {
           for (let i = layoutMatches.length - 1; i >= 0; i--) {
             const l = this.registry.getLayout(layoutMatches[i].pattern);
             if (l?.onInit) {
-              ctx.state = await l.onInit({ params });
+              ctx.state = await l.onInit({ params, query });
               break;
             }
           }

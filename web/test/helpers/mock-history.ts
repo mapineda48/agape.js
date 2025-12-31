@@ -28,13 +28,14 @@ import type { History } from "history";
  */
 export function createMockHistory(initialPath = "/"): History {
   let historyListener: any = null;
+  const initialUrl = new URL(initialPath, "http://dummy");
 
   const mockHistory = {
     location: {
-      pathname: initialPath,
+      pathname: initialUrl.pathname,
       state: {},
-      search: "",
-      hash: "",
+      search: initialUrl.search,
+      hash: initialUrl.hash,
       key: "default",
     },
     listen: vi.fn((cb: any) => {
@@ -44,11 +45,12 @@ export function createMockHistory(initialPath = "/"): History {
       };
     }),
     push: vi.fn((path: string, state: any) => {
+      const url = new URL(path, "http://dummy");
       mockHistory.location = {
-        pathname: path,
+        pathname: url.pathname,
         state,
-        search: "",
-        hash: "",
+        search: url.search,
+        hash: url.hash,
         key: `key-${Date.now()}`,
       };
       if (historyListener) {
@@ -59,11 +61,12 @@ export function createMockHistory(initialPath = "/"): History {
       }
     }),
     replace: vi.fn((path: string, state: any) => {
+      const url = new URL(path, "http://dummy");
       mockHistory.location = {
-        pathname: path,
+        pathname: url.pathname,
         state,
-        search: "",
-        hash: "",
+        search: url.search,
+        hash: url.hash,
         key: mockHistory.location.key,
       };
       if (historyListener) {
