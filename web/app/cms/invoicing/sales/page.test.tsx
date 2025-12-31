@@ -1,14 +1,14 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createElement } from "react";
-import { HistoryManager, HistoryContext } from "@/components/router/router";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import React from "react";
 import EventEmitter from "@/components/util/event-emitter";
+import { HistoryManager, HistoryContext } from "@/components/router/router";
 import PortalProvider from "@/components/util/portal";
 
 // Componente a testear
 import SalesInvoicesPage from "./page";
 
-// Mocks de servicios (vía alias en vitest.config.ts)
+// Mocks de servicios (vía alias en vitest.config.ts → web/test/mocks/)
 import { listSalesInvoices } from "@agape/finance/sales_invoice";
 import { listClients } from "@agape/crm/client";
 
@@ -26,7 +26,7 @@ vi.mock("@/components/ui/notification", () => ({
 describe("SalesInvoicesPage", () => {
     let router: HistoryManager;
 
-    // Mock data
+    // Mock data completo
     const mockInvoices: SalesInvoiceListItem[] = [
         {
             id: 1,
@@ -37,6 +37,8 @@ describe("SalesInvoicesPage", () => {
             status: "draft",
             issueDate: "2024-01-15",
             totalAmount: new Decimal("1500.00"),
+            totalPaid: new Decimal("0.00"),
+            balance: new Decimal("1500.00"),
             documentNumberFull: "FV-001",
         },
         {
@@ -48,6 +50,8 @@ describe("SalesInvoicesPage", () => {
             status: "issued",
             issueDate: "2024-01-16",
             totalAmount: new Decimal("2500.50"),
+            totalPaid: new Decimal("500.00"),
+            balance: new Decimal("2000.50"),
             documentNumberFull: "FV-002",
         },
         {
@@ -59,6 +63,8 @@ describe("SalesInvoicesPage", () => {
             status: "paid",
             issueDate: "2024-01-17",
             totalAmount: new Decimal("750.00"),
+            totalPaid: new Decimal("750.00"),
+            balance: new Decimal("0.00"),
             documentNumberFull: "FV-003",
         },
     ];
@@ -120,37 +126,39 @@ describe("SalesInvoicesPage", () => {
         },
     ];
 
+    const defaultProps = {
+        invoices: mockInvoices,
+        totalCount: mockInvoices.length,
+        clients: mockClients,
+    };
+
     beforeEach(() => {
         vi.clearAllMocks();
-        router = new HistoryManager();
 
-        // Setup router spies
-        vi.spyOn(router, "navigateTo");
-        vi.spyOn(router, "listenPath").mockReturnValue(() => { });
-    });
-
-    const renderPage = (props = {}) => {
-        const defaultProps = {
+        // Setup mocks de RPC (las funciones ya son vi.fn() via alias)
+        (listSalesInvoices as ReturnType<typeof vi.fn>).mockResolvedValue({
             invoices: mockInvoices,
             totalCount: mockInvoices.length,
+        });
+        (listClients as ReturnType<typeof vi.fn>).mockResolvedValue({
             clients: mockClients,
-            ...props,
-        };
+        });
 
+        router = new HistoryManager({}, {});
+        vi.spyOn(router, "navigateTo").mockImplementation(() => { });
+        vi.spyOn(router, "listenPath").mockReturnValue(() => { });
+        vi.spyOn(router, "listenParams").mockReturnValue(() => { });
+    });
+
+    const renderPage = (props = defaultProps) => {
         return render(
-            createElement(
-                HistoryContext.Provider,
-                { value: router },
-                createElement(
-                    EventEmitter,
-                    null,
-                    createElement(
-                        PortalProvider,
-                        null,
-                        createElement(SalesInvoicesPage, defaultProps)
-                    )
-                )
-            )
+            <HistoryContext.Provider value={router}>
+                <EventEmitter>
+                    <PortalProvider>
+                        <SalesInvoicesPage {...props} />
+                    </PortalProvider>
+                </EventEmitter>
+            </HistoryContext.Provider>
         );
     };
 
@@ -187,11 +195,9 @@ describe("SalesInvoicesPage", () => {
 
         it("should render status badges in the table", () => {
             renderPage();
-            // Check that statuses are rendered in some form (table or badges)
-            // The badges show translated Spanish labels
             const table = screen.getByRole("table");
             expect(table).toBeInTheDocument();
-            // "Borrador" appears both in filter dropdown and in badge, so use getAllByText
+            // "Borrador" appears both in filter dropdown and in badge
             const borradorElements = screen.getAllByText("Borrador");
             expect(borradorElements.length).toBeGreaterThan(0);
         });
@@ -202,7 +208,7 @@ describe("SalesInvoicesPage", () => {
         });
 
         it("should render empty state when no invoices", () => {
-            renderPage({ invoices: [], totalCount: 0 });
+            renderPage({ invoices: [], totalCount: 0, clients: mockClients });
             expect(
                 screen.getByText("No se encontraron facturas de venta")
             ).toBeInTheDocument();
@@ -234,11 +240,6 @@ describe("SalesInvoicesPage", () => {
         });
 
         it("should call listSalesInvoices when client filter changes", async () => {
-            (listSalesInvoices as ReturnType<typeof vi.fn>).mockResolvedValue({
-                invoices: [],
-                totalCount: 0,
-            });
-
             renderPage();
 
             const clientSelect = screen.getByLabelText("Cliente");
@@ -252,11 +253,6 @@ describe("SalesInvoicesPage", () => {
         });
 
         it("should call listSalesInvoices when status filter changes", async () => {
-            (listSalesInvoices as ReturnType<typeof vi.fn>).mockResolvedValue({
-                invoices: [],
-                totalCount: 0,
-            });
-
             renderPage();
 
             const statusSelect = screen.getByLabelText("Estado");
@@ -270,11 +266,6 @@ describe("SalesInvoicesPage", () => {
         });
 
         it("should reset filters when 'Limpiar Filtros' button is clicked", async () => {
-            (listSalesInvoices as ReturnType<typeof vi.fn>).mockResolvedValue({
-                invoices: mockInvoices,
-                totalCount: mockInvoices.length,
-            });
-
             renderPage();
 
             const resetButton = screen.getByRole("button", {
@@ -310,7 +301,6 @@ describe("SalesInvoicesPage", () => {
             const newButton = screen.getByRole("button", { name: /Nueva Factura/i });
             fireEvent.click(newButton);
 
-            // useRouter.navigate uses setTimeout, wait for it
             await waitFor(() => {
                 expect(router.navigateTo).toHaveBeenCalled();
             });
@@ -344,18 +334,29 @@ describe("SalesInvoicesPage", () => {
     describe("Formatting", () => {
         it("should format currency correctly", () => {
             renderPage();
-            // Check if the amount is formatted
-            expect(screen.getByText(/1\.500,00/)).toBeInTheDocument();
+            // Match currency format variations (locale dependent)
+            const currencyTexts = screen.getAllByText(/\$?1[.,]500[,.]00/);
+            expect(currencyTexts.length).toBeGreaterThan(0);
         });
 
-        it("should format dates in Spanish locale", () => {
+        it("should format dates correctly", () => {
             renderPage();
-            // The date formatting depends on system locale in JSDOM
-            // Just verify that date cells are present with invoice data
             const table = screen.getByRole("table");
             expect(table).toBeInTheDocument();
-            // Invoices should be rendered
+            // Verify invoices are rendered with dates
             expect(screen.getByText("FV-001")).toBeInTheDocument();
+        });
+    });
+
+    describe("Pagination", () => {
+        it("should render pagination when totalCount > pageSize", () => {
+            renderPage({
+                ...defaultProps,
+                totalCount: 100,
+            });
+            // Should find page numbers
+            expect(screen.getByText("1")).toBeInTheDocument();
+            expect(screen.getByText("2")).toBeInTheDocument();
         });
     });
 });

@@ -120,6 +120,10 @@ export interface SalesInvoiceDetails {
   globalDiscountAmount: Decimal;
   taxAmount: Decimal;
   totalAmount: Decimal;
+  /** Monto total pagado */
+  totalPaid: Decimal;
+  /** Saldo pendiente */
+  balance: Decimal;
   /** Número completo del documento (con prefijo/sufijo) */
   documentNumberFull: string;
   /** Líneas de la factura */
@@ -161,6 +165,8 @@ export interface SalesInvoiceListItem {
   status: SalesInvoiceStatus;
   issueDate: string;
   totalAmount: Decimal;
+  totalPaid: Decimal;
+  balance: Decimal;
   /** Número completo del documento (con prefijo/sufijo) */
   documentNumberFull: string;
 }

@@ -11,6 +11,7 @@ import { documentSequence } from "#models/numbering/document_sequence";
 import { documentSeries } from "#models/numbering/document_series";
 import { item } from "#models/catalogs/item";
 import { tax } from "#models/finance/tax";
+import payment_allocation from "#models/finance/payment_allocation";
 import DateTime from "#utils/data/DateTime";
 import Decimal from "#utils/data/Decimal";
 import { eq, and, gte, lte, count, desc, sql } from "drizzle-orm";
@@ -431,16 +432,15 @@ export async function getSalesInvoiceById(
       globalDiscountAmount: sales_invoice.globalDiscountAmount,
       taxAmount: sales_invoice.taxAmount,
       totalAmount: sales_invoice.totalAmount,
+      totalPaid: sql<Decimal>`(SELECT COALESCE(SUM(${payment_allocation.amount}), 0) FROM ${payment_allocation} WHERE ${payment_allocation.salesInvoiceId} = ${sales_invoice.id})`,
       documentNumber: sales_invoice.documentNumber,
       seriesPrefix: documentSeries.prefix,
       seriesSuffix: documentSeries.suffix,
       notes: sales_invoice.notes,
-      // Order data
       orderDocumentNumber: order.documentNumber,
       orderSeriesPrefix: orderSeries.prefix,
       orderSeriesSuffix: orderSeries.suffix,
       clientId: sales_invoice.clientId,
-      // Client data
       clientFirstName: person.firstName,
       clientLastName: person.lastName,
       clientLegalName: company.legalName,
@@ -518,6 +518,8 @@ export async function getSalesInvoiceById(
     globalDiscountAmount: invoice.globalDiscountAmount,
     taxAmount: invoice.taxAmount,
     totalAmount: invoice.totalAmount,
+    totalPaid: toDecimal(invoice.totalPaid),
+    balance: toDecimal(invoice.totalAmount).sub(toDecimal(invoice.totalPaid)),
     documentNumberFull,
     items: lines.map((l) => ({
       id: l.id,
@@ -600,6 +602,7 @@ export async function listSalesInvoices(
       status: sales_invoice.status,
       issueDate: sales_invoice.issueDate,
       totalAmount: sales_invoice.totalAmount,
+      totalPaid: sql<Decimal>`(SELECT COALESCE(SUM(${payment_allocation.amount}), 0) FROM ${payment_allocation} WHERE ${payment_allocation.salesInvoiceId} = ${sales_invoice.id})`,
       documentNumber: sales_invoice.documentNumber,
       seriesPrefix: documentSeries.prefix,
       seriesSuffix: documentSeries.suffix,
@@ -630,6 +633,7 @@ export async function listSalesInvoices(
     status: string;
     issueDate: string;
     totalAmount: Decimal;
+    totalPaid: Decimal;
     documentNumber: number;
     seriesPrefix: string | null;
     seriesSuffix: string | null;
@@ -661,6 +665,8 @@ export async function listSalesInvoices(
       status: inv.status as SalesInvoiceStatus,
       issueDate: inv.issueDate,
       totalAmount: inv.totalAmount,
+      totalPaid: toDecimal(inv.totalPaid),
+      balance: toDecimal(inv.totalAmount).sub(toDecimal(inv.totalPaid)),
       documentNumberFull: `${prefix}${inv.documentNumber}${suffix}`,
     };
   };

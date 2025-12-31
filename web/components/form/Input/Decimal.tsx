@@ -9,7 +9,7 @@ import Decimal from "@utils/data/Decimal";
 export interface DecimalProps
   extends Omit<JSX.IntrinsicElements["input"], "value" | "onChange" | "type"> {
   /** Path within the form store (e.g. "price" or "item.0.amount") */
-  path: string | number;
+  path: string | number | (string | number)[];
   /** If true, writes the default value to the store on mount */
   materialize?: boolean;
   /** If true, removes the value from the store when unmounted */

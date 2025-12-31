@@ -1,4 +1,5 @@
 import type DateTime from "../../data/DateTime";
+import type Decimal from "../../data/Decimal";
 
 /**
  * Estados posibles de una orden de venta.
@@ -22,6 +23,22 @@ export const ORDER_STATUS_VALUES: readonly OrderStatus[] = [
 ];
 
 /**
+ * Input para una línea de orden de venta.
+ */
+export interface CreateSalesOrderItemInput {
+  /** ID del ítem del catálogo */
+  itemId: number;
+  /** Cantidad solicitada */
+  quantity: number | string | Decimal;
+  /** Precio unitario pactado */
+  unitPrice: number | string | Decimal;
+  /** Porcentaje de descuento por línea (opcional) */
+  discountPercent?: number | string | Decimal;
+  /** Notas adicionales por línea (opcional) */
+  notes?: string;
+}
+
+/**
  * Input para crear una orden de venta.
  */
 export interface CreateSalesOrderInput {
@@ -33,6 +50,14 @@ export interface CreateSalesOrderInput {
   orderDate?: DateTime;
   /** Estado de la orden (opcional, por defecto 'pending') */
   status?: OrderStatus;
+  /** Líneas de la orden */
+  items: CreateSalesOrderItemInput[];
+  /** Notas generales (opcional) */
+  notes?: string;
+  /** Términos de pago (opcional) */
+  paymentTermsId?: number;
+  /** Lista de precios (opcional) */
+  priceListId?: number;
 }
 
 /**
@@ -51,6 +76,30 @@ export interface SalesOrderWithNumbering {
   documentNumber: number;
   /** Número completo del documento (con prefijo/sufijo) */
   documentNumberFull: string;
+  /** Total de la orden */
+  total: Decimal;
+}
+
+/**
+ * Detalle de una línea de orden de venta.
+ */
+export interface SalesOrderItemDetails {
+  id: number;
+  lineNumber: number;
+  itemId: number;
+  itemCode: string;
+  itemName: string;
+  quantity: Decimal;
+  unitPrice: Decimal;
+  discountPercent: Decimal;
+  discountAmount: Decimal;
+  taxPercent: Decimal;
+  taxAmount: Decimal;
+  subtotal: Decimal;
+  total: Decimal;
+  notes: string | null;
+  deliveredQuantity: Decimal;
+  invoicedQuantity: Decimal;
 }
 
 /**
@@ -68,6 +117,11 @@ export interface SalesOrderDetails {
   /** Número completo del documento (con prefijo/sufijo) */
   documentNumberFull: string;
   disabled: boolean;
+  subtotal: Decimal;
+  taxAmount: Decimal;
+  total: Decimal;
+  notes: string | null;
+  items: SalesOrderItemDetails[];
 }
 
 /**
@@ -104,6 +158,10 @@ export interface SalesOrderListItem {
   status: OrderStatus;
   /** Número completo del documento (con prefijo/sufijo) */
   documentNumberFull: string;
+  /** Total de la orden */
+  total: Decimal;
+  deliveredPercent: number;
+  invoicedPercent: number;
 }
 
 /**
@@ -112,4 +170,13 @@ export interface SalesOrderListItem {
 export interface ListSalesOrdersResult {
   orders: SalesOrderListItem[];
   totalCount?: number;
+}
+
+/**
+ * Representa un tipo de orden de venta (ej: Online, Mostrador).
+ */
+export interface SalesOrderType {
+  id: number;
+  name: string;
+  disabled: boolean;
 }

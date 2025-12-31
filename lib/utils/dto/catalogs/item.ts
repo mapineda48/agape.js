@@ -64,6 +64,10 @@ export interface IItemBase {
   categoryId?: number | null;
   /** ID de la subcategoría asociada */
   subcategoryId?: number | null;
+  /** ID del grupo de impuestos asociado */
+  taxGroupId?: number | null;
+  /** ID del grupo contable asociado */
+  itemAccountingGroupId?: number | null;
 }
 
 /**
@@ -154,23 +158,23 @@ export interface ListItemsResult {
  */
 export type IItemRecord =
   | (IItemBase & {
-      id: number;
-      type: ItemType;
-      images: unknown;
-      good: IGood;
-      service?: never;
-    })
+    id: number;
+    type: ItemType;
+    images: unknown;
+    good: IGood;
+    service?: never;
+  })
   | (IItemBase & {
-      id: number;
-      type: ItemType;
-      images: unknown;
-      service: IService;
-      good?: never;
-    })
+    id: number;
+    type: ItemType;
+    images: unknown;
+    service: IService;
+    good?: never;
+  })
   | (IItemBase & {
-      id: number;
-      type: ItemType;
-      images: unknown;
-      good?: never;
-      service?: never;
-    });
+    id: number;
+    type: ItemType;
+    images: unknown;
+    good?: never;
+    service?: never;
+  });

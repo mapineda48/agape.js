@@ -15,6 +15,13 @@
       "when": 1765639971225,
       "tag": "0001_yellow_rocket_racer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767111597626,
+      "tag": "0002_elite_war_machine",
+      "breakpoints": true
     }
   ]
 }

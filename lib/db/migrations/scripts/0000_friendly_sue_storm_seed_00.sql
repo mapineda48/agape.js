@@ -324,7 +324,9 @@ VALUES
     ('PURCHASE_INVOICE', 'Factura de Compra',        'Facturación de compras',                  'finance',   true),
     ('PURCHASE_ORDER', 'Orden de Compra',   'Documentos de órdenes de compra',         'purchasing', true),
     ('SALES_ORDER',    'Orden de Venta',    'Documentos de órdenes de venta',          'crm',        true),
-    ('GOODS_RECEIPT',  'Recepción de Mercancía', 'Documentos de recepción de mercancía', 'purchasing', true)
+    ('GOODS_RECEIPT',  'Recepción de Mercancía', 'Documentos de recepción de mercancía', 'purchasing', true),
+    ('SALES_RECEIPT',  'Recibo de Caja',    'Recibos de cobro a clientes',             'finance',    true),
+    ('PURCHASE_DISBURSEMENT', 'Comprobante de Egreso', 'Pagos a proveedores',             'finance',    true)
 ON CONFLICT ("code") DO UPDATE
 SET "name"        = EXCLUDED."name",
     "description" = EXCLUDED."description",
@@ -337,7 +339,8 @@ SET "name"        = EXCLUDED."name",
 -- ============================================================
 WITH doc_types AS (
     SELECT id, code FROM "agape_app_development_demo"."numbering_document_type"
-    WHERE code IN ('INV_MOV','SALES_INVOICE','PURCHASE_INVOICE','PURCHASE_ORDER','SALES_ORDER','GOODS_RECEIPT')
+    WHERE code IN ('INV_MOV','SALES_INVOICE','PURCHASE_INVOICE','PURCHASE_ORDER',
+                   'SALES_ORDER','GOODS_RECEIPT','SALES_RECEIPT','PURCHASE_DISBURSEMENT')
 ),
 series_values AS (
     SELECT * FROM (VALUES
@@ -361,7 +364,13 @@ series_values AS (
         ('SALES_ORDER','OV','OV-',NULL, 1::bigint, 999999::bigint, true),
 
         -- GOODS_RECEIPT
-        ('GOODS_RECEIPT','RM','RM-',NULL, 1::bigint, 999999::bigint, true)
+        ('GOODS_RECEIPT','RM','RM-',NULL, 1::bigint, 999999::bigint, true),
+
+        -- SALES_RECEIPT
+        ('SALES_RECEIPT','RECAUDO','RC-',NULL, 1::bigint, 999999::bigint, true),
+
+        -- PURCHASE_DISBURSEMENT
+        ('PURCHASE_DISBURSEMENT','EGRESO','CE-',NULL, 1::bigint, 999999::bigint, true)
     ) AS v(doc_type_code, series_code, prefix, suffix, start_number, end_number, is_default)
 )
 INSERT INTO "agape_app_development_demo"."numbering_document_series"

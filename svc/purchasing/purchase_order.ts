@@ -717,6 +717,7 @@ function toDecimal(value: Decimal | number | string): Decimal {
 /**
  * Internal function to create inventory movement within an existing transaction.
  * This is a simplified version that works within the purchase order transaction.
+ * It also applies the stock effects (updates stock and creates cost layers).
  */
 async function createInventoryMovementInTx(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
@@ -743,6 +744,8 @@ async function createInventoryMovementInTx(
   const { getNextDocumentNumberTx } = await import(
     "#svc/numbering/getNextDocumentNumber"
   );
+  const { stock } = await import("#models/inventory/stock");
+  const { inventoryCostLayer } = await import("#models/inventory/cost_layer");
 
   // Get movement type
   const [movementType] = await tx
@@ -773,7 +776,7 @@ async function createInventoryMovementInTx(
     externalDocumentId: tempExternalId,
   });
 
-  // Insert movement
+  // Insert movement (as "posted" since purchase receipts are auto-posted)
   const [movement] = await tx
     .insert(inventoryMovement)
     .values({
@@ -786,6 +789,7 @@ async function createInventoryMovementInTx(
       documentSeriesId: numbering.seriesId,
       documentNumber: numbering.assignedNumber,
       documentNumberFull: numbering.fullNumber,
+      status: "posted", // Auto-posted for purchase receipts
     })
     .returning();
 
@@ -803,16 +807,66 @@ async function createInventoryMovementInTx(
       )
     );
 
-  // Insert details
-  await tx.insert(inventoryMovementDetail).values(
-    input.details.map((d) => ({
+  // Insert details and apply stock effects
+  for (const d of input.details) {
+    const locationId = d.locationId;
+    if (!locationId) {
+      throw new Error(`Ubicación requerida para el ítem ${d.itemId}`);
+    }
+
+    const quantity = toDecimal(d.quantity);
+    const unitCost = d.unitCost ?? new Decimal(0);
+    const totalCost = quantity.times(unitCost);
+
+    // Insert detail
+    await tx.insert(inventoryMovementDetail).values({
       movementId: movement.id,
       itemId: d.itemId,
-      locationId: d.locationId,
-      quantity: toDecimal(d.quantity),
-      unitCost: d.unitCost,
-    }))
-  );
+      locationId,
+      quantity,
+      unitCost,
+      totalCost,
+    });
+
+    // Apply stock effect (for inputs, factor = 1)
+    if (movementType.affectsStock && movementType.factor === 1) {
+      // Update stock (aggregate)
+      const [existingStock] = await tx
+        .select()
+        .from(stock)
+        .where(and(eq(stock.itemId, d.itemId), eq(stock.locationId, locationId)))
+        .for("update");
+
+      if (existingStock) {
+        await tx
+          .update(stock)
+          .set({
+            quantity: sql`${stock.quantity} + ${quantity.toString()}`,
+          })
+          .where(and(eq(stock.itemId, d.itemId), eq(stock.locationId, locationId)));
+      } else {
+        await tx.insert(stock).values({
+          itemId: d.itemId,
+          locationId,
+          quantity,
+          reservedQuantity: new Decimal(0),
+        });
+      }
+
+      // Create cost layer
+      await tx.insert(inventoryCostLayer).values({
+        itemId: d.itemId,
+        locationId,
+        lotId: null,
+        originalQuantity: quantity,
+        remainingQuantity: quantity,
+        unitCost,
+        sourceMovementId: movement.id,
+        createdAt: input.movementDate,
+      });
+    }
+  }
 
   return movement;
 }
+

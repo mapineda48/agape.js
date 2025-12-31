@@ -13,6 +13,7 @@ import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { Pagination } from "../../inventory/Pagination";
 import Decimal from "@utils/data/Decimal";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 const PAGE_SIZE = 15;
 
@@ -256,6 +257,12 @@ export default function SalesInvoicesPage(props: Props) {
                                                 Total
                                             </th>
                                             <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                                Pagado
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                                Saldo
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                                 Acciones
                                             </th>
                                         </tr>
@@ -305,11 +312,6 @@ function InvoiceRow({
     invoice: SalesInvoiceListItem;
     onView: () => void;
 }) {
-    const totalNumber =
-        invoice.totalAmount instanceof Decimal
-            ? invoice.totalAmount.toNumber()
-            : Number(invoice.totalAmount);
-
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr + "T00:00:00");
         return date.toLocaleDateString("es-CO", {
@@ -319,37 +321,6 @@ function InvoiceRow({
         });
     };
 
-    const getStatusBadge = (status: SalesInvoiceStatus) => {
-        const statusConfig: Record<SalesInvoiceStatus, { label: string; className: string }> = {
-            draft: {
-                label: "Borrador",
-                className: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-            },
-            issued: {
-                label: "Emitida",
-                className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-            },
-            partially_paid: {
-                label: "Pago Parcial",
-                className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-            },
-            paid: {
-                label: "Pagada",
-                className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
-            },
-            cancelled: {
-                label: "Anulada",
-                className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-            },
-        };
-
-        const config = statusConfig[status] || statusConfig.draft;
-        return (
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
-                {config.label}
-            </span>
-        );
-    };
 
     return (
         <tr
@@ -396,11 +367,21 @@ function InvoiceRow({
                 </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-center">
-                {getStatusBadge(invoice.status)}
+                <StatusBadge status={invoice.status} />
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-right">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    ${totalNumber.toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+                    ${toNum(invoice.totalAmount).toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+                </span>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-right">
+                <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                    ${toNum(invoice.totalPaid).toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+                </span>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-right">
+                <span className={`text-sm font-black ${toNum(invoice.balance) > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                    ${toNum(invoice.balance).toLocaleString("es-CO", { minimumFractionDigits: 2 })}
                 </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -430,4 +411,9 @@ interface IState {
     filters: InternalFilters;
     invoices: SalesInvoiceListItem[];
     totalCount: number;
+}
+
+function toNum(val: any): number {
+    if (val instanceof Decimal) return val.toNumber();
+    return Number(val) || 0;
 }

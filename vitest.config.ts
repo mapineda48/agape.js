@@ -85,6 +85,10 @@ export default defineConfig({
               __dirname,
               "./web/test/mocks/crm/clientType.ts"
             ),
+            "@agape/crm/order": path.resolve(
+              __dirname,
+              "./web/test/mocks/crm/order.ts"
+            ),
             "@agape/purchasing/purchase_order": path.resolve(
               __dirname,
               "./web/test/mocks/purchasing/purchaseOrder.ts"
@@ -124,6 +128,18 @@ export default defineConfig({
             "@agape/finance/sales_invoice": path.resolve(
               __dirname,
               "./web/test/mocks/finance/sales_invoice.ts"
+            ),
+            "@agape/finance/payment_method": path.resolve(
+              __dirname,
+              "./web/test/mocks/finance/payment_method.ts"
+            ),
+            "@agape/finance/payment": path.resolve(
+              __dirname,
+              "./web/test/mocks/finance/payment.ts"
+            ),
+            "@agape/sales/sales_flow": path.resolve(
+              __dirname,
+              "./web/test/mocks/sales/sales_flow.ts"
             ),
           },
         },

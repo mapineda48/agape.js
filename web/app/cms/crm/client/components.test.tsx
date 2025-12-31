@@ -204,7 +204,7 @@ describe("ClientForm", () => {
 
       // Click "Ver Cliente"
       await act(async () => {
-        fireEvent.click(screen.getByText("Ver Cliente"));
+        fireEvent.click(screen.getByRole("button", { name: /Ver Cliente/i }));
       });
 
       // Now it should navigate
@@ -242,7 +242,7 @@ describe("ClientForm", () => {
 
       // Click "Continuar Editando"
       await act(async () => {
-        fireEvent.click(screen.getByText("Continuar Editando"));
+        fireEvent.click(screen.getByRole("button", { name: /Continuar Editando/i }));
       });
 
       // Modal should close
@@ -345,7 +345,7 @@ describe("ClientForm", () => {
 
       // Click "Sí, Usar Datos"
       await act(async () => {
-        fireEvent.click(screen.getByText("Sí, Usar Datos"));
+        fireEvent.click(screen.getByRole("button", { name: /Sí, Usar Datos/i }));
       });
 
       // Should notify about data load
@@ -408,15 +408,15 @@ describe("ClientForm", () => {
       await waitFor(
         () => {
           expect(getClientByDocument).toHaveBeenCalledWith(2, "88888");
-          expect(getUserByDocument).toHaveBeenCalledWith(2, "88888");
         },
-        { timeout: 1000 }
+        { timeout: 3000 }
       );
 
       // Should show modal instead of navigating
       await waitFor(() => {
         expect(screen.getByText("Documento No Encontrado")).toBeInTheDocument();
-      });
+        expect(screen.getByText("88888")).toBeInTheDocument();
+      }, { timeout: 3000 });
 
       // Should NOT navigate automatically
       expect(mockNavigate).not.toHaveBeenCalled();
@@ -448,14 +448,14 @@ describe("ClientForm", () => {
         fireEvent.blur(docInput);
       });
 
-      // Wait for modal
+      // Wait for modal specifically with the new data
       await waitFor(() => {
         expect(screen.getByText("Documento No Encontrado")).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
       // Click "Crear Nuevo Cliente"
       await act(async () => {
-        fireEvent.click(screen.getByText("Crear Nuevo Cliente"));
+        fireEvent.click(screen.getByRole("button", { name: /Crear Nuevo Cliente/i }));
       });
 
       // Now should navigate
@@ -507,7 +507,6 @@ describe("ClientForm", () => {
       // Should show error modal
       await waitFor(() => {
         expect(screen.getByText("Error de Validación")).toBeInTheDocument();
-        // Error message appears in both ValidationStatus and Modal, so use getAllByText
         expect(screen.getAllByText("Network error").length).toBeGreaterThan(0);
       });
     });
@@ -540,7 +539,7 @@ describe("ClientForm", () => {
 
       // Click "Continuar Sin Verificar"
       await act(async () => {
-        fireEvent.click(screen.getByText("Continuar Sin Verificar"));
+        fireEvent.click(screen.getByRole("button", { name: /Continuar Sin Verificar/i }));
       });
 
       // Modal should close

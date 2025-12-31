@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { path: "/cms/report", icon: ChartBarIcon, label: "Reportes" },
   { path: "/cms/hr", icon: UserCircleIcon, label: "Colaboradores" },
   { path: "/cms/crm/clients", icon: UsersIcon, label: "Clientes" },
+  { path: "/cms/sales/orders", icon: BanknotesIcon, label: "Ventas" },
   { path: "/cms/purchasing/orders", icon: TruckIcon, label: "Compras" },
   { path: "/cms/invoicing", icon: BanknotesIcon, label: "Facturación" },
   { path: "/cms/inventory/products", icon: CubeIcon, label: "Inventario" },

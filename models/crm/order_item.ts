@@ -124,6 +124,22 @@ export const orderItem = schema.table(
      */
     total: decimal("total").notNull(),
 
+    /**
+     * Cantidad entregada hasta el momento.
+     * Soporta entregas parciales.
+     */
+    deliveredQuantity: decimal("delivered_quantity")
+      .notNull()
+      .default(sql`0`),
+
+    /**
+     * Cantidad facturada hasta el momento.
+     * Soporta facturación parcial.
+     */
+    invoicedQuantity: decimal("invoiced_quantity")
+      .notNull()
+      .default(sql`0`),
+
     /** Notas o comentarios específicos de esta línea */
     notes: varchar("notes", { length: 500 }),
   },

@@ -24,6 +24,12 @@ const TABS = [
         icon: ShoppingCartIcon,
         description: "Facturas de proveedores y cuentas por pagar",
     },
+    {
+        path: "payments",
+        label: "Pagos",
+        icon: BanknotesIcon,
+        description: "Gestión de recaudos y egresos de caja",
+    },
 ];
 
 export default function InvoicingLayout({ children }: InvoicingLayoutProps) {
