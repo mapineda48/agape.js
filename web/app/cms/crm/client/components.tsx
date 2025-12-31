@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, useCallback, type ReactNode } from "react";
 import { Form } from "@/components/form";
+import { SelectItem } from "@/components/ui/select";
 import { useNotificacion } from "@/components/ui/notification";
 import { getUserByDocument } from "@agape/core/user";
 import { useRouter } from "@/components/router/router-hook";
@@ -503,13 +504,12 @@ export function ClientForm({
                   path="documentTypeId"
                   required
                   onChange={handleDocumentTypeChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 >
-                  <option value="">Seleccionar tipo...</option>
+                  <SelectItem value={0 as any}>Seleccionar tipo...</SelectItem>
                   {enabledDocumentTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
+                    <SelectItem key={type.id} value={type.id}>
                       {type.name}
-                    </option>
+                    </SelectItem>
                   ))}
                 </Form.Select.Int>
                 <Form.Text
@@ -646,19 +646,15 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="typeId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900 hover:border-gray-400"
                 >
-                  <option value={0} className="text-gray-500 bg-white py-2">
-                    Seleccionar tipo...
-                  </option>
+                  <SelectItem value={0}>Seleccionar tipo...</SelectItem>
                   {clientTypes.map((type) => (
-                    <option
+                    <SelectItem
                       key={type.id}
                       value={type.id}
-                      className="text-gray-900 bg-white py-2 hover:bg-indigo-50"
                     >
                       {type.name}
-                    </option>
+                    </SelectItem>
                   ))}
                 </Form.Select.Int>
               </div>
@@ -761,13 +757,12 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="priceListId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
-                  <option value="">Lista por defecto</option>
+                  <SelectItem value={0 as any}>Lista por defecto</SelectItem>
                   {priceLists.map((pl) => (
-                    <option key={pl.id} value={pl.id}>
+                    <SelectItem key={pl.id} value={pl.id}>
                       {pl.fullName}
-                    </option>
+                    </SelectItem>
                   ))}
                 </Form.Select.Int>
               </div>
@@ -779,13 +774,12 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="paymentTermsId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
-                  <option value="">Condiciones por defecto</option>
+                  <SelectItem value={0 as any}>Condiciones por defecto</SelectItem>
                   {paymentTerms.map((pt) => (
-                    <option key={pt.id} value={pt.id}>
+                    <SelectItem key={pt.id} value={pt.id}>
                       {pt.fullName} ({pt.dueDays} días)
-                    </option>
+                    </SelectItem>
                   ))}
                 </Form.Select.Int>
               </div>
@@ -797,13 +791,12 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="salespersonId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
-                  <option value="">Sin vendedor asignado</option>
-                  {salespersons.map((sp) => (
-                    <option key={sp.id} value={sp.id}>
-                      {sp.fullName}
-                    </option>
+                  <SelectItem value={0 as any}>Vendedor por defecto</SelectItem>
+                  {salespersons.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.fullName}
+                    </SelectItem>
                   ))}
                 </Form.Select.Int>
               </div>

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNotificacion } from "@/components/ui/notification";
 import clsx from "clsx";
+import { Select, SelectItem } from "@/components/ui/select";
 import {
     PlusIcon,
     IdentificationIcon,
@@ -245,37 +246,35 @@ function FilterForm({
                     </Field>
 
                     <Field label="Aplica para personas">
-                        <select
+                        <Select
                             value={filters.appliesToPerson}
-                            onChange={(e) =>
+                            onChange={(value: "all" | "yes" | "no" | undefined) =>
                                 setFilters({
                                     ...filters,
-                                    appliesToPerson: e.target.value as "all" | "yes" | "no",
+                                    appliesToPerson: value || "all",
                                 })
                             }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
-                            <option value="all">Todos</option>
-                            <option value="yes">Sí</option>
-                            <option value="no">No</option>
-                        </select>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="yes">Sí</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                        </Select>
                     </Field>
 
                     <Field label="Aplica para empresas">
-                        <select
+                        <Select
                             value={filters.appliesToCompany}
-                            onChange={(e) =>
+                            onChange={(value: "all" | "yes" | "no" | undefined) =>
                                 setFilters({
                                     ...filters,
-                                    appliesToCompany: e.target.value as "all" | "yes" | "no",
+                                    appliesToCompany: value || "all",
                                 })
                             }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
-                            <option value="all">Todos</option>
-                            <option value="yes">Sí</option>
-                            <option value="no">No</option>
-                        </select>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="yes">Sí</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                        </Select>
                     </Field>
 
                     <label className="flex items-center gap-2 cursor-pointer">

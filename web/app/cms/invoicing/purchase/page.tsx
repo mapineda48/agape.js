@@ -1,4 +1,5 @@
 import { Fragment, useEffect } from "react";
+import { Select, SelectItem } from "@/components/ui/select";
 import { listPurchaseInvoices } from "@agape/finance/purchase_invoice";
 import { listSuppliers } from "@agape/purchasing/supplier";
 import type {
@@ -125,28 +126,25 @@ export default function PurchaseInvoicesPage(props: Props) {
                                 <label htmlFor="supplier-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Proveedor
                                 </label>
-                                <select
-                                    id="supplier-filter"
-                                    className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent sm:text-sm transition"
-                                    value={filters.supplierId ?? ""}
-                                    onChange={(e) =>
+                                <Select
+                                    value={filters.supplierId ?? undefined}
+                                    onChange={(value: number | undefined) =>
                                         updateFilter({
-                                            supplierId: e.target.value
-                                                ? Number(e.target.value)
-                                                : undefined,
+                                            supplierId: value || undefined,
                                         })
                                     }
+                                    placeholder="Todos los proveedores"
                                 >
-                                    <option value="">Todos los proveedores</option>
+                                    <SelectItem value={undefined as any}>Todos los proveedores</SelectItem>
                                     {props.suppliers.map((supplier: SupplierListItem) => (
-                                        <option key={supplier.id} value={supplier.id}>
+                                        <SelectItem key={supplier.id} value={supplier.id}>
                                             {supplier.firstName
                                                 ? `${supplier.firstName} ${supplier.lastName ?? ""
                                                     }`.trim()
                                                 : supplier.legalName ?? ""}
-                                        </option>
+                                        </SelectItem>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
 
                             {/* Date From Filter */}

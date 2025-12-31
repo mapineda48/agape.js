@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Form } from "@/components/form";
+import { SelectItem } from "@/components/ui/select";
 import { BanknotesIcon, CalendarIcon, UserIcon, DocumentTextIcon, PlusIcon } from "@heroicons/react/24/outline";
 import type { CreatePaymentInput, PaymentStatus } from "@utils/dto/finance/payment";
 import type { ClientListItem } from "@utils/dto/crm/client";
@@ -117,12 +118,12 @@ export function PaymentForm({
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                             <UserIcon className="h-4 w-4" /> Cliente
                         </label>
-                        <Form.Select.Int path="userId" required className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold">
-                            <option value={0}>Seleccionar cliente...</option>
+                        <Form.Select.Int path="userId" required>
+                            <SelectItem value={0}>Seleccionar cliente...</SelectItem>
                             {clients.map(c => (
-                                <option key={c.id} value={c.id}>
+                                <SelectItem key={c.id} value={c.id}>
                                     {c.firstName ? `${c.firstName} ${c.lastName || ""}` : c.legalName}
-                                </option>
+                                </SelectItem>
                             ))}
                         </Form.Select.Int>
                     </div>
@@ -132,10 +133,10 @@ export function PaymentForm({
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                             <BanknotesIcon className="h-4 w-4" /> Método de Pago
                         </label>
-                        <Form.Select.Int path="paymentMethodId" required className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold">
-                            <option value={0}>Seleccionar método...</option>
+                        <Form.Select.Int path="paymentMethodId" required>
+                            <SelectItem value={0}>Seleccionar método...</SelectItem>
                             {paymentMethods.map(m => (
-                                <option key={m.id} value={m.id}>{m.fullName}</option>
+                                <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>
                             ))}
                         </Form.Select.Int>
                     </div>

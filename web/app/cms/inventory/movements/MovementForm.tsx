@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Form, useAppDispatch, setAtPath } from "@/components/form";
+import { SelectItem } from "@/components/ui/select";
 import Decimal from "@utils/data/Decimal";
 
 import Submit from "@/components/ui/submit";
@@ -157,14 +158,14 @@ function GeneralInfoCard({
           <Form.Select.Int
             path="movementTypeId"
             required
-            className="w-full rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/30"
+            placeholder="- Seleccionar -"
             disabled={isReadOnly}
           >
-            <option value="">- Seleccionar -</option>
+            <SelectItem value={0}>- Seleccionar -</SelectItem>
             {types.map((t) => (
-              <option key={t.id} value={t.id}>
+              <SelectItem key={t.id} value={t.id}>
                 {t.name}
-              </option>
+              </SelectItem>
             ))}
           </Form.Select.Int>
         </div>
@@ -266,13 +267,13 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                       <Form.Select.Int
                         path={`details.${index}.itemId`}
                         required
-                        className="w-full rounded-lg border-gray-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-transparent"
+                        placeholder="- Seleccionar -"
                       >
-                        <option value="">- Seleccionar -</option>
+                        <SelectItem value={0}>- Seleccionar -</SelectItem>
                         {items.map((i) => (
-                          <option key={i.id} value={i.id}>
+                          <SelectItem key={i.id} value={i.id}>
                             {i.fullName} ({i.code})
-                          </option>
+                          </SelectItem>
                         ))}
                       </Form.Select.Int>
                     )}
@@ -287,13 +288,13 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                       <Form.Select.Int
                         path={`details.${index}.locationId`}
                         required
-                        className="w-full min-w-[140px] rounded-lg border-gray-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-transparent"
+                        placeholder="- Ubicación -"
                       >
-                        <option value="">- Ubicación -</option>
+                        <SelectItem value={0}>- Ubicación -</SelectItem>
                         {locations.map((loc) => (
-                          <option key={loc.id} value={loc.id}>
+                          <SelectItem key={loc.id} value={loc.id}>
                             {loc.name}
-                          </option>
+                          </SelectItem>
                         ))}
                       </Form.Select.Int>
                     )}
@@ -350,15 +351,18 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
 function SummaryCard() {
   const details = Form.useSelector((state: any) => state.details || []) as MovementFormState["details"];
 
-  const totals = details.reduce((acc, curr) => {
-    const qty = Number(curr.quantity || 0);
-    const cost = Number(curr.unitCost || 0);
-    return {
-      items: acc.items + 1,
-      quantity: acc.quantity + qty,
-      totalCost: acc.totalCost + (qty * cost),
-    };
-  }, { items: 0, quantity: 0, totalCost: 0 });
+  const totals = details.reduce(
+    (acc: { items: number; quantity: number; totalCost: number }, curr) => {
+      const qty = Number(curr.quantity || 0);
+      const cost = Number(curr.unitCost || 0);
+      return {
+        items: acc.items + 1,
+        quantity: acc.quantity + qty,
+        totalCost: acc.totalCost + qty * cost,
+      };
+    },
+    { items: 0, quantity: 0, totalCost: 0 }
+  );
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

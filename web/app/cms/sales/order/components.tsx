@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from "react";
 import { Form } from "@/components/form";
+import { SelectItem } from "@/components/ui/select";
 import { PlusIcon, TrashIcon, ShoppingCartIcon, CalendarIcon } from "@heroicons/react/24/outline";
 import type {
     CreateSalesOrderInput,
@@ -133,15 +134,15 @@ export function SalesOrderForm({
                         <Form.Select.Int
                             path="clientId"
                             required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all bg-white text-sm font-medium"
+                            placeholder="Seleccionar cliente..."
                         >
-                            <option value={0}>Seleccionar cliente...</option>
+                            <SelectItem value={0}>Seleccionar cliente...</SelectItem>
                             {clients.map((client) => (
-                                <option key={client.id} value={client.id}>
+                                <SelectItem key={client.id} value={client.id}>
                                     {client.firstName
                                         ? `${client.firstName} ${client.lastName ?? ""}`.trim()
                                         : client.legalName ?? ""}
-                                </option>
+                                </SelectItem>
                             ))}
                         </Form.Select.Int>
                     </div>
@@ -157,13 +158,13 @@ export function SalesOrderForm({
                         <Form.Select.Int
                             path="orderTypeId"
                             required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all bg-white text-sm font-medium"
+                            placeholder="Seleccionar tipo..."
                         >
-                            <option value={0}>Seleccionar tipo...</option>
+                            <SelectItem value={0}>Seleccionar tipo...</SelectItem>
                             {orderTypes.map((type) => (
-                                <option key={type.id} value={type.id}>
+                                <SelectItem key={type.id} value={type.id}>
                                     {type.name}
-                                </option>
+                                </SelectItem>
                             ))}
                         </Form.Select.Int>
                     </div>
@@ -216,20 +217,20 @@ export function SalesOrderForm({
                                         <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
                                             Producto
                                         </label>
-                                        <select
-                                            value={item.itemId || 0}
-                                            onChange={(e) =>
-                                                handleItemSelect(index, Number(e.target.value))
-                                            }
-                                            className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-semibold text-gray-700"
-                                        >
-                                            <option value={0}>Seleccionar producto...</option>
-                                            {items.map((product) => (
-                                                <option key={product.id} value={product.id}>
-                                                    {product.code} - {product.fullName}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <Form.Scope path={index}>
+                                            <Form.Select.Int
+                                                path="itemId"
+                                                placeholder="Seleccionar producto..."
+                                                onChange={(itemId) => handleItemSelect(index, itemId)}
+                                            >
+                                                <SelectItem value={0}>Seleccionar producto...</SelectItem>
+                                                {items.map((product) => (
+                                                    <SelectItem key={product.id} value={product.id}>
+                                                        {product.code} - {product.fullName}
+                                                    </SelectItem>
+                                                ))}
+                                            </Form.Select.Int>
+                                        </Form.Scope>
                                     </div>
 
                                     {/* Quantity */}

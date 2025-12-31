@@ -374,3 +374,20 @@ class PortalErrorBoundary extends Component<
     return this.props.children;
   }
 }
+
+/**
+ * ----------------------------------------------------------------------
+ * SIMPLE PORTAL COMPONENT
+ * ----------------------------------------------------------------------
+ */
+export function Portal({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return ReactDOM.createPortal(children, document.body);
+}

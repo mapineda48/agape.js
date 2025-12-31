@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Form } from "@/components/form";
+import { SelectItem } from "@/components/ui/select";
 import { useNotificacion } from "@/components/ui/notification";
 import { useRouter } from "@/components/router/router-hook";
 import { getUserByDocument } from "@agape/core/user";
@@ -285,13 +286,12 @@ export function EmployeeForm({
                 </label>
                 <Form.Select.Int
                   path="documentTypeId"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-gray-900"
                 >
-                  <option value="">Seleccionar tipo...</option>
+                  <SelectItem value={0 as any}>Seleccionar tipo...</SelectItem>
                   {personDocumentTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
+                    <SelectItem key={type.id} value={type.id}>
                       {type.name}
-                    </option>
+                    </SelectItem>
                   ))}
                 </Form.Select.Int>
               </div>

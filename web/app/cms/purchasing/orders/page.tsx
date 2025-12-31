@@ -1,4 +1,5 @@
 import { Fragment, useEffect } from "react";
+import { Select, SelectItem } from "@/components/ui/select";
 import { listPurchaseOrders } from "@agape/purchasing/purchase_order";
 import { PURCHASE_ORDER_STATUS_VALUES } from "@utils/dto/purchasing/purchase_order";
 import { listSuppliers } from "@agape/purchasing/supplier";
@@ -126,28 +127,23 @@ export default function PurchaseOrdersPage(props: Props) {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Proveedor
                 </label>
-                <select
-                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sm:text-sm transition"
-                  value={filters.supplierId ?? ""}
-                  onChange={(e) =>
-                    updateFilter({
-                      supplierId: e.target.value
-                        ? Number(e.target.value)
-                        : undefined,
-                    })
+                <Select
+                  value={filters.supplierId}
+                  onChange={(supplierId: number | undefined) =>
+                    updateFilter({ supplierId })
                   }
+                  placeholder="Todos los proveedores"
                 >
-                  <option value="">Todos los proveedores</option>
+                  <SelectItem value={undefined}>Todos los proveedores</SelectItem>
                   {props.suppliers.map((supplier: SupplierListItem) => (
-                    <option key={supplier.id} value={supplier.id}>
+                    <SelectItem key={supplier.id} value={supplier.id}>
                       {supplier.firstName
-                        ? `${supplier.firstName} ${
-                            supplier.lastName ?? ""
+                        ? `${supplier.firstName} ${supplier.lastName ?? ""
                           }`.trim()
                         : supplier.legalName ?? ""}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Status Filter */}
@@ -155,24 +151,20 @@ export default function PurchaseOrdersPage(props: Props) {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Estado
                 </label>
-                <select
-                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sm:text-sm transition"
-                  value={filters.status ?? ""}
-                  onChange={(e) =>
-                    updateFilter({
-                      status: e.target.value
-                        ? (e.target.value as PurchaseOrderStatus)
-                        : undefined,
-                    })
+                <Select
+                  value={filters.status}
+                  onChange={(status: PurchaseOrderStatus | undefined) =>
+                    updateFilter({ status })
                   }
+                  placeholder="Todos los estados"
                 >
-                  <option value="">Todos los estados</option>
+                  <SelectItem value={undefined}>Todos los estados</SelectItem>
                   {PURCHASE_ORDER_STATUS_VALUES.map((status) => (
-                    <option key={status} value={status}>
+                    <SelectItem key={status} value={status}>
                       {getStatusLabel(status)}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Reset Filters */}

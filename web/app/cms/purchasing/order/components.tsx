@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from "react";
 import { Form } from "@/components/form";
+import { SelectItem } from "@/components/ui/select";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type {
   CreatePurchaseOrderInput,
@@ -138,15 +139,15 @@ export function OrderForm({
           <Form.Select.Int
             path="supplierId"
             required
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white"
+            placeholder="Seleccionar proveedor..."
           >
-            <option value={0}>Seleccionar proveedor...</option>
+            <SelectItem value={0}>Seleccionar proveedor...</SelectItem>
             {suppliers.map((supplier) => (
-              <option key={supplier.id} value={supplier.id}>
+              <SelectItem key={supplier.id} value={supplier.id}>
                 {supplier.firstName
                   ? `${supplier.firstName} ${supplier.lastName ?? ""}`.trim()
                   : supplier.legalName ?? ""}
-              </option>
+              </SelectItem>
             ))}
           </Form.Select.Int>
         </div>
@@ -220,20 +221,20 @@ export function OrderForm({
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Producto
                     </label>
-                    <select
-                      value={item.itemId || 0}
-                      onChange={(e) =>
-                        handleItemSelect(index, Number(e.target.value))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
-                    >
-                      <option value={0}>Seleccionar producto...</option>
-                      {items.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.code} - {product.fullName}
-                        </option>
-                      ))}
-                    </select>
+                    <Form.Scope path={index}>
+                      <Form.Select.Int
+                        path="itemId"
+                        placeholder="Seleccionar producto..."
+                        onChange={(itemId) => handleItemSelect(index, itemId)}
+                      >
+                        <SelectItem value={0}>Seleccionar producto...</SelectItem>
+                        {items.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.code} - {product.fullName}
+                          </SelectItem>
+                        ))}
+                      </Form.Select.Int>
+                    </Form.Scope>
                   </div>
 
                   {/* Quantity */}

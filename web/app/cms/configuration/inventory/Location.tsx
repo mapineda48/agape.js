@@ -11,6 +11,7 @@ import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
+import { SelectItem } from "@/components/ui/select";
 import {
   createPortalHook,
   type PortalInjectedProps,
@@ -60,7 +61,7 @@ function LocationModalWrapper(
       <LocationForm
         location={props.location}
         onSave={props.onSave}
-        onClose={() => {}}
+        onClose={() => { }}
       />
     </PortalModal>
   );
@@ -217,11 +218,10 @@ function LocationForm({
             <Form.Select.String
               path="type"
               required
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             >
-              <option value="warehouse">Bodega</option>
-              <option value="store">Tienda</option>
-              <option value="shelf">Estantería</option>
+              <SelectItem value="warehouse">Bodega</SelectItem>
+              <SelectItem value="store">Tienda</SelectItem>
+              <SelectItem value="shelf">Estantería</SelectItem>
             </Form.Select.String>
           </label>
         </div>

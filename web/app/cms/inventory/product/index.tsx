@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Form, { useAppDispatch, setAtPath } from "@/components/form";
+import { Select, SelectItem } from "@/components/ui/select";
 import * as Input from "@/components/form/Input";
 import Checkbox from "@/components/form/CheckBox";
 import {
@@ -109,14 +110,14 @@ function TypeSelector(props: {
             type="button"
             onClick={() => props.onChange("good")}
             className={`relative flex flex-col items-center p-6 rounded-xl border-2 transition-all ${props.value === "good"
-                ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
+              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }`}
           >
             <div
               className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${props.value === "good"
-                  ? "bg-indigo-500 text-white"
-                  : "bg-gray-100 text-gray-500"
+                ? "bg-indigo-500 text-white"
+                : "bg-gray-100 text-gray-500"
                 }`}
             >
               <svg
@@ -163,14 +164,14 @@ function TypeSelector(props: {
             type="button"
             onClick={() => props.onChange("service")}
             className={`relative flex flex-col items-center p-6 rounded-xl border-2 transition-all ${props.value === "service"
-                ? "border-purple-500 bg-purple-50 ring-2 ring-purple-200"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              ? "border-purple-500 bg-purple-50 ring-2 ring-purple-200"
+              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }`}
           >
             <div
               className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${props.value === "service"
-                  ? "bg-purple-500 text-white"
-                  : "bg-gray-100 text-gray-500"
+                ? "bg-purple-500 text-white"
+                : "bg-gray-100 text-gray-500"
                 }`}
             >
               <svg
@@ -240,8 +241,8 @@ function BasicInfoCard(props: { itemType: ItemType }) {
             path="fullName"
             required
             placeholder={`Ej: ${props.itemType === "good"
-                ? "Camiseta Premium Algodon"
-                : "Consultoria Empresarial"
+              ? "Camiseta Premium Algodon"
+              : "Consultoria Empresarial"
               }`}
             className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
           />
@@ -254,8 +255,8 @@ function BasicInfoCard(props: { itemType: ItemType }) {
           <Input.Text
             path="slogan"
             placeholder={`Ej: ${props.itemType === "good"
-                ? "La mejor calidad para tu dia a dia"
-                : "Soluciones profesionales para tu negocio"
+              ? "La mejor calidad para tu dia a dia"
+              : "Soluciones profesionales para tu negocio"
               }`}
             className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
           />
@@ -381,17 +382,16 @@ function GoodUomSelect() {
   ];
 
   return (
-    <select
+    <Select
       value={uomId ?? 1}
-      onChange={(e) => setUomId(parseInt(e.target.value, 10))}
-      className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+      onChange={(value) => setUomId(value || 1)}
     >
       {units.map((u) => (
-        <option key={u.id} value={u.id}>
+        <SelectItem key={u.id} value={u.id}>
           {u.name}
-        </option>
+        </SelectItem>
       ))}
-    </select>
+    </Select>
   );
 }
 

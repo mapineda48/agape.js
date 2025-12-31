@@ -15,6 +15,7 @@ import { useNotificacion } from "@/components/ui/notification";
 import { Pagination } from "../../inventory/Pagination";
 import Decimal from "@utils/data/Decimal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Select, SelectItem } from "@/components/ui/select";
 
 const PAGE_SIZE = 15;
 
@@ -127,27 +128,20 @@ export default function SalesOrdersPage(props: Props) {
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Cliente
                                 </label>
-                                <select
-                                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition"
-                                    value={filters.clientId ?? ""}
-                                    onChange={(e) =>
-                                        updateFilter({
-                                            clientId: e.target.value
-                                                ? Number(e.target.value)
-                                                : undefined,
-                                        })
-                                    }
+                                <Select
+                                    value={filters.clientId}
+                                    onChange={(clientId) => updateFilter({ clientId })}
+                                    placeholder="Todos los clientes"
                                 >
-                                    <option value="">Todos los clientes</option>
+                                    <SelectItem value={undefined}>Todos los clientes</SelectItem>
                                     {props.clients.map((client: ClientListItem) => (
-                                        <option key={client.id} value={client.id}>
+                                        <SelectItem key={client.id} value={client.id}>
                                             {client.firstName
-                                                ? `${client.firstName} ${client.lastName ?? ""
-                                                    }`.trim()
+                                                ? `${client.firstName} ${client.lastName ?? ""}`.trim()
                                                 : client.legalName ?? ""}
-                                        </option>
+                                        </SelectItem>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
 
                             {/* Status Filter */}
@@ -155,27 +149,21 @@ export default function SalesOrdersPage(props: Props) {
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Estado
                                 </label>
-                                <select
-                                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition"
-                                    value={filters.status ?? ""}
-                                    onChange={(e) =>
-                                        updateFilter({
-                                            status: e.target.value
-                                                ? (e.target.value as OrderStatus)
-                                                : undefined,
-                                        })
-                                    }
+                                <Select
+                                    value={filters.status}
+                                    onChange={(status: OrderStatus | undefined) => updateFilter({ status })}
+                                    placeholder="Todos los estados"
                                 >
-                                    <option value="">Todos los estados</option>
+                                    <SelectItem value={undefined}>Todos los estados</SelectItem>
                                     {ORDER_STATUS_VALUES.map((status) => (
-                                        <option key={status} value={status}>
+                                        <SelectItem key={status} value={status}>
                                             {status === 'pending' ? 'Pendiente' :
                                                 status === 'confirmed' ? 'Confirmada' :
                                                     status === 'shipped' ? 'Enviada' :
                                                         status === 'delivered' ? 'Entregada' : 'Cancelada'}
-                                        </option>
+                                        </SelectItem>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
 
                             {/* Reset Filters */}
@@ -195,95 +183,95 @@ export default function SalesOrdersPage(props: Props) {
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Table */}
-                    <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-indigo-50">
-                        {orders.length === 0 ? (
-                            <div className="text-center py-20">
-                                <svg
-                                    className="mx-auto h-12 w-12 text-indigo-300"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                    />
-                                </svg>
-                                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                                    No se encontraron órdenes de venta
-                                </h3>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    Intenta ajustar los filtros o crea una nueva orden.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Documento
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Cliente
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Fecha
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Estado
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Total
-                                            </th>
-                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Surtido
-                                            </th>
-                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Facturado
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Acciones
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {orders.map((order: SalesOrderListItem) => (
-                                            <OrderRow
-                                                key={order.id}
-                                                order={order}
-                                                onView={() => navigate(`../order/${order.id}`)}
-                                            />
-                                        ))}
-                                    </tbody>
-                                </table>
+                        {/* Table */}
+                        <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-indigo-50">
+                            {orders.length === 0 ? (
+                                <div className="text-center py-20">
+                                    <svg
+                                        className="mx-auto h-12 w-12 text-indigo-300"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                        />
+                                    </svg>
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                                        No se encontraron órdenes de venta
+                                    </h3>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Intenta ajustar los filtros o crea una nueva orden.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Documento
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Cliente
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Fecha
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Estado
+                                                </th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Total
+                                                </th>
+                                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Surtido
+                                                </th>
+                                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Facturado
+                                                </th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    Acciones
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {orders.map((order: SalesOrderListItem) => (
+                                                <OrderRow
+                                                    key={order.id}
+                                                    order={order}
+                                                    onView={() => navigate(`../order/${order.id}`)}
+                                                />
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalCount > 0 && (
+                            <div className="mt-6">
+                                <Pagination
+                                    totalItems={totalCount}
+                                    pageIndex={filters?.pageIndex ?? 0}
+                                    onChange={(pageIndex) => {
+                                        if (fetch) return;
+                                        setState({
+                                            orders,
+                                            totalCount,
+                                            fetch: true,
+                                            filters: { ...filters, pageIndex },
+                                        });
+                                    }}
+                                />
                             </div>
                         )}
                     </div>
-
-                    {/* Pagination */}
-                    {totalCount > 0 && (
-                        <div className="mt-6">
-                            <Pagination
-                                totalItems={totalCount}
-                                pageIndex={filters?.pageIndex ?? 0}
-                                onChange={(pageIndex) => {
-                                    if (fetch) return;
-                                    setState({
-                                        orders,
-                                        totalCount,
-                                        fetch: true,
-                                        filters: { ...filters, pageIndex },
-                                    });
-                                }}
-                            />
-                        </div>
-                    )}
                 </div>
             </div>
         </Fragment>

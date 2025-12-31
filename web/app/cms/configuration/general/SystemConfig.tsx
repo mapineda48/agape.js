@@ -17,7 +17,8 @@ import { listCurrencies } from "@agape/finance/currency";
 import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
 import Submit from "@/components/ui/submit";
-import * as Select from "@/components/form/Select";
+import Select from "@/components/form/Select";
+import { SelectItem } from "@/components/ui/select";
 
 interface Currency {
     id: number;
@@ -245,13 +246,12 @@ function CompanyTab({ currencies }: { currencies: Currency[] }) {
             >
                 <Select.String
                     path="currency"
-                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                    <option value="">Seleccionar moneda</option>
+                    <SelectItem value="">Seleccionar moneda</SelectItem>
                     {currencies.map((c) => (
-                        <option key={c.id} value={c.code}>
+                        <SelectItem key={c.id} value={c.code}>
                             {c.code} - {c.fullName} ({c.symbol})
-                        </option>
+                        </SelectItem>
                     ))}
                 </Select.String>
             </FieldGroup>
@@ -294,13 +294,12 @@ function RegionalTab() {
                 <FieldGroup title="País" description="País de operación principal.">
                     <Select.String
                         path="country"
-                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
-                        <option value="">Seleccionar país</option>
+                        <SelectItem value="">Seleccionar país</SelectItem>
                         {countries.map((c) => (
-                            <option key={c.code} value={c.code}>
+                            <SelectItem key={c.code} value={c.code}>
                                 {c.name}
-                            </option>
+                            </SelectItem>
                         ))}
                     </Select.String>
                 </FieldGroup>
@@ -308,13 +307,12 @@ function RegionalTab() {
                 <FieldGroup title="Idioma" description="Idioma de la interfaz.">
                     <Select.String
                         path="language"
-                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
-                        <option value="">Seleccionar idioma</option>
+                        <SelectItem value="">Seleccionar idioma</SelectItem>
                         {languages.map((l) => (
-                            <option key={l.code} value={l.code}>
+                            <SelectItem key={l.code} value={l.code}>
                                 {l.name}
-                            </option>
+                            </SelectItem>
                         ))}
                     </Select.String>
                 </FieldGroup>
@@ -326,13 +324,12 @@ function RegionalTab() {
             >
                 <Select.String
                     path="timezone"
-                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                    <option value="">Seleccionar zona horaria</option>
+                    <SelectItem value="">Seleccionar zona horaria</SelectItem>
                     {timezones.map((tz) => (
-                        <option key={tz.value} value={tz.value}>
+                        <SelectItem key={tz.value} value={tz.value}>
                             {tz.label}
-                        </option>
+                        </SelectItem>
                     ))}
                 </Select.String>
             </FieldGroup>

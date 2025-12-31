@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Form } from "@/components/form";
+import { SelectItem } from "@/components/ui/select";
 import { createPortalHook, type PortalInjectedProps } from "@/components/util/portal";
 import PortalModal, { Modal } from "@/components/ui/PortalModal";
 import type { SalesOrderDetails } from "@utils/dto/crm/order";
@@ -137,16 +138,12 @@ function DeliveryModalContent({ order, locations, onConfirm, onClose }: Delivery
                         <Form.Select.Int
                             path="locationId"
                             required
-                            className="w-full pl-5 pr-10 py-4 bg-white hover:bg-gray-50/80 focus:bg-white border-2 border-gray-100 focus:border-blue-500/30 rounded-2xl transition-all font-bold text-gray-700 outline-none appearance-none shadow-sm focus:shadow-md focus:shadow-blue-500/10 cursor-pointer"
                         >
-                            <option value={0}>Seleccionar bodega...</option>
+                            <SelectItem value={0}>Seleccionar bodega...</SelectItem>
                             {locations.map(l => (
-                                <option key={l.id} value={l.id}>{l.name}</option>
+                                <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
                             ))}
                         </Form.Select.Int>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
                     </div>
                 </div>
 

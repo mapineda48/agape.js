@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Select, SelectItem } from "@/components/ui/select";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import {
@@ -200,18 +201,18 @@ export default function ReceiveOrderPage(props: Props) {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Ubicación de Bodega *
               </label>
-              <select
+              <Select
                 value={locationId}
-                onChange={(e) => setLocationId(Number(e.target.value))}
-                className="w-full md:w-1/2 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition bg-white"
+                onChange={(value: number | undefined) => setLocationId(value || 0)}
+                placeholder="Seleccionar ubicación..."
               >
-                <option value={0}>Seleccionar ubicación...</option>
+                <SelectItem value={0}>Seleccionar ubicación...</SelectItem>
                 {props.locations.map((loc: Location) => (
-                  <option key={loc.id} value={loc.id}>
+                  <SelectItem key={loc.id} value={loc.id}>
                     {loc.name}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Observation */}

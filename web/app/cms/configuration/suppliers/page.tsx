@@ -21,6 +21,7 @@ import { getUserByDocument } from "@agape/core/user";
 import { Form } from "@/components/form";
 import useInput from "@/components/form/Input/useInput";
 import Submit from "@/components/ui/submit";
+import { SelectItem } from "@/components/ui/select";
 import DateTime from "@utils/data/DateTime";
 import {
   createPortalHook,
@@ -121,7 +122,7 @@ function SupplierModalWrapper(
         supplierTypes={props.supplierTypes}
         documentTypes={props.documentTypes}
         onSave={props.onSave}
-        onClose={() => {}} // Will be overridden by PortalModal cloneElement
+        onClose={() => { }} // Will be overridden by PortalModal cloneElement
       />
     </PortalModal>
   );
@@ -203,9 +204,8 @@ export default function SuppliersConfigurationPage(props: {
   function confirmDelete(supplier: SupplierRow) {
     showConfirm({
       title: "Eliminar proveedor",
-      message: `¿Deseas eliminar a ${
-        supplier.firstName || supplier.legalName || "este proveedor"
-      }?`,
+      message: `¿Deseas eliminar a ${supplier.firstName || supplier.legalName || "este proveedor"
+        }?`,
       confirmText: "Eliminar",
       variant: "danger",
       onConfirm: async () => {
@@ -445,17 +445,17 @@ function SupplierForm({
     person:
       initialType === "person"
         ? {
-            firstName: supplier?.firstName ?? "",
-            lastName: supplier?.lastName ?? "",
-            birthdate: birthdateValue,
-          }
+          firstName: supplier?.firstName ?? "",
+          lastName: supplier?.lastName ?? "",
+          birthdate: birthdateValue,
+        }
         : undefined,
     company:
       initialType === "company"
         ? {
-            legalName: supplier?.legalName ?? "",
-            tradeName: supplier?.tradeName ?? "",
-          }
+          legalName: supplier?.legalName ?? "",
+          tradeName: supplier?.tradeName ?? "",
+        }
         : undefined,
   };
 
@@ -573,17 +573,16 @@ function SupplierFormContent({
           <Field label="Tipo de clasificación">
             <Form.Select.Int
               path="supplierTypeId"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               disabled={!hasTypes}
             >
               {hasTypes ? (
                 supplierTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
+                  <SelectItem key={type.id} value={type.id}>
                     {type.name}
-                  </option>
+                  </SelectItem>
                 ))
               ) : (
-                <option value="">Crea tipos en la gestión de tipos</option>
+                <SelectItem value={0 as any}>Crea tipos en la gestión de tipos</SelectItem>
               )}
             </Form.Select.Int>
           </Field>
@@ -633,17 +632,17 @@ function SupplierFormContent({
                 documentTypeId: targetDocTypeId,
                 ...(isPersonType
                   ? {
-                      person: {
-                        ...data.person,
-                        id: supplier?.personId, // Keep existing ID if updating
-                      },
-                    }
+                    person: {
+                      ...data.person,
+                      id: supplier?.personId, // Keep existing ID if updating
+                    },
+                  }
                   : {
-                      company: {
-                        ...data.company,
-                        id: supplier?.companyId, // Keep existing ID if updating
-                      },
-                    }),
+                    company: {
+                      ...data.company,
+                      id: supplier?.companyId, // Keep existing ID if updating
+                    },
+                  }),
               } as any, // Cast as any to satisfy compiler if types aren't perfectly aligned
             });
 

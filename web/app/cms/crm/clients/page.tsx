@@ -1,4 +1,5 @@
 import { Fragment, useEffect } from "react";
+import { Select, SelectItem } from "@/components/ui/select";
 import {
   listClients,
   type ListClientsParams as GetClientsParams,
@@ -170,24 +171,20 @@ export default function ClientsPage(props: Props) {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Tipo de Cliente
                 </label>
-                <select
-                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition"
-                  value={filters.typeId ?? ""}
-                  onChange={(e) =>
-                    updateFilter({
-                      typeId: e.target.value
-                        ? Number(e.target.value)
-                        : undefined,
-                    })
+                <Select
+                  value={filters.typeId}
+                  onChange={(typeId: number | undefined) =>
+                    updateFilter({ typeId })
                   }
+                  placeholder="Todos los tipos"
                 >
-                  <option value="">Todos los tipos</option>
+                  <SelectItem value={undefined}>Todos los tipos</SelectItem>
                   {props.clientTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
+                    <SelectItem key={type.id} value={type.id}>
                       {type.name}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Status Filter */}
@@ -370,8 +367,8 @@ function ClientRow({
       <td className="px-6 py-4 whitespace-nowrap">
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${client.active
-              ? "bg-green-100 text-green-800"
-              : "bg-gray-100 text-gray-800"
+            ? "bg-green-100 text-green-800"
+            : "bg-gray-100 text-gray-800"
             }`}
         >
           <span

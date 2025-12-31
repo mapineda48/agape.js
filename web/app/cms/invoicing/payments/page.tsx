@@ -1,4 +1,5 @@
 import { Fragment, useEffect } from "react";
+import { Select, SelectItem } from "@/components/ui/select";
 import { listPayments } from "@agape/finance/payment";
 import type {
     ListPaymentsParams,
@@ -104,28 +105,28 @@ export default function PaymentsPage(props: Props) {
                     <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 mb-8 flex flex-wrap gap-4 items-end">
                         <div className="space-y-1.5 flex-1 min-w-[200px]">
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tipo de Pago</label>
-                            <select
-                                value={filters.type || ''}
-                                onChange={(e) => updateFilter({ type: (e.target.value as any) || undefined })}
-                                className="w-full bg-white border-none rounded-2xl px-4 py-3 text-sm font-bold text-gray-700 shadow-sm focus:ring-4 focus:ring-indigo-500/10 transition-all cursor-pointer"
+                            <Select
+                                value={filters.type || undefined}
+                                onChange={(value) => updateFilter({ type: (value as any) || undefined })}
+                                placeholder="Todos los tipos"
                             >
-                                <option value="">Todos los tipos</option>
-                                <option value="receipt">Recaudos (Clientes)</option>
-                                <option value="disbursement">Egresos (Proveedores)</option>
-                            </select>
+                                <SelectItem value={undefined as any}>Todos los tipos</SelectItem>
+                                <SelectItem value="receipt">Recaudos (Clientes)</SelectItem>
+                                <SelectItem value="disbursement">Egresos (Proveedores)</SelectItem>
+                            </Select>
                         </div>
 
                         <div className="space-y-1.5 flex-1 min-w-[200px]">
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Estado</label>
-                            <select
-                                value={filters.status || ''}
-                                onChange={(e) => updateFilter({ status: (e.target.value as any) || undefined })}
-                                className="w-full bg-white border-none rounded-2xl px-4 py-3 text-sm font-bold text-gray-700 shadow-sm focus:ring-4 focus:ring-indigo-500/10 transition-all cursor-pointer"
+                            <Select
+                                value={filters.status || undefined}
+                                onChange={(value) => updateFilter({ status: (value as any) || undefined })}
+                                placeholder="Todos los estados"
                             >
-                                <option value="">Todos los estados</option>
-                                <option value="draft">Borrador (Registrado)</option>
-                                <option value="posted">Contabilizado (Aplicado)</option>
-                            </select>
+                                <SelectItem value={undefined as any}>Todos los estados</SelectItem>
+                                <SelectItem value="draft">Borrador (Registrado)</SelectItem>
+                                <SelectItem value="posted">Contabilizado (Aplicado)</SelectItem>
+                            </Select>
                         </div>
 
                         <button

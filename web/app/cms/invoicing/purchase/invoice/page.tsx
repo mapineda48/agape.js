@@ -1,4 +1,5 @@
 import { Fragment, useMemo } from "react";
+import { SelectItem } from "@/components/ui/select";
 import { listItems } from "@agape/catalogs/item";
 import { listSuppliers } from "@agape/purchasing/supplier";
 import { createPurchaseInvoice } from "@agape/finance/purchase_invoice";
@@ -273,15 +274,15 @@ function InvoiceForm({ suppliers, items, children }: InvoiceFormProps) {
                     <Form.Select.Int
                         path="supplierId"
                         required
-                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+                        placeholder="Seleccionar proveedor..."
                     >
-                        <option value={0}>Seleccionar proveedor...</option>
+                        <SelectItem value={0}>Seleccionar proveedor...</SelectItem>
                         {suppliers.map((supplier) => (
-                            <option key={supplier.id} value={supplier.id}>
+                            <SelectItem key={supplier.id} value={supplier.id}>
                                 {supplier.firstName
                                     ? `${supplier.firstName} ${supplier.lastName ?? ""}`.trim()
                                     : supplier.legalName ?? ""}
-                            </option>
+                            </SelectItem>
                         ))}
                     </Form.Select.Int>
                 </div>
@@ -381,20 +382,20 @@ function InvoiceForm({ suppliers, items, children }: InvoiceFormProps) {
                                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                             Producto
                                         </label>
-                                        <select
-                                            value={item.itemId || 0}
-                                            onChange={(e) =>
-                                                handleItemSelect(index, Number(e.target.value))
-                                            }
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent transition text-sm"
-                                        >
-                                            <option value={0}>Seleccionar producto...</option>
-                                            {items.map((product) => (
-                                                <option key={product.id} value={product.id}>
-                                                    {product.code} - {product.fullName}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <Form.Scope path={index}>
+                                            <Form.Select.Int
+                                                path="itemId"
+                                                placeholder="Seleccionar producto..."
+                                                onChange={(itemId) => handleItemSelect(index, itemId)}
+                                            >
+                                                <SelectItem value={0}>Seleccionar producto...</SelectItem>
+                                                {items.map((product) => (
+                                                    <SelectItem key={product.id} value={product.id}>
+                                                        {product.code} - {product.fullName}
+                                                    </SelectItem>
+                                                ))}
+                                            </Form.Select.Int>
+                                        </Form.Scope>
                                     </div>
 
                                     {/* Quantity */}

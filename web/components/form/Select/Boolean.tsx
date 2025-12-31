@@ -1,51 +1,44 @@
-import { forwardRef, type JSX } from "react";
+import React from "react";
+import { Select, SelectItem } from "../../ui/select";
 import useInput from "../Input/useInput";
 
-/**
- * Props for the Boolean select component.
- */
-export interface BooleanProps
-  extends Omit<JSX.IntrinsicElements["select"], "value" | "onChange"> {
-  /** Path within the form store */
+export interface BooleanProps {
   path: string;
-  /** If true, writes the default value to the store on mount */
   materialize?: boolean;
-  /** If true, removes the value from the store when unmounted */
   autoCleanup?: boolean;
+  required?: boolean;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
-/**
- * Boolean dropdown select connected to the form store.
- * Renders "Sí" and "No" options.
- *
- * @example
- * ```tsx
- * <Form.Select.Boolean path="isActive" />
- * ```
- */
-const SelectBoolean = forwardRef<HTMLSelectElement, BooleanProps>(
-  (props, ref) => {
-    const { path, materialize, autoCleanup, ...core } = props;
+const SelectBoolean = ({
+  path,
+  materialize,
+  autoCleanup,
+  placeholder = "Seleccionar...",
+  className,
+  disabled,
+  required,
+}: BooleanProps) => {
+  const [state, setState] = useInput<boolean>(path, false, {
+    materialize,
+    autoCleanup,
+  });
 
-    const [state, setState] = useInput<boolean>(path, false, {
-      materialize,
-      autoCleanup,
-    });
-
-    return (
-      <select
-        {...core}
-        ref={ref}
-        value={state ? "true" : "false"}
-        onChange={(e) => setState(e.currentTarget.value === "true")}
-      >
-        <option value="true">Sí</option>
-        <option value="false">No</option>
-      </select>
-    );
-  }
-);
-
-SelectBoolean.displayName = "Form.Select.Boolean";
+  return (
+    <Select
+      value={state}
+      onChange={(val) => setState(val)}
+      placeholder={placeholder}
+      className={className}
+      disabled={disabled}
+      required={required}
+    >
+      <SelectItem value={true}>Sí</SelectItem>
+      <SelectItem value={false}>No</SelectItem>
+    </Select>
+  );
+};
 
 export default SelectBoolean;

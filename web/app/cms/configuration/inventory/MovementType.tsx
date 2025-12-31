@@ -12,7 +12,8 @@ import {
 } from "@agape/inventory/movementType";
 import Form from "@/components/form";
 import * as Input from "@/components/form/Input";
-import * as Select from "@/components/form/Select";
+import * as FormSelect from "@/components/form/Select";
+import { Select as UISelect, SelectItem } from "@/components/ui/select";
 import Checkbox from "@/components/form/CheckBox";
 import Submit from "@/components/ui/submit";
 import {
@@ -70,7 +71,7 @@ function MovementModalWrapper(
       <MovementForm
         movement={props.movement}
         onSave={props.onSave}
-        onClose={() => {}}
+        onClose={() => { }}
       />
     </PortalModal>
   );
@@ -126,37 +127,35 @@ function MovementFilterForm({
         </Field>
 
         <Field label="Tipo">
-          <select
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white sm:text-sm"
+          <UISelect
             value={localFilters.type}
-            onChange={(e) =>
+            onChange={(value) =>
               setLocalFilters((prev) => ({
                 ...prev,
-                type: e.target.value as any,
+                type: value as any,
               }))
             }
           >
-            <option value="all">Todos</option>
-            <option value="entry">Entradas (+)</option>
-            <option value="exit">Salidas (-)</option>
-          </select>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="entry">Entradas (+)</SelectItem>
+            <SelectItem value="exit">Salidas (-)</SelectItem>
+          </UISelect>
         </Field>
 
         <Field label="Afecta Stock">
-          <select
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white sm:text-sm"
+          <UISelect
             value={localFilters.affectsStock}
-            onChange={(e) =>
+            onChange={(value) =>
               setLocalFilters((prev) => ({
                 ...prev,
-                affectsStock: e.target.value as any,
+                affectsStock: value as any,
               }))
             }
           >
-            <option value="all">Todos</option>
-            <option value="yes">Sí</option>
-            <option value="no">No</option>
-          </select>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="yes">Sí</SelectItem>
+            <SelectItem value="no">No</SelectItem>
+          </UISelect>
         </Field>
 
         <div className="flex items-center gap-3 mt-2">
@@ -251,13 +250,13 @@ function MovementForm({
           label="Factor"
           description="Usa +1 para entradas, -1 para salidas."
         >
-          <Select.Int
+          <FormSelect.Int
             path="factor"
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
-            <option value={1}>+1 Entrada</option>
-            <option value={-1}>-1 Salida</option>
-          </Select.Int>
+            <SelectItem value={1}>+1 Entrada</SelectItem>
+            <SelectItem value={-1}>-1 Salida</SelectItem>
+          </FormSelect.Int>
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">

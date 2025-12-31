@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Select from "@/components/form/Select";
+import { SelectItem } from "@/components/ui/select";
 import { useEventEmitter } from "@/components/util/event-emitter";
 
 const DEFAULT_SUBCATEGORY = {
@@ -28,9 +29,9 @@ export function SubCategories() {
       className="mt-1 block w-full border-gray-300 rounded p-2"
     >
       {subcategories.map(({ id, fullName }) => (
-        <option key={id} value={id || ""}>
+        <SelectItem key={id} value={id || 0}>
           {fullName}
-        </option>
+        </SelectItem>
       ))}
     </Select.Int>
   );

@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Select from "@/components/form/Select";
+import { SelectItem } from "@/components/ui/select";
+import useInput from "@/components/form/Input/useInput";
 import {
   useEventEmitter,
   useSharedState,
@@ -19,7 +21,7 @@ const DEFAULT_CATEGORY: Partial<Category> = {
 const REF_READ_DELAY_MS = 50; // Increased slightly
 
 export default function Categories() {
-  const ref = useRef<HTMLSelectElement>(null);
+  const [value] = useInput<number>("categoryId", 0);
   const emitter = useEventEmitter();
   const [state, setState] = useSharedState<Category[]>([]);
 
@@ -28,24 +30,19 @@ export default function Categories() {
       try {
         const categories = await findAll();
         setState([{ ...DEFAULT_CATEGORY } as Category, ...categories]);
-
-        // Initial load of subcategories if value exists
-        if (ref.current?.value) {
-          updateSubcategories(parseInt(ref.current.value), emitter);
-        } else {
-          // Try again shortly in case ref is not ready
-          setTimeout(() => {
-            if (ref.current?.value)
-              updateSubcategories(parseInt(ref.current.value), emitter);
-          }, REF_READ_DELAY_MS);
-        }
       } catch (error) {
         console.error("Error loading categories:", error);
       }
     };
 
     loadCategories();
-  }, [setState, emitter]);
+  }, [setState]);
+
+  useEffect(() => {
+    if (value) {
+      updateSubcategories(value, emitter);
+    }
+  }, [value, emitter]);
 
   const handleChange = (value: number) => {
     updateSubcategories(value, emitter);
@@ -56,13 +53,12 @@ export default function Categories() {
       path="categoryId"
       required
       className="mt-1 block w-full border-gray-300 rounded p-2"
-      ref={ref}
       onChange={handleChange}
     >
       {state.map((category) => (
-        <option key={category.id} value={category.id || ""}>
+        <SelectItem key={category.id} value={category.id || 0}>
           {category.fullName}
-        </option>
+        </SelectItem>
       ))}
     </Select.Int>
   );

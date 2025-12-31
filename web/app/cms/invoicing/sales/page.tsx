@@ -1,4 +1,5 @@
 import { Fragment, useEffect } from "react";
+import { Select, SelectItem } from "@/components/ui/select";
 import { listSalesInvoices } from "@agape/finance/sales_invoice";
 import { listClients } from "@agape/crm/client";
 import type {
@@ -127,28 +128,25 @@ export default function SalesInvoicesPage(props: Props) {
                                 <label htmlFor="client-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Cliente
                                 </label>
-                                <select
-                                    id="client-filter"
-                                    className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sm:text-sm transition"
-                                    value={filters.clientId ?? ""}
-                                    onChange={(e) =>
+                                <Select
+                                    value={filters.clientId ?? undefined}
+                                    onChange={(value: number | undefined) =>
                                         updateFilter({
-                                            clientId: e.target.value
-                                                ? Number(e.target.value)
-                                                : undefined,
+                                            clientId: value || undefined,
                                         })
                                     }
+                                    placeholder="Todos los clientes"
                                 >
-                                    <option value="">Todos los clientes</option>
+                                    <SelectItem value={undefined as any}>Todos los clientes</SelectItem>
                                     {props.clients.map((client: ClientListItem) => (
-                                        <option key={client.id} value={client.id}>
+                                        <SelectItem key={client.id} value={client.id}>
                                             {client.firstName
                                                 ? `${client.firstName} ${client.lastName ?? ""
                                                     }`.trim()
                                                 : client.legalName ?? ""}
-                                        </option>
+                                        </SelectItem>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
 
                             {/* Status Filter */}
@@ -156,23 +154,22 @@ export default function SalesInvoicesPage(props: Props) {
                                 <label htmlFor="status-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Estado
                                 </label>
-                                <select
-                                    id="status-filter"
-                                    className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sm:text-sm transition"
-                                    value={filters.status ?? ""}
-                                    onChange={(e) =>
+                                <Select
+                                    value={filters.status ?? undefined}
+                                    onChange={(value) =>
                                         updateFilter({
-                                            status: (e.target.value || undefined) as SalesInvoiceStatus | undefined,
+                                            status: (value || undefined) as SalesInvoiceStatus | undefined,
                                         })
                                     }
+                                    placeholder="Todos los estados"
                                 >
-                                    <option value="">Todos los estados</option>
-                                    <option value="draft">Borrador</option>
-                                    <option value="issued">Emitida</option>
-                                    <option value="partially_paid">Pago Parcial</option>
-                                    <option value="paid">Pagada</option>
-                                    <option value="cancelled">Anulada</option>
-                                </select>
+                                    <SelectItem value={undefined as any}>Todos los estados</SelectItem>
+                                    <SelectItem value="draft">Borrador</SelectItem>
+                                    <SelectItem value="issued">Emitida</SelectItem>
+                                    <SelectItem value="partially_paid">Pago Parcial</SelectItem>
+                                    <SelectItem value="paid">Pagada</SelectItem>
+                                    <SelectItem value="cancelled">Anulada</SelectItem>
+                                </Select>
                             </div>
 
                             {/* Date From Filter */}

@@ -1,60 +1,50 @@
-import { forwardRef, type JSX } from "react";
+import React from "react";
+import { Select, SelectItem } from "../../ui/select";
 import useInput from "../Input/useInput";
 
-/**
- * Props for the String select component.
- */
-export interface StringProps
-  extends Omit<JSX.IntrinsicElements["select"], "value" | "onChange"> {
-  /** Path within the form store */
+export interface StringProps {
   path: string;
-  /** If true, writes the default value to the store on mount */
   materialize?: boolean;
-  /** If true, removes the value from the store when unmounted */
   autoCleanup?: boolean;
-  /** Callback when selection changes */
-  onChange?: (value: string, index: number) => void;
+  onChange?: (value: string) => void;
+  required?: boolean;
+  children: React.ReactNode;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
-/**
- * String dropdown select connected to the form store.
- *
- * @example
- * ```tsx
- * <Form.Select.String path="status">
- *   <option value="active">Active</option>
- *   <option value="inactive">Inactive</option>
- * </Form.Select.String>
- * ```
- */
-const SelectString = forwardRef<HTMLSelectElement, StringProps>(
-  (props, ref) => {
-    const { path, materialize, autoCleanup, onChange, children, ...core } =
-      props;
+const SelectString = ({
+  path,
+  materialize,
+  autoCleanup,
+  onChange,
+  children,
+  placeholder,
+  className,
+  disabled,
+  required,
+}: StringProps) => {
+  const [state, setState] = useInput<string>(path, "", {
+    materialize,
+    autoCleanup,
+  });
 
-    const [state, setState] = useInput<string>(path, "", {
-      materialize,
-      autoCleanup,
-    });
-
-    return (
-      <select
-        {...core}
-        ref={ref}
-        value={state as string}
-        onChange={(e) => {
-          const value = e.currentTarget.value;
-          const index = e.currentTarget.selectedIndex;
-          setState(value);
-          onChange?.(value, index);
-        }}
-      >
-        {children}
-      </select>
-    );
-  }
-);
-
-SelectString.displayName = "Form.Select.String";
+  return (
+    <Select
+      value={state}
+      onChange={(val) => {
+        setState(val);
+        onChange?.(val);
+      }}
+      placeholder={placeholder}
+      className={className}
+      disabled={disabled}
+      required={required}
+    >
+      {children}
+    </Select>
+  );
+};
 
 export default SelectString;
