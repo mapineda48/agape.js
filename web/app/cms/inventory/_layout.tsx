@@ -10,15 +10,15 @@ interface InventoryLayoutProps {
 
 const TABS = [
   {
-    path: "products",
-    label: "Productos",
-    icon: CubeIcon,
-  },
-  {
     path: "movements",
     label: "Movimientos",
     icon: ArrowsRightLeftIcon,
   },
+  {
+    path: "products",
+    label: "Productos",
+    icon: CubeIcon,
+  }
 ];
 
 export default function InventoryLayout({ children }: InventoryLayoutProps) {

@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { path: "/cms/sales/orders", icon: BanknotesIcon, label: "Ventas" },
   { path: "/cms/purchasing/orders", icon: TruckIcon, label: "Compras" },
   { path: "/cms/invoicing", icon: BanknotesIcon, label: "Facturación" },
-  { path: "/cms/inventory/products", icon: CubeIcon, label: "Inventario" },
+  { path: "/cms/inventory/movements", icon: CubeIcon, label: "Inventario" },
   { path: "/cms/configuration", icon: CogIcon, label: "Configuración" },
 ];
 

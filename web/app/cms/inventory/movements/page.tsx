@@ -1,16 +1,28 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect } from "react";
 import {
   listInventoryMovements,
   type ListInventoryMovementsParams,
 } from "@agape/inventory/movement";
-import { listMovementTypes } from "@agape/inventory/movementType"; // Assuming this exists or I will verify export
+import { listMovementTypes } from "@agape/inventory/movementType";
 import { useSharedState } from "@/components/util/event-emitter";
 import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "@/utils/debounce";
-// Assuming Pagination is shared or I import relatively
 import { Pagination } from "../Pagination";
-import DateTime from "@utils/data/DateTime";
+import {
+  Search,
+  Plus,
+  Filter,
+  Calendar,
+  Package,
+  ArrowRight,
+  ClipboardList,
+  FileText,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+} from "lucide-react";
 import { clsx } from "clsx";
 
 const PAGE_SIZE = 12;
@@ -33,7 +45,7 @@ export async function onInit() {
       pageSize: PAGE_SIZE,
       includeTotalCount: true,
     }),
-    listMovementTypes(false), // Get all types to show in filter potentially, or just active
+    listMovementTypes(false),
   ]);
 
   return {
@@ -69,7 +81,7 @@ export default function MovementsPage(props: Props) {
       filters: {
         ...filters,
         ...newFilters,
-        pageIndex: 0, // Reset to first page on filter change
+        pageIndex: 0,
         includeTotalCount: true,
       },
     });
@@ -110,136 +122,145 @@ export default function MovementsPage(props: Props) {
   }, [fetch, filters, notify, setState, totalCount]);
 
   return (
-    <Fragment>
-      <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-12">
+      {/* Decorative Background */}
+      <div className="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-indigo-50 to-transparent -z-10" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
+                <ClipboardList size={20} />
+              </span>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                 Movimientos de Inventario
               </h1>
-              <p className="text-gray-500 mt-1">
-                Gestiona y audita los movimientos de stock.
-              </p>
             </div>
-            <button
-              onClick={() => navigate("./new")}
-              className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
-            >
-              <svg
-                className="-ml-1 mr-2 h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Nuevo Movimiento
-            </button>
+            <p className="text-gray-500 ml-9 text-sm">
+              Gestiona, audita y rastrea todos los movimientos de stock en tiempo real.
+            </p>
           </div>
+          <button
+            onClick={() => navigate("./new")}
+            className="group inline-flex items-center px-5 py-2.5 bg-indigo-600 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Plus className="mr-2 h-4 w-4 transition-transform group-hover:rotate-90" />
+            Nuevo Movimiento
+          </button>
+        </div>
 
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar Filters */}
-            <aside className="w-full lg:w-72 flex-shrink-0 space-y-8">
-              {/* Search */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Filters */}
+          <aside className="w-full lg:w-72 flex-shrink-0 space-y-6">
+            {/* Search Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Search size={14} /> Búsqueda
+              </h3>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <Search className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  placeholder="Buscar documento..."
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition shadow-sm"
+                  placeholder="Buscar por documento..."
+                  className="block w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm transition-all"
                   onChange={(e) => debouncedSearch(e.target.value)}
                 />
               </div>
+            </div>
 
-              {/* Type Filter */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                  Tipo
-                </h3>
-                <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar pr-2">
-                  <div
-                    className={`cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      filters.movementTypeId === undefined
-                        ? "bg-indigo-50 text-indigo-700"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                    onClick={() => updateFilter({ movementTypeId: undefined })}
-                  >
-                    Todos
-                  </div>
+            {/* Type Filter Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 overflow-hidden">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Filter size={14} /> Filtros Rápidos
+              </h3>
+              <div className="space-y-1">
+                <button
+                  className={clsx(
+                    "w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex justify-between items-center group",
+                    filters.movementTypeId === undefined
+                      ? "bg-indigo-50 text-indigo-700"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                  onClick={() => updateFilter({ movementTypeId: undefined })}
+                >
+                  <span>Todos los tipos</span>
+                  {filters.movementTypeId === undefined && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  )}
+                </button>
+                <div className="h-px bg-gray-100 my-2" />
+                <div className="max-h-[300px] overflow-y-auto space-y-1 custom-scrollbar pr-1">
                   {props.types.map((type) => (
-                    <div key={type.id}>
-                      <div
-                        className={`cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-colors flex justify-between items-center ${
-                          filters.movementTypeId === type.id
-                            ? "bg-indigo-50 text-indigo-700"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                        onClick={() =>
-                          updateFilter({ movementTypeId: type.id })
-                        }
-                      >
-                        <span>{type.name}</span>
-                      </div>
-                    </div>
+                    <button
+                      key={type.id}
+                      className={clsx(
+                        "w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex justify-between items-center group",
+                        filters.movementTypeId === type.id
+                          ? "bg-indigo-50 text-indigo-700 font-medium"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      )}
+                      onClick={() => updateFilter({ movementTypeId: type.id })}
+                    >
+                      <span className="truncate">{type.name}</span>
+                      {filters.movementTypeId === type.id && (
+                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0 ml-2" />
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
+            </div>
 
-              {/* Date Filter (Simplified) */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
-                  Fecha
-                </h3>
-                {/*  Ideally replace with date picker components, but for now simple inputs if needed, or skip complex date UI */}
-                {/* For this iteration I will omit complex date inputs to focus on main functionality as user asked for "filtros" generically */}
-              </div>
-            </aside>
-
-            {/* List Grid */}
-            <div className="flex-1">
-              {items.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                    />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">
-                    No hay movimientos
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Crea un nuevo movimiento para comenzar.
-                  </p>
+            {/* Date Filter (Simplified UI) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Calendar size={14} /> Periodo
+              </h3>
+              <div className="space-y-3">
+                <div className="relative">
+                  <label className="text-[10px] text-gray-400 absolute top-1.5 left-2">Desde</label>
+                  <input
+                    type="date"
+                    className="block w-full pt-5 pb-1.5 px-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 bg-gray-50/50"
+                  />
                 </div>
-              ) : (
+                <div className="relative">
+                  <label className="text-[10px] text-gray-400 absolute top-1.5 left-2">Hasta</label>
+                  <input
+                    type="date"
+                    className="block w-full pt-5 pb-1.5 px-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 bg-gray-50/50"
+                  />
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main List */}
+          <div className="flex-1 min-w-0">
+            {items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-dashed border-gray-300">
+                <div className="p-4 bg-indigo-50 rounded-full mb-4">
+                  <Package className="h-8 w-8 text-indigo-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  No se encontraron movimientos
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 max-w-sm text-center">
+                  Intenta ajustar los filtros de búsqueda o crea un nuevo movimiento para comenzar el registro.
+                </p>
+                <button
+                  onClick={() => updateFilter({ documentNumber: undefined, movementTypeId: undefined })}
+                  className="mt-6 text-sm text-indigo-600 font-medium hover:text-indigo-800"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4">
                   {items.map((item) => (
                     <MovementCard
@@ -249,32 +270,32 @@ export default function MovementsPage(props: Props) {
                     />
                   ))}
                 </div>
-              )}
 
-              {/* Pagination */}
-              <div className="mt-8">
-                <Pagination
-                  totalItems={totalCount}
-                  pageIndex={filters?.pageIndex ?? 0}
-                  onChange={(pageIndex) => {
-                    if (fetch) return;
-                    setState({
-                      items,
-                      totalCount,
-                      fetch: true,
-                      filters: {
-                        ...filters,
-                        pageIndex: pageIndex,
-                      },
-                    });
-                  }}
-                />
+                {/* Pagination */}
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    totalItems={totalCount}
+                    pageIndex={filters?.pageIndex ?? 0}
+                    onChange={(pageIndex) => {
+                      if (fetch) return;
+                      setState({
+                        items,
+                        totalCount,
+                        fetch: true,
+                        filters: {
+                          ...filters,
+                          pageIndex: pageIndex,
+                        },
+                      });
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
-    </Fragment>
+    </div>
   );
 }
 
@@ -287,41 +308,49 @@ function MovementCard({
 }) {
   return (
     <div
-      className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer"
+      className="group bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-gray-100/50 hover:border-indigo-100 p-5 cursor-pointer relative overflow-hidden"
       onClick={onEdit}
     >
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-gray-900">
-            {item.documentNumberFull}
-          </span>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            {item.movementTypeName}
-          </span>
-          <StatusBadge status={item.status} />
-        </div>
-        <div className="flex items-center gap-3 text-sm text-gray-500">
-          <span>{new Date(item.movementDate as any).toLocaleDateString()}</span>
-          {/* Casting to any because DateTime might be string in JSON response if not deserialized, but usually it is string */}
-          {item.observation && (
-            <>
-              <span>•</span>
-              <span className="line-clamp-1">{item.observation}</span>
-            </>
-          )}
-        </div>
-      </div>
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-gray-50 to-transparent -translate-y-16 translate-x-16 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out z-0" />
 
-      <div className="mt-4 sm:mt-0 flex items-center">
-        <button
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-        >
-          Ver Detalle
-        </button>
+      <div className="relative z-10">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+              <FileText size={20} />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                {item.documentNumberFull}
+              </h4>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span className="font-medium">{item.movementTypeName}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <StatusBadge status={item.status} />
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-gray-50">
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-1.5">
+              <Calendar size={14} className="text-gray-400" />
+              <span>{new Date(item.movementDate as any).toLocaleDateString()}</span>
+            </div>
+            {item.observation && (
+              <div className="flex items-center gap-1.5 max-w-[200px] sm:max-w-md">
+                <span className="w-1 h-1 rounded-full bg-gray-300" />
+                <span className="truncate italic">{item.observation}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center text-indigo-600 text-sm font-medium opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+            Ver detalles <ArrowRight size={16} className="ml-1" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -335,26 +364,40 @@ interface IState {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    draft: "bg-yellow-100 text-yellow-800",
-    posted: "bg-green-100 text-green-800",
-    cancelled: "bg-red-100 text-red-800",
+  const configs: Record<string, { className: string; icon: any; label: string }> = {
+    draft: {
+      className: "bg-amber-50 text-amber-700 border-amber-100",
+      icon: Clock,
+      label: "Borrador",
+    },
+    posted: {
+      className: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      icon: CheckCircle2,
+      label: "Contabilizado",
+    },
+    cancelled: {
+      className: "bg-red-50 text-red-700 border-red-100",
+      icon: XCircle,
+      label: "Cancelado",
+    },
   };
 
-  const labels: Record<string, string> = {
-    draft: "Borrador",
-    posted: "Contabilizado",
-    cancelled: "Cancelado",
+  const config = configs[status] || {
+    className: "bg-gray-50 text-gray-700 border-gray-100",
+    icon: AlertCircle,
+    label: status,
   };
+
+  const Icon = config.icon;
 
   return (
     <span
-      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-        styles[status] || "bg-gray-100 text-gray-800"
-      }`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${config.className}`}
     >
-      {labels[status] || status}
+      <Icon size={12} />
+      {config.label}
     </span>
   );
 }
+
 
