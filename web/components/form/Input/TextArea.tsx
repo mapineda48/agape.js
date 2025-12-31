@@ -1,5 +1,6 @@
-import { forwardRef, type JSX } from "react";
+import { useMemo, forwardRef, type JSX } from "react";
 import useInput from "./useInput";
+import stringToPath from "@/utils/stringToPath";
 
 /**
  * Props for the TextArea input component.
@@ -9,8 +10,8 @@ export interface TextAreaProps
     JSX.IntrinsicElements["textarea"],
     "value" | "onChange" | "defaultValue"
   > {
-  /** Path within the form store */
-  path: string;
+  /** Path within the form store (e.g. "description" or "comments.0.text") */
+  path: string | number;
   /**
    * Default value used when no value exists in the store.
    * Only used on initial mount - changes to this prop are ignored.
@@ -41,7 +42,9 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       ...core
     } = props;
 
-    const [state, setState] = useInput(path, defaultValue, {
+    const paths = useMemo(() => stringToPath(path), [path]);
+
+    const [state, setState] = useInput(paths, defaultValue, {
       materialize,
       autoCleanup,
     });

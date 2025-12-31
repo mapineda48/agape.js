@@ -1,13 +1,14 @@
-import { forwardRef, type JSX } from "react";
+import { useMemo, forwardRef, type JSX } from "react";
 import useInput from "./useInput";
+import stringToPath from "@/utils/stringToPath";
 
 /**
  * Props for the File input component.
  */
 export interface FileProps
   extends Omit<JSX.IntrinsicElements["input"], "value" | "onChange" | "type"> {
-  /** Path within the form store */
-  path: string;
+  /** Path within the form store (e.g. "avatar" or "attachments.0") */
+  path: string | number;
   /** If true, writes the default value to the store on mount */
   materialize?: boolean;
   /** If true, removes the value from the store when unmounted */
@@ -27,8 +28,10 @@ export interface FileProps
 const FileInput = forwardRef<HTMLInputElement, FileProps>((props, ref) => {
   const { path, multiple, materialize, autoCleanup, ...core } = props;
 
+  const paths = useMemo(() => stringToPath(path), [path]);
+
   const [state, setState] = useInput<File | File[] | null>(
-    path,
+    paths,
     multiple ? [] : null,
     { materialize, autoCleanup }
   );

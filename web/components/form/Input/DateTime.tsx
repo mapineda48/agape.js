@@ -1,5 +1,6 @@
-import { forwardRef, type JSX } from "react";
+import { useMemo, forwardRef, type JSX } from "react";
 import useInput from "./useInput";
+import stringToPath from "@/utils/stringToPath";
 import DateTime from "@utils/data/DateTime";
 import { format } from "date-fns";
 
@@ -8,8 +9,8 @@ import { format } from "date-fns";
  */
 export interface DateTimeProps
   extends Omit<JSX.IntrinsicElements["input"], "value" | "onChange" | "type"> {
-  /** Path within the form store */
-  path: string;
+  /** Path within the form store (e.g. "eventDate" or "schedule.0.startTime") */
+  path: string | number;
   /** If true, writes the default value to the store on mount. Defaults to true for DateTime. */
   materialize?: boolean;
   /** If true, removes the value from the store when unmounted */
@@ -30,8 +31,10 @@ const DateTimeInput = forwardRef<HTMLInputElement, DateTimeProps>(
   (props, ref) => {
     const { path, materialize = true, autoCleanup, ...core } = props;
 
+    const paths = useMemo(() => stringToPath(path), [path]);
+
     // Default to now if no value
-    const [state, setState] = useInput<DateTime>(path, new DateTime(), {
+    const [state, setState] = useInput<DateTime>(paths, new DateTime(), {
       materialize,
       autoCleanup,
     });

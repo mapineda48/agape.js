@@ -7,8 +7,8 @@ import stringToPath from "@/utils/stringToPath";
  */
 export interface IntProps
   extends Omit<JSX.IntrinsicElements["input"], "value" | "onChange" | "type"> {
-  /** Path within the form store */
-  path: string;
+  /** Path within the form store (e.g. "age" or "items.0.quantity") */
+  path: string | number;
   /** If true, writes the default value to the store on mount */
   materialize?: boolean;
   /** If true, removes the value from the store when unmounted */

@@ -1,5 +1,6 @@
-import { forwardRef, type JSX } from "react";
+import { useMemo, forwardRef, type JSX } from "react";
 import useInput from "./useInput";
+import stringToPath from "@/utils/stringToPath";
 import Decimal from "@utils/data/Decimal";
 
 /**
@@ -7,8 +8,8 @@ import Decimal from "@utils/data/Decimal";
  */
 export interface DecimalProps
   extends Omit<JSX.IntrinsicElements["input"], "value" | "onChange" | "type"> {
-  /** Path within the form store */
-  path: string;
+  /** Path within the form store (e.g. "price" or "item.0.amount") */
+  path: string | number;
   /** If true, writes the default value to the store on mount */
   materialize?: boolean;
   /** If true, removes the value from the store when unmounted */
@@ -29,7 +30,9 @@ const DecimalInput = forwardRef<HTMLInputElement, DecimalProps>(
   (props, ref) => {
     const { path, materialize, autoCleanup, ...core } = props;
 
-    const [state, setState] = useInput<Decimal>(path, new Decimal(0), {
+    const paths = useMemo(() => stringToPath(path), [path]);
+
+    const [state, setState] = useInput<Decimal>(paths, new Decimal(0), {
       materialize,
       autoCleanup,
     });
