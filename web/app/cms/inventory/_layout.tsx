@@ -1,7 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
-import { CubeIcon, ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
+import { CubeIcon, ArrowsRightLeftIcon, ArchiveBoxIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "@/components/router/router-hook";
 
 interface InventoryLayoutProps {
@@ -18,6 +18,11 @@ const TABS = [
     path: "products",
     label: "Productos",
     icon: CubeIcon,
+  },
+  {
+    path: "stock",
+    label: "Existencias",
+    icon: ArchiveBoxIcon,
   }
 ];
 
