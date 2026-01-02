@@ -1,5 +1,6 @@
 import { Fragment, useEffect } from "react";
 import { Select, SelectItem } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/datepicker";
 import { listSalesInvoices } from "@agape/finance/sales_invoice";
 import { listClients } from "@agape/crm/client";
 import type {
@@ -14,6 +15,7 @@ import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { Pagination } from "../../inventory/Pagination";
 import Decimal from "@utils/data/Decimal";
+import DateTime from "@utils/data/DateTime";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 const PAGE_SIZE = 15;
@@ -177,14 +179,12 @@ export default function SalesInvoicesPage(props: Props) {
                                 <label htmlFor="date-from-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Desde
                                 </label>
-                                <input
-                                    id="date-from-filter"
-                                    type="date"
-                                    className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sm:text-sm transition"
-                                    value={filters.fromDate ?? ""}
-                                    onChange={(e) =>
+                                <DatePicker
+                                    placeholder="Desde..."
+                                    value={filters.fromDate ? (typeof filters.fromDate === "object" ? filters.fromDate : new Date(filters.fromDate as any)) : undefined}
+                                    onChange={(date) =>
                                         updateFilter({
-                                            fromDate: e.target.value || undefined,
+                                            fromDate: date ? date.toISOString().split("T")[0] as any : undefined,
                                         })
                                     }
                                 />

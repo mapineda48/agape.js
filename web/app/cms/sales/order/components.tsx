@@ -177,10 +177,10 @@ export function SalesOrderForm({
                             </div>
                             Fecha de Venta
                         </h3>
-                        <Form.DateTime
+                        <Form.DatePicker
                             path="orderDate"
-                            required
-                            className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all text-sm font-medium"
+                            showTime
+                            placeholder="Seleccionar fecha..."
                         />
                     </div>
                 </div>

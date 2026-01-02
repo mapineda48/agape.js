@@ -173,10 +173,10 @@ function GeneralInfoCard({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Fecha Contable
           </label>
-          <Form.DateTime
+          <Form.DatePicker
             path="movementDate"
-            required
-            className="w-full rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/30"
+            showTime
+            placeholder="Seleccionar fecha..."
             disabled={isReadOnly}
           />
         </div>

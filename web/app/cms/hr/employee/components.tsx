@@ -343,9 +343,9 @@ export function EmployeeForm({
                   required
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
-                <Form.DateTime
+                <Form.DatePicker
                   path="birthdate"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  placeholder="Fecha de nacimiento"
                 />
               </Form.Scope>
             </div>
@@ -376,10 +376,10 @@ export function EmployeeForm({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Fecha de Contratación
               </label>
-              <Form.DateTime
+              <Form.DatePicker
                 path="hireDate"
                 required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                placeholder="Fecha de contratación"
               />
             </div>
             <div>

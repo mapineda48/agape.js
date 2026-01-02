@@ -1,5 +1,6 @@
 import { Fragment, useEffect } from "react";
 import { Select, SelectItem } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/datepicker";
 import { listPurchaseInvoices } from "@agape/finance/purchase_invoice";
 import { listSuppliers } from "@agape/purchasing/supplier";
 import type {
@@ -152,20 +153,12 @@ export default function PurchaseInvoicesPage(props: Props) {
                                 <label htmlFor="date-from-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Desde
                                 </label>
-                                <input
-                                    id="date-from-filter"
-                                    type="date"
-                                    className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent sm:text-sm transition"
-                                    value={
-                                        filters.fromDate
-                                            ? typeof filters.fromDate === "string"
-                                                ? filters.fromDate
-                                                : filters.fromDate.toISOString().split("T")[0]
-                                            : ""
-                                    }
-                                    onChange={(e) =>
+                                <DatePicker
+                                    placeholder="Desde..."
+                                    value={filters.fromDate instanceof DateTime ? filters.fromDate : (filters.fromDate ? new Date(filters.fromDate as any) : undefined)}
+                                    onChange={(date) =>
                                         updateFilter({
-                                            fromDate: e?.target?.value ? new DateTime(e.target.value) : undefined,
+                                            fromDate: date ? new DateTime(date) : undefined,
                                         })
                                     }
                                 />

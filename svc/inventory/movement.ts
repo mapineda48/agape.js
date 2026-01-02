@@ -708,12 +708,12 @@ export async function listInventoryMovements(
     );
   }
 
-  if (params.startDate) {
-    conditions.push(gte(inventoryMovement.movementDate, params.startDate));
+  if (params.startDate || params.fromDate) {
+    conditions.push(gte(inventoryMovement.movementDate, params.startDate || params.fromDate!));
   }
 
-  if (params.endDate) {
-    conditions.push(lte(inventoryMovement.movementDate, params.endDate));
+  if (params.endDate || params.toDate) {
+    conditions.push(lte(inventoryMovement.movementDate, params.endDate || params.toDate!));
   }
 
   if (params.documentNumber) {

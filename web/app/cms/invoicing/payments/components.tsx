@@ -146,7 +146,10 @@ export function PaymentForm({
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                             <CalendarIcon className="h-4 w-4" /> Fecha
                         </label>
-                        <Form.DateTime path="paymentDate" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold" />
+                        <Form.DatePicker
+                            path="paymentDate"
+                            placeholder="Fecha de pago"
+                        />
                     </div>
 
                     {/* Amount */}

@@ -120,6 +120,8 @@ export interface ListInventoryMovementsParams {
   movementTypeId?: number;
   startDate?: DateTime;
   endDate?: DateTime;
+  fromDate?: DateTime;
+  toDate?: DateTime;
   documentNumber?: string;
   status?: InventoryMovementStatus;
   includeTotalCount?: boolean;

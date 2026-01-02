@@ -747,9 +747,9 @@ function ConditionalFields() {
         />
       </Field>
       <Field label="Fecha de nacimiento" className="md:col-span-2">
-        <Form.DateTime
+        <Form.DatePicker
           path="birthdate"
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          placeholder="Seleccionar fecha..."
         />
       </Field>
     </Form.Scope>

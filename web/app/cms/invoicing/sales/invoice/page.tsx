@@ -352,10 +352,10 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                             </svg>
                             Fecha de Emisión
                         </h3>
-                        <Form.DateTime
+                        <Form.DatePicker
                             path="issueDate"
                             required
-                            className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                            placeholder="Seleccionar fecha..."
                         />
                     </div>
 
@@ -377,9 +377,9 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                             </svg>
                             Fecha de Vencimiento
                         </h3>
-                        <Form.DateTime
+                        <Form.DatePicker
                             path="dueDate"
-                            className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                            placeholder="Seleccionar fecha..."
                         />
                     </div>
                 </div>

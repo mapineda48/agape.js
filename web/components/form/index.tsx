@@ -32,6 +32,7 @@ import Decimal from "./Input/Decimal";
 
 // Inputs - Date/Time family
 import DateTime from "./Input/DateTime";
+import DatePicker from "./Input/DatePicker";
 
 // Inputs - Boolean/Selection
 import Checkbox from "./CheckBox";
@@ -127,6 +128,7 @@ export const Form = {
    * Date and time input.
    */
   DateTime,
+  DatePicker,
 
   // ============ Boolean/Selection Inputs ============
   /**
@@ -199,6 +201,7 @@ export type { IntProps } from "./Input/Int";
 export type { FloatProps } from "./Input/Float";
 export type { DecimalProps } from "./Input/Decimal";
 export type { DateTimeProps } from "./Input/DateTime";
+export type { DatePickerProps } from "./Input/DatePicker";
 export type { TextAreaProps } from "./Input/TextArea";
 export type { FileProps } from "./Input/File";
 export type { CheckboxProps } from "./CheckBox";

@@ -171,10 +171,9 @@ export function OrderForm({
             </svg>
             Fecha de Orden
           </h3>
-          <Form.DateTime
+          <Form.DatePicker
             path="orderDate"
-            required
-            className="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+            placeholder="Seleccionar fecha..."
           />
         </div>
 

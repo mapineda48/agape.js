@@ -9,6 +9,8 @@ import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { debounce } from "@/utils/debounce";
 import { Pagination } from "../Pagination";
+import { DatePicker } from "@/components/ui/datepicker";
+import DateTime from "@utils/data/DateTime";
 import {
   Search,
   Plus,
@@ -221,19 +223,23 @@ export default function MovementsPage(props: Props) {
                 <Calendar size={14} /> Periodo
               </h3>
               <div className="space-y-3">
-                <div className="relative">
-                  <label className="text-[10px] text-gray-400 absolute top-1.5 left-2">Desde</label>
-                  <input
-                    type="date"
-                    className="block w-full pt-5 pb-1.5 px-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 bg-gray-50/50"
-                  />
-                </div>
-                <div className="relative">
-                  <label className="text-[10px] text-gray-400 absolute top-1.5 left-2">Hasta</label>
-                  <input
-                    type="date"
-                    className="block w-full pt-5 pb-1.5 px-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 bg-gray-50/50"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Desde</label>
+                    <DatePicker
+                      placeholder="Fecha inicio"
+                      value={filters.fromDate ? (filters.fromDate instanceof DateTime ? filters.fromDate : new Date(filters.fromDate as any)) : undefined}
+                      onChange={(date) => updateFilter({ fromDate: date ? new DateTime(date) : undefined })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Hasta</label>
+                    <DatePicker
+                      placeholder="Fecha fin"
+                      value={filters.toDate ? (filters.toDate instanceof DateTime ? filters.toDate : new Date(filters.toDate as any)) : undefined}
+                      onChange={(date) => updateFilter({ toDate: date ? new DateTime(date) : undefined })}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
