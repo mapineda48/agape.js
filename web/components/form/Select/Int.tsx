@@ -6,12 +6,13 @@ export interface IntProps {
   path: string;
   materialize?: boolean;
   autoCleanup?: boolean;
-  onChange?: (value: number) => void;
+  onChange?: (value: number, index: number) => void;
   required?: boolean;
   children: React.ReactNode;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  "data-testid"?: string;
 }
 
 const SelectInt = ({
@@ -24,6 +25,7 @@ const SelectInt = ({
   className,
   disabled,
   required,
+  "data-testid": testId,
 }: IntProps) => {
   const [state, setState] = useInput<number>(path, 0, {
     materialize,
@@ -34,13 +36,25 @@ const SelectInt = ({
     <Select
       value={state}
       onChange={(val) => {
-        setState(val);
-        onChange?.(val);
+        const numVal = typeof val === "string" ? parseInt(val, 10) : Number(val);
+        const finalVal = isNaN(numVal) ? 0 : numVal;
+
+        setState(finalVal);
+
+        if (onChange) {
+          // Find index of the selected value among children for backward compatibility
+          const childrenArray = React.Children.toArray(children);
+          const index = childrenArray.findIndex((child: any) =>
+            String(child.props.value) === String(val)
+          );
+          onChange(finalVal, index);
+        }
       }}
       placeholder={placeholder}
       className={className}
       disabled={disabled}
       required={required}
+      data-testid={testId}
     >
       {children}
     </Select>

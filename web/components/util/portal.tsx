@@ -146,7 +146,7 @@ function PortalRenderer({ store }: { store: PortalStore }) {
   // Estado local SOLO para este componente.
   // Cuando se actualiza, solo se repinta este fragmento, no toda la App.
   const [items, setItems] = useState<PortalItemEntry[]>(store.getItems());
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(typeof document !== "undefined");
 
   // Efecto 1: Suscripción al Store
   useEffect(() => {
@@ -381,7 +381,7 @@ class PortalErrorBoundary extends Component<
  * ----------------------------------------------------------------------
  */
 export function Portal({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(typeof document !== "undefined");
 
   useEffect(() => {
     setMounted(true);

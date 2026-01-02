@@ -1,16 +1,15 @@
-import React, { useState, useRef, useEffect, type ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDownIcon, CheckIcon } from "@heroicons/react/24/outline";
+import React, { useState, useRef, useEffect, ReactNode, useMemo } from "react";
 import {
     useFloating,
     autoUpdate,
     offset,
     flip,
     shift,
-    size,
 } from "@floating-ui/react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import { Portal } from "@/components/util/portal";
+import { Portal } from "../util/portal";
 
 interface SelectProps<T> {
     value?: T;
@@ -20,6 +19,11 @@ interface SelectProps<T> {
     className?: string;
     disabled?: boolean;
     required?: boolean;
+    "data-testid"?: string;
+    id?: string;
+    name?: string;
+    "aria-label"?: string;
+    "aria-labelledby"?: string;
 }
 
 export function Select<T>({
@@ -30,6 +34,11 @@ export function Select<T>({
     className,
     disabled = false,
     required = false,
+    "data-testid": testId,
+    id,
+    name,
+    "aria-label": ariaLabel,
+    "aria-labelledby": ariaLabelledBy,
 }: SelectProps<T>) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -37,50 +46,64 @@ export function Select<T>({
     const { refs, x, y, strategy } = useFloating({
         open: isOpen,
         onOpenChange: setIsOpen,
+        middleware: [offset(4), flip(), shift({ padding: 8 })],
         whileElementsMounted: autoUpdate,
-        placement: "bottom-start",
-        middleware: [
-            offset(8),
-            flip(),
-            shift(),
-            size({
-                apply({ rects, elements }) {
-                    Object.assign(elements.floating.style, {
-                        width: `${rects.reference.width}px`,
-                    });
-                },
-            }),
-        ],
     });
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (
-                containerRef.current &&
-                !containerRef.current.contains(event.target as Node) &&
-                refs.floating.current &&
-                !refs.floating.current.contains(event.target as Node)
-            ) {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [refs.floating]);
+
+        if (isOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isOpen]);
 
     const handleToggle = () => {
-        if (!disabled) setIsOpen(!isOpen);
+        if (!disabled) {
+            setIsOpen(!isOpen);
+        }
     };
 
-    const selectedChild = React.Children.toArray(children).find(
-        (child: any) => child?.props?.value === value
-    ) as any;
+    const childrenArray = useMemo(() => React.Children.toArray(children), [children]);
+
+    const selectedChild = childrenArray.find(
+        (child) => React.isValidElement(child) && child.props.value === value
+    ) as React.ReactElement | undefined;
+
+    // Pre-calculate options for the hidden native select
+    const options = useMemo(() => {
+        const hasEmptyOption = childrenArray.some((child: any) =>
+            child && (child.props.value === undefined || child.props.value === "" || child.props.value === null || child.props.value === 0)
+        );
+
+        return (
+            <>
+                {!hasEmptyOption && <option value="">{placeholder}</option>}
+                {React.Children.map(children, (child: any) => {
+                    if (!child) return null;
+                    if (child.type === 'option') return child;
+                    // value={undefined} in React doesn't render the value attribute, so we force it to "" for the null case
+                    const val = child.props.value === undefined ? "" : child.props.value;
+                    return <option value={val}>{child.props.children}</option>;
+                })}
+            </>
+        );
+    }, [children, childrenArray, placeholder]);
 
     return (
         <div ref={containerRef} className={clsx("relative w-full", className)}>
             <button
                 ref={refs.setReference}
                 type="button"
+                aria-expanded={isOpen}
+                aria-haspopup="listbox"
                 onClick={handleToggle}
                 disabled={disabled}
                 className={clsx(
@@ -89,8 +112,8 @@ export function Select<T>({
                     required && !value && "border-red-300"
                 )}
             >
-                <span className={clsx("block truncate", !value && "text-gray-400")}>
-                    {selectedChild && selectedChild.props.value !== undefined ? selectedChild.props.children : placeholder}
+                <span className={clsx("block truncate", (value === undefined || value === null || value === "") && "text-gray-400")}>
+                    {selectedChild ? selectedChild.props.children : placeholder}
                 </span>
                 <ChevronDownIcon
                     className={clsx(
@@ -99,6 +122,53 @@ export function Select<T>({
                     )}
                 />
             </button>
+
+            {/* Hidden select for test compatibility and form submission */}
+            <select
+                tabIndex={-1}
+                role="combobox"
+                id={id}
+                name={name}
+                aria-label={ariaLabel}
+                aria-labelledby={ariaLabelledBy}
+                data-testid={testId}
+                required={required}
+                disabled={disabled}
+                value={value !== undefined && value !== null ? String(value) : ""}
+                onChange={(e) => {
+                    const stringVal = e.target.value;
+                    if (onChange) {
+                        // Find the original child to preserve the value's type
+                        const foundChild = childrenArray.find((child: any) =>
+                            child && String(child.props.value === undefined ? "" : child.props.value) === stringVal
+                        ) as any;
+
+                        if (foundChild) {
+                            onChange(foundChild.props.value);
+                        } else if (stringVal === "") {
+                            onChange(undefined as any);
+                        } else {
+                            onChange(stringVal as any);
+                        }
+                    }
+                }}
+                style={{
+                    position: 'absolute',
+                    width: '1px',
+                    height: '1px',
+                    padding: '0',
+                    margin: '-1px',
+                    overflow: 'hidden',
+                    clip: 'rect(0, 0, 0, 0)',
+                    whiteSpace: 'nowrap',
+                    border: '0',
+                    top: '50%',
+                    left: '0',
+                    pointerEvents: 'none'
+                }}
+            >
+                {options}
+            </select>
 
             <Portal>
                 <AnimatePresence>
@@ -117,8 +187,26 @@ export function Select<T>({
                             className="z-[2000] overflow-hidden bg-white border border-gray-200 shadow-xl rounded-2xl dark:bg-gray-900 dark:border-gray-800"
                         >
                             <div className="py-1 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
-                                {React.Children.map(children, (child: any) => {
+                                {childrenArray.map((child: any) => {
                                     if (!child) return null;
+
+                                    // If child is a native option or another component, we try to extract its value and label
+                                    if (child.type === 'option') {
+                                        return (
+                                            <SelectItem
+                                                key={child.props.value}
+                                                value={child.props.value}
+                                                active={child.props.value === value}
+                                                onClick={() => {
+                                                    onChange?.(child.props.value);
+                                                    setIsOpen(false);
+                                                }}
+                                            >
+                                                {child.props.children}
+                                            </SelectItem>
+                                        );
+                                    }
+
                                     return React.cloneElement(child, {
                                         active: child.props.value === value,
                                         onClick: () => {
@@ -136,62 +224,51 @@ export function Select<T>({
     );
 }
 
-interface SelectItemProps<T> {
-    value: T;
+interface SelectItemProps {
+    value: any;
     children: ReactNode;
     active?: boolean;
     onClick?: () => void;
     className?: string;
-    icon?: ReactNode;
+    "data-testid"?: string;
 }
 
-export function SelectItem<T>({
-    value,
+export function SelectItem({
     children,
     active,
     onClick,
     className,
-    icon,
-}: SelectItemProps<T>) {
+    "data-testid": testId,
+}: SelectItemProps) {
     return (
         <button
             type="button"
             onClick={onClick}
+            data-testid={testId}
             className={clsx(
-                "group relative flex items-center w-full px-4 py-3 text-sm transition-all duration-200",
+                "flex items-center w-full px-4 py-2.5 text-sm transition-colors duration-150",
                 active
-                    ? "bg-indigo-50/80 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 font-semibold"
-                    : "text-gray-700 hover:bg-indigo-50/40 dark:text-gray-300 dark:hover:bg-gray-800/40 hover:text-indigo-600",
+                    ? "bg-indigo-50 text-indigo-700 font-semibold dark:bg-indigo-900/30 dark:text-indigo-300"
+                    : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50",
                 className
             )}
         >
-            {/* Left accent border on hover or active */}
-            <div className={clsx(
-                "absolute left-0 top-0 bottom-0 w-1 transition-all duration-200",
-                active ? "bg-indigo-600 h-full" : "bg-transparent h-0 group-hover:h-full group-hover:bg-indigo-400/50"
-            )} />
-
-            {icon && (
-                <span className={clsx(
-                    "mr-3 transition-colors duration-200",
-                    active ? "text-indigo-600" : "text-gray-400 group-hover:text-indigo-400"
-                )}>
-                    {icon}
-                </span>
-            )}
-
-            <span className="flex-1 text-left truncate">{children}</span>
-
+            <span className="flex-1 truncate text-left">{children}</span>
             {active && (
-                <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="ml-2"
+                <svg
+                    className="w-4 h-4 ml-2 text-indigo-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                 >
-                    <CheckIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                </motion.div>
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2.5"
+                        d="M5 13l4 4L19 7"
+                    />
+                </svg>
             )}
         </button>
     );
 }
-

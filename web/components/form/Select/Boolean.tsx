@@ -10,6 +10,7 @@ export interface BooleanProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  "data-testid"?: string;
 }
 
 const SelectBoolean = ({
@@ -20,6 +21,7 @@ const SelectBoolean = ({
   className,
   disabled,
   required,
+  "data-testid": testId,
 }: BooleanProps) => {
   const [state, setState] = useInput<boolean>(path, false, {
     materialize,
@@ -34,6 +36,7 @@ const SelectBoolean = ({
       className={className}
       disabled={disabled}
       required={required}
+      data-testid={testId}
     >
       <SelectItem value={true}>Sí</SelectItem>
       <SelectItem value={false}>No</SelectItem>

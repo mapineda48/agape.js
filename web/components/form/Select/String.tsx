@@ -12,6 +12,7 @@ export interface StringProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  "data-testid"?: string;
 }
 
 const SelectString = ({
@@ -24,6 +25,7 @@ const SelectString = ({
   className,
   disabled,
   required,
+  "data-testid": testId,
 }: StringProps) => {
   const [state, setState] = useInput<string>(path, "", {
     materialize,
@@ -41,6 +43,7 @@ const SelectString = ({
       className={className}
       disabled={disabled}
       required={required}
+      data-testid={testId}
     >
       {children}
     </Select>

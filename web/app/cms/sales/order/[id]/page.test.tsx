@@ -372,7 +372,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Registrar Entrega / Remisión")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione bodega y confirmee las cantidades/i)).toBeInTheDocument();
             });
         });
 
@@ -412,7 +412,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Registrar Entrega / Remisión")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione bodega y confirmee las cantidades/i)).toBeInTheDocument();
             });
 
             // Get the cancel button inside the modal (last one)
@@ -436,7 +436,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Registrar Entrega / Remisión")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione bodega y confirmee las cantidades/i)).toBeInTheDocument();
             });
 
             const confirmButton = screen.getByRole("button", { name: /Confirmar Entrega/i });
@@ -483,7 +483,7 @@ describe("SalesOrderDetailPage", () => {
 
             // Wait for modal to appear
             await waitFor(() => {
-                expect(screen.getByText("Registrar Entrega / Remisión")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione bodega y confirmee las cantidades/i)).toBeInTheDocument();
             });
 
             // Find the quantity input (inside the modal) and change it to 3
@@ -533,7 +533,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Registrar Entrega / Remisión")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione bodega y confirmee las cantidades/i)).toBeInTheDocument();
             });
 
             const confirmButton = screen.getByRole("button", { name: /Confirmar Entrega/i });
@@ -564,7 +564,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Registrar Entrega / Remisión")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione bodega y confirmee las cantidades/i)).toBeInTheDocument();
             });
 
             const confirmButton = screen.getByRole("button", { name: /Confirmar Entrega/i });
@@ -618,7 +618,9 @@ describe("SalesOrderDetailPage", () => {
             });
 
             // Should show the order number in the message
-            expect(screen.getByText(/han sido entregados exitosamente/i)).toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.getByText(/han sido entregados/i)).toBeInTheDocument();
+            });
 
             // Should have a "Cerrar" button instead of form buttons
             expect(screen.getAllByRole("button", { name: /Cerrar/i }).length).toBeGreaterThan(0);
@@ -645,7 +647,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Generar Factura de Venta")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione las cantidades a facturar/i)).toBeInTheDocument();
             });
         });
 
@@ -671,7 +673,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Generar Factura de Venta")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione las cantidades a facturar/i)).toBeInTheDocument();
             });
 
             // Get the cancel button inside the modal (last one)
@@ -682,7 +684,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.queryByText("Generar Factura de Venta")).not.toBeInTheDocument();
+                expect(screen.queryByText(/Seleccione las cantidades a facturar/i)).not.toBeInTheDocument();
             });
         });
 
@@ -695,7 +697,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Generar Factura de Venta")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione las cantidades a facturar/i)).toBeInTheDocument();
             });
 
             // Get the submit button inside the modal (last one with that text)
@@ -719,7 +721,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Generar Factura de Venta")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione las cantidades a facturar/i)).toBeInTheDocument();
             });
 
             // Get the submit button inside the modal
@@ -752,7 +754,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Generar Factura de Venta")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione las cantidades a facturar/i)).toBeInTheDocument();
             });
 
             // Get the submit button inside the modal
@@ -808,7 +810,9 @@ describe("SalesOrderDetailPage", () => {
             });
 
             // Should show the order number in the message
-            expect(screen.getByText(/han sido facturados exitosamente/i)).toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.getByText(/han sido facturados/i)).toBeInTheDocument();
+            });
 
             // Should have a "Cerrar" button instead of form buttons
             expect(screen.getAllByRole("button", { name: /Cerrar/i }).length).toBeGreaterThan(0);
@@ -904,7 +908,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Registrar Entrega / Remisión")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione bodega y confirmee las cantidades/i)).toBeInTheDocument();
             });
 
             const confirmButton = screen.getByRole("button", { name: /Confirmar Entrega/i });
@@ -927,7 +931,7 @@ describe("SalesOrderDetailPage", () => {
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Generar Factura de Venta")).toBeInTheDocument();
+                expect(screen.getByText(/Seleccione las cantidades a facturar/i)).toBeInTheDocument();
             });
 
             // Get the submit button inside the modal

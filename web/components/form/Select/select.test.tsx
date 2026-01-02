@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Form } from "../index";
 import * as Select from "./index";
@@ -16,6 +16,19 @@ describe("Select Components", () => {
     </EventEmitter>
   );
 
+  const selectOption = async (user: any, testId: string, optionText: string) => {
+    const button = screen.getByTestId(testId);
+    await user.click(button);
+    // As it uses a Portal, we look in document.body or the whole screen
+    const option = await screen.findByText(optionText);
+    await user.click(option);
+  };
+
+  const getSelectValue = (testId: string) => {
+    const hiddenInput = screen.getByTestId(`${testId}-hidden`) as HTMLInputElement;
+    return hiddenInput.value;
+  };
+
   describe("Select.Boolean", () => {
     it("should initialize with default value (false)", () => {
       render(
@@ -24,8 +37,7 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      expect(select.value).toBe("false");
+      expect(getSelectValue("select")).toBe("false");
     });
 
     it("should initialize with true value", () => {
@@ -35,8 +47,7 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      expect(select.value).toBe("true");
+      expect(getSelectValue("select")).toBe("true");
     });
 
     it("should update state on change", async () => {
@@ -47,9 +58,8 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      await user.selectOptions(select, "true");
-      expect(select.value).toBe("true");
+      await selectOption(user, "select", "Sí");
+      expect(getSelectValue("select")).toBe("true");
     });
 
     it("should submit with correct boolean value", async () => {
@@ -65,10 +75,9 @@ describe("Select Components", () => {
         </SubmitWrapper>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
       const submit = screen.getByTestId("submit");
 
-      await user.selectOptions(select, "true");
+      await selectOption(user, "select", "Sí");
       await user.click(submit);
 
       await waitFor(() => {
@@ -110,8 +119,7 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      expect(select.value).toBe("0");
+      expect(getSelectValue("select")).toBe("0");
     });
 
     it("should initialize with provided value", () => {
@@ -124,8 +132,7 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      expect(select.value).toBe("1");
+      expect(getSelectValue("select")).toBe("1");
     });
 
     it("should update state on change", async () => {
@@ -139,9 +146,8 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      await user.selectOptions(select, "5");
-      expect(select.value).toBe("5");
+      await selectOption(user, "select", "Five");
+      expect(getSelectValue("select")).toBe("5");
     });
 
     it("should submit with correct integer value", async () => {
@@ -160,10 +166,9 @@ describe("Select Components", () => {
         </SubmitWrapper>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
       const submit = screen.getByTestId("submit");
 
-      await user.selectOptions(select, "10");
+      await selectOption(user, "select", "Ten");
       await user.click(submit);
 
       await waitFor(() => {
@@ -207,10 +212,12 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      await user.selectOptions(select, "abc");
+      const button = screen.getByTestId("select");
+      await user.click(button);
+      const option = await screen.findByText("Invalid");
+      await user.click(option);
 
-      expect(select.value).toBe("0");
+      expect(getSelectValue("select")).toBe("0");
     });
 
     it("should call onChange with parsed number and option index", async () => {
@@ -226,8 +233,7 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const select = screen.getByTestId("select") as HTMLSelectElement;
-      await user.selectOptions(select, "10");
+      await selectOption(user, "select", "Ten");
 
       expect(handleChange).toHaveBeenCalledWith(10, 1);
     });

@@ -97,7 +97,7 @@ describe("ItemForm", () => {
             });
             expect(screen.getByText("Unidad de Medida")).toBeInTheDocument();
             // Verifica que el select contiene opciones de unidades
-            expect(screen.getByText("Unidad (UND)")).toBeInTheDocument();
+            expect(screen.getAllByText("Unidad (UND)").length).toBeGreaterThan(0);
         });
     });
 
@@ -167,14 +167,16 @@ describe("ItemForm", () => {
             },
         };
 
-        it("should show service details when editing a service", () => {
+        it("should show service details when editing a service", async () => {
             renderForm(mockService);
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
             expect(screen.getByText("Detalles del Servicio")).toBeInTheDocument();
             expect(screen.getByText("Duracion (minutos)")).toBeInTheDocument();
         });
 
-        it("should NOT show inventory details when editing a service", () => {
+        it("should NOT show inventory details when editing a service", async () => {
             renderForm(mockService);
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
             expect(
                 screen.queryByText("Detalles de Inventario")
             ).not.toBeInTheDocument();
@@ -182,15 +184,18 @@ describe("ItemForm", () => {
     });
 
     describe("Type Switching", () => {
-        it("should switch from product to service when clicking service button", () => {
+        it("should switch from product to service when clicking service button", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             // Inicialmente muestra detalles de producto
             expect(screen.getByText("Detalles de Inventario")).toBeInTheDocument();
 
             // Click en Servicio
             const serviceButton = screen.getByText("Servicio").closest("button");
-            fireEvent.click(serviceButton!);
+            await act(async () => {
+                fireEvent.click(serviceButton!);
+            });
 
             // Ahora muestra detalles de servicio
             expect(screen.getByText("Detalles del Servicio")).toBeInTheDocument();
@@ -199,17 +204,22 @@ describe("ItemForm", () => {
             ).not.toBeInTheDocument();
         });
 
-        it("should switch from service to product when clicking product button", () => {
+        it("should switch from service to product when clicking product button", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             // Cambiar a servicio primero
             const serviceButton = screen.getByText("Servicio").closest("button");
-            fireEvent.click(serviceButton!);
+            await act(async () => {
+                fireEvent.click(serviceButton!);
+            });
             expect(screen.getByText("Detalles del Servicio")).toBeInTheDocument();
 
             // Cambiar de vuelta a producto
             const productButton = screen.getByText("Producto").closest("button");
-            fireEvent.click(productButton!);
+            await act(async () => {
+                fireEvent.click(productButton!);
+            });
 
             expect(screen.getByText("Detalles de Inventario")).toBeInTheDocument();
             expect(
@@ -217,15 +227,18 @@ describe("ItemForm", () => {
             ).not.toBeInTheDocument();
         });
 
-        it("should update submit button text when switching types", () => {
+        it("should update submit button text when switching types", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             // Inicialmente muestra "Guardar Producto"
             expect(screen.getByText("Guardar Producto")).toBeInTheDocument();
 
             // Cambiar a servicio
             const serviceButton = screen.getByText("Servicio").closest("button");
-            fireEvent.click(serviceButton!);
+            await act(async () => {
+                fireEvent.click(serviceButton!);
+            });
 
             // Ahora muestra "Guardar Servicio"
             expect(screen.getByText("Guardar Servicio")).toBeInTheDocument();
@@ -233,46 +246,58 @@ describe("ItemForm", () => {
     });
 
     describe("Form Input Interaction", () => {
-        it("should allow typing in the name field", () => {
+        it("should allow typing in the name field", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             const nameInput = screen.getByPlaceholderText(
                 "Ej: Camiseta Premium Algodon"
             );
-            fireEvent.change(nameInput, { target: { value: "Nuevo Producto" } });
+            await act(async () => {
+                fireEvent.change(nameInput, { target: { value: "Nuevo Producto" } });
+            });
 
             expect(nameInput).toHaveValue("Nuevo Producto");
         });
 
-        it("should allow typing in the slogan field", () => {
+        it("should allow typing in the slogan field", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             const sloganInput = screen.getByPlaceholderText(
                 "Ej: La mejor calidad para tu dia a dia"
             );
-            fireEvent.change(sloganInput, { target: { value: "El mejor slogan" } });
+            await act(async () => {
+                fireEvent.change(sloganInput, { target: { value: "El mejor slogan" } });
+            });
 
             expect(sloganInput).toHaveValue("El mejor slogan");
         });
 
-        it("should allow typing in the description field", () => {
+        it("should allow typing in the description field", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             const descriptionInput = screen.getByPlaceholderText(
                 "Describe las caracteristicas y beneficios del producto..."
             );
-            fireEvent.change(descriptionInput, {
-                target: { value: "Una descripción detallada" },
+            await act(async () => {
+                fireEvent.change(descriptionInput, {
+                    target: { value: "Una descripción detallada" },
+                });
             });
 
             expect(descriptionInput).toHaveValue("Una descripción detallada");
         });
 
-        it("should allow changing the price field", () => {
+        it("should allow changing the price field", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             const priceInput = screen.getByPlaceholderText("0.00");
-            fireEvent.change(priceInput, { target: { value: "199.99" } });
+            await act(async () => {
+                fireEvent.change(priceInput, { target: { value: "199.99" } });
+            });
 
             expect(priceInput).toHaveValue(199.99);
         });
@@ -407,20 +432,22 @@ describe("ItemForm", () => {
     });
 
     describe("Unit of Measure Select", () => {
-        it("should display available units of measure", () => {
+        it("should display available units of measure", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
-            expect(screen.getByText("Unidad (UND)")).toBeInTheDocument();
-            expect(screen.getByText("Kilogramo (KG)")).toBeInTheDocument();
-            expect(screen.getByText("Litro (LT)")).toBeInTheDocument();
-            expect(screen.getByText("Metro (MT)")).toBeInTheDocument();
-            expect(screen.getByText("Caja (CJ)")).toBeInTheDocument();
+            expect(screen.getAllByText("Unidad (UND)").length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Kilogramo (KG)").length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Litro (LT)").length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Metro (MT)").length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Caja (CJ)").length).toBeGreaterThan(0);
         });
     });
 
     describe("Media Card", () => {
-        it("should render image gallery section", () => {
+        it("should render image gallery section", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             expect(screen.getByText("Galeria de Imagenes")).toBeInTheDocument();
             expect(
@@ -428,22 +455,25 @@ describe("ItemForm", () => {
             ).toBeInTheDocument();
         });
 
-        it("should render 'Sin imágenes' when no images are present", () => {
+        it("should render 'Sin imágenes' when no images are present", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             expect(screen.getByText("Sin imágenes")).toBeInTheDocument();
         });
     });
 
     describe("Checkbox - Item Enabled", () => {
-        it("should render enabled checkbox", () => {
+        it("should render enabled checkbox", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             expect(screen.getByText("Item Habilitado")).toBeInTheDocument();
         });
 
-        it("should be checked by default on new item", () => {
+        it("should be checked by default on new item", async () => {
             renderForm();
+            await waitFor(() => expect(listCategories).toHaveBeenCalled());
 
             const checkboxes = screen.getAllByRole("checkbox");
             // El primer checkbox debería ser el de "Item Habilitado"

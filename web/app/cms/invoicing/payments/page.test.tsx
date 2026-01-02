@@ -154,14 +154,14 @@ describe("PaymentsPage", () => {
 
         it("should render payment type filter", () => {
             renderPage();
-            expect(screen.getByText("Tipo de Pago")).toBeInTheDocument();
-            expect(screen.getByText("Todos los tipos")).toBeInTheDocument();
+            expect(screen.getAllByText("Tipo de Pago").length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Todos los tipos").length).toBeGreaterThan(0);
         });
 
         it("should render status filter", () => {
             renderPage();
-            expect(screen.getByText("Estado")).toBeInTheDocument();
-            expect(screen.getByText("Todos los estados")).toBeInTheDocument();
+            expect(screen.getAllByText("Estado").length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Todos los estados").length).toBeGreaterThan(0);
         });
 
         it("should render reset filters button", () => {
@@ -172,7 +172,7 @@ describe("PaymentsPage", () => {
         it("should call listPayments when type filter changes", async () => {
             renderPage();
 
-            const typeSelect = screen.getByDisplayValue("Todos los tipos");
+            const typeSelect = screen.getAllByRole("combobox")[0];
 
             await act(async () => {
                 fireEvent.change(typeSelect, { target: { value: "receipt" } });
@@ -188,7 +188,7 @@ describe("PaymentsPage", () => {
         it("should call listPayments when status filter changes", async () => {
             renderPage();
 
-            const statusSelect = screen.getByDisplayValue("Todos los estados");
+            const statusSelect = screen.getAllByRole("combobox")[1];
 
             await act(async () => {
                 fireEvent.change(statusSelect, { target: { value: "posted" } });
@@ -240,7 +240,7 @@ describe("PaymentsPage", () => {
             });
 
             await waitFor(() => {
-                expect(mockNavigate).toHaveBeenCalledWith("new");
+                expect(mockNavigate).toHaveBeenCalledWith("./new");
             });
         });
     });

@@ -223,14 +223,14 @@ describe("SalesOrdersPage", () => {
             renderPage();
             // "Cliente" appears in filter label and table header
             expect(screen.getAllByText("Cliente").length).toBeGreaterThan(0);
-            expect(screen.getByText("Todos los clientes")).toBeInTheDocument();
+            expect(screen.getAllByText("Todos los clientes").length).toBeGreaterThan(0);
         });
 
         it("should render status filter", () => {
             renderPage();
             // "Estado" appears in filter label and table header
             expect(screen.getAllByText("Estado").length).toBeGreaterThan(0);
-            expect(screen.getByText("Todos los estados")).toBeInTheDocument();
+            expect(screen.getAllByText("Todos los estados").length).toBeGreaterThan(0);
         });
 
         it("should render reset filters button", () => {
@@ -241,8 +241,8 @@ describe("SalesOrdersPage", () => {
         it("should call listSalesOrders when client filter changes", async () => {
             renderPage();
 
-            // Find the client filter select by looking for "Todos los clientes"
-            const clientSelect = screen.getByDisplayValue("Todos los clientes");
+            // Find the client filter select
+            const clientSelect = screen.getAllByRole("combobox")[0];
 
             await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
@@ -258,7 +258,7 @@ describe("SalesOrdersPage", () => {
         it("should call listSalesOrders when status filter changes", async () => {
             renderPage();
 
-            const statusSelect = screen.getByDisplayValue("Todos los estados");
+            const statusSelect = screen.getAllByRole("combobox")[1];
 
             await act(async () => {
                 fireEvent.change(statusSelect, { target: { value: "confirmed" } });
