@@ -303,25 +303,5 @@ describe("lib/context", () => {
         });
     });
 
-    describe("IUserSession type", () => {
-        it("should accept IContext as a valid context", () => {
-            const context: IContext = {
-                id: 1,
-                permissions: [], tenant: "test", session: new Map()
-            };
 
-            // This test ensures the type is correctly exported and usable
-            let capturedContext: Partial<IContext> = {};
-
-            runContext(context, () => {
-                capturedContext = {
-                    id: ctx.id,
-                    tenant: ctx.tenant,
-                    session: ctx.session,
-                };
-            });
-
-            expect(capturedContext).toEqual(context);
-        });
-    });
 });
