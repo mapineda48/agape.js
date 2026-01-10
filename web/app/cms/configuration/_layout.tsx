@@ -7,6 +7,7 @@ import {
   Cog6ToothIcon,
   CurrencyDollarIcon,
   UserGroupIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "@/components/router/router-hook";
 
@@ -31,14 +32,19 @@ const TABS = [
     icon: CurrencyDollarIcon,
   },
   {
+    path: "suppliers",
+    label: "Proveedores",
+    icon: UsersIcon,
+  },
+  {
     path: "hr",
     label: "Recursos Humanos",
     icon: UserGroupIcon,
   },
   {
-    path: "suppliers",
-    label: "Proveedores",
-    icon: UsersIcon,
+    path: "security",
+    label: "Seguridad",
+    icon: ShieldCheckIcon,
   },
 ];
 
