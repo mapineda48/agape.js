@@ -3,88 +3,62 @@
  *
  * Express middleware that handles RPC requests by matching endpoints
  * against a pre-registered map of service functions.
+ *
+ * This module exports:
+ * - `createRpcMiddleware`: Factory function for creating the middleware (testable)
+ * - `createModuleMap`: Helper to build the endpoint map from service discovery
+ * - Default export: Pre-configured middleware instance for production use
  */
 
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 import type { Request, Response, NextFunction } from "express";
 import { encode } from "#utils/msgpack";
 import parseError from "./error";
 import { parseArgs } from "./parseArgs";
-import { cwd, findServices, toPublicUrl } from "./path";
 import { CONTENT_TYPES, HTTP_STATUS } from "./constants";
-import { validateEndpointPermission } from "./authorization";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 /** A function exported from a service module */
-type ServiceFunction = (...args: unknown[]) => Promise<unknown> | unknown;
+export type ServiceFunction = (...args: unknown[]) => Promise<unknown> | unknown;
 
 /** Map of export names to their functions */
-type ServiceExports = Record<string, unknown>;
+export type ServiceExports = Record<string, unknown>;
+
+/** Map of endpoint paths to their handler functions */
+export type ModuleMap = Map<string, ServiceFunction>;
 
 /** Express middleware function signature */
 type Middleware = (req: Request, res: Response, next: NextFunction) => void;
 
-// ============================================================================
-// RPC Endpoint Registry
-// ============================================================================
-
 /**
- * Map of RPC endpoints to their handler functions.
- * Key: endpoint path (e.g., "/users/getById")
- * Value: the service function to call
- */
-const rpcEndpoints = new Map<string, ServiceFunction>();
-
-/**
- * Registers all service functions as RPC endpoints.
- */
-async function registerServiceEndpoints(): Promise<void> {
-  for await (const relativePath of findServices()) {
-    const absolutePath = path.join(cwd, relativePath);
-    const moduleUrl = pathToFileURL(absolutePath).href;
-    const publicUrl = toPublicUrl(relativePath);
-
-    const module = (await import(moduleUrl)) as ServiceExports;
-
-    for (const [exportName, exportValue] of Object.entries(module)) {
-      if (!isServiceFunction(exportValue)) {
-        continue;
-      }
-
-      const endpoint = getEndpointPath(publicUrl, exportName);
-      rpcEndpoints.set(endpoint, exportValue);
-    }
-  }
-}
-
-/**
- * Generates the endpoint path for an exported function.
+ * Permission validator function type.
+ * Validates if the current request has permission to access the endpoint.
  *
- * Default exports map to the module URL root.
- * Named exports append the export name to the module URL.
- *
- * @example
- * getEndpointPath("/users", "getById") → "/users/getById"
- * getEndpointPath("/users", "default") → "/users"
+ * @param endpoint - The RPC endpoint path
+ * @throws Should throw an error if permission is denied
  */
-function getEndpointPath(moduleUrl: string, exportName: string): string {
-  const suffix = exportName !== "default" ? exportName : "";
-  return path.posix.join("/", moduleUrl, suffix);
-}
+export type PermissionValidator = (endpoint: string) => Promise<void> | void;
 
 /**
- * Checks if a module export is a valid service function.
+ * Options for creating the RPC middleware.
  */
-function isServiceFunction(value: unknown): value is ServiceFunction {
-  return typeof value === "function";
-}
+export interface CreateMiddlewareOptions {
+  /**
+   * Map of RPC endpoints to their handler functions.
+   * Key: endpoint path (e.g., "/users/getById")
+   * Value: the service function to call
+   */
+  moduleMap: ModuleMap;
 
-// Execute registration during module initialization
-await registerServiceEndpoints();
+  /**
+   * Optional permission validator function.
+   * Called before executing the handler to validate RBAC permissions.
+   * If not provided, no permission validation is performed.
+   */
+  validatePermission?: PermissionValidator;
+}
 
 // ============================================================================
 // Response Helpers
@@ -117,50 +91,170 @@ function acceptsMsgpack(req: Request): boolean {
 }
 
 // ============================================================================
-// RPC Middleware
+// RPC Middleware Factory
 // ============================================================================
 
 /**
- * RPC middleware that handles incoming requests.
+ * Creates an RPC middleware with the provided configuration.
  *
- * This middleware:
- * 1. Checks if the request accepts MessagePack (via Accept header)
- * 2. Looks up the endpoint in the registered RPC endpoints map
- * 3. If found, executes the RPC handler and returns the response
- * 4. If not found, passes control to the next middleware
+ * This factory function enables:
+ * - **Dependency Injection**: Pass custom moduleMap and permission validator
+ * - **Unit Testing**: Mock dependencies for isolated testing
+ * - **Flexibility**: Different configurations for different environments
  *
- * @param req - Express request object
- * @param res - Express response object
- * @param next - Express next function
+ * @param options - Configuration options for the middleware
+ * @returns Express middleware function
+ *
+ * @example
+ * ```typescript
+ * // Basic usage with just a module map
+ * const moduleMap = new Map();
+ * moduleMap.set("/users/getById", getByIdHandler);
+ *
+ * const middleware = createRpcMiddleware({ moduleMap });
+ * app.use(middleware);
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // With permission validation
+ * const middleware = createRpcMiddleware({
+ *   moduleMap,
+ *   validatePermission: async (endpoint) => {
+ *     if (!hasAccess(endpoint)) {
+ *       throw new ForbiddenError("Access denied");
+ *     }
+ *   }
+ * });
+ * ```
  */
-const rpcMiddleware: Middleware = async (req, res, next) => {
-  // Only handle requests that explicitly accept msgpack
-  if (!acceptsMsgpack(req)) {
-    next();
-    return;
+export function createRpcMiddleware(options: CreateMiddlewareOptions): Middleware {
+  const { moduleMap, validatePermission } = options;
+
+  const rpcMiddleware: Middleware = async (req, res, next) => {
+    // Only handle requests that explicitly accept msgpack
+    if (!acceptsMsgpack(req)) {
+      next();
+      return;
+    }
+
+    // Look up the endpoint in our registry
+    const endpoint = req.path;
+    const handler = moduleMap.get(endpoint);
+
+    // If no handler found, pass to next middleware
+    if (!handler) {
+      next();
+      return;
+    }
+
+    // Execute the RPC handler
+    try {
+      // 🔐 RBAC: Validate permissions before executing handler (if validator provided)
+      if (validatePermission) {
+        await validatePermission(endpoint);
+      }
+
+      const args = await parseArgs(req);
+      const result = await handler.call(null, ...args);
+      sendSuccess(res, result);
+    } catch (error) {
+      sendError(res, error);
+    }
+  };
+
+  return rpcMiddleware;
+}
+
+// ============================================================================
+// Module Map Builder
+// ============================================================================
+
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { cwd, findServices, toPublicUrl } from "./path";
+
+/**
+ * Generates the endpoint path for an exported function.
+ *
+ * Default exports map to the module URL root.
+ * Named exports append the export name to the module URL.
+ *
+ * @example
+ * getEndpointPath("/users", "getById") → "/users/getById"
+ * getEndpointPath("/users", "default") → "/users"
+ */
+function getEndpointPath(moduleUrl: string, exportName: string): string {
+  const suffix = exportName !== "default" ? exportName : "";
+  return path.posix.join("/", moduleUrl, suffix);
+}
+
+/**
+ * Checks if a module export is a valid service function.
+ */
+function isServiceFunction(value: unknown): value is ServiceFunction {
+  return typeof value === "function";
+}
+
+/**
+ * Creates a module map by discovering and loading all service modules.
+ *
+ * This function:
+ * 1. Scans the service directory for TypeScript/JavaScript files
+ * 2. Imports each module dynamically
+ * 3. Registers all exported functions as RPC endpoints
+ *
+ * @returns Promise resolving to the populated module map
+ *
+ * @example
+ * ```typescript
+ * const moduleMap = await createModuleMap();
+ * const middleware = createRpcMiddleware({ moduleMap });
+ * ```
+ */
+export async function createModuleMap(): Promise<ModuleMap> {
+  const rpcEndpoints: ModuleMap = new Map();
+
+  for await (const relativePath of findServices()) {
+    const absolutePath = path.join(cwd, relativePath);
+    const moduleUrl = pathToFileURL(absolutePath).href;
+    const publicUrl = toPublicUrl(relativePath);
+
+    const module = (await import(moduleUrl)) as ServiceExports;
+
+    for (const [exportName, exportValue] of Object.entries(module)) {
+      if (!isServiceFunction(exportValue)) {
+        continue;
+      }
+
+      const endpoint = getEndpointPath(publicUrl, exportName);
+      rpcEndpoints.set(endpoint, exportValue);
+    }
   }
 
-  // Look up the endpoint in our registry
-  const endpoint = req.path;
-  const handler = rpcEndpoints.get(endpoint);
+  return rpcEndpoints;
+}
 
-  // If no handler found, pass to next middleware
-  if (!handler) {
-    next();
-    return;
-  }
+// ============================================================================
+// Default Production Instance
+// ============================================================================
 
-  // Execute the RPC handler
-  try {
-    // 🔐 RBAC: Validate permissions before executing handler
-    await validateEndpointPermission(endpoint);
+import { validateEndpointPermission } from "./authorization";
 
-    const args = await parseArgs(req);
-    const result = await handler.call(null, ...args);
-    sendSuccess(res, result);
-  } catch (error) {
-    sendError(res, error);
-  }
-};
+/**
+ * Pre-configured RPC middleware for production use.
+ *
+ * This instance is created with:
+ * - Auto-discovered service modules from the `svc` directory
+ * - Full RBAC permission validation
+ *
+ * For unit testing or custom configurations, use `createRpcMiddleware` directly.
+ */
+const moduleMap = await createModuleMap();
+
+const rpcMiddleware = createRpcMiddleware({
+  moduleMap,
+  validatePermission: validateEndpointPermission,
+});
 
 export default rpcMiddleware;

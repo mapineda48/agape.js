@@ -36,6 +36,17 @@
 // Re-export the main middleware for server-side use
 export { default } from "./middleware";
 
+// Re-export factory function and types for unit testing
+export {
+    createRpcMiddleware,
+    createModuleMap,
+    type ServiceFunction,
+    type ServiceExports,
+    type ModuleMap,
+    type PermissionValidator,
+    type CreateMiddlewareOptions,
+} from "./middleware";
+
 // Re-export types for external use
 export type { DatabaseError, UploadedFile, UploadedFileMetadata } from "./types";
 
