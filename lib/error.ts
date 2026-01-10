@@ -7,11 +7,7 @@
 /**
  * Error de regla de negocio.
  * Se lanza cuando una operación viola una regla de negocio invariante.
- *
- * @example
- * ```ts
- * throw new BusinessRuleError("No se puede deshabilitar porque tiene ítems activos");
- * ```
+ * 
  */
 export class BusinessRuleError extends Error {
   public readonly code = "BUSINESS_RULE_ERROR";
@@ -29,11 +25,7 @@ export class BusinessRuleError extends Error {
 /**
  * Error de recurso no encontrado.
  * Se lanza cuando se intenta operar sobre un recurso que no existe.
- *
- * @example
- * ```ts
- * throw new NotFoundError("Categoría con ID 123 no encontrada");
- * ```
+ * 
  */
 export class NotFoundError extends Error {
   public readonly code = "NOT_FOUND_ERROR";
@@ -50,11 +42,7 @@ export class NotFoundError extends Error {
 /**
  * Error de validación.
  * Se lanza cuando los datos de entrada no cumplen con las validaciones requeridas.
- *
- * @example
- * ```ts
- * throw new ValidationError("El código es requerido");
- * ```
+ * 
  */
 export class ValidationError extends Error {
   public readonly code = "VALIDATION_ERROR";
@@ -73,11 +61,7 @@ export class ValidationError extends Error {
 /**
  * Error de conflicto.
  * Se lanza cuando existe un conflicto con el estado actual (ej: unicidad).
- *
- * @example
- * ```ts
- * throw new ConflictError("Ya existe una categoría con ese nombre");
- * ```
+ * 
  */
 export class ConflictError extends Error {
   public readonly code = "CONFLICT_ERROR";
@@ -94,11 +78,7 @@ export class ConflictError extends Error {
 /**
  * Error de permiso denegado.
  * Se lanza cuando el usuario no tiene los permisos necesarios para una operación.
- *
- * @example
- * ```ts
- * throw new ForbiddenError("Permiso requerido: sales.flow.deliver");
- * ```
+ * 
  */
 export class ForbiddenError extends Error {
   public readonly code = "FORBIDDEN_ERROR";

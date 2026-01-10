@@ -15,15 +15,7 @@ import type {
  * @param params Filtros de listado o boolean para compatibilidad
  * @returns Lista de tipos de cliente ordenados por ID descendente
  * @permission crm.client_type.read
- *
- * @example
- * ```ts
- * // Obtener solo tipos activos
- * const activeTypes = await listClientTypes();
- *
- * // Obtener todos los tipos
- * const allTypes = await listClientTypes({ activeOnly: false });
- * ```
+ * *
  */
 export async function listClientTypes(
   params: IListClientTypesParams | boolean = true
@@ -48,14 +40,7 @@ export async function listClientTypes(
  * @param id Identificador único del tipo de cliente
  * @returns El tipo de cliente o undefined si no existe
  * @permission crm.client_type.read
- *
- * @example
- * ```ts
- * const type = await getClientTypeById(1);
- * if (type) {
- *   console.log(type.name);
- * }
- * ```
+ * *
  */
 export async function getClientTypeById(
   id: number
@@ -76,22 +61,7 @@ export async function getClientTypeById(
  * @param payload Datos del tipo de cliente a insertar o actualizar
  * @returns El tipo de cliente insertado o actualizado
  * @permission crm.client_type.manage
- *
- * @example
- * ```ts
- * // Crear nuevo tipo
- * const [newType] = await upsertClientType({
- *   name: "VIP",
- *   isEnabled: true,
- * });
- *
- * // Actualizar tipo existente
- * const [updated] = await upsertClientType({
- *   id: 1,
- *   name: "VIP Premium",
- *   isEnabled: true,
- * });
- * ```
+ * *
  */
 export async function upsertClientType(
   payload: NewClientType
@@ -126,14 +96,7 @@ export async function upsertClientType(
  * @param payload ID y nuevo estado del tipo de cliente.
  * @returns Resultado de la operación con el tipo de cliente actualizado.
  * @permission crm.client_type.manage
- *
- * @example
- * ```ts
- * const result = await toggleClientType({ id: 1, isEnabled: false });
- * if (result.success) {
- *   console.log("Tipo de cliente deshabilitado");
- * }
- * ```
+ * *
  */
 export async function toggleClientType(
   payload: IToggleClientType
@@ -183,11 +146,7 @@ export async function toggleClientType(
  * @deprecated Usar toggleClientType con isEnabled=false en su lugar.
  * @param id Identificador único del tipo de cliente a eliminar
  * @permission crm.client_type.manage
- *
- * @example
- * ```ts
- * await deleteClientType(1);
- * ```
+ * *
  */
 export async function deleteClientType(id: number) {
   await db.delete(clientType).where(eq(clientType.id, id));

@@ -104,29 +104,6 @@ function acceptsMsgpack(req: Request): boolean {
  *
  * @param options - Configuration options for the middleware
  * @returns Express middleware function
- *
- * @example
- * ```typescript
- * // Basic usage with just a module map
- * const moduleMap = new Map();
- * moduleMap.set("/users/getById", getByIdHandler);
- *
- * const middleware = createRpcMiddleware({ moduleMap });
- * app.use(middleware);
- * ```
- *
- * @example
- * ```typescript
- * // With permission validation
- * const middleware = createRpcMiddleware({
- *   moduleMap,
- *   validatePermission: async (endpoint) => {
- *     if (!hasAccess(endpoint)) {
- *       throw new ForbiddenError("Access denied");
- *     }
- *   }
- * });
- * ```
  */
 export function createRpcMiddleware(options: CreateMiddlewareOptions): Middleware {
   const { moduleMap, validatePermission } = options;
@@ -205,12 +182,6 @@ function isServiceFunction(value: unknown): value is ServiceFunction {
  * 3. Registers all exported functions as RPC endpoints
  *
  * @returns Promise resolving to the populated module map
- *
- * @example
- * ```typescript
- * const moduleMap = await createModuleMap();
- * const middleware = createRpcMiddleware({ moduleMap });
- * ```
  */
 export async function createModuleMap(): Promise<ModuleMap> {
   const rpcEndpoints: ModuleMap = new Map();

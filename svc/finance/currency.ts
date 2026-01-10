@@ -223,16 +223,7 @@ export async function getCurrencyUsageInfo(
  * @param payload Datos de la moneda.
  * @returns Array con la moneda creada/actualizada.
  * @permission finance.currency.manage
- *
- * @example
- * ```ts
- * const [currency] = await upsertCurrency({
- *   code: "usd",
- *   fullName: "Dólar Estadounidense",
- *   symbol: "$",
- * });
- * console.log(currency.code); // "USD"
- * ```
+ * *
  */
 export async function upsertCurrency(
   payload: IUpsertCurrency
@@ -403,12 +394,7 @@ export async function toggleCurrency(
  * @param payload DTO con el ID de la nueva moneda base.
  * @returns Resultado de la operación.
  * @permission finance.currency.manage
- *
- * @example
- * ```ts
- * const result = await setBaseCurrency({ id: 2 });
- * console.log(result.newBaseCurrency.code); // "USD"
- * ```
+ * *
  */
 export async function setBaseCurrency(
   payload: ISetBaseCurrency

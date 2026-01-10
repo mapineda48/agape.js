@@ -63,11 +63,7 @@ function toDto(record: typeof unitOfMeasure.$inferSelect): IUnitOfMeasure {
  * @param params Filtros de listado.
  * @returns Lista de unidades de medida.
  * @permission inventory.unit_of_measure.read
- *
- * @example
- * ```ts
- * const uoms = await listUnitOfMeasures({ activeOnly: true });
- * ```
+ * *
  */
 export async function listUnitOfMeasures(
   params: IListUnitOfMeasureParams = {}
@@ -227,12 +223,7 @@ export async function getUnitOfMeasureUsageInfo(
  * @param payload Datos de la UOM.
  * @returns Array con la UOM creada/actualizada.
  * @permission inventory.unit_of_measure.manage
- *
- * @example
- * ```ts
- * const [uom] = await upsertUnitOfMeasure({ code: "kg", fullName: "Kilogramo" });
- * console.log(uom.code); // "KG"
- * ```
+ * *
  */
 export async function upsertUnitOfMeasure(
   payload: IUpsertUnitOfMeasure
@@ -314,14 +305,7 @@ export async function upsertUnitOfMeasure(
  * @param payload DTO con ID y nuevo estado.
  * @returns Resultado de la operación con mensaje informativo.
  * @permission inventory.unit_of_measure.manage
- *
- * @example
- * ```ts
- * const result = await toggleUnitOfMeasure({ id: 1, isEnabled: false });
- * if (!result.success) {
- *   console.log(result.message);
- * }
- * ```
+ * *
  */
 export async function toggleUnitOfMeasure(
   payload: IToggleUnitOfMeasure

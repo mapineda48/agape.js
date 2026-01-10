@@ -112,20 +112,7 @@ function validateDocumentSeries(
  * @returns Serie creada o actualizada
  * @throws DocumentSeriesValidationError si la validación falla
  * @permission numbering.series.manage
- *
- * @example
- * ```ts
- * const series = await upsertDocumentSeries({
- *   documentTypeId: 1,
- *   seriesCode: "F001",
- *   prefix: "FAC-",
- *   startNumber: 1,
- *   endNumber: 999999,
- *   validFrom: new DateTime("2025-01-01"),
- *   isActive: true,
- *   isDefault: true,
- * });
- * ```
+ * *
  */
 export async function upsertDocumentSeries(
   payload: Omit<NewDocumentSeries, "currentNumber">

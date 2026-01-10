@@ -62,12 +62,7 @@ async function countUsersWithDocumentType(
  * @param params Filtros de listado.
  * @returns Lista de tipos de documento.
  * @permission core.document_type.read
- *
- * @example
- * ```ts
- * // Solo tipos de documento activos para personas
- * const types = await listDocumentTypes({ activeOnly: true, personOnly: true });
- * ```
+ * *
  */
 export async function listDocumentTypes(
   params: IListDocumentTypesParams = {}
@@ -156,26 +151,7 @@ export async function getDocumentTypeByCode(
  * @param payload Datos del tipo de documento.
  * @returns Array con el tipo de documento creado/actualizado.
  * @permission core.document_type.manage
- *
- * @example
- * ```ts
- * // Crear nuevo tipo de documento
- * const [docType] = await upsertDocumentType({
- *   code: "CC",
- *   name: "Cédula de Ciudadanía",
- *   appliesToPerson: true,
- *   appliesToCompany: false,
- * });
- *
- * // Actualizar existente
- * const [updated] = await upsertDocumentType({
- *   id: 1,
- *   code: "CC",
- *   name: "Cédula de Ciudadanía Colombiana",
- *   appliesToPerson: true,
- *   appliesToCompany: false,
- *   });
- * ```
+ * *
  */
 export async function upsertDocumentType(
   payload: IUpsertDocumentType
@@ -246,18 +222,7 @@ export async function upsertDocumentType(
  * @param payload ID y nuevo estado del tipo de documento.
  * @returns Resultado de la operación con el tipo de documento actualizado.
  * @permission core.document_type.manage
- *
- * @example
- * ```ts
- * // Deshabilitar tipo de documento
- * const result = await toggleDocumentType({ id: 1, isEnabled: false });
- *
- * if (result.success) {
- *   console.log("Tipo de documento deshabilitado");
- * } else {
- *   console.error(result.message);
- * }
- * ```
+ * *
  */
 export async function toggleDocumentType(
   payload: IToggleDocumentType

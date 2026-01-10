@@ -17,14 +17,6 @@ import type { History } from "history";
  * @param initialPath - The initial pathname for the mock history (default: '/')
  * @returns A mock history object compatible with the History interface
  *
- * @example
- * ```typescript
- * const mockHistory = createMockHistory('/initial/path');
- * router.navigator.history = mockHistory;
- *
- * // Later in test...
- * expect(mockHistory.push).toHaveBeenCalledWith('/new/path', state);
- * ```
  */
 export function createMockHistory(initialPath = "/"): History {
   let historyListener: any = null;

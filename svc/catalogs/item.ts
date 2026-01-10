@@ -105,17 +105,6 @@ async function validateCategoryHierarchy(
  * @returns Ítem encontrado con sus detalles o undefined si no existe
  * @permission inventory.item.read
  *
- * @example
- * ```ts
- * const item = await getItemById(1);
- * if (item) {
- *   if (item.good) {
- *     console.log("Es un producto:", item.good.uomId);
- *   } else if (item.service) {
- *     console.log("Es un servicio:", item.service.durationMinutes);
- *   }
- * }
- * ```
  */
 export async function getItemById(
   id: number
@@ -279,36 +268,7 @@ export async function listItems(
  * @permission inventory.item.manage
  * @throws Error si se proporcionan ambas propiedades (good y service)
  * @throws Error si no se proporciona ninguna propiedad de entidad
- *
- * @example
- * ```ts
- * // Crear ítem bien físico
- * const newGood = await upsertItem({
- *   code: "PROD-001",
- *   fullName: "Producto Ejemplo",
- *   basePrice: new Decimal("100.00"),
- *   isEnabled: true,
- *   categoryId: 1,
- *   images: [],
- *   good: {
- *     uomId: 1,
- *     minStock: new Decimal("10"),
- *   }
- * });
- *
- * // Crear ítem servicio
- * const newService = await upsertItem({
- *   code: "SVC-001",
- *   fullName: "Servicio Ejemplo",
- *   basePrice: new Decimal("50.00"),
- *   isEnabled: true,
- *   images: [],
- *   service: {
- *     durationMinutes: 60,
- *     isRecurring: false,
- *   }
- * });
- * ```
+ * *
  */
 export async function upsertItem(
   payload: IItemGood

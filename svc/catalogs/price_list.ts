@@ -53,11 +53,7 @@ function toDto(record: typeof priceList.$inferSelect): IPriceList {
  * @param params Filtros de listado.
  * @returns Lista de listas de precios.
  * @permission inventory.price_list.read
- *
- * @example
- * ```ts
- * const priceLists = await listPriceLists({ activeOnly: true });
- * ```
+ * *
  */
 export async function listPriceLists(
   params: IListPriceListsParams = {}
@@ -171,15 +167,7 @@ export async function getPriceListUsageInfo(
  * @param payload Datos de la lista de precios.
  * @returns Array con la lista creada/actualizada.
  * @permission inventory.price_list.manage
- *
- * @example
- * ```ts
- * const [list] = await upsertPriceList({
- *   code: "RETAIL",
- *   fullName: "Precio Retail",
- *   isDefault: true,
- * });
- * ```
+ * *
  */
 export async function upsertPriceList(
   payload: IUpsertPriceList

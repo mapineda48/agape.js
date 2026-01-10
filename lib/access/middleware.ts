@@ -131,23 +131,6 @@ function sendMsgPack(res: Response, payload: unknown, status = 200): void {
  * @param options - Configuration options for the middleware
  * @returns Express router with authentication routes
  *
- * @example
- * ```typescript
- * // Basic usage with custom user services
- * const authMiddleware = createAuthMiddleware({
- *   secret: 'my-jwt-secret',
- *   findByCredentials: async (username, password) => {
- *     // Custom authentication logic
- *     return await myUserService.authenticate(username, password);
- *   },
- *   findById: async (id) => {
- *     // Custom user lookup
- *     return await myUserService.getById(id);
- *   }
- * });
- *
- * app.use(authMiddleware);
- * ```
  */
 export function createAuthMiddleware(options: CreateAuthOptions) {
   const { secret, findByCredentials, findById } = options;

@@ -16,18 +16,7 @@ import DateTime from "../utils/data/DateTime";
  * Sin snapshots, si un cliente cambia de dirección después de emitida
  * una factura, el documento histórico mostraría la dirección nueva,
  * alterando la historia legal.
- *
- * @example
- * ```ts
- * const snapshot: AddressSnapshot = {
- *   street: "Calle 123 #45-67",
- *   city: "Bogotá",
- *   state: "Cundinamarca",
- *   zipCode: "110111",
- *   countryCode: "CO",
- *   label: "Oficina Principal"
- * };
- * ```
+ * 
  */
 export interface AddressSnapshot {
   /** Línea principal de la dirección */

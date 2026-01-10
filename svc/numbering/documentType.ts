@@ -13,15 +13,7 @@ import { eq } from "drizzle-orm";
  * @param enabledOnly - Si true, retorna solo tipos habilitados (default: true)
  * @returns Lista de tipos de documento
  * @permission numbering.type.read
- *
- * @example
- * ```ts
- * // Listar solo tipos habilitados
- * const types = await listDocumentTypes();
- *
- * // Listar todos los tipos
- * const allTypes = await listDocumentTypes(false);
- * ```
+ * *
  */
 export async function listDocumentTypes(
   enabledOnly = true
@@ -78,25 +70,7 @@ export async function getDocumentTypeByCode(
  * @param payload - Datos del tipo de documento
  * @returns Tipo de documento creado o actualizado
  * @permission numbering.type.manage
- *
- * @example
- * ```ts
- * // Crear nuevo tipo
- * const newType = await upsertDocumentType({
- *   code: "FAC",
- *   name: "Factura",
- *   module: "billing",
- *   isEnabled: true,
- * });
- *
- * // Actualizar tipo existente
- * const updated = await upsertDocumentType({
- *   id: 1,
- *   code: "FAC",
- *   name: "Factura Actualizada",
- *   isEnabled: false,
- * });
- * ```
+ * *
  */
 export async function upsertDocumentType(
   payload: NewDocumentType

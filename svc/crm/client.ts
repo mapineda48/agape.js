@@ -33,14 +33,7 @@ const salespersonPerson = alias(person, "salesperson_person");
  * @param id - Identificador único del cliente
  * @returns Cliente con datos de persona y tipo, o undefined si no existe
  * @permission crm.client.read
- *
- * @example
- * ```ts
- * const client = await getClientById(1);
- * if (client) {
- *   console.log(client.firstName, client.lastName);
- * }
- * ```
+ * *
  */
 export async function getClientById(id: number): Promise<ClientDto> {
   const [match] = await db
@@ -166,22 +159,7 @@ export async function getClientByDocument(
  * @param params - Parámetros de búsqueda y paginación
  * @returns Lista de clientes y opcionalmente el total de registros
  * @permission crm.client.read
- *
- * @example
- * ```ts
- * // Obtener primera página
- * const { clients, totalCount } = await listClients({
- *   pageIndex: 0,
- *   pageSize: 10,
- *   includeTotalCount: true,
- * });
- *
- * // Filtrar por nombre
- * const { clients } = await listClients({
- *   fullName: "John",
- *   isActive: true,
- * });
- * ```
+ * *
  */
 export async function listClients(
   params: ListClientsParams = {}
@@ -317,31 +295,7 @@ export async function listClients(
  * @param payload - Datos del cliente a insertar o actualizar
  * @returns El cliente creado o actualizado con sus datos relacionados
  * @permission crm.client.manage
- *
- * @example
- * ```ts
- * // Crear nuevo cliente con campos comerciales
- * const newClient = await upsertClient({
- *   user: {
- *     documentTypeId: 1,
- *     documentNumber: "123456",
- *     person: {
- *       firstName: "John",
- *       lastName: "Doe",
- *     },
- *   },
- *   typeId: 1,
- *   active: true,
- *   priceListId: 1,
- *   paymentTermsId: 1,
- *   creditLimit: 5000000,
- *   contacts: {
- *     email: "john@example.com",
- *     phone: "+57 1 234 5678",
- *     mobile: "+57 300 123 4567",
- *   },
- * });
- * ```
+ * *
  */
 export async function upsertClient(
   payload: UpsertClientPayload

@@ -41,10 +41,6 @@ import type {
  * @returns Lista de categorías.
  * @permission inventory.category.read
  *
- * @example
- * ```ts
- * const categories = await listCategories({ activeOnly: true });
- * ```
  */
 export async function listCategories(
   params: IListCategoriesParams = {}
@@ -121,11 +117,7 @@ export async function getCategoryById(
  * @param payload Datos de la categoría.
  * @returns Array con la categoría creada/actualizada.
  * @permission inventory.category.manage
- *
- * @example
- * ```ts
- * const [cat] = await upsertCategory({ fullName: "Electrónicos" });
- * ```
+ * *
  */
 export async function upsertCategory(
   payload: IUpsertCategory
@@ -165,13 +157,7 @@ export async function upsertCategory(
  * @param cascade Si es true, deshabilita subcategorías en cascada.
  * @returns Resultado de la operación.
  * @permission inventory.category.manage
- *
- * @example
- * ```ts
- * // Deshabilitar con cascada
- * const result = await toggleCategory({ id: 1, isEnabled: false }, true);
- * console.log(`Subcategorías afectadas: ${result.affectedSubcategories}`);
- * ```
+ * *
  */
 export async function toggleCategory(
   payload: IToggleCategory,
@@ -252,11 +238,7 @@ export async function toggleCategory(
  * @param params Filtros de listado.
  * @returns Lista de subcategorías.
  * @permission inventory.category.read
- *
- * @example
- * ```ts
- * const subcats = await listSubcategories({ categoryId: 1, activeOnly: true });
- * ```
+ * *
  */
 export async function listSubcategories(
   params: IListSubcategoriesParams = {}
@@ -338,14 +320,7 @@ export async function getSubcategoryWithCategory(
  * @param payload Datos de la subcategoría.
  * @returns Array con la subcategoría creada/actualizada.
  * @permission inventory.category.manage
- *
- * @example
- * ```ts
- * const [subcat] = await upsertSubcategory({
- *   fullName: "Teléfonos",
- *   categoryId: 1,
- * });
- * ```
+ * *
  */
 export async function upsertSubcategory(
   payload: IUpsertSubcategory

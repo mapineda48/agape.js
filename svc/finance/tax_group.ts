@@ -239,14 +239,7 @@ export async function getTaxUsageInfo(id: number): Promise<ITaxUsageInfo> {
  * @param payload DTO con ID y nuevo estado.
  * @returns Resultado de la operación.
  * @permission finance.tax.manage
- *
- * @example
- * ```ts
- * const result = await toggleTax({ id: 1, isEnabled: false });
- * if (!result.success) {
- *   console.log(result.message);
- * }
- * ```
+ * *
  */
 export async function toggleTax(
   payload: IToggleTax
@@ -486,15 +479,7 @@ export async function getTaxGroupUsageInfo(
  * @param payload Datos del grupo de impuestos.
  * @returns Array con el grupo creado/actualizado.
  * @permission finance.tax_group.manage
- *
- * @example
- * ```ts
- * const [group] = await upsertTaxGroup({
- *   code: "GRAVADO19",
- *   fullName: "Productos Gravados 19%",
- *   taxIds: [1, 2], // IDs de impuestos
- * });
- * ```
+ * *
  */
 export async function upsertTaxGroup(
   payload: IUpsertTaxGroup

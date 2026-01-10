@@ -66,13 +66,7 @@ const DEFAULT_CONFIG: ISystemConfig = {
  *
  * @returns Configuración del sistema consolidada.
  * @permission config.system.read
- *
- * @example
- * ```ts
- * const config = await getSystemConfig();
- * console.log(config.currency); // "COP"
- * console.log(config.companyName); // "Mi Empresa S.A.S."
- * ```
+ * *
  */
 export async function getSystemConfig(): Promise<ISystemConfig> {
   const keys = Object.values(CONFIG_KEY_MAP);
@@ -105,12 +99,7 @@ export async function getSystemConfig(): Promise<ISystemConfig> {
  * @param key Clave de configuración.
  * @returns Valor de configuración o undefined si no existe.
  * @permission config.system.read
- *
- * @example
- * ```ts
- * const currency = await getConfigValue("system.currency");
- * // currency = "COP"
- * ```
+ * *
  */
 export async function getConfigValue(
   key: SystemConfigKey
@@ -136,14 +125,7 @@ export async function getConfigValue(
  *
  * @throws Error si `decimalPlaces` está fuera del rango permitido.
  * @permission config.system.manage
- *
- * @example
- * ```ts
- * await updateSystemConfig({
- *   companyName: "Mi Nueva Empresa S.A.S.",
- *   currency: "USD",
- * });
- * ```
+ * *
  */
 export async function updateSystemConfig(
   payload: IUpdateSystemConfig
@@ -182,11 +164,7 @@ export async function updateSystemConfig(
  * @param key Clave de configuración.
  * @param value Valor a establecer.
  * @permission config.system.manage
- *
- * @example
- * ```ts
- * await setConfigValue("system.custom.feature", true);
- * ```
+ * *
  */
 export async function setConfigValue(
   key: SystemConfigKey,

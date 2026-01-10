@@ -16,14 +16,7 @@ import { and, eq } from "drizzle-orm";
  * @param id - Identificador único del usuario
  * @returns Usuario encontrado o undefined si no existe
  * @permission core.user.read
- *
- * @example
- * ```ts
- * const user = await getUserById(1);
- * if (user) {
- *   console.log(user.documentNumber);
- * }
- * ```
+ * *
  */
 export async function getUserById(id: number) {
   const [record] = await db.select().from(user).where(eq(user.id, id));
@@ -84,30 +77,7 @@ export async function getUserByDocument(
  * @throws Error si se proporcionan ambas propiedades (person y company)
  * @throws Error si no se proporciona ninguna propiedad de entidad
  * @permission core.user.manage
- *
- * @example
- * ```ts
- * // Crear usuario persona
- * const newPerson = await upsertUser({
- *   documentTypeId: 1,
- *   documentNumber: "123456",
- *   email: "john@example.com",
- *   person: {
- *     firstName: "John",
- *     lastName: "Doe"
- *   }
- * });
- *
- * // Crear usuario compañía
- * const newCompany = await upsertUser({
- *   documentTypeId: 2,
- *   documentNumber: "900123",
- *   company: {
- *     legalName: "Acme Corp",
- *     tradeName: "Acme"
- *   }
- * });
- * ```
+ * *
  */
 export async function upsertUser(
   payload: IUserPerson
