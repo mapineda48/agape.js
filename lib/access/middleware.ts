@@ -4,6 +4,10 @@
  * Express middleware that handles user authentication via JWT tokens.
  * Supports login, logout, session validation, and route protection.
  *
+ * JWT Token Strategy:
+ * - Stores id, tenant, and permissions in the token
+ * - Full user data is fetched from database only when needed
+ *
  * This module exports:
  * - `createAuthMiddleware`: Factory function for creating the middleware (testable)
  * - Default export: Pre-configured middleware instance for production use
@@ -12,8 +16,10 @@
 import express, { type Response } from "express";
 
 import Jwt from "./Jwt";
-import ctx, { runContext, type IContext, type IUserSession } from "../context";
+import ctx, { runContext, type IContext } from "../context";
 import { decode, encode } from "#utils/msgpack";
+import { findUserByCredentials, findUserById, type IUserSession } from "#svc/security/user";
+
 
 // ============================================================================
 // Constants
@@ -25,6 +31,17 @@ const AUTH_FAILED_MESSAGE = "Falló Autenticación";
 // ============================================================================
 // Types
 // ============================================================================
+
+/**
+ * Payload stored in JWT token.
+ * Includes essential session data: id, tenant, and permissions.
+ */
+interface JwtPayload {
+  id: number;
+  tenant: string;
+  permissions: string[];
+  [key: string]: unknown;
+}
 
 /**
  * Login request payload.
@@ -162,10 +179,16 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
         return;
       }
 
-      const token = await jwt.generateToken(user);
+      // 🔐 Store essential session data in JWT
+      const token = await jwt.generateToken({
+        id: user.id,
+        tenant: user.tenant,
+        permissions: user.permissions
+      });
 
       res.cookie(AUTH_TOKEN_COOKIE, token, cookieOptions);
 
+      // Return full user data in response (not stored in JWT)
       sendMsgPack(res, user);
     } catch (error) {
       next(error);
@@ -185,18 +208,29 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
         return;
       }
 
-      const payload = await jwt.verifyToken(refreshToken);
+      const { id } = await jwt.verifyToken<JwtPayload>(refreshToken);
 
-      // Remove standard JWT claims before regenerating
-      // jose will add them automatically with updated values
-      const { exp, iat, iss, aud, nbf, jti, sub, ...userData } = payload;
+      // Fetch fresh user data from database
+      const user = await findById(id);
 
-      const token = await jwt.generateToken(userData);
+      if (!user) {
+        res.clearCookie(AUTH_TOKEN_COOKIE);
+        sendMsgPack(res, failLogin, 401);
+        return;
+      }
+
+      // Refresh token with updated session data
+      const token = await jwt.generateToken({
+        id: user.id,
+        tenant: user.tenant,
+        permissions: user.permissions
+      });
 
       res.clearCookie(AUTH_TOKEN_COOKIE);
       res.cookie(AUTH_TOKEN_COOKIE, token, cookieOptions);
 
-      sendMsgPack(res, userData);
+      // Return full user data in response
+      sendMsgPack(res, user);
     } catch (error) {
       console.error(error);
       res.clearCookie(AUTH_TOKEN_COOKIE);
@@ -228,18 +262,15 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
     }
 
     try {
-      const { id } = (await jwt.verifyToken(token)) as { id: string | number };
+      const payload = await jwt.verifyToken<JwtPayload>(token);
 
-      const user = await findById(
-        typeof id === "string" ? parseInt(id) : id
-      );
-
-      if (!user) {
-        sendMsgPack(res, failLogin, 401);
-        return;
-      }
-
-      const context: IContext = { ...user, session: new Map() };
+      // Use session data directly from token for API requests
+      const context: IContext = {
+        id: payload.id,
+        tenant: payload.tenant,
+        permissions: payload.permissions,
+        session: new Map()
+      };
       runContext(context, next);
     } catch (error) {
       sendMsgPack(res, failLogin, 401);
@@ -259,8 +290,14 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
     }
 
     try {
-      const verified = await jwt.verifyToken<IUserSession>(token);
-      const context: IContext = { ...verified, session: new Map() };
+      const payload = await jwt.verifyToken<JwtPayload>(token);
+
+      const context: IContext = {
+        id: payload.id,
+        tenant: payload.tenant,
+        permissions: payload.permissions,
+        session: new Map()
+      };
       runContext(context, next);
 
       res.redirect("/cms");
@@ -282,8 +319,14 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
     }
 
     try {
-      const verified = await jwt.verifyToken<IUserSession>(token);
-      const context: IContext = { ...verified, session: new Map() };
+      const payload = await jwt.verifyToken<JwtPayload>(token);
+
+      const context: IContext = {
+        id: payload.id,
+        tenant: payload.tenant,
+        permissions: payload.permissions,
+        session: new Map()
+      };
       runContext(context, next);
     } catch (error) {
       res.redirect("/login");
@@ -296,8 +339,6 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
 // ============================================================================
 // Default Production Instance
 // ============================================================================
-
-import { findUserByCredentials, findUserById } from "#svc/security/user";
 
 /**
  * Creates a pre-configured auth middleware for production use.
@@ -319,5 +360,5 @@ export default function defineAuth(secret: string) {
 // Re-export context for external use
 export const user = ctx;
 
-// Re-export types from context for convenience
+// Re-export types for convenience
 export type { IContext, IUserSession };

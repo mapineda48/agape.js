@@ -5,7 +5,7 @@ import { verifyPassword } from "#lib/access/password";
 import employee from "#models/hr/employee";
 import person from "#models/core/person";
 import { securityRole, securityUserRole } from "#models/security/role";
-import type { IUserSession as IWebSession } from "#lib/context";
+import type { IContext } from "#lib/context";
 
 /**
  * Obtiene los permisos combinados de todos los roles de un usuario.
@@ -35,7 +35,7 @@ async function getUserPermissions(userId: number): Promise<string[]> {
 export async function findUserByCredentials(
   username: string,
   password: string
-): Promise<IWebSession | null> {
+): Promise<IUserSession | null> {
   const [record] = await db
     .select({
       id: securityUser.id,
@@ -72,7 +72,7 @@ export async function findUserByCredentials(
  * @returns Sesión del usuario o null si no se encuentra
  * @permission security.user.read
  */
-export async function findUserById(id: number): Promise<IWebSession | null> {
+export async function findUserById(id: number): Promise<IUserSession | null> {
   const [record] = await db
     .select({
       id: securityUser.id,
@@ -96,4 +96,10 @@ export async function findUserById(id: number): Promise<IWebSession | null> {
     permissions,
     tenant: "agape_app_development_demo",
   };
+}
+
+
+export interface IUserSession extends Omit<IContext, "session"> {
+  fullName: string;
+  avatarUrl: string | null;
 }

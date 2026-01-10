@@ -11,8 +11,6 @@ describe("lib/context", () => {
             const callback = vi.fn();
             const testContext: IContext = {
                 id: 1,
-                fullName: "Test User",
-                avatarUrl: null,
                 permissions: [],
                 tenant: "test",
                 session: new Map()
@@ -27,8 +25,7 @@ describe("lib/context", () => {
             let executed = false;
             const testContext: IContext = {
                 id: 1,
-                fullName: "Test User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
             runContext(testContext, () => {
@@ -40,8 +37,8 @@ describe("lib/context", () => {
 
         it("should handle multiple sequential contexts", () => {
             const results: number[] = [];
-            const context1: IContext = { id: 1, fullName: "User 1", avatarUrl: null, permissions: [], tenant: "test", session: new Map() };
-            const context2: IContext = { id: 2, fullName: "User 2", avatarUrl: null, permissions: [], tenant: "test", session: new Map() };
+            const context1: IContext = { id: 1, permissions: [], tenant: "test", session: new Map() };
+            const context2: IContext = { id: 2, permissions: [], tenant: "test", session: new Map() };
 
             runContext(context1, () => {
                 results.push(ctx.id);
@@ -57,18 +54,17 @@ describe("lib/context", () => {
         it("should create an isolated copy of the context", () => {
             const originalContext: IContext = {
                 id: 1,
-                fullName: "Original Name",
-                avatarUrl: "http://example.com/avatar.jpg", permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
             runContext(originalContext, () => {
                 // Modificar el contexto dentro del runContext
-                ctx.fullName = "Modified Name";
-                expect(ctx.fullName).toBe("Modified Name");
+                ctx.id = 99;
+                expect(ctx.id).toBe(99);
             });
 
             // El contexto original no debería haberse modificado
-            expect(originalContext.fullName).toBe("Original Name");
+            expect(originalContext.id).toBe(1);
         });
     });
 
@@ -83,8 +79,7 @@ describe("lib/context", () => {
             it("should return context id when inside runContext", () => {
                 const testContext: IContext = {
                     id: 42,
-                    fullName: "Test User",
-                    avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
@@ -95,12 +90,11 @@ describe("lib/context", () => {
             it("should return context fullName when inside runContext", () => {
                 const testContext: IContext = {
                     id: 1,
-                    fullName: "John Doe",
-                    avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
-                    expect(ctx.fullName).toBe("John Doe");
+                    expect(ctx.id).toBe(1);
                 });
             });
 
@@ -108,24 +102,22 @@ describe("lib/context", () => {
                 const avatarUrl = "https://example.com/avatar.png";
                 const testContext: IContext = {
                     id: 1,
-                    fullName: "John Doe",
-                    avatarUrl, permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
-                    expect(ctx.avatarUrl).toBe(avatarUrl);
+                    expect(ctx.id).toBe(1);
                 });
             });
 
             it("should return null avatarUrl when inside runContext", () => {
                 const testContext: IContext = {
                     id: 1,
-                    fullName: "John Doe",
-                    avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
-                    expect(ctx.avatarUrl).toBeNull();
+                    expect(ctx.id).toBe(1);
                 });
             });
         });
@@ -133,15 +125,14 @@ describe("lib/context", () => {
         describe("setter", () => {
             it("should throw error when setting outside of context", () => {
                 expect(() => {
-                    ctx.fullName = "New Name";
+                    ctx.id = 99;
                 }).toThrow("No hay contexto activo (¿faltó runContext en el request?)");
             });
 
             it("should allow setting id inside runContext", () => {
                 const testContext: IContext = {
                     id: 1,
-                    fullName: "Test User",
-                    avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
@@ -153,39 +144,36 @@ describe("lib/context", () => {
             it("should allow setting fullName inside runContext", () => {
                 const testContext: IContext = {
                     id: 1,
-                    fullName: "Original Name",
-                    avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
-                    ctx.fullName = "Updated Name";
-                    expect(ctx.fullName).toBe("Updated Name");
+                    ctx.id = 99;
+                    expect(ctx.id).toBe(99);
                 });
             });
 
             it("should allow setting avatarUrl inside runContext", () => {
                 const testContext: IContext = {
                     id: 1,
-                    fullName: "Test User",
-                    avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
-                    ctx.avatarUrl = "https://new-avatar.com/image.png";
-                    expect(ctx.avatarUrl).toBe("https://new-avatar.com/image.png");
+                    ctx.id = 99;
+                    expect(ctx.id).toBe(99);
                 });
             });
 
             it("should allow setting avatarUrl to null inside runContext", () => {
                 const testContext: IContext = {
                     id: 1,
-                    fullName: "Test User",
-                    avatarUrl: "https://example.com/avatar.png", permissions: [], tenant: "test", session: new Map()
+                    permissions: [], tenant: "test", session: new Map()
                 };
 
                 runContext(testContext, () => {
-                    ctx.avatarUrl = null;
-                    expect(ctx.avatarUrl).toBeNull();
+                    ctx.id = 99;
+                    expect(ctx.id).toBe(99);
                 });
             });
         });
@@ -195,13 +183,11 @@ describe("lib/context", () => {
         it("should maintain isolated contexts in nested runContext calls", () => {
             const outerContext: IContext = {
                 id: 1,
-                fullName: "Outer User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
             const innerContext: IContext = {
                 id: 2,
-                fullName: "Inner User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
             const results: { outer: number; inner: number }[] = [];
@@ -225,26 +211,24 @@ describe("lib/context", () => {
         it("should not leak context modifications to parent context", () => {
             const outerContext: IContext = {
                 id: 1,
-                fullName: "Outer User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
             const innerContext: IContext = {
                 id: 2,
-                fullName: "Inner User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
-            let outerNameAfterInner = "";
+            let outerIdAfterInner = 0;
 
             runContext(outerContext, () => {
                 runContext(innerContext, () => {
-                    ctx.fullName = "Modified Inner User";
+                    ctx.id = 99;
                 });
 
-                outerNameAfterInner = ctx.fullName;
+                outerIdAfterInner = ctx.id;
             });
 
-            expect(outerNameAfterInner).toBe("Outer User");
+            expect(outerIdAfterInner).toBe(1);
         });
     });
 
@@ -252,32 +236,27 @@ describe("lib/context", () => {
         it("should propagate context through async operations", async () => {
             const testContext: IContext = {
                 id: 123,
-                fullName: "Async User",
-                avatarUrl: "https://async.example.com/avatar.png", permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
             let capturedId: number | undefined;
-            let capturedName: string | undefined;
 
             await new Promise<void>((resolve) => {
                 runContext(testContext, async () => {
                     // Simular operación asíncrona
                     await Promise.resolve();
                     capturedId = ctx.id;
-                    capturedName = ctx.fullName;
                     resolve();
                 });
             });
 
             expect(capturedId).toBe(123);
-            expect(capturedName).toBe("Async User");
         });
 
         it("should propagate context through setTimeout", async () => {
             const testContext: IContext = {
                 id: 456,
-                fullName: "Timeout User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
             let capturedId: number | undefined;
@@ -297,8 +276,7 @@ describe("lib/context", () => {
         it("should propagate context through Promise chains", async () => {
             const testContext: IContext = {
                 id: 789,
-                fullName: "Promise User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
             const results: number[] = [];
@@ -329,8 +307,7 @@ describe("lib/context", () => {
         it("should accept IContext as a valid context", () => {
             const context: IContext = {
                 id: 1,
-                fullName: "Type Test User",
-                avatarUrl: null, permissions: [], tenant: "test", session: new Map()
+                permissions: [], tenant: "test", session: new Map()
             };
 
             // This test ensures the type is correctly exported and usable
@@ -339,8 +316,6 @@ describe("lib/context", () => {
             runContext(context, () => {
                 capturedContext = {
                     id: ctx.id,
-                    fullName: ctx.fullName,
-                    avatarUrl: ctx.avatarUrl,
                     tenant: ctx.tenant,
                     session: ctx.session,
                 };

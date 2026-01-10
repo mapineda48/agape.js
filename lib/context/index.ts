@@ -6,13 +6,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 export interface IContext {
     readonly tenant: string;
     id: number;
-    fullName: string;
-    avatarUrl: string | null;
     permissions: string[];
     session: Map<unknown, unknown>;
 }
-
-export type IUserSession = Omit<IContext, "session">;
 
 /**
  * Internal ALS store
