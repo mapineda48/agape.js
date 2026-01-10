@@ -6,6 +6,7 @@ import { desc, eq } from "drizzle-orm";
  * Lista todas las ubicaciones de inventario.
  * @param activeOnly Si es true, retorna solo las ubicaciones activas
  * @returns Lista de ubicaciones ordenadas por ID descendente
+ * @permission inventory.location.read
  */
 export async function listLocations(activeOnly = true) {
   const query = db.select().from(location).orderBy(desc(location.id));
@@ -21,6 +22,7 @@ export async function listLocations(activeOnly = true) {
  * Obtiene una ubicación por su ID.
  * @param id Identificador único de la ubicación
  * @returns Ubicación encontrada o undefined si no existe
+ * @permission inventory.location.read
  */
 export async function getLocationById(id: number) {
   const [record] = await db.select().from(location).where(eq(location.id, id));
@@ -32,6 +34,7 @@ export async function getLocationById(id: number) {
  * Inserta o actualiza una ubicación de inventario.
  * @param payload Datos de la ubicación a insertar o actualizar
  * @returns La ubicación insertada o actualizada
+ * @permission inventory.location.manage
  */
 export async function upsertLocation(payload: NewLocation) {
   const { id, ...data } = payload;

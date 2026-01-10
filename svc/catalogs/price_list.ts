@@ -52,6 +52,7 @@ function toDto(record: typeof priceList.$inferSelect): IPriceList {
  *
  * @param params Filtros de listado.
  * @returns Lista de listas de precios.
+ * @permission inventory.price_list.read
  *
  * @example
  * ```ts
@@ -85,6 +86,7 @@ export async function listPriceLists(
  *
  * @param id ID de la lista.
  * @returns Lista o undefined si no existe.
+ * @permission inventory.price_list.read
  */
 export async function getPriceListById(
   id: number
@@ -101,6 +103,7 @@ export async function getPriceListById(
  * Obtiene la lista de precios default.
  *
  * @returns Lista default o undefined si no hay ninguna.
+ * @permission inventory.price_list.read
  */
 export async function getDefaultPriceList(): Promise<IPriceList | undefined> {
   const [record] = await db
@@ -116,6 +119,7 @@ export async function getDefaultPriceList(): Promise<IPriceList | undefined> {
  *
  * @param id ID de la lista.
  * @returns Información de uso.
+ * @permission inventory.price_list.read
  */
 export async function getPriceListUsageInfo(
   id: number
@@ -166,6 +170,7 @@ export async function getPriceListUsageInfo(
  *
  * @param payload Datos de la lista de precios.
  * @returns Array con la lista creada/actualizada.
+ * @permission inventory.price_list.manage
  *
  * @example
  * ```ts
@@ -257,6 +262,7 @@ export async function upsertPriceList(
  *
  * @param payload DTO con el ID de la lista.
  * @returns Resultado con la nueva lista default y la anterior.
+ * @permission inventory.price_list.manage
  */
 export async function setDefaultPriceList(
   payload: ISetDefaultPriceList
@@ -328,6 +334,7 @@ export async function setDefaultPriceList(
  *
  * @param payload DTO con ID y nuevo estado.
  * @returns Resultado de la operación.
+ * @permission inventory.price_list.manage
  */
 export async function togglePriceList(
   payload: ITogglePriceList
@@ -364,7 +371,7 @@ export async function togglePriceList(
     if (existing.isDefault) {
       throw new BusinessRuleError(
         `No se puede deshabilitar la lista "${existing.code}" porque es la lista de precios por defecto. ` +
-          `Primero asigne el default a otra lista.`
+        `Primero asigne el default a otra lista.`
       );
     }
 

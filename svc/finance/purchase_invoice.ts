@@ -60,6 +60,7 @@ function toDecimal(value: Decimal | number | string): Decimal {
 /**
  * Crea una nueva factura de compra.
  * Asigna automáticamente un número de documento vía el motor de numeración.
+ * @permission finance.purchase_invoice.manage
  */
 export async function createPurchaseInvoice(
   payload: CreatePurchaseInvoiceInput
@@ -264,6 +265,7 @@ export async function createPurchaseInvoiceTx(
 
 /**
  * Obtiene una factura de compra por su ID con todos los detalles.
+ * @permission finance.purchase_invoice.read
  */
 export async function getPurchaseInvoiceById(
   id: number
@@ -321,6 +323,7 @@ export async function getPurchaseInvoiceById(
 
 /**
  * Lista facturas de compra con filtros y paginación.
+ * @permission finance.purchase_invoice.read
  */
 export async function listPurchaseInvoices(
   params: ListPurchaseInvoicesParams = {}
@@ -426,6 +429,7 @@ export async function listPurchaseInvoices(
 /**
  * Obtiene los datos completos de una factura de compra para generar el PDF.
  * Incluye ítems detallados, información del proveedor y datos de la empresa.
+ * @permission finance.purchase_invoice.read
  */
 export async function getPurchaseInvoiceForPdf(
   id: number

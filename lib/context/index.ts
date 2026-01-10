@@ -5,11 +5,11 @@ import { AsyncLocalStorage } from "node:async_hooks";
  */
 export interface IContext {
     readonly tenant: string;
-    readonly id: number;
-    readonly fullName: string;
-    readonly avatarUrl: string | null;
-    readonly permissions: string[];
-    readonly session: Map<unknown, unknown>;
+    id: number;
+    fullName: string;
+    avatarUrl: string | null;
+    permissions: string[];
+    session: Map<unknown, unknown>;
 }
 
 export type IUserSession = Omit<IContext, "session">;

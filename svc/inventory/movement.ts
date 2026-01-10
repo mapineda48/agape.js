@@ -262,6 +262,7 @@ async function applyStockEffect(
  *
  * Implements:
  * R1 (ATP), R2 (UOM), R3 (Period Closing), R4 (FIFO/LIFO), R5 (Layers), R6 (Lots), R7 (Sync)
+ * @permission inventory.movement.manage
  */
 export async function createInventoryMovement(
   input: CreateInventoryMovementInput
@@ -405,6 +406,7 @@ export async function createInventoryMovement(
  * - Crea capas de costo (entradas) o consume capas (salidas)
  *
  * Una vez posteado, el movimiento NO puede editarse, solo cancelarse.
+ * @permission inventory.movement.manage
  */
 export async function postInventoryMovement(
   movementId: number
@@ -495,6 +497,7 @@ export async function postInventoryMovement(
  * - Crea un movimiento de reversión (con signo opuesto)
  * - Vincula el original con la reversión
  * - Cambia ambos a "cancelled"
+ * @permission inventory.movement.manage
  */
 export async function cancelInventoryMovement(
   movementId: number,
@@ -696,6 +699,7 @@ export async function cancelInventoryMovement(
 
 /**
  * Lista movimientos de inventario con paginación y filtros
+ * @permission inventory.movement.read
  */
 export async function listInventoryMovements(
   params: ListInventoryMovementsParams
@@ -792,6 +796,7 @@ export async function listInventoryMovements(
 
 /**
  * Obtiene un movimiento de inventario por ID con sus detalles
+ * @permission inventory.movement.read
  */
 export async function getInventoryMovement(id: number) {
   const [movement] = await db

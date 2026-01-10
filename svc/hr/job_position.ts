@@ -10,6 +10,7 @@ import type {
 } from "#utils/dto/hr/job_position";
 import DateTime from "#utils/data/DateTime";
 
+/** @permission hr.job_position.manage */
 export async function upsertJobPosition(
   payload: CreateJobPositionDto | UpdateJobPositionDto
 ): Promise<JobPositionDto> {
@@ -45,6 +46,7 @@ export async function upsertJobPosition(
   }
 }
 
+/** @permission hr.job_position.read */
 export async function getJobPositionById(
   id: number
 ): Promise<JobPositionDto | undefined> {
@@ -56,6 +58,7 @@ export async function getJobPositionById(
   return record ? mapToDto(record) : undefined;
 }
 
+/** @permission hr.job_position.read */
 export async function listJobPositions(
   params: ListJobPositionsParams
 ): Promise<ListJobPositionsResult> {

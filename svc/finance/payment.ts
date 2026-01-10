@@ -34,6 +34,7 @@ function toDecimal(
 
 /**
  * Crea un nuevo pago y opcionalmente lo asigna a facturas.
+ * @permission finance.payment.manage
  */
 export async function createPayment(
     input: CreatePaymentInput
@@ -180,6 +181,7 @@ export async function createPayment(
 
 /**
  * Lista los pagos según filtros.
+ * @permission finance.payment.read
  */
 export async function listPayments(
     params: ListPaymentsParams

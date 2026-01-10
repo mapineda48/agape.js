@@ -32,7 +32,7 @@ import { securityUser } from "./user";
  * - Un "Contador" (cargo) puede necesitar roles "Facturación" + "Reportes"
  * - Los roles de seguridad son granulares y combinables
  */
-const securityRole = schema.table("security_role", {
+export const securityRole = schema.table("security_role", {
   /** Identificador único del rol */
   id: serial("id").primaryKey(),
 

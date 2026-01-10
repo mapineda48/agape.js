@@ -90,3 +90,26 @@ export class ConflictError extends Error {
     }
   }
 }
+
+/**
+ * Error de permiso denegado.
+ * Se lanza cuando el usuario no tiene los permisos necesarios para una operación.
+ *
+ * @example
+ * ```ts
+ * throw new ForbiddenError("Permiso requerido: sales.flow.deliver");
+ * ```
+ */
+export class ForbiddenError extends Error {
+  public readonly code = "FORBIDDEN_ERROR";
+  public readonly requiredPermission?: string;
+
+  constructor(message: string, requiredPermission?: string) {
+    super(message);
+    this.name = "ForbiddenError";
+    this.requiredPermission = requiredPermission;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ForbiddenError);
+    }
+  }
+}

@@ -61,6 +61,7 @@ async function countUsersWithDocumentType(
  *
  * @param params Filtros de listado.
  * @returns Lista de tipos de documento.
+ * @permission core.document_type.read
  *
  * @example
  * ```ts
@@ -111,6 +112,7 @@ export async function listPersonDocumentTypes(
  *
  * @param id ID del tipo de documento.
  * @returns Tipo de documento o undefined si no existe.
+ * @permission core.document_type.read
  */
 export async function getDocumentTypeById(
   id: number
@@ -127,6 +129,7 @@ export async function getDocumentTypeById(
  *
  * @param code Código del tipo de documento.
  * @returns Tipo de documento o undefined si no existe.
+ * @permission core.document_type.read
  */
 export async function getDocumentTypeByCode(
   code: string
@@ -152,6 +155,7 @@ export async function getDocumentTypeByCode(
  *
  * @param payload Datos del tipo de documento.
  * @returns Array con el tipo de documento creado/actualizado.
+ * @permission core.document_type.manage
  *
  * @example
  * ```ts
@@ -170,7 +174,7 @@ export async function getDocumentTypeByCode(
  *   name: "Cédula de Ciudadanía Colombiana",
  *   appliesToPerson: true,
  *   appliesToCompany: false,
- * });
+ *   });
  * ```
  */
 export async function upsertDocumentType(
@@ -241,6 +245,7 @@ export async function upsertDocumentType(
  *
  * @param payload ID y nuevo estado del tipo de documento.
  * @returns Resultado de la operación con el tipo de documento actualizado.
+ * @permission core.document_type.manage
  *
  * @example
  * ```ts
@@ -271,7 +276,7 @@ export async function toggleDocumentType(
     if (userCount > 0) {
       throw new Error(
         `No se puede deshabilitar este tipo de documento porque hay ${userCount} usuario(s) activo(s) usándolo. ` +
-          `Primero debe migrar estos usuarios a otro tipo de documento o desactivarlos.`
+        `Primero debe migrar estos usuarios a otro tipo de documento o desactivarlos.`
       );
     }
   }

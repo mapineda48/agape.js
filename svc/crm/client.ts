@@ -32,6 +32,7 @@ const salespersonPerson = alias(person, "salesperson_person");
  *
  * @param id - Identificador único del cliente
  * @returns Cliente con datos de persona y tipo, o undefined si no existe
+ * @permission crm.client.read
  *
  * @example
  * ```ts
@@ -107,6 +108,7 @@ export async function getClientById(id: number): Promise<ClientDto> {
 
 /**
  * Busca un cliente por tipo y número de documento para validar duplicados.
+ * @permission crm.client.read
  */
 export async function getClientByDocument(
   documentTypeId: number,
@@ -163,6 +165,7 @@ export async function getClientByDocument(
  *
  * @param params - Parámetros de búsqueda y paginación
  * @returns Lista de clientes y opcionalmente el total de registros
+ * @permission crm.client.read
  *
  * @example
  * ```ts
@@ -200,9 +203,8 @@ export async function listClients(
     // Buscar en nombre y apellido de persona o razón social/nombre comercial de empresa
     conditions.push(
       sql`(
-        CONCAT(${person.firstName}, ' ', ${
-        person.lastName
-      }) ILIKE ${`%${fullName}%`} OR
+        CONCAT(${person.firstName}, ' ', ${person.lastName
+        }) ILIKE ${`%${fullName}%`} OR
         ${company.legalName} ILIKE ${`%${fullName}%`} OR
         ${company.tradeName} ILIKE ${`%${fullName}%`}
       )`
@@ -314,6 +316,7 @@ export async function listClients(
  *
  * @param payload - Datos del cliente a insertar o actualizar
  * @returns El cliente creado o actualizado con sus datos relacionados
+ * @permission crm.client.manage
  *
  * @example
  * ```ts

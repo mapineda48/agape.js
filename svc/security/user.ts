@@ -4,8 +4,25 @@ import securityUser from "#models/security/user";
 import { verifyPassword } from "#lib/access/password";
 import employee from "#models/hr/employee";
 import person from "#models/core/person";
+import { securityRole, securityUserRole } from "#models/security/role";
 import type { IUserSession as IWebSession } from "#lib/context";
-import { CacheManager } from "#lib/services/cache/CacheManager";
+
+/**
+ * Obtiene los permisos combinados de todos los roles de un usuario.
+ */
+async function getUserPermissions(userId: number): Promise<string[]> {
+  const roles = await db
+    .select({
+      permissions: securityRole.permissions,
+    })
+    .from(securityUserRole)
+    .innerJoin(securityRole, eq(securityRole.id, securityUserRole.roleId))
+    .where(eq(securityUserRole.userId, userId));
+
+  // Combinar todos los arrays de permisos en uno solo y eliminar duplicados
+  const allPermissions = roles.flatMap((r) => r.permissions);
+  return Array.from(new Set(allPermissions));
+}
 
 /**
  * Busca un usuario por credenciales y retorna la sesión si es válida.
@@ -13,6 +30,7 @@ import { CacheManager } from "#lib/services/cache/CacheManager";
  * @param username - Nombre de usuario
  * @param password - Contraseña en texto plano
  * @returns Sesión del usuario o null si las credenciales son inválidas
+ * @permission security.user.read
  */
 export async function findUserByCredentials(
   username: string,
@@ -36,12 +54,14 @@ export async function findUserByCredentials(
 
   if (!isValid) return null;
 
+  const permissions = await getUserPermissions(record.id);
+
   return {
     id: record.id,
     fullName: record.fullName,
     avatarUrl: record.avatarUrl,
-    permissions: [],
-    tenant: "",
+    permissions,
+    tenant: "agape_app_development_demo",
   };
 }
 
@@ -50,6 +70,7 @@ export async function findUserByCredentials(
  *
  * @param id - ID del usuario
  * @returns Sesión del usuario o null si no se encuentra
+ * @permission security.user.read
  */
 export async function findUserById(id: number): Promise<IWebSession | null> {
   const [record] = await db
@@ -66,13 +87,13 @@ export async function findUserById(id: number): Promise<IWebSession | null> {
 
   if (!record) return null;
 
+  const permissions = await getUserPermissions(record.id);
+
   return {
     id: record.id,
     fullName: record.fullName,
     avatarUrl: record.avatarUrl,
-    permissions: [],
-    tenant: "",
+    permissions,
+    tenant: "agape_app_development_demo",
   };
 }
-
-export const findUserByIdCache = CacheManager.cacheFn("findUserById", findUserById,);

@@ -63,6 +63,7 @@ function toDecimal(
 /**
  * Crea una nueva orden de venta con sus líneas.
  * Asigna automáticamente un número de documento vía el motor de numeración.
+ * @permission sales.order.manage
  */
 export async function createSalesOrder(
   payload: CreateSalesOrderInput
@@ -200,6 +201,7 @@ export async function createSalesOrder(
 
 /**
  * Obtiene una orden de venta por su ID con todos los detalles y líneas.
+ * @permission sales.order.read
  */
 export async function getSalesOrderById(
   id: number
@@ -307,6 +309,7 @@ export async function getSalesOrderById(
 
 /**
  * Lista órdenes de venta con filtros y paginación.
+ * @permission sales.order.read
  */
 export async function listSalesOrders(
   params: ListSalesOrdersParams = {}
@@ -433,6 +436,7 @@ export async function listSalesOrders(
 
 /**
  * Actualiza el estado de una orden de venta.
+ * @permission sales.order.manage
  */
 export async function updateSalesOrderStatus(
   orderId: number,
@@ -504,6 +508,7 @@ export async function updateSalesOrderStatus(
 
 /**
  * Lista los tipos de órdenes de venta disponibles.
+ * @permission sales.order.read
  */
 export async function listSalesOrderTypes(): Promise<SalesOrderType[]> {
   return db

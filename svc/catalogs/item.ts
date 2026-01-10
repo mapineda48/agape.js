@@ -51,7 +51,7 @@ export class CategoryMismatchError extends Error {
   ) {
     super(
       `La subcategoría ${subcategoryId} pertenece a la categoría ${actualCategoryId}, ` +
-        `pero el ítem tiene categoryId ${categoryId ?? "null"}.`
+      `pero el ítem tiene categoryId ${categoryId ?? "null"}.`
     );
     this.name = "CategoryMismatchError";
   }
@@ -103,6 +103,7 @@ async function validateCategoryHierarchy(
  *
  * @param id - Identificador único del ítem
  * @returns Ítem encontrado con sus detalles o undefined si no existe
+ * @permission inventory.item.read
  *
  * @example
  * ```ts
@@ -159,6 +160,7 @@ export async function getItemById(
  *
  * @param code - Código único del ítem
  * @returns Ítem encontrado o undefined si no existe
+ * @permission inventory.item.read
  */
 export async function getItemByCode(code: string) {
   const [record] = await db.select().from(item).where(eq(item.code, code));
@@ -170,6 +172,7 @@ export async function getItemByCode(code: string) {
  *
  * @param params - Parámetros de filtrado y paginación
  * @returns Lista de ítems y opcionalmente el conteo total
+ * @permission inventory.item.read
  */
 export async function listItems(
   params: ListItemsParams = {}
@@ -273,6 +276,7 @@ export async function listItems(
  *
  * @param payload - Datos del ítem a insertar o actualizar
  * @returns Ítem creado o actualizado con sus datos relacionados
+ * @permission inventory.item.manage
  * @throws Error si se proporcionan ambas propiedades (good y service)
  * @throws Error si no se proporciona ninguna propiedad de entidad
  *

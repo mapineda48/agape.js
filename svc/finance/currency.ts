@@ -64,6 +64,7 @@ function toDto(record: typeof currency.$inferSelect): ICurrency {
  *
  * @param params Filtros de listado.
  * @returns Lista de monedas.
+ * @permission finance.currency.read
  */
 export async function listCurrencies(
   params: IListCurrenciesParams = {}
@@ -96,6 +97,7 @@ export async function listCurrencies(
  *
  * @param id ID de la moneda.
  * @returns Moneda o undefined si no existe.
+ * @permission finance.currency.read
  */
 export async function getCurrencyById(
   id: number
@@ -110,6 +112,7 @@ export async function getCurrencyById(
  *
  * @param code Código de la moneda.
  * @returns Moneda o undefined si no existe.
+ * @permission finance.currency.read
  */
 export async function getCurrencyByCode(
   code: string
@@ -127,6 +130,7 @@ export async function getCurrencyByCode(
  * Obtiene la moneda base del sistema.
  *
  * @returns Moneda base o undefined si no hay ninguna configurada.
+ * @permission finance.currency.read
  */
 export async function getBaseCurrency(): Promise<ICurrency | undefined> {
   const [record] = await db
@@ -142,6 +146,7 @@ export async function getBaseCurrency(): Promise<ICurrency | undefined> {
  *
  * @param id ID de la moneda.
  * @returns Información de uso.
+ * @permission finance.currency.read
  */
 export async function getCurrencyUsageInfo(
   id: number
@@ -217,6 +222,7 @@ export async function getCurrencyUsageInfo(
  *
  * @param payload Datos de la moneda.
  * @returns Array con la moneda creada/actualizada.
+ * @permission finance.currency.manage
  *
  * @example
  * ```ts
@@ -300,6 +306,7 @@ export async function upsertCurrency(
  *
  * @param payload DTO con ID y nuevo estado.
  * @returns Resultado de la operación.
+ * @permission finance.currency.manage
  */
 export async function toggleCurrency(
   payload: IToggleCurrency
@@ -336,7 +343,7 @@ export async function toggleCurrency(
     if (existing.isBase) {
       throw new BusinessRuleError(
         `No se puede deshabilitar la moneda "${existing.code}" porque es la moneda base del sistema. ` +
-          `Primero debe establecer otra moneda como base.`
+        `Primero debe establecer otra moneda como base.`
       );
     }
 
@@ -395,6 +402,7 @@ export async function toggleCurrency(
  *
  * @param payload DTO con el ID de la nueva moneda base.
  * @returns Resultado de la operación.
+ * @permission finance.currency.manage
  *
  * @example
  * ```ts
@@ -422,7 +430,7 @@ export async function setBaseCurrency(
     if (!newBase.isEnabled) {
       throw new BusinessRuleError(
         `No se puede establecer la moneda "${newBase.code}" como base porque está deshabilitada. ` +
-          `Primero debe habilitarla.`
+        `Primero debe habilitarla.`
       );
     }
 

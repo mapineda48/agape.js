@@ -80,6 +80,7 @@ function toTaxGroupDto(record: typeof taxGroup.$inferSelect): ITaxGroup {
  *
  * @param params Filtros de listado.
  * @returns Lista de impuestos.
+ * @permission finance.tax.read
  */
 export async function listTaxes(
   params: IListTaxesParams = {}
@@ -102,6 +103,7 @@ export async function listTaxes(
  *
  * @param id ID del impuesto.
  * @returns Impuesto o undefined si no existe.
+ * @permission finance.tax.read
  */
 export async function getTaxById(id: number): Promise<ITax | undefined> {
   const [record] = await db.select().from(tax).where(eq(tax.id, id));
@@ -114,6 +116,7 @@ export async function getTaxById(id: number): Promise<ITax | undefined> {
  *
  * @param payload Datos del impuesto.
  * @returns Array con el impuesto creado/actualizado.
+ * @permission finance.tax.manage
  */
 export async function upsertTax(payload: IUpsertTax): Promise<[ITax]> {
   const { id, code, fullName, description, rate, isEnabled = true } = payload;
@@ -166,6 +169,7 @@ export async function upsertTax(payload: IUpsertTax): Promise<[ITax]> {
  *
  * @param id ID del impuesto.
  * @returns Información de uso.
+ * @permission finance.tax.read
  */
 export async function getTaxUsageInfo(id: number): Promise<ITaxUsageInfo> {
   // Verificar que el impuesto existe
@@ -234,6 +238,7 @@ export async function getTaxUsageInfo(id: number): Promise<ITaxUsageInfo> {
  *
  * @param payload DTO con ID y nuevo estado.
  * @returns Resultado de la operación.
+ * @permission finance.tax.manage
  *
  * @example
  * ```ts
@@ -289,7 +294,7 @@ export async function toggleTax(
     if (salesCount > 0) {
       throw new BusinessRuleError(
         `No se puede deshabilitar el impuesto "${existing.code}" porque hay ${salesCount} línea(s) de factura de venta activa(s) usándolo. ` +
-          `Deshabilitar este impuesto podría generar inconsistencias en facturación electrónica.`
+        `Deshabilitar este impuesto podría generar inconsistencias en facturación electrónica.`
       );
     }
 
@@ -315,7 +320,7 @@ export async function toggleTax(
     if (activeGroupsCount > 0) {
       throw new BusinessRuleError(
         `No se puede deshabilitar el impuesto "${existing.code}" porque está incluido en ${activeGroupsCount} grupo(s) de impuestos activo(s). ` +
-          `Primero debe removerlo de esos grupos o deshabilitarlos.`
+        `Primero debe removerlo de esos grupos o deshabilitarlos.`
       );
     }
 
@@ -343,6 +348,7 @@ export async function toggleTax(
  *
  * @param params Filtros de listado.
  * @returns Lista de grupos de impuestos.
+ * @permission finance.tax_group.read
  */
 export async function listTaxGroups(
   params: IListTaxGroupsParams = {}
@@ -405,6 +411,7 @@ export async function listTaxGroups(
  *
  * @param id ID del grupo.
  * @returns Grupo con impuestos o undefined si no existe.
+ * @permission finance.tax_group.read
  */
 export async function getTaxGroupById(
   id: number
@@ -443,6 +450,7 @@ export async function getTaxGroupById(
  *
  * @param id ID del grupo.
  * @returns Información de uso.
+ * @permission finance.tax_group.read
  */
 export async function getTaxGroupUsageInfo(
   id: number
@@ -477,6 +485,7 @@ export async function getTaxGroupUsageInfo(
  *
  * @param payload Datos del grupo de impuestos.
  * @returns Array con el grupo creado/actualizado.
+ * @permission finance.tax_group.manage
  *
  * @example
  * ```ts
@@ -574,10 +583,10 @@ export async function upsertTaxGroup(
     await tx.insert(taxGroupTax).values(
       taxIds.map(
         (taxId) =>
-          ({
-            taxGroupId: record.id,
-            taxId,
-          } satisfies NewTaxGroupTax)
+        ({
+          taxGroupId: record.id,
+          taxId,
+        } satisfies NewTaxGroupTax)
       )
     );
 
@@ -606,6 +615,7 @@ export async function upsertTaxGroup(
  *
  * @param payload DTO con ID y nuevo estado.
  * @returns Resultado de la operación.
+ * @permission finance.tax_group.manage
  */
 export async function toggleTaxGroup(
   payload: IToggleTaxGroup
@@ -647,7 +657,7 @@ export async function toggleTaxGroup(
     if (productsCount > 0) {
       throw new BusinessRuleError(
         `No se puede deshabilitar el grupo "${existing.code}" porque hay ${productsCount} producto(s) activo(s) usándolo. ` +
-          `Deshabilitar este grupo podría generar errores en facturación electrónica.`
+        `Deshabilitar este grupo podría generar errores en facturación electrónica.`
       );
     }
 

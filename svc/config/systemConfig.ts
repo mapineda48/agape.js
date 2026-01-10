@@ -65,6 +65,7 @@ const DEFAULT_CONFIG: ISystemConfig = {
  * en un objeto tipado. Los valores no encontrados usan los valores por defecto.
  *
  * @returns Configuración del sistema consolidada.
+ * @permission config.system.read
  *
  * @example
  * ```ts
@@ -103,6 +104,7 @@ export async function getSystemConfig(): Promise<ISystemConfig> {
  *
  * @param key Clave de configuración.
  * @returns Valor de configuración o undefined si no existe.
+ * @permission config.system.read
  *
  * @example
  * ```ts
@@ -133,6 +135,7 @@ export async function getConfigValue(
  * @returns Configuración actualizada.
  *
  * @throws Error si `decimalPlaces` está fuera del rango permitido.
+ * @permission config.system.manage
  *
  * @example
  * ```ts
@@ -178,6 +181,7 @@ export async function updateSystemConfig(
  *
  * @param key Clave de configuración.
  * @param value Valor a establecer.
+ * @permission config.system.manage
  *
  * @example
  * ```ts

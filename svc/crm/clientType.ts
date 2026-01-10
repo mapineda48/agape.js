@@ -14,6 +14,7 @@ import type {
  * Lista todos los tipos de cliente.
  * @param params Filtros de listado o boolean para compatibilidad
  * @returns Lista de tipos de cliente ordenados por ID descendente
+ * @permission crm.client_type.read
  *
  * @example
  * ```ts
@@ -46,6 +47,7 @@ export async function listClientTypes(
  * Obtiene un tipo de cliente por su ID.
  * @param id Identificador único del tipo de cliente
  * @returns El tipo de cliente o undefined si no existe
+ * @permission crm.client_type.read
  *
  * @example
  * ```ts
@@ -73,6 +75,7 @@ export async function getClientTypeById(
  *
  * @param payload Datos del tipo de cliente a insertar o actualizar
  * @returns El tipo de cliente insertado o actualizado
+ * @permission crm.client_type.manage
  *
  * @example
  * ```ts
@@ -122,6 +125,7 @@ export async function upsertClientType(
  *
  * @param payload ID y nuevo estado del tipo de cliente.
  * @returns Resultado de la operación con el tipo de cliente actualizado.
+ * @permission crm.client_type.manage
  *
  * @example
  * ```ts
@@ -154,7 +158,7 @@ export async function toggleClientType(
     if (activeClients > 0) {
       throw new Error(
         `No se puede deshabilitar este tipo de cliente porque hay ${activeClients} cliente(s) activo(s) usándolo. ` +
-          `Primero debe migrar estos clientes a otro tipo o desactivarlos.`
+        `Primero debe migrar estos clientes a otro tipo o desactivarlos.`
       );
     }
   }
@@ -178,6 +182,7 @@ export async function toggleClientType(
  * Elimina un tipo de cliente por su ID.
  * @deprecated Usar toggleClientType con isEnabled=false en su lugar.
  * @param id Identificador único del tipo de cliente a eliminar
+ * @permission crm.client_type.manage
  *
  * @example
  * ```ts

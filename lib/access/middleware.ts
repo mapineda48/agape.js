@@ -2,9 +2,8 @@ import express, { type Response } from "express";
 
 import Jwt from "./Jwt";
 import ctx, { runContext } from "../context";
-import { findUserByCredentials, findUserByIdCache } from "#svc/security/user";
+import { findUserByCredentials, findUserById } from "#svc/security/user";
 import { decode, encode } from "#utils/msgpack";
-import { CacheManager } from "#lib/services/cache/CacheManager";
 
 const failLogin = new Error("Falló Autenticación");
 
@@ -90,7 +89,7 @@ export default function defineAuth(secret: string) {
     try {
       const { id } = await jwt.verifyToken(token) as any;
 
-      const user = await findUserByIdCache(parseInt(id));
+      const user = await findUserById(parseInt(id));
 
       if (!user) {
         sendMsgPack(res, failLogin, 401);

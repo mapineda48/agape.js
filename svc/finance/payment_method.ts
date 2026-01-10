@@ -13,6 +13,7 @@ import type {
 } from "#utils/dto/finance/payment_method";
 import DateTime from "#utils/data/DateTime";
 
+/** @permission finance.payment_method.manage */
 export async function upsertPaymentMethod(
   payload: CreatePaymentMethodDto | UpdatePaymentMethodDto
 ): Promise<PaymentMethodDto> {
@@ -50,6 +51,7 @@ export async function upsertPaymentMethod(
   }
 }
 
+/** @permission finance.payment_method.read */
 export async function getPaymentMethodById(
   id: number
 ): Promise<PaymentMethodDto | undefined> {
@@ -61,6 +63,7 @@ export async function getPaymentMethodById(
   return record ? mapToDto(record) : undefined;
 }
 
+/** @permission finance.payment_method.read */
 export async function listPaymentMethods(
   params: ListPaymentMethodsParams
 ): Promise<ListPaymentMethodsResult> {

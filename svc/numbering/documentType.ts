@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
  *
  * @param enabledOnly - Si true, retorna solo tipos habilitados (default: true)
  * @returns Lista de tipos de documento
+ * @permission numbering.type.read
  *
  * @example
  * ```ts
@@ -39,6 +40,7 @@ export async function listDocumentTypes(
  *
  * @param id - Identificador único del tipo de documento
  * @returns Tipo de documento encontrado o undefined
+ * @permission numbering.type.read
  */
 export async function getDocumentTypeById(
   id: number
@@ -55,6 +57,7 @@ export async function getDocumentTypeById(
  *
  * @param code - Código único del tipo de documento (ej: "FAC", "VTA")
  * @returns Tipo de documento encontrado o undefined
+ * @permission numbering.type.read
  */
 export async function getDocumentTypeByCode(
   code: string
@@ -74,6 +77,7 @@ export async function getDocumentTypeByCode(
  *
  * @param payload - Datos del tipo de documento
  * @returns Tipo de documento creado o actualizado
+ * @permission numbering.type.manage
  *
  * @example
  * ```ts

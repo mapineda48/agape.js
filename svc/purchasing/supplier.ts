@@ -25,6 +25,7 @@ import type {
 
 /**
  * Obtiene un proveedor por su ID con los datos de contacto y tipo.
+ * @permission purchasing.supplier.read
  */
 export async function getSupplierById(id: number) {
   const [record] = await db
@@ -55,6 +56,7 @@ export async function getSupplierById(id: number) {
 
 /**
  * Lista proveedores con filtros opcionales y paginación.
+ * @permission purchasing.supplier.read
  */
 export async function listSuppliers(
   params: ListSuppliersParams = {}
@@ -136,6 +138,7 @@ export async function listSuppliers(
 
 /**
  * Crea o actualiza un proveedor junto con el usuario asociado.
+ * @permission purchasing.supplier.manage
  */
 export async function upsertSupplier(
   payload: UpsertSupplierPayload
@@ -176,6 +179,7 @@ export async function upsertSupplier(
 
 /**
  * Elimina un proveedor.
+ * @permission purchasing.supplier.manage
  */
 export async function deleteSupplier(id: number) {
   await db.delete(supplier).where(eq(supplier.id, id));

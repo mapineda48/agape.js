@@ -7,11 +7,20 @@
  */
 
 // Re-exportar todo desde el nuevo servicio de catálogos
+// Re-exportar todo desde el nuevo servicio de catálogos
+/** @permission inventory.item.read */
 export {
   getItemById,
   getItemByCode,
   listItems,
+} from "#svc/catalogs/item";
+
+/** @permission inventory.item.manage */
+export {
   upsertItem,
+} from "#svc/catalogs/item";
+
+export {
   type ListItemsParams,
   type ListItemsResult,
   type ListItemItem,

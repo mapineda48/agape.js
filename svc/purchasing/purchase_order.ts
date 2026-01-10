@@ -64,6 +64,7 @@ import type {
  * @throws Error si el proveedor no existe o está inactivo
  * @throws Error si algún ítem no existe o está deshabilitado
  * @throws Error si no hay series de numeración disponibles
+ * @permission purchasing.purchase_order.manage
  */
 export async function createPurchaseOrder(
   payload: CreatePurchaseOrderInput
@@ -188,6 +189,7 @@ export async function createPurchaseOrder(
  *
  * @param id ID de la orden de compra
  * @returns Orden de compra con ítems y datos del proveedor, o undefined si no existe
+ * @permission purchasing.purchase_order.read
  */
 export async function getPurchaseOrderById(
   id: number
@@ -282,6 +284,7 @@ export async function getPurchaseOrderById(
  *
  * @param params Parámetros de búsqueda y paginación
  * @returns Lista de órdenes y opcionalmente el total de registros
+ * @permission purchasing.purchase_order.read
  */
 export async function listPurchaseOrders(
   params: ListPurchaseOrdersParams = {}
@@ -422,6 +425,7 @@ export async function listPurchaseOrders(
  * @throws Error si la orden no existe
  * @throws Error si el estado es inválido
  * @throws Error si la transición de estado no es permitida
+ * @permission purchasing.purchase_order.manage
  */
 export async function updatePurchaseOrderStatus(
   orderId: number,
@@ -507,6 +511,7 @@ export async function updatePurchaseOrderStatus(
  * @throws Error si la orden no está en estado "approved"
  * @throws Error si la ubicación no existe
  * @throws Error si no hay tipo de movimiento para compras configurado
+ * @permission purchasing.purchase_order.manage
  */
 export async function receivePurchaseOrder(
   input: ReceivePurchaseOrderInput

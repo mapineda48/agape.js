@@ -31,6 +31,7 @@ export class ContactMethodNotFoundError extends Error {
  *
  * @param params - Parámetros de filtrado
  * @returns Lista de métodos de contacto del usuario
+ * @permission core.contact_method.read
  */
 export async function listContactMethods(
   params: ListContactMethodsParams
@@ -65,6 +66,7 @@ export async function listContactMethods(
  *
  * @param id - Identificador único del método de contacto
  * @returns Método de contacto o undefined
+ * @permission core.contact_method.read
  */
 export async function getContactMethodById(
   id: number
@@ -85,6 +87,7 @@ export async function getContactMethodById(
  *
  * @param payload - Datos del método de contacto
  * @returns Método de contacto creado o actualizado
+ * @permission core.contact_method.manage
  */
 export async function upsertContactMethod(
   payload: Omit<IContactMethod, "id">
@@ -163,6 +166,7 @@ export async function upsertContactMethod(
  * Elimina un método de contacto.
  *
  * @param id - ID del método de contacto a eliminar
+ * @permission core.contact_method.manage
  */
 export async function deleteContactMethod(id: number): Promise<void> {
   const result = await db
@@ -182,6 +186,7 @@ export async function deleteContactMethod(id: number): Promise<void> {
  * @param userId - ID del usuario
  * @param contacts - Lista de contactos a guardar (crea o actualiza)
  * @returns Lista de contactos guardados
+ * @permission core.contact_method.manage
  */
 export async function saveUserContactMethods(
   userId: number,

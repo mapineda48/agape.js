@@ -62,6 +62,7 @@ function toDto(record: typeof unitOfMeasure.$inferSelect): IUnitOfMeasure {
  *
  * @param params Filtros de listado.
  * @returns Lista de unidades de medida.
+ * @permission inventory.unit_of_measure.read
  *
  * @example
  * ```ts
@@ -141,6 +142,7 @@ export async function listUnitOfMeasures(
  *
  * @param id ID de la UOM.
  * @returns UOM o undefined si no existe.
+ * @permission inventory.unit_of_measure.read
  */
 export async function getUnitOfMeasureById(
   id: number
@@ -158,6 +160,7 @@ export async function getUnitOfMeasureById(
  *
  * @param code Código de la UOM.
  * @returns UOM o undefined si no existe.
+ * @permission inventory.unit_of_measure.read
  */
 export async function getUnitOfMeasureByCode(
   code: string
@@ -176,6 +179,7 @@ export async function getUnitOfMeasureByCode(
  *
  * @param id ID de la UOM.
  * @returns Información de uso.
+ * @permission inventory.unit_of_measure.read
  */
 export async function getUnitOfMeasureUsageInfo(
   id: number
@@ -222,6 +226,7 @@ export async function getUnitOfMeasureUsageInfo(
  *
  * @param payload Datos de la UOM.
  * @returns Array con la UOM creada/actualizada.
+ * @permission inventory.unit_of_measure.manage
  *
  * @example
  * ```ts
@@ -250,7 +255,7 @@ export async function upsertUnitOfMeasure(
     if (existingByName && existingByName.id !== id) {
       throw new BusinessRuleError(
         `Ya existe una unidad de medida con el nombre "${fullName}" pero código diferente (${existingByName.code}). ` +
-          `Verifique que no está duplicando la misma unidad.`
+        `Verifique que no está duplicando la misma unidad.`
       );
     }
 
@@ -308,6 +313,7 @@ export async function upsertUnitOfMeasure(
  *
  * @param payload DTO con ID y nuevo estado.
  * @returns Resultado de la operación con mensaje informativo.
+ * @permission inventory.unit_of_measure.manage
  *
  * @example
  * ```ts

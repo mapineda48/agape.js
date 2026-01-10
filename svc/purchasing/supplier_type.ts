@@ -6,6 +6,7 @@ import { desc, eq } from "drizzle-orm";
 
 /**
  * Lista todos los tipos de proveedor ordenados por ID descendente.
+ * @permission purchasing.supplier_type.read
  */
 export async function listSupplierTypes() {
   return db.select().from(supplierType).orderBy(desc(supplierType.id));
@@ -13,6 +14,7 @@ export async function listSupplierTypes() {
 
 /**
  * Obtiene un tipo de proveedor por ID.
+ * @permission purchasing.supplier_type.read
  */
 export async function getSupplierTypeById(id: number) {
   const [record] = await db
@@ -25,6 +27,7 @@ export async function getSupplierTypeById(id: number) {
 
 /**
  * Inserta o actualiza un tipo de proveedor.
+ * @permission purchasing.supplier_type.manage
  */
 export async function upsertSupplierType(payload: NewSupplierType) {
   const { id, ...data } = payload;
@@ -42,17 +45,21 @@ export async function upsertSupplierType(payload: NewSupplierType) {
 
 /**
  * Elimina un tipo de proveedor por ID.
+ * @permission purchasing.supplier_type.manage
  */
 export async function deleteSupplierType(id: number) {
   await db.delete(supplierType).where(eq(supplierType.id, id));
 }
 
 // Alias para compatibilidad con código existente
+/** @permission purchasing.supplier_type.read */
 export const getSupplierType = getSupplierTypeById;
+/** @permission purchasing.supplier_type.manage */
 export async function createSupplierType(payload: { name: string }) {
   const [record] = await upsertSupplierType(payload as NewSupplierType);
   return record;
 }
+/** @permission purchasing.supplier_type.manage */
 export async function updateSupplierType(
   id: number,
   payload: { name: string }

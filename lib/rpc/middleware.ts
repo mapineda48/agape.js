@@ -13,6 +13,7 @@ import parseError from "./error";
 import { parseArgs } from "./parseArgs";
 import { cwd, findServices, toPublicUrl } from "./path";
 import { CONTENT_TYPES, HTTP_STATUS } from "./constants";
+import { validateEndpointPermission } from "./authorization";
 
 // ============================================================================
 // Types
@@ -151,6 +152,9 @@ const rpcMiddleware: Middleware = async (req, res, next) => {
 
   // Execute the RPC handler
   try {
+    // 🔐 RBAC: Validate permissions before executing handler
+    await validateEndpointPermission(endpoint);
+
     const args = await parseArgs(req);
     const result = await handler.call(null, ...args);
     sendSuccess(res, result);

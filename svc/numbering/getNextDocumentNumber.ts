@@ -172,6 +172,7 @@ async function getNextDocumentNumberCore(
 
 /**
  * Versión "clásica": maneja su propia transacción.
+ * @permission numbering.sequence.next
  */
 export async function getNextDocumentNumber(
   params: GetNextDocumentNumberParams
@@ -188,6 +189,7 @@ export async function getNextDocumentNumber(
  *     const num = await getNextDocumentNumberTx(tx, {...});
  *     ...
  *   });
+ * @permission numbering.sequence.next
  */
 export async function getNextDocumentNumberTx(
   tx: NumberingTx,

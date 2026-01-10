@@ -74,6 +74,7 @@ function toDecimal(
  *
  * @param payload Datos de la factura con líneas
  * @returns Factura creada con numeración
+ * @permission finance.sales_invoice.manage
  */
 export async function createSalesInvoice(
   payload: CreateSalesInvoiceInput
@@ -266,6 +267,7 @@ export async function createSalesInvoice(
  *
  * @param id ID de la factura a postear
  * @returns Resultado del posteo con totales calculados
+ * @permission finance.sales_invoice.manage
  */
 export async function postSalesInvoice(
   id: number
@@ -406,6 +408,7 @@ export async function postSalesInvoice(
 
 /**
  * Obtiene una factura de venta por su ID con todos los detalles.
+ * @permission finance.sales_invoice.read
  */
 export async function getSalesInvoiceById(
   id: number
@@ -544,6 +547,7 @@ export async function getSalesInvoiceById(
 
 /**
  * Lista facturas de venta con filtros y paginación.
+ * @permission finance.sales_invoice.read
  */
 export async function listSalesInvoices(
   params: ListSalesInvoicesParams = {}
@@ -705,6 +709,7 @@ import { getSystemConfig } from "#svc/config/systemConfig";
 /**
  * Obtiene los datos completos de una factura de venta para generar el PDF.
  * Incluye ítems detallados, información del cliente y datos de la empresa.
+ * @permission finance.sales_invoice.read
  */
 export async function getSalesInvoiceForPdf(
   id: number

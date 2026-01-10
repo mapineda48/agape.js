@@ -25,6 +25,7 @@ export class DocumentSeriesValidationError extends Error {
  * @param options.documentTypeId - Filtrar por tipo de documento
  * @param options.activeOnly - Si true, retorna solo series activas (default: true)
  * @returns Lista de series de documentos
+ * @permission numbering.series.read
  */
 export async function listDocumentSeries(
   options: {
@@ -58,6 +59,7 @@ export async function listDocumentSeries(
  *
  * @param id - Identificador único de la serie
  * @returns Serie encontrada o undefined
+ * @permission numbering.series.read
  */
 export async function getDocumentSeriesById(
   id: number
@@ -109,6 +111,7 @@ function validateDocumentSeries(
  * @param payload - Datos de la serie
  * @returns Serie creada o actualizada
  * @throws DocumentSeriesValidationError si la validación falla
+ * @permission numbering.series.manage
  *
  * @example
  * ```ts
@@ -194,6 +197,7 @@ async function ensureSingleDefault(
  * @param documentTypeId - ID del tipo de documento
  * @param today - Fecha de referencia para la vigencia (default: hoy)
  * @returns Series activas y vigentes ordenadas por prioridad
+ * @permission numbering.series.read
  */
 export async function getAvailableSeriesForDocument(
   documentTypeId: number,

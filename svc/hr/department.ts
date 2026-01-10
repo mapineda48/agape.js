@@ -10,6 +10,7 @@ import type {
 } from "#utils/dto/hr/department";
 import DateTime from "#utils/data/DateTime";
 
+/** @permission hr.department.manage */
 export async function upsertDepartment(
   payload: CreateDepartmentDto | UpdateDepartmentDto
 ): Promise<DepartmentDto> {
@@ -49,6 +50,7 @@ export async function upsertDepartment(
   }
 }
 
+/** @permission hr.department.read */
 export async function getDepartmentById(
   id: number
 ): Promise<DepartmentDto | undefined> {
@@ -60,6 +62,7 @@ export async function getDepartmentById(
   return record ? mapToDto(record) : undefined;
 }
 
+/** @permission hr.department.read */
 export async function listDepartments(
   params: ListDepartmentsParams
 ): Promise<ListDepartmentsResult> {

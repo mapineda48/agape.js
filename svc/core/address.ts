@@ -43,6 +43,7 @@ export class UserAddressNotFoundError extends Error {
  *
  * @param id - Identificador único de la dirección
  * @returns Dirección encontrada o undefined si no existe
+ * @permission core.address.read
  */
 export async function getAddressById(id: number) {
   const [record] = await db.select().from(address).where(eq(address.id, id));
@@ -54,6 +55,7 @@ export async function getAddressById(id: number) {
  *
  * @param payload - Datos de la dirección
  * @returns Dirección creada o actualizada
+ * @permission core.address.manage
  */
 export async function upsertAddress(payload: IAddress) {
   const { id, ...data } = payload;
@@ -83,6 +85,7 @@ export async function upsertAddress(payload: IAddress) {
  *
  * @param params - Parámetros de filtrado
  * @returns Lista de direcciones del usuario
+ * @permission core.address.read
  */
 export async function listUserAddresses(
   params: ListUserAddressesParams
@@ -138,6 +141,7 @@ export async function listUserAddresses(
  *
  * @param payload - Datos de la asociación
  * @returns Asociación creada o actualizada
+ * @permission core.address.manage
  */
 export async function upsertUserAddress(payload: IUserAddress) {
   const { id, ...data } = payload;
@@ -192,6 +196,7 @@ export async function upsertUserAddress(payload: IUserAddress) {
  *
  * @param payload - Datos de la dirección y asociación
  * @returns Asociación creada con la dirección
+ * @permission core.address.manage
  */
 export async function createUserAddressWithAddress(
   payload: IUpsertUserAddress
@@ -244,6 +249,7 @@ export async function createUserAddressWithAddress(
  *
  * @param id - ID de la asociación
  * @param deleteAddress - Si es true, también elimina la dirección física
+ * @permission core.address.manage
  */
 export async function deleteUserAddress(
   id: number,

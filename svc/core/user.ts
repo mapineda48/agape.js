@@ -15,6 +15,7 @@ import { and, eq } from "drizzle-orm";
  *
  * @param id - Identificador único del usuario
  * @returns Usuario encontrado o undefined si no existe
+ * @permission core.user.read
  *
  * @example
  * ```ts
@@ -32,6 +33,7 @@ export async function getUserById(id: number) {
 /**
  * Busca un usuario por tipo y número de documento.
  * Incluye los datos relacionados (persona o compañía).
+ * @permission core.user.read
  */
 export async function getUserByDocument(
   documentTypeId: number,
@@ -81,6 +83,7 @@ export async function getUserByDocument(
  * @returns Usuario creado o actualizado con sus datos relacionados
  * @throws Error si se proporcionan ambas propiedades (person y company)
  * @throws Error si no se proporciona ninguna propiedad de entidad
+ * @permission core.user.manage
  *
  * @example
  * ```ts
@@ -329,7 +332,7 @@ export type IUser = IUserPerson | IUserCompany;
  * Interfaz para un registro de usuario leído de la BD.
  * (usa `User` en vez de `NewUser`)
  */
-export interface IUserRecord extends Omit<User, "type"> {}
+export interface IUserRecord extends Omit<User, "type"> { }
 
 /**
  * Tipo inferido del resultado de upsertUser.

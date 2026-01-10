@@ -39,6 +39,7 @@ import type {
  *
  * @param params Filtros de listado.
  * @returns Lista de categorías.
+ * @permission inventory.category.read
  *
  * @example
  * ```ts
@@ -105,6 +106,7 @@ export async function listCategories(
  *
  * @param id ID de la categoría.
  * @returns Categoría o undefined si no existe.
+ * @permission inventory.category.read
  */
 export async function getCategoryById(
   id: number
@@ -118,6 +120,7 @@ export async function getCategoryById(
  *
  * @param payload Datos de la categoría.
  * @returns Array con la categoría creada/actualizada.
+ * @permission inventory.category.manage
  *
  * @example
  * ```ts
@@ -161,6 +164,7 @@ export async function upsertCategory(
  * @param payload ID y nuevo estado de la categoría.
  * @param cascade Si es true, deshabilita subcategorías en cascada.
  * @returns Resultado de la operación.
+ * @permission inventory.category.manage
  *
  * @example
  * ```ts
@@ -195,7 +199,7 @@ export async function toggleCategory(
     if (activeSubcategories > 0 && !cascade) {
       throw new Error(
         `No se puede deshabilitar la categoría porque tiene ${activeSubcategories} subcategoría(s) activa(s). ` +
-          `Primero deshabilite las subcategorías o use la opción de cascada.`
+        `Primero deshabilite las subcategorías o use la opción de cascada.`
       );
     }
 
@@ -247,6 +251,7 @@ export async function toggleCategory(
  *
  * @param params Filtros de listado.
  * @returns Lista de subcategorías.
+ * @permission inventory.category.read
  *
  * @example
  * ```ts
@@ -282,6 +287,7 @@ export async function listSubcategories(
  *
  * @param id ID de la subcategoría.
  * @returns Subcategoría o undefined si no existe.
+ * @permission inventory.category.read
  */
 export async function getSubcategoryById(
   id: number
@@ -298,6 +304,7 @@ export async function getSubcategoryById(
  *
  * @param id ID de la subcategoría.
  * @returns Subcategoría con categoría o undefined si no existe.
+ * @permission inventory.category.read
  */
 export async function getSubcategoryWithCategory(
   id: number
@@ -330,6 +337,7 @@ export async function getSubcategoryWithCategory(
  *
  * @param payload Datos de la subcategoría.
  * @returns Array con la subcategoría creada/actualizada.
+ * @permission inventory.category.manage
  *
  * @example
  * ```ts
@@ -355,7 +363,7 @@ export async function upsertSubcategory(
   if (isEnabling && !parentCategory.isEnabled) {
     throw new Error(
       `No se puede crear/habilitar una subcategoría para una categoría deshabilitada. ` +
-        `Primero habilite la categoría "${parentCategory.fullName}".`
+      `Primero habilite la categoría "${parentCategory.fullName}".`
     );
   }
 
@@ -390,6 +398,7 @@ export async function upsertSubcategory(
  * @param id ID de la subcategoría.
  * @param isEnabled Nuevo estado de habilitación.
  * @returns Subcategoría actualizada.
+ * @permission inventory.category.manage
  */
 export async function toggleSubcategory(
   id: number,
@@ -405,7 +414,7 @@ export async function toggleSubcategory(
   if (isEnabled && !existing.category.isEnabled) {
     throw new Error(
       `No se puede habilitar la subcategoría porque su categoría padre "${existing.category.fullName}" está deshabilitada. ` +
-        `Primero habilite la categoría padre.`
+      `Primero habilite la categoría padre.`
     );
   }
 

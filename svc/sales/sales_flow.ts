@@ -155,6 +155,7 @@ export async function deliverSalesOrder(
 /**
  * Crea una factura de venta directamente desde una orden (Variante B: Servicios).
  * Corresponde al Paso 3 del flujo ideal (sin inventario).
+ * @permission sales.flow.invoice
  */
 export async function invoiceSalesOrder(
     input: InvoiceSalesOrderInput
@@ -251,6 +252,7 @@ export async function invoiceSalesOrder(
 /**
  * Crea una factura de venta a partir de un despacho (Variante A: Inventario).
  * Corresponde al Paso 3 del flujo ideal (con inventario).
+ * @permission sales.flow.invoice
  */
 export async function invoiceDelivery(
     input: InvoiceDeliveryInput

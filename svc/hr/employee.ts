@@ -37,6 +37,7 @@ interface UpsertEmployeePayload {
  *
  * @param id - Identificador único del empleado
  * @returns Empleado con datos de persona, o undefined si no existe
+ * @permission hr.employee.read
  */
 export async function getEmployeeById(id: number) {
   const [match] = await db
@@ -74,6 +75,7 @@ export async function getEmployeeById(id: number) {
  * @param documentTypeId - ID del tipo de documento
  * @param documentNumber - Número de documento
  * @returns Empleado encontrado con datos básicos, o null si no existe
+ * @permission hr.employee.read
  */
 export async function getEmployeeByDocument(
   documentTypeId: number,
@@ -110,6 +112,7 @@ export async function getEmployeeByDocument(
  *
  * @param params - Parámetros de búsqueda y paginación
  * @returns Lista de empleados y opcionalmente el total de registros
+ * @permission hr.employee.read
  */
 export async function listEmployees(
   params: ListEmployeesParams = {}
@@ -190,6 +193,7 @@ export async function listEmployees(
  *
  * @param payload - Datos del empleado a insertar o actualizar
  * @returns El empleado creado o actualizado con sus datos relacionados
+ * @permission hr.employee.manage
  */
 export async function upsertEmployee(payload: UpsertEmployeePayload) {
   const { id, avatar, user: userDto, ...employeeData } = payload;

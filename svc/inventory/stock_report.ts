@@ -37,6 +37,7 @@ export interface StockValuationItem {
     }[];
 }
 
+/** @permission inventory.stock.read */
 export async function listStockValuation(params: ListStockValuationParams) {
     const conditions = [sql`${inventoryCostLayer.remainingQuantity} > 0`];
 
@@ -154,6 +155,7 @@ export async function listStockValuation(params: ListStockValuationParams) {
     };
 }
 
+/** @permission inventory.stock.read */
 export async function getStockMetrics() {
     const result = await db.execute(sql`
         SELECT 

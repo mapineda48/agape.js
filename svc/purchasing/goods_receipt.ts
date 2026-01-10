@@ -44,6 +44,7 @@ function toDecimal(
 
 /**
  * Crea un documento de recepción en estado borrador.
+ * @permission purchasing.goods_receipt.manage
  */
 export async function createGoodsReceipt(
   payload: CreateGoodsReceiptInput
@@ -229,6 +230,7 @@ export async function createGoodsReceipt(
 
 /**
  * Postea una recepción: Afecta inventario y actualiza OC.
+ * @permission purchasing.goods_receipt.manage
  */
 export async function postGoodsReceipt(
   id: number
@@ -378,6 +380,7 @@ export async function postGoodsReceipt(
 
 /**
  * Obtiene un Goods Receipt por su ID.
+ * @permission purchasing.goods_receipt.read
  */
 export async function getGoodsReceiptById(
   id: number
