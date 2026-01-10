@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { createClient, RESP_TYPES, type RedisClientType } from "redis";
 import { encode, decode } from "../../utils/msgpack"; // asumo que tienes decode también
 import logger from "../../log/logger";
@@ -31,10 +32,10 @@ const rpcCommandOptions = {
 } as const;
 
 function defaultKeyFromArgs<A extends unknown[]>(baseKey: string, args: A): string {
-  // Ojo: esto asume args JSON-serializables.
-  // Si tienes objetos grandes/fechas/etc, considera hashear.
   const suffix = args.length ? `:${JSON.stringify(args)}` : "";
-  return `${baseKey}${suffix}`;
+  const key = `${baseKey}${suffix}`;
+  const hash = crypto.createHash("sha256").update(key).digest("hex");
+  return hash;
 }
 
 export class CacheManager {
@@ -152,6 +153,16 @@ export class CacheManager {
   public async getNumber(key: string): Promise<number> {
     const value = await this.client.get(key);
     return value ? parseInt(value, 10) : 0;
+  }
+
+  /**
+   * Wrapper estándar: cachea y retorna el valor ya deserializado (T).
+   */
+  public static cacheFn<T, A extends unknown[]>(baseKey: string, fn: (...args: A) => Promise<T>, options: CacheOptions<T, A> = {}): (...args: A) => Promise<T> {
+
+    const cache = this.get();
+
+    return cache.cache(baseKey, fn, options);
   }
 
   /**

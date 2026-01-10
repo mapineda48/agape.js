@@ -5,6 +5,7 @@ import {
   boolean,
   primaryKey,
   integer,
+  json,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { schema } from "../schema";
@@ -43,6 +44,9 @@ const securityRole = schema.table("security_role", {
 
   /** Descripción detallada de los permisos que otorga el rol */
   description: text("description"),
+
+  /** Lista de permisos asignados al rol */
+  permissions: json("permissions").$type<string[]>().default([]).notNull(),
 
   /**
    * Indica si es un rol de sistema (no editable por usuarios).

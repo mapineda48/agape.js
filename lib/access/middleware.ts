@@ -2,8 +2,9 @@ import express, { type Response } from "express";
 
 import Jwt from "./Jwt";
 import ctx, { runContext } from "../context";
-import { findUser } from "#svc/security/user";
+import { findUserByCredentials, findUserByIdCache } from "#svc/security/user";
 import { decode, encode } from "#utils/msgpack";
+import { CacheManager } from "#lib/services/cache/CacheManager";
 
 const failLogin = new Error("Falló Autenticación");
 
@@ -25,12 +26,13 @@ export default function defineAuth(secret: string) {
     try {
       const [{ username, password }] = decode(req.body) as [LoginRequest];
 
-      const user = await findUser(username, password);
+      const user = await findUserByCredentials(username, password);
 
       if (!user) {
         sendMsgPack(res, failLogin, 401);
         return;
       }
+
 
       const token = await jwt.generateToken(user);
 
@@ -86,8 +88,16 @@ export default function defineAuth(secret: string) {
     }
 
     try {
-      const verified: any = await jwt.verifyToken(token);
-      runContext(verified, next);
+      const { id } = await jwt.verifyToken(token) as any;
+
+      const user = await findUserByIdCache(parseInt(id));
+
+      if (!user) {
+        sendMsgPack(res, failLogin, 401);
+        return;
+      }
+
+      runContext({ ...user, session: new Map() }, next);
     } catch (error) {
       sendMsgPack(res, failLogin, 401);
     }

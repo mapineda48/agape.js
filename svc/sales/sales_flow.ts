@@ -28,6 +28,7 @@ import type {
 /**
  * Realiza el despacho (Entrega/Remisión) de una orden de venta.
  * Corresponde al Paso 2 del flujo ideal.
+ * @permission sales.flow.deliver
  */
 export async function deliverSalesOrder(
     input: DeliverSalesOrderInput
