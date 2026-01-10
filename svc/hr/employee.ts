@@ -1,7 +1,8 @@
 import { db } from "#lib/db";
-import employee from "#models/hr/employee";
+import employee, { employeeJobPosition } from "#models/hr/employee";
 import person from "#models/core/person";
 import { user } from "#models/core/user";
+import { contactMethod } from "#models/core/contactMethod";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { and, count, eq, sql, desc } from "drizzle-orm";
 import DateTime from "#utils/data/DateTime";
@@ -28,6 +29,13 @@ interface UpsertEmployeePayload {
   user: IUser;
   isActive?: boolean;
   hireDate?: DateTime;
+  departmentId?: number;
+  jobPositionIds?: number[];
+  contacts?: {
+    email?: string;
+    phone?: string;
+    mobile?: string;
+  };
   metadata?: unknown;
   avatar?: string | File;
 }
@@ -50,6 +58,7 @@ export async function getEmployeeById(id: number) {
       hireDate: employee.hireDate,
       isActive: employee.isActive,
       avatarUrl: employee.avatarUrl,
+      departmentId: employee.departmentId,
       createdAt: employee.createdAt,
       updatedAt: employee.updatedAt,
       // Identity fields
@@ -65,7 +74,34 @@ export async function getEmployeeById(id: number) {
     .innerJoin(person, eq(employee.id, person.id))
     .where(eq(employee.id, id));
 
-  return match;
+  if (!match) return undefined;
+
+  // Get job positions
+  const jobPositions = await db
+    .select({ jobPositionId: employeeJobPosition.jobPositionId })
+    .from(employeeJobPosition)
+    .where(eq(employeeJobPosition.employeeId, id));
+
+  // Get contacts
+  const contacts = await db
+    .select({
+      type: contactMethod.type,
+      value: contactMethod.value,
+    })
+    .from(contactMethod)
+    .where(eq(contactMethod.userId, id));
+
+  const contactsMap = {
+    email: contacts.find((c) => c.type === "email")?.value,
+    phone: contacts.find((c) => c.type === "phone")?.value,
+    mobile: contacts.find((c) => c.type === "mobile")?.value,
+  };
+
+  return {
+    ...match,
+    jobPositionIds: jobPositions.map((jp) => jp.jobPositionId),
+    contacts: contactsMap,
+  };
 }
 
 /**
@@ -196,7 +232,7 @@ export async function listEmployees(
  * @permission hr.employee.manage
  */
 export async function upsertEmployee(payload: UpsertEmployeePayload) {
-  const { id, avatar, user: userDto, ...employeeData } = payload;
+  const { id, avatar, user: userDto, contacts, jobPositionIds, ...employeeData } = payload;
 
   // Paso 1: Upsert del usuario (SIEMPRE persona para empleados)
   // Aseguramos que person exista en el DTO
@@ -213,6 +249,7 @@ export async function upsertEmployee(payload: UpsertEmployeePayload) {
       id: userRecord.id,
       hireDate: employeeData.hireDate ?? new DateTime(),
       isActive: employeeData.isActive ?? true,
+      departmentId: employeeData.departmentId ?? null,
       avatarUrl: "", // Se actualiza despues si hay archivo
       metadata: employeeData.metadata,
     })
@@ -227,12 +264,62 @@ export async function upsertEmployee(payload: UpsertEmployeePayload) {
         ...(employeeData.isActive !== undefined
           ? { isActive: employeeData.isActive }
           : {}),
+        ...(employeeData.departmentId !== undefined
+          ? { departmentId: employeeData.departmentId }
+          : {}),
         ...(employeeData.metadata ? { metadata: employeeData.metadata } : {}),
       },
     })
     .returning();
 
-  // Paso 3: Manejar subida de avatar si se proporciona
+  // Paso 3: Manejar cargos (job positions)
+  if (jobPositionIds !== undefined) {
+    // Eliminar asignaciones existentes
+    await db
+      .delete(employeeJobPosition)
+      .where(eq(employeeJobPosition.employeeId, employeeRecord.id));
+
+    // Insertar nuevas asignaciones
+    if (jobPositionIds.length > 0) {
+      await db.insert(employeeJobPosition).values(
+        jobPositionIds.map((jobPositionId, index) => ({
+          employeeId: employeeRecord.id,
+          jobPositionId,
+          isPrimary: index === 0, // El primero es el principal
+        }))
+      );
+    }
+  }
+
+  // Paso 4: Manejar contactos
+  if (contacts) {
+    const contactTypes = [
+      { type: "email" as const, value: contacts.email },
+      { type: "phone" as const, value: contacts.phone },
+      { type: "mobile" as const, value: contacts.mobile },
+    ];
+
+    for (const { type, value } of contactTypes) {
+      if (value) {
+        // Upsert each contact type
+        await db
+          .insert(contactMethod)
+          .values({
+            userId: employeeRecord.id,
+            type,
+            value,
+            isPrimary: true,
+            isActive: true,
+          })
+          .onConflictDoUpdate({
+            target: [contactMethod.userId, contactMethod.type, contactMethod.value],
+            set: { value, updatedAt: new DateTime() },
+          });
+      }
+    }
+  }
+
+  // Paso 5: Manejar subida de avatar si se proporciona
   if (avatar) {
     let avatarUrl: string;
 
@@ -268,3 +355,4 @@ export async function upsertEmployee(payload: UpsertEmployeePayload) {
 
 // Types are now imported from "#utils/dto/hr/employee"
 // and re-exported at the top of this file.
+

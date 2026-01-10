@@ -9,6 +9,14 @@ import Image from "@/components/util/image";
 import DateTime from "@utils/data/DateTime";
 import { type UpsertEmployeePayload } from "@agape/hr/employee";
 import { type DocumentType } from "@agape/core/documentType";
+import type { JobPositionDto } from "@agape/hr/job_position";
+
+// Department type (simplified)
+interface DepartmentOption {
+  id: number;
+  name: string;
+  code: string;
+}
 
 function ImageProfile({ initialAvatar }: { initialAvatar?: string | null }) {
   const avatar = Form.useSelector(
@@ -86,6 +94,10 @@ interface EmployeeFormProps {
   isEdit?: boolean;
   /** The ID of the employee being edited (used for redirect comparison) */
   employeeId?: number;
+  /** Available job positions */
+  jobPositions?: JobPositionDto[];
+  /** Available departments */
+  departments?: DepartmentOption[];
 }
 
 export function EmployeeForm({
@@ -94,15 +106,22 @@ export function EmployeeForm({
   children,
   isEdit = false,
   employeeId,
+  jobPositions = [],
+  departments = [],
 }: EmployeeFormProps) {
   const notify = useNotificacion();
   const { navigate } = useRouter();
-  const { setAt } = Form.useForm();
+  const { setAt, getValues } = Form.useForm();
 
   // Filter document types for persons only
   const personDocumentTypes = useMemo(() => {
     return documentTypes.filter((d) => !d.appliesToCompany && d.isEnabled);
   }, [documentTypes]);
+
+  // Filter active job positions
+  const activeJobPositions = useMemo(() => {
+    return jobPositions.filter((jp) => jp.isActive);
+  }, [jobPositions]);
 
   // Watch fields for validation
   const documentTypeId = Form.useSelector(
@@ -110,6 +129,11 @@ export function EmployeeForm({
   );
   const documentNumber = Form.useSelector(
     (state: UpsertEmployeePayload) => state.user?.documentNumber
+  );
+
+  // Selected job positions state
+  const selectedJobPositions = Form.useSelector(
+    (state: UpsertEmployeePayload) => state.jobPositionIds || []
   );
 
   // Track initial values at mount time (edit mode detection)
@@ -250,6 +274,16 @@ export function EmployeeForm({
     employeeId,
   ]);
 
+  // Toggle job position selection
+  const toggleJobPosition = (jpId: number) => {
+    const current = selectedJobPositions || [];
+    if (current.includes(jpId)) {
+      setAt(["jobPositionIds"], current.filter((id) => id !== jpId));
+    } else {
+      setAt(["jobPositionIds"], [...current, jpId]);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       {/* Photo Section */}
@@ -352,6 +386,57 @@ export function EmployeeForm({
           </div>
         </Form.Scope>
 
+        {/* Contact Information */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg
+              className="h-5 w-5 mr-2 text-green-600"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg>
+            Información de Contacto
+          </h3>
+          <Form.Scope path="contacts" autoCleanup>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <Form.Text
+                  path="email"
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono Fijo
+                </label>
+                <Form.Text
+                  path="phone"
+                  placeholder="+57 1 234 5678"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono Móvil
+                </label>
+                <Form.Text
+                  path="mobile"
+                  placeholder="+57 300 123 4567"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                />
+              </div>
+            </div>
+          </Form.Scope>
+        </div>
+
         {/* Work Information */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -384,6 +469,19 @@ export function EmployeeForm({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Departamento
+              </label>
+              <Form.Select.Int path="departmentId">
+                <SelectItem value={0 as any}>Sin departamento</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </Form.Select.Int>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Estado
               </label>
               <div className="flex items-center pt-2">
@@ -397,6 +495,69 @@ export function EmployeeForm({
             </div>
           </div>
         </div>
+
+        {/* Job Positions */}
+        {activeJobPositions.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg
+                className="h-5 w-5 mr-2 text-amber-600"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M6 3.75A2.75 2.75 0 018.75 1h2.5A2.75 2.75 0 0114 3.75v.443c.572.055 1.14.122 1.706.2C17.053 4.582 18 5.75 18 7.07v3.469c0 1.126-.694 2.191-1.83 2.54-1.952.599-4.024.921-6.17.921s-4.219-.322-6.17-.921C2.694 12.73 2 11.665 2 10.539V7.07c0-1.321.947-2.489 2.294-2.676A41.047 41.047 0 016 4.193V3.75zm6.5 0v.325a41.622 41.622 0 00-5 0V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25zM10 10a1 1 0 00-1 1v.01a1 1 0 001 1h.01a1 1 0 001-1V11a1 1 0 00-1-1H10z"
+                  clipRule="evenodd"
+                />
+                <path d="M3 15.055v-.684c.126.053.255.1.39.142 2.092.642 4.313.987 6.61.987 2.297 0 4.518-.345 6.61-.987.135-.041.264-.089.39-.142v.684c0 1.347-.985 2.53-2.363 2.686a41.454 41.454 0 01-9.274 0C3.985 17.585 3 16.402 3 15.055z" />
+              </svg>
+              Cargos Asignados
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                ({selectedJobPositions.length} seleccionados)
+              </span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {activeJobPositions.map((jp) => {
+                const isSelected = selectedJobPositions.includes(jp.id);
+                return (
+                  <label
+                    key={jp.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all
+                      ${isSelected
+                        ? "border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20"
+                        : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                      }
+                    `}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleJobPosition(jp.id)}
+                      className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white block">
+                        {jp.name}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                        {jp.code}
+                      </span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+            {activeJobPositions.length === 0 && (
+              <p className="text-sm text-gray-500 italic">
+                No hay cargos configurados. Configure cargos en{" "}
+                <span className="font-medium">Configuración → Recursos Humanos</span>.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Actions */}
@@ -406,3 +567,4 @@ export function EmployeeForm({
     </div>
   );
 }
+

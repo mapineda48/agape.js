@@ -55,6 +55,16 @@ export interface UpsertEmployeePayload {
   isActive?: boolean;
   /** Fecha de contratación */
   hireDate?: DateTime;
+  /** ID del departamento */
+  departmentId?: number;
+  /** IDs de los cargos asignados */
+  jobPositionIds?: number[];
+  /** Datos de contacto */
+  contacts?: {
+    email?: string;
+    phone?: string;
+    mobile?: string;
+  };
   /** Metadatos adicionales */
   metadata?: unknown;
   /** Avatar (URL existente o File para subir) */

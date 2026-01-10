@@ -9,6 +9,8 @@ import {
   type UpsertEmployeePayload,
 } from "@agape/hr/employee";
 import { listDocumentTypes, type DocumentType } from "@agape/core/documentType";
+import { listJobPositions, type JobPositionDto } from "@agape/hr/job_position";
+import { listDepartments, type DepartmentDto } from "@agape/hr/department";
 import { EmployeeForm } from "../components";
 import DateTime from "@utils/data/DateTime";
 
@@ -16,6 +18,8 @@ type EmployeeData = NonNullable<Awaited<ReturnType<typeof getEmployeeById>>>;
 
 interface Props {
   documentTypes: DocumentType[];
+  jobPositions: JobPositionDto[];
+  departments: DepartmentDto[];
   employee: EmployeeData;
 }
 
@@ -25,9 +29,11 @@ interface PageParams {
 
 export async function onInit({ params }: { params: PageParams }) {
   const employeeId = Number(params.id);
-  const [documentTypes, employee] = await Promise.all([
+  const [documentTypes, employee, jobPositionsResult, departmentsResult] = await Promise.all([
     listDocumentTypes(),
     getEmployeeById(employeeId),
+    listJobPositions({ isActive: true }),
+    listDepartments({ isActive: true }),
   ]);
 
   if (!employee) {
@@ -37,6 +43,8 @@ export async function onInit({ params }: { params: PageParams }) {
   return {
     documentTypes,
     employee,
+    jobPositions: jobPositionsResult.jobPositions,
+    departments: departmentsResult.departments,
   };
 }
 
@@ -51,6 +59,9 @@ export default function EditEmployeePage(props: Props) {
     hireDate: props.employee.hireDate
       ? new DateTime(new Date(props.employee.hireDate as any))
       : undefined,
+    departmentId: props.employee.departmentId ?? undefined,
+    jobPositionIds: props.employee.jobPositionIds || [],
+    contacts: props.employee.contacts || {},
     user: {
       id: props.employee.userId,
       documentTypeId: props.employee.documentTypeId,
@@ -101,6 +112,8 @@ export default function EditEmployeePage(props: Props) {
           <Form.Root<UpsertEmployeePayload> state={initialData}>
             <EmployeeForm
               documentTypes={props.documentTypes}
+              jobPositions={props.jobPositions}
+              departments={props.departments}
               initialAvatar={props.employee.avatarUrl}
               isEdit
               employeeId={props.employee.id}
@@ -166,3 +179,4 @@ export default function EditEmployeePage(props: Props) {
     </Fragment>
   );
 }
+

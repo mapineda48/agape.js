@@ -5,19 +5,29 @@ import { useRouter } from "@/components/router/router-hook";
 import { useNotificacion } from "@/components/ui/notification";
 import { upsertEmployee, type UpsertEmployeePayload } from "@agape/hr/employee";
 import { listDocumentTypes, type DocumentType } from "@agape/core/documentType";
+import { listJobPositions, type JobPositionDto } from "@agape/hr/job_position";
+import { listDepartments, type DepartmentDto } from "@agape/hr/department";
 import { EmployeeForm } from "./components";
 import DateTime from "@utils/data/DateTime";
 
 interface Props {
   documentTypes: DocumentType[];
+  jobPositions: JobPositionDto[];
+  departments: DepartmentDto[];
   initialData?: UpsertEmployeePayload;
 }
 
 export async function onInit() {
-  const [documentTypes] = await Promise.all([listDocumentTypes()]);
+  const [documentTypes, jobPositionsResult, departmentsResult] = await Promise.all([
+    listDocumentTypes(),
+    listJobPositions({ isActive: true }),
+    listDepartments({ isActive: true }),
+  ]);
 
   return {
     documentTypes,
+    jobPositions: jobPositionsResult.jobPositions,
+    departments: departmentsResult.departments,
   };
 }
 
@@ -43,6 +53,7 @@ export default function NewEmployeePage(props: Props) {
       user: {
         documentTypeId: cedulaType?.id,
       },
+      jobPositionIds: [],
     } as UpsertEmployeePayload;
   }, [props.documentTypes, props.initialData]);
 
@@ -80,7 +91,11 @@ export default function NewEmployeePage(props: Props) {
 
           {/* Form */}
           <Form.Root<UpsertEmployeePayload> state={initialData}>
-            <EmployeeForm documentTypes={props.documentTypes}>
+            <EmployeeForm
+              documentTypes={props.documentTypes}
+              jobPositions={props.jobPositions}
+              departments={props.departments}
+            >
               <button
                 type="button"
                 onClick={() => navigate("../employees")}
@@ -144,3 +159,4 @@ export default function NewEmployeePage(props: Props) {
     </Fragment>
   );
 }
+
