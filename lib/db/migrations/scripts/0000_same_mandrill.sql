@@ -216,6 +216,12 @@ CREATE TABLE "agape_app_development_demo"."crm_client" (
 	"type_id" integer,
 	"photo_url" varchar(500),
 	"active" boolean DEFAULT true NOT NULL,
+	"price_list_id" integer,
+	"payment_terms_id" integer,
+	"credit_limit" numeric(10, 2),
+	"credit_days" integer,
+	"salesperson_id" integer,
+	"client_code" varchar(20),
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now()
 );
@@ -233,6 +239,8 @@ CREATE TABLE "agape_app_development_demo"."crm_order_item" (
 	"tax_amount" numeric(10, 2) DEFAULT 0 NOT NULL,
 	"subtotal" numeric(10, 2) NOT NULL,
 	"total" numeric(10, 2) NOT NULL,
+	"delivered_quantity" numeric(10, 2) DEFAULT 0 NOT NULL,
+	"invoiced_quantity" numeric(10, 2) DEFAULT 0 NOT NULL,
 	"notes" varchar(500)
 );
 --> statement-breakpoint
@@ -772,6 +780,7 @@ CREATE TABLE "agape_app_development_demo"."security_role" (
 	"code" varchar(30) NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"description" text,
+	"permissions" json DEFAULT '[]'::json NOT NULL,
 	"is_system_role" boolean DEFAULT false NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -836,6 +845,9 @@ ALTER TABLE "agape_app_development_demo"."core_person" ADD CONSTRAINT "core_pers
 ALTER TABLE "agape_app_development_demo"."user" ADD CONSTRAINT "user_document_type_id_core_identity_document_type_id_fk" FOREIGN KEY ("document_type_id") REFERENCES "agape_app_development_demo"."core_identity_document_type"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_id_user_id_fk" FOREIGN KEY ("id") REFERENCES "agape_app_development_demo"."user"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_type_id_crm_client_type_id_fk" FOREIGN KEY ("type_id") REFERENCES "agape_app_development_demo"."crm_client_type"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_price_list_id_catalogs_price_list_id_fk" FOREIGN KEY ("price_list_id") REFERENCES "agape_app_development_demo"."catalogs_price_list"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_payment_terms_id_finance_payment_terms_id_fk" FOREIGN KEY ("payment_terms_id") REFERENCES "agape_app_development_demo"."finance_payment_terms"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_salesperson_id_hr_employee_id_fk" FOREIGN KEY ("salesperson_id") REFERENCES "agape_app_development_demo"."hr_employee"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "agape_app_development_demo"."crm_order_item" ADD CONSTRAINT "crm_order_item_order_id_crm_order_id_fk" FOREIGN KEY ("order_id") REFERENCES "agape_app_development_demo"."crm_order"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "agape_app_development_demo"."crm_order_item" ADD CONSTRAINT "crm_order_item_item_id_catalogs_item_id_fk" FOREIGN KEY ("item_id") REFERENCES "agape_app_development_demo"."catalogs_item"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "agape_app_development_demo"."crm_order" ADD CONSTRAINT "crm_order_series_id_numbering_document_series_id_fk" FOREIGN KEY ("series_id") REFERENCES "agape_app_development_demo"."numbering_document_series"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -1045,13 +1057,3 @@ CREATE INDEX "ix_purchasing_goods_receipt_supplier" ON "agape_app_development_de
 CREATE UNIQUE INDEX "ux_purchasing_order_series_number" ON "agape_app_development_demo"."purchasing_purchase_order" USING btree ("series_id","document_number");--> statement-breakpoint
 CREATE INDEX "ix_purchasing_order_series" ON "agape_app_development_demo"."purchasing_purchase_order" USING btree ("series_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "ux_security_user_employee_id" ON "agape_app_development_demo"."security_user" USING btree ("employee_id");
-
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD COLUMN "price_list_id" integer;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD COLUMN "payment_terms_id" integer;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD COLUMN "credit_limit" numeric(10, 2);--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD COLUMN "credit_days" integer;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD COLUMN "salesperson_id" integer;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD COLUMN "client_code" varchar(20);--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_price_list_id_catalogs_price_list_id_fk" FOREIGN KEY ("price_list_id") REFERENCES "agape_app_development_demo"."catalogs_price_list"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_payment_terms_id_finance_payment_terms_id_fk" FOREIGN KEY ("payment_terms_id") REFERENCES "agape_app_development_demo"."finance_payment_terms"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_client" ADD CONSTRAINT "crm_client_salesperson_id_hr_employee_id_fk" FOREIGN KEY ("salesperson_id") REFERENCES "agape_app_development_demo"."hr_employee"("id") ON DELETE set null ON UPDATE no action;

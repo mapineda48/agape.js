@@ -1,1 +1,0 @@
-ALTER TABLE "agape_app_development_demo"."security_role" ADD COLUMN "permissions" json DEFAULT '[]'::json NOT NULL;

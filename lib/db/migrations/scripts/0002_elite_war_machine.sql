@@ -1,2 +1,0 @@
-ALTER TABLE "agape_app_development_demo"."crm_order_item" ADD COLUMN "delivered_quantity" numeric(10, 2) DEFAULT 0 NOT NULL;--> statement-breakpoint
-ALTER TABLE "agape_app_development_demo"."crm_order_item" ADD COLUMN "invoiced_quantity" numeric(10, 2) DEFAULT 0 NOT NULL;

@@ -1,5 +1,5 @@
 {
-  "id": "5b9c8d2b-ef69-4aa9-8743-c9eb39fa8351",
+  "id": "022fe175-a78f-4a4e-94ff-f155749002f2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1828,6 +1828,42 @@
           "notNull": true,
           "default": true
         },
+        "price_list_id": {
+          "name": "price_list_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_terms_id": {
+          "name": "payment_terms_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "credit_limit": {
+          "name": "credit_limit",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "credit_days": {
+          "name": "credit_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "salesperson_id": {
+          "name": "salesperson_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_code": {
+          "name": "client_code",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1871,6 +1907,48 @@
             "id"
           ],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "crm_client_price_list_id_catalogs_price_list_id_fk": {
+          "name": "crm_client_price_list_id_catalogs_price_list_id_fk",
+          "tableFrom": "crm_client",
+          "tableTo": "catalogs_price_list",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "price_list_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "crm_client_payment_terms_id_finance_payment_terms_id_fk": {
+          "name": "crm_client_payment_terms_id_finance_payment_terms_id_fk",
+          "tableFrom": "crm_client",
+          "tableTo": "finance_payment_terms",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "payment_terms_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "crm_client_salesperson_id_hr_employee_id_fk": {
+          "name": "crm_client_salesperson_id_hr_employee_id_fk",
+          "tableFrom": "crm_client",
+          "tableTo": "hr_employee",
+          "schemaTo": "agape_app_development_demo",
+          "columnsFrom": [
+            "salesperson_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -1959,6 +2037,20 @@
           "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": true
+        },
+        "delivered_quantity": {
+          "name": "delivered_quantity",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        },
+        "invoiced_quantity": {
+          "name": "invoiced_quantity",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
         },
         "notes": {
           "name": "notes",
@@ -7968,6 +8060,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "permissions": {
+          "name": "permissions",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::json"
         },
         "is_system_role": {
           "name": "is_system_role",

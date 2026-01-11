@@ -90,7 +90,7 @@ upsert_employee AS (
 upsert_role AS (
     INSERT INTO "agape_app_development_demo"."security_role"
         (code, name, description, is_system_role, is_active)
-    VALUES ('SP', 'super user', 'super user', true, true)
+    VALUES ('SP', 'Super User', 'Super User', true, true)
     ON CONFLICT (code)
     DO UPDATE SET
         name           = EXCLUDED.name,
