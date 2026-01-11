@@ -1,4 +1,4 @@
-import { hashPassword } from "#lib/access/password";
+import { hashPassword } from "#lib/security/password";
 import logger from "#lib/log/logger";
 import { Pool } from "pg";
 

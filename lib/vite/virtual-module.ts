@@ -142,7 +142,7 @@ async function generateVirtualModules(): Promise<VirtualModuleMap> {
 function addStaticModules(modules: VirtualModuleMap): void {
   // Security access module
   const securityModuleId = VIRTUAL_MODULE_PREFIX + "@agape/security/access";
-  modules[securityModuleId] = fs.readFileSync("lib/access/browser.js", "utf8");
+  modules[securityModuleId] = fs.readFileSync("lib/security/browser.js", "utf8");
 }
 
 // ============================================================================

@@ -1,7 +1,7 @@
 import { eq, sql, and, ilike, desc, asc, count } from "drizzle-orm";
 import { db } from "#lib/db";
 import securityUser from "#models/security/user";
-import { verifyPassword, hashPassword } from "#lib/access/password";
+import { verifyPassword, hashPassword } from "#lib/security/password";
 import employee from "#models/hr/employee";
 import person from "#models/core/person";
 import { securityRole, securityUserRole } from "#models/security/role";

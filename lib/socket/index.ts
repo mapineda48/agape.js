@@ -19,8 +19,8 @@ import { cwd, findServices, toPublicUrl } from "../rpc/path";
 import { Server, type Namespace } from "socket.io";
 import { NamespaceManager } from "./namespace"
 import logger from "#lib/log/logger";
-import Jwt from "#lib/access/Jwt";
-import { getCookie } from "#lib/access/middleware";
+import Jwt from "#lib/security/Jwt";
+import { getCookie } from "#lib/security/middleware";
 
 // ============================================================================
 // Types

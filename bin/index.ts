@@ -104,7 +104,7 @@ if (isDevelopment) {
  * Dynamic imports for middleware after the database is initialized
  * Importing middleware before the database is initialized will throw an error
  */
-const { default: auth } = await import("#lib/access/middleware");
+const { default: auth } = await import("#lib/security/middleware");
 const { default: rpc } = await import("#lib/rpc/middleware");
 const { default: createSocketServer } = await import("#lib/socket");
 
