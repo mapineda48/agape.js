@@ -384,12 +384,27 @@ export async function getAvailablePermissions(): Promise<
     // Return the permission catalog
     return [
         {
+            module: "Navegación",
+            permissions: [
+                { key: "cms.view", label: "Acceso al CMS (requerido)" },
+                { key: "inventory.view", label: "Ver módulo Inventario" },
+                { key: "sales.view", label: "Ver módulo Ventas" },
+                { key: "purchasing.view", label: "Ver módulo Compras" },
+                { key: "invoicing.view", label: "Ver módulo Facturación" },
+                { key: "crm.view", label: "Ver módulo Clientes (CRM)" },
+                { key: "hr.view", label: "Ver módulo Recursos Humanos" },
+                { key: "report.view", label: "Ver módulo Reportes" },
+                { key: "configuration.admin", label: "Ver Configuración del sistema" },
+            ],
+        },
+        {
             module: "Seguridad",
             permissions: [
                 { key: "security.role.read", label: "Ver roles" },
                 { key: "security.role.manage", label: "Gestionar roles" },
                 { key: "security.user.read", label: "Ver usuarios" },
-                { key: "*", label: "Acceso total (Admin)" },
+                { key: "security.user.manage", label: "Gestionar usuarios" },
+                { key: "*", label: "Acceso total (Super Admin)" },
             ],
         },
         {
@@ -436,6 +451,10 @@ export async function getAvailablePermissions(): Promise<
                 { key: "finance.payment.manage", label: "Gestionar pagos" },
                 { key: "finance.currency.read", label: "Ver monedas" },
                 { key: "finance.currency.manage", label: "Gestionar monedas" },
+                { key: "finance.tax.read", label: "Ver impuestos" },
+                { key: "finance.tax.manage", label: "Gestionar impuestos" },
+                { key: "finance.tax_group.read", label: "Ver grupos de impuestos" },
+                { key: "finance.tax_group.manage", label: "Gestionar grupos de impuestos" },
                 { key: "finance.*", label: "Acceso completo a Finanzas" },
             ],
         },
@@ -444,8 +463,10 @@ export async function getAvailablePermissions(): Promise<
             permissions: [
                 { key: "purchasing.supplier.read", label: "Ver proveedores" },
                 { key: "purchasing.supplier.manage", label: "Gestionar proveedores" },
-                { key: "purchasing.order.read", label: "Ver órdenes de compra" },
-                { key: "purchasing.order.manage", label: "Gestionar órdenes de compra" },
+                { key: "purchasing.purchase_order.read", label: "Ver órdenes de compra" },
+                { key: "purchasing.purchase_order.manage", label: "Gestionar órdenes de compra" },
+                { key: "purchasing.goods_receipt.read", label: "Ver recepciones" },
+                { key: "purchasing.goods_receipt.manage", label: "Gestionar recepciones" },
                 { key: "purchasing.*", label: "Acceso completo a Compras" },
             ],
         },
@@ -456,6 +477,8 @@ export async function getAvailablePermissions(): Promise<
                 { key: "hr.employee.manage", label: "Gestionar empleados" },
                 { key: "hr.department.read", label: "Ver departamentos" },
                 { key: "hr.department.manage", label: "Gestionar departamentos" },
+                { key: "hr.job_position.read", label: "Ver cargos" },
+                { key: "hr.job_position.manage", label: "Gestionar cargos" },
                 { key: "hr.*", label: "Acceso completo a RRHH" },
             ],
         },
@@ -466,7 +489,32 @@ export async function getAvailablePermissions(): Promise<
                 { key: "config.system.manage", label: "Gestionar configuración" },
                 { key: "numbering.series.read", label: "Ver series de numeración" },
                 { key: "numbering.series.manage", label: "Gestionar series de numeración" },
+                { key: "numbering.type.read", label: "Ver tipos de documento" },
+                { key: "numbering.type.manage", label: "Gestionar tipos de documento" },
+            ],
+        },
+        {
+            module: "Catálogos",
+            permissions: [
+                { key: "catalogs.item.read", label: "Ver ítems del catálogo" },
+                { key: "catalogs.item.manage", label: "Gestionar ítems" },
+                { key: "catalogs.category.read", label: "Ver categorías" },
+                { key: "catalogs.category.manage", label: "Gestionar categorías" },
+                { key: "catalogs.price_list.read", label: "Ver listas de precios" },
+                { key: "catalogs.price_list.manage", label: "Gestionar listas de precios" },
+            ],
+        },
+        {
+            module: "Core",
+            permissions: [
+                { key: "core.user.read", label: "Ver datos de usuarios" },
+                { key: "core.user.manage", label: "Gestionar datos de usuarios" },
+                { key: "core.address.read", label: "Ver direcciones" },
+                { key: "core.address.manage", label: "Gestionar direcciones" },
+                { key: "core.contact_method.read", label: "Ver métodos de contacto" },
+                { key: "core.contact_method.manage", label: "Gestionar métodos de contacto" },
             ],
         },
     ];
 }
+

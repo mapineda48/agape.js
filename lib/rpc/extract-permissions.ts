@@ -146,6 +146,7 @@ function hasCallableInitializer(decl: ts.VariableDeclaration): boolean {
 
 /**
  * Extracts the @permission tag value from a node's JSDoc comments.
+ * Sanitizes the result to remove newlines and extra whitespace.
  */
 function getPermissionTag(node: ts.Node): string | null {
     const tags = ts.getJSDocTags(node);
@@ -153,18 +154,21 @@ function getPermissionTag(node: ts.Node): string | null {
 
     if (!permTag?.comment) return null;
 
+    let permission: string | null = null;
+
     if (typeof permTag.comment === "string") {
-        return permTag.comment.trim();
-    }
-
-    if (Array.isArray(permTag.comment)) {
-        return permTag.comment
+        permission = permTag.comment;
+    } else if (Array.isArray(permTag.comment)) {
+        permission = permTag.comment
             .map((part) => (typeof part === "string" ? part : part.text))
-            .join("")
-            .trim();
+            .join("");
     }
 
-    return null;
+    if (!permission) return null;
+
+    // Sanitize: remove newlines and trim whitespace
+    // Sometimes JSDoc comments can span multiple lines
+    return permission.split("\n")[0].trim();
 }
 
 // ============================================================================
@@ -334,26 +338,64 @@ export async function buildAndGenerate(outputPath: string = OUTPUT_FILE) {
     return permissions;
 }
 
+import { navigationPermissions } from "./permissions.generated.js";
+
 export function generateJavaScriptModule(permissions: PermissionMap): string {
-    const entries = Object.entries(permissions)
+    const rpcEntries = Object.entries(permissions)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([endpoint, permission]) => `  "${endpoint}": "${permission}"`)
         .join(",\n");
 
+    const navEntries = Object.entries(navigationPermissions)
+        .map(([key, value]) => `  "${key}": "${value}"`)
+        .join(",\n");
+
     return `/**
- * Auto-generated RPC Permission Map (Production)
+ * Permissions Configuration (Production)
+ * 
  * Generated at: ${new Date().toISOString()}
+ * 
+ * Contains:
+ * - Navigation permissions (constant, for routing/menu)
+ * - RPC permissions (auto-generated from @permission JSDoc)
  */
+
+// ============================================================================
+// Navigation Permissions (CONSTANT)
+// ============================================================================
+
+/**
+ * Constant permissions for module navigation/view access.
+ */
+export const navigationPermissions = {
+${navEntries}
+};
+
+// ============================================================================
+// RPC Permissions (AUTO-GENERATED)
+// ============================================================================
 
 /**
  * Map of RPC endpoint paths to required permissions.
  */
 export const rpcPermissions = {
-${entries}
+${rpcEntries}
+};
+
+// ============================================================================
+// Combined Permissions
+// ============================================================================
+
+/**
+ * All permissions available in the system.
+ */
+export const allPermissions = {
+  ...navigationPermissions,
+  ...rpcPermissions,
 };
 
 /**
- * Gets the required permission for an endpoint.
+ * Gets the required permission for an RPC endpoint.
  * Returns null if no permission is required (public endpoint).
  */
 export function getRequiredPermission(endpoint) {
@@ -361,10 +403,24 @@ export function getRequiredPermission(endpoint) {
 }
 
 /**
- * Checks if an endpoint requires authentication.
+ * Checks if an RPC endpoint requires authentication.
  */
 export function isProtectedEndpoint(endpoint) {
   return endpoint in rpcPermissions;
+}
+
+/**
+ * Checks if a permission key is valid (exists in the system).
+ */
+export function isValidPermission(permission) {
+  return permission in allPermissions;
+}
+
+/**
+ * Gets all permission keys as an array.
+ */
+export function getAllPermissionKeys() {
+  return Object.keys(allPermissions);
 }
 `;
 }

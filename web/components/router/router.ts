@@ -1,6 +1,7 @@
 import { Action } from "history";
 import { createContext, createElement, useContext, type JSX } from "react";
 import NoFoundPage from "../../app/NotFound";
+import Unauthorized from "../Unauthorized";
 import { RouterPathProvider } from "./path-context";
 import { RouteRegistry, type ModuleType } from "./route-registry";
 import { Navigator } from "./navigator";
@@ -62,6 +63,19 @@ export class HistoryManager {
 
   public listenPage(cb: (page: JSX.Element) => void) {
     const unlisten = this.navigator.listen((pathname, action, state) => {
+      const cleanState = this.navigator.getCleanState(state);
+
+      // Check if this navigation was denied by RBAC
+      if (cleanState?.deniedPermission) {
+        this.currentParams = {};
+        cb(
+          createElement(Unauthorized, {
+            requiredPermission: cleanState.deniedPermission,
+          })
+        );
+        return;
+      }
+
       const result = this.registry.getPageWithParams(pathname);
 
       // Si existe una página registrada, construimos el árbol con layouts
@@ -70,7 +84,7 @@ export class HistoryManager {
         this.currentParams = result.params;
 
         const props = {
-          ...this.navigator.getCleanState(state),
+          ...cleanState,
           params: result.params,
         };
 
@@ -109,8 +123,17 @@ export class HistoryManager {
     const ctx = structuredClone(opt);
 
     (async () => {
-      // 1) Auth gates
-      pathname = await this.authGuard.check(pathname, ctx);
+      // 1) Auth gates (authentication + RBAC)
+      const authResult = await this.authGuard.check(pathname, ctx);
+      pathname = authResult.pathname;
+
+      // 1.1) Permission denied - pass through state for listenPage to handle
+      if (authResult.deniedPermission) {
+        this.currentParams = {};
+        ctx.state = { deniedPermission: authResult.deniedPermission };
+        this.navigator.updateHistory(pathname, ctx);
+        return;
+      }
 
       // Parse actual path and query from the pathname string
       // Use a dummy base because pathname might be relative or just absolute path

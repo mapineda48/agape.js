@@ -26,6 +26,11 @@ export interface IUserSession {
   avatarUrl: string | null;
   /** Nombre del cargo principal del empleado (puede ser null) */
   jobPositionName: string | null;
+  /**
+   * Permisos del usuario obtenidos de sus roles.
+   * Soporta wildcards: "*" (super admin), "inventory.*" (todo inventario)
+   */
+  permissions: string[];
 }
 
 /**

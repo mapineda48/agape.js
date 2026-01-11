@@ -18,6 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useTheme } from "./ThemeProvider";
 import { logout, session } from "@agape/security/access";
+import { canViewMenuItem } from "@/lib/rbac";
 import clsx from "clsx";
 import { useHistory } from "./router/router";
 import { factoryHook } from "../hook/useBreakpointValue";
@@ -179,75 +180,87 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 space-y-6 overflow-y-auto py-4">
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.label} className="space-y-1">
-              {!isCollapsed && (
-                <motion.h3
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="px-4 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2 mt-4 first:mt-0"
-                >
-                  {section.label}
-                </motion.h3>
-              )}
-              {section.items.map((item) => {
-                const isActive = item.exact
-                  ? currentPath === item.path
-                  : currentPath.startsWith(item.activePath || item.path);
+          {NAV_SECTIONS.map((section) => {
+            // Filter items based on user permissions
+            const visibleItems = section.items.filter((item) =>
+              canViewMenuItem(item.path)
+            );
 
-                return (
-                  <div
-                    key={item.path}
-                    onClick={() => {
-                      router.navigateTo(item.path);
-                      if (breakpoint.isMobile) {
-                        setIsCollapsed(true);
-                      }
-                    }}
-                    className={clsx(
-                      "flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 group relative overflow-hidden",
-                      isActive
-                        ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                        : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
-                    )}
+            // Don't render section if no items are visible
+            if (visibleItems.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={section.label} className="space-y-1">
+                {!isCollapsed && (
+                  <motion.h3
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="px-4 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2 mt-4 first:mt-0"
                   >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl"
-                        initial={false}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                        }}
-                      />
-                    )}
-                    <item.icon
+                    {section.label}
+                  </motion.h3>
+                )}
+                {visibleItems.map((item) => {
+                  const isActive = item.exact
+                    ? currentPath === item.path
+                    : currentPath.startsWith(item.activePath || item.path);
+
+                  return (
+                    <div
+                      key={item.path}
+                      onClick={() => {
+                        router.navigateTo(item.path);
+                        if (breakpoint.isMobile) {
+                          setIsCollapsed(true);
+                        }
+                      }}
                       className={clsx(
-                        "w-6 h-6 relative z-10 transition-colors",
+                        "flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 group relative overflow-hidden",
                         isActive
-                          ? "text-indigo-600 dark:text-indigo-400"
-                          : "group-hover:text-gray-900 dark:group-hover:text-gray-200"
+                          ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                          : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
                       )}
-                    />
-                    <AnimatePresence>
-                      {!isCollapsed && (
-                        <motion.span
-                          initial={{ opacity: 0, width: 0 }}
-                          animate={{ opacity: 1, width: "auto" }}
-                          exit={{ opacity: 0, width: 0 }}
-                          className="ml-3 font-medium whitespace-nowrap relative z-10"
-                        >
-                          {item.label}
-                        </motion.span>
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl"
+                          initial={false}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                          }}
+                        />
                       )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                      <item.icon
+                        className={clsx(
+                          "w-6 h-6 relative z-10 transition-colors",
+                          isActive
+                            ? "text-indigo-600 dark:text-indigo-400"
+                            : "group-hover:text-gray-900 dark:group-hover:text-gray-200"
+                        )}
+                      />
+                      <AnimatePresence>
+                        {!isCollapsed && (
+                          <motion.span
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: "auto" }}
+                            exit={{ opacity: 0, width: 0 }}
+                            className="ml-3 font-medium whitespace-nowrap relative z-10"
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
 
         {/* User Profile */}

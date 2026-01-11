@@ -1,8 +1,26 @@
-import { isAuthenticated } from "@agape/security/access";
+import { isAuthenticated, session } from "@agape/security/access";
 import type { INavigateTo } from "./types";
+import { canAccessRoute, getRoutePermission } from "@/lib/rbac";
 
 // Re-export for backwards compatibility
 export type { INavigateTo };
+
+/**
+ * Result of an auth guard check.
+ */
+export interface AuthGuardResult {
+  /**
+   * The pathname to navigate to.
+   * May be different from the original if a redirect is needed.
+   */
+  pathname: string;
+
+  /**
+   * If set, the user was authenticated but lacks the required permission.
+   * The router should render the Unauthorized component instead of the page.
+   */
+  deniedPermission?: string;
+}
 
 /**
  * Helper to check if a pathname matches a protected route prefix.
@@ -18,16 +36,21 @@ function isProtectedRoute(prefix: string, pathname: string): boolean {
 }
 
 /**
- * Authentication guard that controls access to protected routes.
+ * Authentication and authorization guard that controls access to protected routes.
  *
  * ## Protected Routes
- * - `/cms` and `/cms/*` - Requires authentication
+ * - `/cms` and `/cms/*` - Requires authentication AND route permission
  * - `/login` and `/login/*` - Redirects authenticated users to `/cms`
+ *
+ * ## RBAC (Role-Based Access Control)
+ * After authentication, the guard checks if the user has the required permission
+ * for the target route. If not, it returns the permission that was denied so
+ * the router can render an Unauthorized component instead of redirecting.
  *
  * ## Important Behavior
  * - The `ctx.replace` property is **mutated** to `true` for all protected routes.
  *   This ensures auth redirects don't pollute browser history.
- * - If `isAuthenticated()` throws, the user is redirected to `/` as a fallback.
+ * - If `isAuthenticated()` throws, the user is redirected to `/login` as a fallback.
  */
 export class AuthGuard {
   /**
@@ -36,15 +59,15 @@ export class AuthGuard {
    * @param pathname - The target pathname
    * @param ctx - Navigation context. **Note:** `ctx.replace` will be mutated to `true`
    *              for protected routes to prevent history pollution during redirects.
-   * @returns The pathname to navigate to (may be different if redirect is needed)
+   * @returns Object with pathname and optional denied permission
    */
-  public async check(pathname: string, ctx: INavigateTo): Promise<string> {
+  public async check(pathname: string, ctx: INavigateTo): Promise<AuthGuardResult> {
     const isCms = isProtectedRoute("/cms", pathname);
     const isLogin = isProtectedRoute("/login", pathname);
 
     // Non-protected routes pass through unchanged
     if (!isCms && !isLogin) {
-      return pathname;
+      return { pathname };
     }
 
     // For protected routes, always use replace to avoid history pollution
@@ -53,14 +76,40 @@ export class AuthGuard {
     try {
       const { id } = await isAuthenticated();
 
-      if (id && isCms) return pathname;
-      if (!id && isCms) return "/login";
-      if (id && isLogin) return "/cms";
-      return "/login";
+      // Not authenticated - redirect to login
+      if (!id && isCms) {
+        return { pathname: "/login" };
+      }
+
+      // Authenticated but on login page - redirect to CMS
+      if (id && isLogin) {
+        return { pathname: "/cms" };
+      }
+
+      // Not authenticated and not on CMS
+      if (!id) {
+        return { pathname: "/login" };
+      }
+
+      // ====== RBAC Permission Check ======
+      // User is authenticated and trying to access CMS
+      // Check if they have the required permission for this route
+      const userPermissions = session?.permissions ?? [];
+
+      if (!canAccessRoute(pathname, userPermissions)) {
+        const requiredPermission = getRoutePermission(pathname);
+        return {
+          pathname,
+          deniedPermission: requiredPermission ?? "cms.view",
+        };
+      }
+
+      // All checks passed
+      return { pathname };
     } catch (error) {
       if (process.env.NODE_ENV === "development") console.error(error);
       // On auth error, redirect to login instead of root for better UX
-      return "/login";
+      return { pathname: "/login" };
     }
   }
 }
