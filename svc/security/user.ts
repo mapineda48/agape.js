@@ -2,8 +2,9 @@ import { eq, sql, and, ilike, desc, asc, count } from "drizzle-orm";
 import { db } from "#lib/db";
 import securityUser from "#models/security/user";
 import { verifyPassword, hashPassword } from "#lib/security/password";
-import employee from "#models/hr/employee";
+import employee, { employeeJobPosition } from "#models/hr/employee";
 import person from "#models/core/person";
+import jobPosition from "#models/hr/job_position";
 import { securityRole, securityUserRole } from "#models/security/role";
 import type { IContext } from "#lib/context";
 import { BusinessRuleError } from "#lib/error";
@@ -111,6 +112,7 @@ export async function findUserByCredentials(
   const [record] = await db
     .select({
       id: securityUser.id,
+      employeeId: securityUser.employeeId,
       passwordHash: securityUser.passwordHash,
       avatarUrl: employee.avatarUrl,
       fullName: sql<string>`${person.firstName} || ' ' || ${person.lastName}`,
@@ -128,10 +130,22 @@ export async function findUserByCredentials(
 
   const permissions = await getUserPermissions(record.id);
 
+  // Obtener el primer cargo del empleado (priorizando el primario)
+  const [firstJobPosition] = await db
+    .select({
+      name: jobPosition.name,
+    })
+    .from(employeeJobPosition)
+    .innerJoin(jobPosition, eq(jobPosition.id, employeeJobPosition.jobPositionId))
+    .where(eq(employeeJobPosition.employeeId, record.employeeId))
+    .orderBy(desc(employeeJobPosition.isPrimary))
+    .limit(1);
+
   return {
     id: record.id,
     fullName: record.fullName,
     avatarUrl: record.avatarUrl,
+    jobPositionName: firstJobPosition?.name ?? null,
     permissions,
     tenant: "agape_app_development_demo",
   };
@@ -148,6 +162,7 @@ export async function findUserById(id: number): Promise<IUserSession | null> {
   const [record] = await db
     .select({
       id: securityUser.id,
+      employeeId: securityUser.employeeId,
       passwordHash: securityUser.passwordHash,
       avatarUrl: employee.avatarUrl,
       fullName: sql<string>`${person.firstName} || ' ' || ${person.lastName}`,
@@ -161,10 +176,22 @@ export async function findUserById(id: number): Promise<IUserSession | null> {
 
   const permissions = await getUserPermissions(record.id);
 
+  // Obtener el primer cargo del empleado (priorizando el primario)
+  const [firstJobPosition] = await db
+    .select({
+      name: jobPosition.name,
+    })
+    .from(employeeJobPosition)
+    .innerJoin(jobPosition, eq(jobPosition.id, employeeJobPosition.jobPositionId))
+    .where(eq(employeeJobPosition.employeeId, record.employeeId))
+    .orderBy(desc(employeeJobPosition.isPrimary))
+    .limit(1);
+
   return {
     id: record.id,
     fullName: record.fullName,
     avatarUrl: record.avatarUrl,
+    jobPositionName: firstJobPosition?.name ?? null,
     permissions,
     tenant: "agape_app_development_demo",
   };
@@ -586,4 +613,6 @@ export async function unlockSecurityUser(
 export interface IUserSession extends Omit<IContext, "session"> {
   fullName: string;
   avatarUrl: string | null;
+  /** Nombre del primer cargo del empleado (null si no tiene cargos asignados) */
+  jobPositionName: string | null;
 }

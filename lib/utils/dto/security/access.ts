@@ -24,6 +24,8 @@ export interface IUserSession {
   fullName: string;
   /** URL del avatar del usuario (puede ser null) */
   avatarUrl: string | null;
+  /** Nombre del cargo principal del empleado (puede ser null) */
+  jobPositionName: string | null;
 }
 
 /**
