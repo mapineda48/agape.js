@@ -1,7 +1,7 @@
-import { login, type LoginRequest } from "@agape/security/access";
 import { Form } from "@/components/form";
 import Submit from "@/components/ui/submit";
 import { motion } from "framer-motion";
+import { login, type LoginRequest } from "@agape/security/access";
 import { User, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "../../components/router/router-hook";
 
@@ -19,7 +19,7 @@ export default function LoginForm() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-md px-6"
       >
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl shadow-2xl">
@@ -100,12 +100,13 @@ export default function LoginForm() {
 
               <p className="text-center text-sm text-blue-200/60 mt-6">
                 ¿Olvidaste tu contraseña?{" "}
-                <a
-                  href="#"
+                <button
+                  type="button"
+                  onClick={() => router.navigate("/auth/forgot-password")}
                   className="text-blue-400 hover:text-blue-300 font-medium hover:underline transition-colors"
                 >
                   Recuperar acceso
-                </a>
+                </button>
               </p>
             </div>
           </Form.Root>

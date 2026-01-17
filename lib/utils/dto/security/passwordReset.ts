@@ -1,6 +1,12 @@
 export interface RequestPasswordResetInput {
     userId: number;
     resetUrl: string;
+    email?: string;
+}
+
+export interface RequestPasswordResetByEmailInput {
+    email: string;
+    resetUrl: string;
 }
 
 export interface RequestPasswordResetResult {

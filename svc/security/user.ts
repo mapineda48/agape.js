@@ -21,6 +21,7 @@ import {
 } from "#lib/services/mail/template/passwordReset";
 import type {
   RequestPasswordResetInput,
+  RequestPasswordResetByEmailInput,
   RequestPasswordResetResult,
   ResetPasswordInput,
   ResetPasswordResult,
@@ -635,7 +636,7 @@ export async function unlockSecurityUser(
 export async function requestPasswordReset(
   input: RequestPasswordResetInput
 ): Promise<RequestPasswordResetResult> {
-  const { userId, resetUrl } = input;
+  const { userId, resetUrl, email } = input;
 
   if (!resetUrl) {
     throw new BusinessRuleError("Se requiere un enlace de restablecimiento valido");
@@ -679,6 +680,16 @@ export async function requestPasswordReset(
     throw new BusinessRuleError("El empleado no tiene un correo registrado");
   }
 
+  const normalizedInputEmail = email?.trim().toLowerCase() ?? "";
+  const normalizedStoredEmail = emailRecord.email.trim().toLowerCase();
+
+  if (normalizedInputEmail && normalizedInputEmail !== normalizedStoredEmail) {
+    return {
+      success: true,
+      message: "Si el correo coincide, enviaremos un enlace de restablecimiento",
+    };
+  }
+
   const token = crypto.randomUUID();
   const expiresAt = new DateTime(Date.now() + 15 * 60 * 1000);
 
@@ -713,6 +724,66 @@ export async function requestPasswordReset(
     recipientEmail: emailRecord.email,
     expiresAt: expiresAt.toISOString(),
   };
+}
+
+/**
+ * Solicita el enlace de cambio validando el correo del empleado.
+ *
+ * @permission public.security.password.request
+ */
+export async function requestPasswordResetByEmail(
+  input: RequestPasswordResetByEmailInput
+): Promise<RequestPasswordResetResult> {
+  const { email, resetUrl } = input;
+
+  if (!email?.trim()) {
+    return {
+      success: true,
+      message: "Si el correo coincide, enviaremos un enlace de restablecimiento",
+    };
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const record = await db
+    .select({
+      id: securityUser.id,
+      employeeId: securityUser.employeeId,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      isActive: securityUser.isActive,
+      isLocked: securityUser.isLocked,
+      email: contactMethod.value,
+    })
+    .from(contactMethod)
+    .innerJoin(employee, eq(employee.id, contactMethod.userId))
+    .innerJoin(person, eq(person.id, employee.id))
+    .innerJoin(securityUser, eq(securityUser.employeeId, employee.id))
+    .where(
+      and(
+        eq(contactMethod.type, "email"),
+        eq(contactMethod.isPrimary, true),
+        eq(contactMethod.isActive, true),
+        eq(securityUser.isActive, true),
+        eq(securityUser.isLocked, false)
+      )
+    )
+    .then((rows) =>
+      rows.find((row) => row.email?.trim().toLowerCase() === normalizedEmail)
+    );
+
+  if (!record) {
+    return {
+      success: true,
+      message: "Si el correo coincide, enviaremos un enlace de restablecimiento",
+    };
+  }
+
+  return requestPasswordReset({
+    userId: record.id,
+    resetUrl,
+    email: record.email ?? undefined,
+  });
 }
 
 /**
