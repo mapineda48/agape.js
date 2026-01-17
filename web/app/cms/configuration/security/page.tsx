@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 import {
@@ -72,13 +72,17 @@ export async function onInit() {
 // Modal Hooks
 // ============================================================================
 
+type PortalModalProps = PortalInjectedProps & { onClose?: () => void };
+
 function RoleModalWrapper(
     props: {
         item: IRoleWithUsers | null;
         permissionGroups: PermissionGroup[];
         onSave: () => void;
-    } & PortalInjectedProps
+    } & PortalModalProps
 ) {
+    const handleClose = props.onClose ?? (() => {});
+
     return (
         <PortalModal
             {...props}
@@ -89,7 +93,7 @@ function RoleModalWrapper(
                 item={props.item}
                 permissionGroups={props.permissionGroups}
                 onSave={props.onSave}
-                onClose={props.onClose}
+                onClose={handleClose}
             />
         </PortalModal>
     );
@@ -100,8 +104,10 @@ function UserRolesModalWrapper(
         user: UserWithRoles;
         roles: IRoleWithUsers[];
         onSave: () => void;
-    } & PortalInjectedProps
+    } & PortalModalProps
 ) {
+    const handleClose = props.onClose ?? (() => {});
+
     return (
         <PortalModal
             {...props}
@@ -112,7 +118,7 @@ function UserRolesModalWrapper(
                 user={props.user}
                 roles={props.roles}
                 onSave={props.onSave}
-                onClose={props.onClose}
+                onClose={handleClose}
             />
         </PortalModal>
     );
@@ -302,24 +308,58 @@ function RolesPanel({
     onEdit: (role: IRoleWithUsers) => void;
     onToggle: (role: IRoleWithUsers) => void;
 }) {
+    const [search, setSearch] = useState("");
+    const normalizedSearch = search.trim().toLowerCase();
+
+    const filteredRoles = useMemo(() => {
+        if (!normalizedSearch) {
+            return roles;
+        }
+
+        return roles.filter((role) => {
+            const description = role.description ?? "";
+            return (
+                role.name.toLowerCase().includes(normalizedSearch) ||
+                role.code.toLowerCase().includes(normalizedSearch) ||
+                description.toLowerCase().includes(normalizedSearch)
+            );
+        });
+    }, [roles, normalizedSearch]);
+
     return (
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-5 py-4 rounded-t-2xl bg-gradient-to-r from-purple-50/70 dark:from-purple-900/20 to-transparent">
-                <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Roles del Sistema
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Define los roles y sus permisos de acceso.
-                    </p>
+            <div className="flex flex-col gap-4 px-5 py-4 rounded-t-2xl bg-gradient-to-r from-purple-50/70 dark:from-purple-900/20 to-transparent">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            Roles del Sistema
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Define los roles y sus permisos de acceso.
+                        </p>
+                    </div>
+                    <button
+                        onClick={onCreate}
+                        className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white shadow-sm transition-transform hover:-translate-y-0.5 bg-purple-600 hover:bg-purple-700"
+                    >
+                        <PlusIcon className="w-5 h-5" />
+                        Nuevo Rol
+                    </button>
                 </div>
-                <button
-                    onClick={onCreate}
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white shadow-sm transition-transform hover:-translate-y-0.5 bg-purple-600 hover:bg-purple-700"
-                >
-                    <PlusIcon className="w-5 h-5" />
-                    Nuevo Rol
-                </button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="relative flex-1">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Buscar por nombre, codigo o descripcion"
+                            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/60 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900/40"
+                        />
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {filteredRoles.length} de {roles.length} roles
+                    </div>
+                </div>
             </div>
 
             <div className="p-5">
@@ -327,13 +367,13 @@ function RolesPanel({
                     <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-4 py-8 text-center text-sm text-gray-600 dark:text-gray-300">
                         Cargando roles...
                     </div>
-                ) : roles.length === 0 ? (
+                ) : filteredRoles.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-4 py-8 text-center text-sm text-gray-600 dark:text-gray-300">
-                        No hay roles configurados.
+                        No hay roles con esos filtros.
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {roles.map((role) => (
+                        {filteredRoles.map((role) => (
                             <RoleCard
                                 key={role.id}
                                 role={role}
@@ -433,15 +473,49 @@ function UsersPanel({
     loading: boolean;
     onEditRoles: (user: UserWithRoles) => void;
 }) {
+    const [search, setSearch] = useState("");
+    const normalizedSearch = search.trim().toLowerCase();
+
+    const filteredUsers = useMemo(() => {
+        if (!normalizedSearch) {
+            return users;
+        }
+
+        return users.filter((user) => {
+            const rolesText = user.roles.map((role) => role.name).join(" ");
+            return (
+                user.username.toLowerCase().includes(normalizedSearch) ||
+                user.fullName.toLowerCase().includes(normalizedSearch) ||
+                rolesText.toLowerCase().includes(normalizedSearch)
+            );
+        });
+    }, [users, normalizedSearch]);
+
     return (
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
-            <div className="px-5 py-4 rounded-t-2xl bg-gradient-to-r from-indigo-50/70 dark:from-indigo-900/20 to-transparent">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Asignación de Roles a Usuarios
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Gestiona qué roles tiene cada usuario del sistema.
-                </p>
+            <div className="px-5 py-4 rounded-t-2xl bg-gradient-to-r from-indigo-50/70 dark:from-indigo-900/20 to-transparent space-y-3">
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Asignación de Roles a Usuarios
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Gestiona qué roles tiene cada usuario del sistema.
+                    </p>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="relative flex-1">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Buscar por usuario, nombre o rol"
+                            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/60 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-900/40"
+                        />
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {filteredUsers.length} de {users.length} usuarios
+                    </div>
+                </div>
             </div>
 
             <div className="p-5">
@@ -449,13 +523,13 @@ function UsersPanel({
                     <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-4 py-8 text-center text-sm text-gray-600 dark:text-gray-300">
                         Cargando usuarios...
                     </div>
-                ) : users.length === 0 ? (
+                ) : filteredUsers.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-4 py-8 text-center text-sm text-gray-600 dark:text-gray-300">
-                        No hay usuarios en el sistema.
+                        No hay usuarios con esos filtros.
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                             <UserRoleCard
                                 key={user.id}
                                 user={user}
@@ -530,6 +604,57 @@ function RoleForm({
     const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
         new Set(item?.permissions || [])
     );
+    const [permissionSearch, setPermissionSearch] = useState("");
+    const normalizedPermissionSearch = permissionSearch.trim().toLowerCase();
+
+    const filteredPermissionGroups = useMemo(() => {
+        if (!normalizedPermissionSearch) {
+            return permissionGroups;
+        }
+
+        return permissionGroups
+            .map((group) => {
+                const matchingPermissions = group.permissions.filter((perm) => {
+                    return (
+                        perm.label.toLowerCase().includes(normalizedPermissionSearch) ||
+                        perm.key.toLowerCase().includes(normalizedPermissionSearch)
+                    );
+                });
+
+                return {
+                    ...group,
+                    permissions: matchingPermissions,
+                };
+            })
+            .filter(
+                (group) =>
+                    group.permissions.length > 0 ||
+                    group.module.toLowerCase().includes(normalizedPermissionSearch)
+            );
+    }, [permissionGroups, normalizedPermissionSearch]);
+
+    const selectedCountByGroup = useMemo(() => {
+        const counts = new Map<string, { selected: number; total: number }>();
+
+        permissionGroups.forEach((group) => {
+            const selected = group.permissions.filter((perm) =>
+                selectedPermissions.has(perm.key)
+            ).length;
+
+            counts.set(group.module, {
+                selected,
+                total: group.permissions.length,
+            });
+        });
+
+        return counts;
+    }, [permissionGroups, selectedPermissions]);
+
+    const allPermissionKeys = useMemo(() => {
+        return permissionGroups.flatMap((group) =>
+            group.permissions.map((perm) => perm.key)
+        );
+    }, [permissionGroups]);
 
     const initialState: RoleFormState = item
         ? {
@@ -554,6 +679,18 @@ function RoleForm({
         } else {
             newSet.add(key);
         }
+        setSelectedPermissions(newSet);
+    }
+
+    function applySelection(keys: string[], shouldSelect: boolean) {
+        const newSet = new Set(selectedPermissions);
+        keys.forEach((key) => {
+            if (shouldSelect) {
+                newSet.add(key);
+            } else {
+                newSet.delete(key);
+            }
+        });
         setSelectedPermissions(newSet);
     }
 
@@ -632,45 +769,107 @@ function RoleForm({
                 </div>
 
                 <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-800 dark:text-gray-100">
-                        Permisos ({selectedPermissions.size} seleccionados)
-                    </label>
-                    <div className="space-y-4 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                        {permissionGroups.map((group) => (
-                            <div key={group.module}>
-                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
-                                    {group.module}
-                                </p>
-                                <div className="grid gap-2 sm:grid-cols-2">
-                                    {group.permissions.map((perm) => (
-                                        <label
-                                            key={perm.key}
-                                            className={clsx(
-                                                "flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors",
-                                                selectedPermissions.has(perm.key)
-                                                    ? "border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20"
-                                                    : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                            )}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedPermissions.has(perm.key)}
-                                                onChange={() => togglePermission(perm.key)}
-                                                className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                                            />
-                                            <div className="min-w-0">
-                                                <span className="text-sm text-gray-800 dark:text-gray-200 block">
-                                                    {perm.label}
-                                                </span>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400 font-mono block truncate">
-                                                    {perm.key}
-                                                </span>
-                                            </div>
-                                        </label>
-                                    ))}
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <label className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                            Permisos ({selectedPermissions.size} seleccionados)
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => applySelection(allPermissionKeys, true)}
+                                className="text-xs font-medium text-purple-600 hover:text-purple-700"
+                            >
+                                Seleccionar todo
+                            </button>
+                            <span className="text-xs text-gray-300">|</span>
+                            <button
+                                type="button"
+                                onClick={() => applySelection(allPermissionKeys, false)}
+                                className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                            >
+                                Limpiar todo
+                            </button>
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/40 dark:bg-gray-900/40 p-3 space-y-3">
+                        <input
+                            type="text"
+                            value={permissionSearch}
+                            onChange={(event) => setPermissionSearch(event.target.value)}
+                            placeholder="Buscar permisos por modulo, nombre o clave"
+                            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900/40"
+                        />
+                        <div className="space-y-4 max-h-64 overflow-y-auto">
+                            {filteredPermissionGroups.length === 0 ? (
+                                <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    No hay permisos con esos filtros.
                                 </div>
-                            </div>
-                        ))}
+                            ) : (
+                                filteredPermissionGroups.map((group) => {
+                                    const groupStats = selectedCountByGroup.get(group.module);
+                                    const selectedCount = groupStats?.selected ?? 0;
+                                    const totalCount = groupStats?.total ?? 0;
+                                    const groupKeys = group.permissions.map((perm) => perm.key);
+
+                                    return (
+                                        <div key={group.module}>
+                                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                                                    {group.module}
+                                                    <span className="ml-2 text-[11px] font-normal text-gray-400 dark:text-gray-500">
+                                                        {selectedCount}/{totalCount}
+                                                    </span>
+                                                </p>
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => applySelection(groupKeys, true)}
+                                                        className="text-purple-600 hover:text-purple-700"
+                                                    >
+                                                        Seleccionar
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => applySelection(groupKeys, false)}
+                                                        className="text-gray-500 hover:text-gray-700"
+                                                    >
+                                                        Limpiar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                {group.permissions.map((perm) => (
+                                                    <label
+                                                        key={perm.key}
+                                                        className={clsx(
+                                                            "flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors",
+                                                            selectedPermissions.has(perm.key)
+                                                                ? "border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20"
+                                                                : "border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800"
+                                                        )}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedPermissions.has(perm.key)}
+                                                            onChange={() => togglePermission(perm.key)}
+                                                            className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                                                        />
+                                                        <div className="min-w-0">
+                                                            <span className="text-sm text-gray-800 dark:text-gray-200 block">
+                                                                {perm.label}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono block truncate">
+                                                                {perm.key}
+                                                            </span>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
