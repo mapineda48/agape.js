@@ -39,7 +39,7 @@ import type {
  *
  * @param params Filtros de listado.
  * @returns Lista de categorías.
- * @permission inventory.category.read
+ * @permission catalogs.category.read
  *
  */
 export async function listCategories(
@@ -102,7 +102,7 @@ export async function listCategories(
  *
  * @param id ID de la categoría.
  * @returns Categoría o undefined si no existe.
- * @permission inventory.category.read
+ * @permission catalogs.category.read
  */
 export async function getCategoryById(
   id: number
@@ -116,7 +116,7 @@ export async function getCategoryById(
  *
  * @param payload Datos de la categoría.
  * @returns Array con la categoría creada/actualizada.
- * @permission inventory.category.manage
+ * @permission catalogs.category.manage
  * *
  */
 export async function upsertCategory(
@@ -156,7 +156,7 @@ export async function upsertCategory(
  * @param payload ID y nuevo estado de la categoría.
  * @param cascade Si es true, deshabilita subcategorías en cascada.
  * @returns Resultado de la operación.
- * @permission inventory.category.manage
+ * @permission catalogs.category.manage
  * *
  */
 export async function toggleCategory(
@@ -237,7 +237,7 @@ export async function toggleCategory(
  *
  * @param params Filtros de listado.
  * @returns Lista de subcategorías.
- * @permission inventory.category.read
+ * @permission catalogs.category.read
  * *
  */
 export async function listSubcategories(
@@ -269,7 +269,7 @@ export async function listSubcategories(
  *
  * @param id ID de la subcategoría.
  * @returns Subcategoría o undefined si no existe.
- * @permission inventory.category.read
+ * @permission catalogs.category.read
  */
 export async function getSubcategoryById(
   id: number
@@ -286,7 +286,7 @@ export async function getSubcategoryById(
  *
  * @param id ID de la subcategoría.
  * @returns Subcategoría con categoría o undefined si no existe.
- * @permission inventory.category.read
+ * @permission catalogs.category.read
  */
 export async function getSubcategoryWithCategory(
   id: number
@@ -319,7 +319,7 @@ export async function getSubcategoryWithCategory(
  *
  * @param payload Datos de la subcategoría.
  * @returns Array con la subcategoría creada/actualizada.
- * @permission inventory.category.manage
+ * @permission catalogs.category.manage
  * *
  */
 export async function upsertSubcategory(
@@ -373,7 +373,7 @@ export async function upsertSubcategory(
  * @param id ID de la subcategoría.
  * @param isEnabled Nuevo estado de habilitación.
  * @returns Subcategoría actualizada.
- * @permission inventory.category.manage
+ * @permission catalogs.category.manage
  */
 export async function toggleSubcategory(
   id: number,

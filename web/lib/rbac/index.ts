@@ -20,6 +20,10 @@
  */
 
 import { session } from "@agape/security/access";
+import {
+    buildMenuPermissions,
+    buildRoutePermissions,
+} from "@utils/rbac/catalog";
 
 // ============================================================================
 // Route to Permission Mapping
@@ -32,18 +36,9 @@ import { session } from "@agape/security/access";
  * A route requires the permission if it matches exactly or starts with the prefix + "/".
  */
 export const ROUTE_PERMISSIONS: Record<string, string> = {
-    // Configuration (admin only)
-    "/cms/configuration": "configuration.admin",
+    ...buildRoutePermissions(),
 
-    // Operations
-    "/cms/sales": "sales.view",
-    "/cms/purchasing": "purchasing.view",
-    "/cms/invoicing": "invoicing.view",
-    "/cms/inventory": "inventory.view",
-
-    // Catalogs
-    "/cms/crm": "crm.view",
-    "/cms/hr": "hr.view",
+    // Note: /cms/sales, /cms/purchasing, /cms/inventory, /cms/crm, /cms/invoicing, /cms/hr now come from buildRoutePermissions() via catalog
 
     // Dashboard & Reports
     "/cms/report": "report.view",
@@ -55,22 +50,13 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
  * Used by Sidebar to filter visible navigation items.
  */
 export const MENU_PERMISSIONS: Record<string, string> = {
+    ...buildMenuPermissions(),
+
     // Dashboard
     "/cms": "cms.view",
     "/cms/report": "report.view",
 
-    // Operations
-    "/cms/sales/orders": "sales.view",
-    "/cms/purchasing/orders": "purchasing.view",
-    "/cms/invoicing": "invoicing.view",
-    "/cms/inventory/movements": "inventory.view",
-
-    // Catalogs
-    "/cms/crm/clients": "crm.view",
-    "/cms/hr": "hr.view",
-
-    // System
-    "/cms/configuration": "configuration.admin",
+    // Note: /cms/sales/*, /cms/purchasing/*, /cms/inventory/*, /cms/crm/*, /cms/invoicing/*, /cms/hr/* now come from buildMenuPermissions() via catalog
 };
 
 // ============================================================================

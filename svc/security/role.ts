@@ -13,6 +13,7 @@ import {
 } from "#models/security/role";
 import securityUser from "#models/security/user";
 import { BusinessRuleError } from "#lib/error";
+import { rbacModules } from "#utils/rbac/catalog";
 
 // ============================================================================
 // Types
@@ -381,8 +382,7 @@ export async function removeUserRole(
 export async function getAvailablePermissions(): Promise<
     { module: string; permissions: { key: string; label: string }[] }[]
 > {
-    // Return the permission catalog
-    return [
+    const catalog = [
         {
             module: "Navegación",
             permissions: [
@@ -394,7 +394,10 @@ export async function getAvailablePermissions(): Promise<
                 { key: "crm.view", label: "Ver módulo Clientes (CRM)" },
                 { key: "hr.view", label: "Ver módulo Recursos Humanos" },
                 { key: "report.view", label: "Ver módulo Reportes" },
-                { key: "configuration.admin", label: "Ver Configuración del sistema" },
+                {
+                    key: "configuration.admin",
+                    label: "Ver Configuración del sistema",
+                },
             ],
         },
         {
@@ -410,111 +413,66 @@ export async function getAvailablePermissions(): Promise<
         {
             module: "CRM",
             permissions: [
-                { key: "crm.client.read", label: "Ver clientes" },
-                { key: "crm.client.manage", label: "Gestionar clientes" },
-                { key: "crm.client_type.read", label: "Ver tipos de cliente" },
-                { key: "crm.client_type.manage", label: "Gestionar tipos de cliente" },
+                ...(rbacModules.find((m) => m.key === "crm")?.permissions ?? []),
                 { key: "crm.*", label: "Acceso completo a CRM" },
             ],
         },
         {
             module: "Ventas",
             permissions: [
-                { key: "sales.order.read", label: "Ver pedidos" },
-                { key: "sales.order.manage", label: "Gestionar pedidos" },
-                { key: "sales.flow.deliver", label: "Crear despachos" },
-                { key: "sales.flow.invoice", label: "Facturar pedidos" },
+                ...(rbacModules.find((m) => m.key === "sales")?.permissions ?? []),
                 { key: "sales.*", label: "Acceso completo a Ventas" },
             ],
         },
         {
             module: "Inventario",
             permissions: [
-                { key: "inventory.item.read", label: "Ver productos" },
-                { key: "inventory.item.manage", label: "Gestionar productos" },
-                { key: "inventory.location.read", label: "Ver ubicaciones" },
-                { key: "inventory.location.manage", label: "Gestionar ubicaciones" },
-                { key: "inventory.movement.read", label: "Ver movimientos" },
-                { key: "inventory.movement.manage", label: "Gestionar movimientos" },
-                { key: "inventory.stock.read", label: "Ver stock" },
+                ...(rbacModules.find((m) => m.key === "inventory")?.permissions ?? []),
                 { key: "inventory.*", label: "Acceso completo a Inventario" },
             ],
         },
         {
             module: "Finanzas",
             permissions: [
-                { key: "finance.sales_invoice.read", label: "Ver facturas de venta" },
-                { key: "finance.sales_invoice.manage", label: "Gestionar facturas de venta" },
-                { key: "finance.purchase_invoice.read", label: "Ver facturas de compra" },
-                { key: "finance.purchase_invoice.manage", label: "Gestionar facturas de compra" },
-                { key: "finance.payment.read", label: "Ver pagos" },
-                { key: "finance.payment.manage", label: "Gestionar pagos" },
-                { key: "finance.currency.read", label: "Ver monedas" },
-                { key: "finance.currency.manage", label: "Gestionar monedas" },
-                { key: "finance.tax.read", label: "Ver impuestos" },
-                { key: "finance.tax.manage", label: "Gestionar impuestos" },
-                { key: "finance.tax_group.read", label: "Ver grupos de impuestos" },
-                { key: "finance.tax_group.manage", label: "Gestionar grupos de impuestos" },
+                ...(rbacModules.find((m) => m.key === "finance")?.permissions ?? []),
                 { key: "finance.*", label: "Acceso completo a Finanzas" },
             ],
         },
         {
             module: "Compras",
             permissions: [
-                { key: "purchasing.supplier.read", label: "Ver proveedores" },
-                { key: "purchasing.supplier.manage", label: "Gestionar proveedores" },
-                { key: "purchasing.purchase_order.read", label: "Ver órdenes de compra" },
-                { key: "purchasing.purchase_order.manage", label: "Gestionar órdenes de compra" },
-                { key: "purchasing.goods_receipt.read", label: "Ver recepciones" },
-                { key: "purchasing.goods_receipt.manage", label: "Gestionar recepciones" },
+                ...(rbacModules.find((m) => m.key === "purchasing")?.permissions ?? []),
                 { key: "purchasing.*", label: "Acceso completo a Compras" },
             ],
         },
         {
             module: "Recursos Humanos",
             permissions: [
-                { key: "hr.employee.read", label: "Ver empleados" },
-                { key: "hr.employee.manage", label: "Gestionar empleados" },
-                { key: "hr.department.read", label: "Ver departamentos" },
-                { key: "hr.department.manage", label: "Gestionar departamentos" },
-                { key: "hr.job_position.read", label: "Ver cargos" },
-                { key: "hr.job_position.manage", label: "Gestionar cargos" },
+                ...(rbacModules.find((m) => m.key === "hr")?.permissions ?? []),
                 { key: "hr.*", label: "Acceso completo a RRHH" },
             ],
         },
         {
             module: "Configuración",
             permissions: [
-                { key: "config.system.read", label: "Ver configuración" },
-                { key: "config.system.manage", label: "Gestionar configuración" },
-                { key: "numbering.series.read", label: "Ver series de numeración" },
-                { key: "numbering.series.manage", label: "Gestionar series de numeración" },
-                { key: "numbering.type.read", label: "Ver tipos de documento" },
-                { key: "numbering.type.manage", label: "Gestionar tipos de documento" },
+                ...(rbacModules.find((m) => m.key === "configuration")?.permissions ?? []),
+                { key: "configuration.*", label: "Acceso completo a Configuración" },
             ],
         },
         {
             module: "Catálogos",
             permissions: [
-                { key: "catalogs.item.read", label: "Ver ítems del catálogo" },
-                { key: "catalogs.item.manage", label: "Gestionar ítems" },
-                { key: "catalogs.category.read", label: "Ver categorías" },
-                { key: "catalogs.category.manage", label: "Gestionar categorías" },
-                { key: "catalogs.price_list.read", label: "Ver listas de precios" },
-                { key: "catalogs.price_list.manage", label: "Gestionar listas de precios" },
+                ...(rbacModules.find((m) => m.key === "catalogs")?.permissions ?? []),
             ],
         },
         {
             module: "Core",
             permissions: [
-                { key: "core.user.read", label: "Ver datos de usuarios" },
-                { key: "core.user.manage", label: "Gestionar datos de usuarios" },
-                { key: "core.address.read", label: "Ver direcciones" },
-                { key: "core.address.manage", label: "Gestionar direcciones" },
-                { key: "core.contact_method.read", label: "Ver métodos de contacto" },
-                { key: "core.contact_method.manage", label: "Gestionar métodos de contacto" },
+                ...(rbacModules.find((m) => m.key === "core")?.permissions ?? []),
             ],
         },
     ];
+
+    return catalog;
 }
 
