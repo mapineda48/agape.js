@@ -16,7 +16,7 @@
 import express, { type Response } from "express";
 
 import Jwt from "./Jwt";
-import ctx, { runContext, type IContext } from "../context";
+import ctx, { type IContext } from "../context";
 import { decode, encode } from "#utils/msgpack";
 import { findUserByCredentials, findUserById, type IUserSession } from "#svc/security/user";
 
@@ -233,30 +233,40 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
   });
 
   // ===========================================================================
-  // API Auth Guard (protects all non-public POST routes)
+  // API Auth Middleware (Attempts to authenticate, passes to RPC for enforcement)
   // ===========================================================================
 
-  router.post(/^\/(?!public).*$/, async (req, res, next) => {
+  router.post(/.*/, async (req, res, next) => {
     const token = getCookie(req.headers.cookie);
 
+    // Default payload for unauthenticated users
+    const defaultPayload = {
+      id: 0,
+      tenant: "",
+      permissions: ["public.*"],
+    };
+
     if (!token) {
-      sendMsgPack(res, failLogin, 401);
+      res.locals.authPayload = defaultPayload;
+      next();
       return;
     }
 
     try {
       const payload = await jwt.verifyToken<JwtPayload>(token);
 
-      // Use session data directly from token for API requests
-      const context: IContext = {
+      // Expose auth payload for RPC middleware to create context
+      res.locals.authPayload = {
         id: payload.id,
         tenant: payload.tenant,
         permissions: payload.permissions,
-        session: new Map()
       };
-      runContext(context, next);
+
+      next();
     } catch (error) {
-      sendMsgPack(res, failLogin, 401);
+      // Fallback to default payload on error
+      res.locals.authPayload = defaultPayload;
+      next();
     }
   });
 
@@ -273,16 +283,8 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
     }
 
     try {
-      const payload = await jwt.verifyToken<JwtPayload>(token);
-
-      const context: IContext = {
-        id: payload.id,
-        tenant: payload.tenant,
-        permissions: payload.permissions,
-        session: new Map()
-      };
-      runContext(context, next);
-
+      // Just verify token is valid, no context needed for redirect
+      await jwt.verifyToken<JwtPayload>(token);
       res.redirect("/cms");
     } catch (error) {
       next();
@@ -302,15 +304,9 @@ export function createAuthMiddleware(options: CreateAuthOptions) {
     }
 
     try {
-      const payload = await jwt.verifyToken<JwtPayload>(token);
-
-      const context: IContext = {
-        id: payload.id,
-        tenant: payload.tenant,
-        permissions: payload.permissions,
-        session: new Map()
-      };
-      runContext(context, next);
+      // Just verify token is valid, context will be created by RPC middleware if needed
+      await jwt.verifyToken<JwtPayload>(token);
+      next();
     } catch (error) {
       res.redirect("/login");
     }

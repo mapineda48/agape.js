@@ -12,9 +12,23 @@
 
 import type { Request, Response, NextFunction } from "express";
 import { encode } from "#utils/msgpack";
+import { runContext, type IContext } from "#lib/context";
 import parseError from "./error";
 import { parseArgs } from "./parseArgs";
 import { CONTENT_TYPES, HTTP_STATUS } from "./constants";
+
+// ============================================================================
+// Types for Auth Payload
+// ============================================================================
+
+/**
+ * Auth payload passed from security middleware via res.locals
+ */
+interface AuthPayload {
+  id: number;
+  tenant: string;
+  permissions: string[];
+}
 
 // ============================================================================
 // Types
@@ -79,8 +93,16 @@ function sendSuccess(res: Response, result: unknown): void {
 function sendError(res: Response, error: unknown): void {
   const normalizedError = parseError(error);
   const payload = encode(normalizedError);
+
+  let status: number = HTTP_STATUS.BAD_REQUEST;
+
+  // Check for specific error types to set appropriate HTTP status
+  if ((normalizedError as any).code === "FORBIDDEN_ERROR" || (normalizedError as any).name === "ForbiddenError") {
+    status = HTTP_STATUS.UNAUTHORIZED;
+  }
+
   res.set("Content-Type", CONTENT_TYPES.MSGPACK);
-  res.status(HTTP_STATUS.BAD_REQUEST).send(payload);
+  res.status(status).send(payload);
 }
 
 /**
@@ -125,19 +147,39 @@ export function createRpcMiddleware(options: CreateMiddlewareOptions): Middlewar
       return;
     }
 
-    // Execute the RPC handler
-    try {
-      // 🔐 RBAC: Validate permissions before executing handler (if validator provided)
-      if (validatePermission) {
-        await validatePermission(endpoint);
-      }
+    // Execute the RPC handler within the user context
+    const authPayload = res.locals.authPayload as AuthPayload | undefined;
 
-      const args = await parseArgs(req);
-      const result = await handler.call(null, ...args);
-      sendSuccess(res, result);
-    } catch (error) {
-      sendError(res, error);
-    }
+    // Create context from auth payload (or use default for public endpoints)
+    const context: IContext = authPayload
+      ? {
+        id: authPayload.id,
+        tenant: authPayload.tenant,
+        permissions: authPayload.permissions,
+        session: new Map(),
+      }
+      : {
+        id: 0,
+        tenant: "",
+        permissions: [],
+        session: new Map(),
+      };
+
+    // Run handler within the async context
+    runContext(context, async () => {
+      try {
+        // 🔐 RBAC: Validate permissions before executing handler (if validator provided)
+        if (validatePermission) {
+          await validatePermission(endpoint);
+        }
+
+        const args = await parseArgs(req);
+        const result = await handler.call(null, ...args);
+        sendSuccess(res, result);
+      } catch (error) {
+        sendError(res, error);
+      }
+    });
   };
 
   return rpcMiddleware;
