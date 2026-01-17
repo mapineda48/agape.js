@@ -9,9 +9,9 @@ import {
     CheckCircleIcon,
     ClockIcon,
     UserCircleIcon,
+    ArrowPathIcon,
     EyeIcon,
     EyeSlashIcon,
-    ArrowPathIcon,
     XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "@/components/router/router-hook";
@@ -23,7 +23,7 @@ import {
     upsertSecurityUser,
     toggleSecurityUserActive,
     toggleSecurityUserLock,
-    resetSecurityUserPassword,
+    requestPasswordReset,
     type ISecurityUser,
     type IUpsertSecurityUser,
 } from "@agape/security/user";
@@ -71,9 +71,8 @@ export default function EmployeeAccessPage(props: Props) {
         props.securityUser
     );
     const [isCreating, setIsCreating] = useState(!securityUser);
-    const [showPasswordReset, setShowPasswordReset] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isResetLinkLoading, setIsResetLinkLoading] = useState(false);
 
     // Initial form data for creating or editing
     const initialData: IUpsertSecurityUser = securityUser
@@ -141,6 +140,27 @@ export default function EmployeeAccessPage(props: Props) {
             notify({ payload: error });
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleSendResetLink = async () => {
+        if (!securityUser) return;
+        setIsResetLinkLoading(true);
+        try {
+            const resetUrl = new URL("/auth/reset", location.origin).toString();
+            const result = await requestPasswordReset({
+                userId: securityUser.id,
+                resetUrl,
+            });
+            if (result.success) {
+                notify({ payload: result.message, type: "success" });
+            } else {
+                notify({ payload: result.message, type: "error" });
+            }
+        } catch (error: any) {
+            notify({ payload: error?.message || error, type: "error" });
+        } finally {
+            setIsResetLinkLoading(false);
         }
     };
 
@@ -379,29 +399,20 @@ export default function EmployeeAccessPage(props: Props) {
                                                     )}
                                                 </div>
                                                 <button
-                                                    onClick={() => setShowPasswordReset(!showPasswordReset)}
-                                                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-800 dark:text-amber-200 dark:hover:bg-amber-700 transition-all"
+                                                    onClick={handleSendResetLink}
+                                                    disabled={isResetLinkLoading}
+                                                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-800 dark:text-amber-200 dark:hover:bg-amber-700 transition-all disabled:opacity-60"
                                                 >
                                                     <ArrowPathIcon className="h-4 w-4 mr-2" />
-                                                    Resetear Contraseña
+                                                    {isResetLinkLoading
+                                                        ? "Enviando..."
+                                                        : "Enviar enlace de cambio"}
                                                 </button>
                                             </div>
-
-                                            <AnimatePresence>
-                                                {showPasswordReset && (
-                                                    <PasswordResetForm
-                                                        userId={securityUser.id}
-                                                        onSuccess={() => {
-                                                            setShowPasswordReset(false);
-                                                            setSecurityUser({
-                                                                ...securityUser,
-                                                                mustChangePassword: true,
-                                                            });
-                                                        }}
-                                                        onCancel={() => setShowPasswordReset(false)}
-                                                    />
-                                                )}
-                                            </AnimatePresence>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Se enviara un enlace valido por 15 minutos al correo principal del
+                                                empleado.
+                                            </p>
                                         </div>
 
                                         {/* Roles Section */}
@@ -520,147 +531,6 @@ export default function EmployeeAccessPage(props: Props) {
                 </div>
             </div>
         </Fragment>
-    );
-}
-
-// Password Reset Form Component
-function PasswordResetForm({
-    userId,
-    onSuccess,
-    onCancel,
-}: {
-    userId: number;
-    onSuccess: () => void;
-    onCancel: () => void;
-}) {
-    const notify = useNotificacion();
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [mustChangePassword, setMustChangePassword] = useState(true);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (password !== confirmPassword) {
-            notify({ payload: "Las contraseñas no coinciden", type: "error" });
-            return;
-        }
-
-        if (password.length < 6) {
-            notify({
-                payload: "La contraseña debe tener al menos 6 caracteres",
-                type: "error",
-            });
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const result = await resetSecurityUserPassword(
-                userId,
-                password,
-                mustChangePassword
-            );
-            if (result.success) {
-                notify({ payload: result.message, type: "success" });
-                onSuccess();
-            } else {
-                notify({ payload: result.message, type: "error" });
-            }
-        } catch (error: any) {
-            notify({ payload: error });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <motion.form
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            onSubmit={handleSubmit}
-            className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700"
-        >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Nueva Contraseña
-                    </label>
-                    <div className="relative">
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            placeholder="••••••••"
-                            required
-                            minLength={6}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                        >
-                            {showPassword ? (
-                                <EyeSlashIcon className="h-5 w-5" />
-                            ) : (
-                                <EyeIcon className="h-5 w-5" />
-                            )}
-                        </button>
-                    </div>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Confirmar Contraseña
-                    </label>
-                    <input
-                        type={showPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        placeholder="••••••••"
-                        required
-                        minLength={6}
-                    />
-                </div>
-            </div>
-
-            <div className="mt-4 flex items-center">
-                <input
-                    type="checkbox"
-                    id="mustChangePassword"
-                    checked={mustChangePassword}
-                    onChange={(e) => setMustChangePassword(e.target.checked)}
-                    className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-                />
-                <label
-                    htmlFor="mustChangePassword"
-                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
-                    Obligar a cambiar la contraseña en el próximo inicio de sesión
-                </label>
-            </div>
-
-            <div className="mt-4 flex justify-end gap-3">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
-                >
-                    Cancelar
-                </button>
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-all disabled:opacity-50"
-                >
-                    {isLoading ? "Guardando..." : "Cambiar Contraseña"}
-                </button>
-            </div>
-        </motion.form>
     );
 }
 

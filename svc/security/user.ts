@@ -9,6 +9,23 @@ import { securityRole, securityUserRole } from "#models/security/role";
 import type { IContext } from "#lib/context";
 import { BusinessRuleError } from "#lib/error";
 import DateTime from "#lib/utils/data/DateTime";
+import MailManager from "#lib/services/mail/MailManager";
+import { getSystemConfig } from "#svc/config/systemConfig";
+import { contactMethod } from "#models/core/contactMethod";
+import crypto from "node:crypto";
+import {
+  generatePasswordResetEmailHtml,
+  generatePasswordResetEmailSubject,
+  generatePasswordChangedEmailHtml,
+  generatePasswordChangedEmailSubject,
+} from "#lib/services/mail/template/passwordReset";
+import type {
+  RequestPasswordResetInput,
+  RequestPasswordResetResult,
+  ResetPasswordInput,
+  ResetPasswordResult,
+  ValidatePasswordResetTokenResult,
+} from "#utils/dto/security/passwordReset";
 
 // ============================================================================
 // Types
@@ -566,7 +583,7 @@ export async function resetSecurityUserPassword(
   mustChangePassword: boolean = true
 ): Promise<{ success: boolean; message: string }> {
   if (newPassword.length < 6) {
-    return { success: false, message: "La contraseña debe tener al menos 6 caracteres" };
+    return { success: false, message: "La contrasena debe tener al menos 6 caracteres" };
   }
 
   const [existing] = await db
@@ -593,7 +610,7 @@ export async function resetSecurityUserPassword(
 
   return {
     success: true,
-    message: "Contraseña actualizada exitosamente",
+    message: "Contrasena actualizada exitosamente",
   };
 }
 
@@ -608,6 +625,217 @@ export async function unlockSecurityUser(
   id: number
 ): Promise<{ success: boolean; message: string }> {
   return toggleSecurityUserLock(id, false);
+}
+
+/**
+ * Solicita un cambio de contrasena por correo.
+ *
+ * @permission security.user.manage
+ */
+export async function requestPasswordReset(
+  input: RequestPasswordResetInput
+): Promise<RequestPasswordResetResult> {
+  const { userId, resetUrl } = input;
+
+  if (!resetUrl) {
+    throw new BusinessRuleError("Se requiere un enlace de restablecimiento valido");
+  }
+
+  const [record] = await db
+    .select({
+      id: securityUser.id,
+      employeeId: securityUser.employeeId,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      isActive: securityUser.isActive,
+      isLocked: securityUser.isLocked,
+    })
+    .from(securityUser)
+    .innerJoin(employee, eq(employee.id, securityUser.employeeId))
+    .innerJoin(person, eq(person.id, employee.id))
+    .where(eq(securityUser.id, userId));
+
+  if (!record) {
+    throw new BusinessRuleError("Usuario no encontrado");
+  }
+
+  if (!record.isActive || record.isLocked) {
+    throw new BusinessRuleError("El usuario no esta disponible para cambio de contrasena");
+  }
+
+  const [emailRecord] = await db
+    .select({ email: contactMethod.value })
+    .from(contactMethod)
+    .where(
+      and(
+        eq(contactMethod.userId, record.employeeId),
+        eq(contactMethod.type, "email"),
+        eq(contactMethod.isPrimary, true),
+        eq(contactMethod.isActive, true)
+      )
+    );
+
+  if (!emailRecord?.email) {
+    throw new BusinessRuleError("El empleado no tiene un correo registrado");
+  }
+
+  const token = crypto.randomUUID();
+  const expiresAt = new DateTime(Date.now() + 15 * 60 * 1000);
+
+  await db
+    .update(securityUser)
+    .set({
+      passwordResetToken: token,
+      passwordResetExpires: expiresAt,
+    })
+    .where(eq(securityUser.id, record.id));
+
+  const systemConfig = await getSystemConfig();
+  const companyName = systemConfig.companyName || "Agape";
+  const employeeName = `${record.firstName} ${record.lastName}`.trim();
+  const resetLink = new URL(resetUrl);
+  resetLink.searchParams.set("token", token);
+
+  await MailManager.sendMail({
+    to: emailRecord.email,
+    subject: generatePasswordResetEmailSubject(companyName),
+    html: generatePasswordResetEmailHtml({
+      employeeName,
+      resetUrl: resetLink.toString(),
+      companyName,
+      supportEmail: systemConfig.companyEmail || undefined,
+    }),
+  });
+
+  return {
+    success: true,
+    message: `Enlace de restablecimiento enviado a ${emailRecord.email}`,
+    recipientEmail: emailRecord.email,
+    expiresAt: expiresAt.toISOString(),
+  };
+}
+
+/**
+ * Valida un token de cambio de contrasena.
+ *
+ * @permission public.security.password.validate
+ */
+export async function validatePasswordResetToken(
+  token: string
+): Promise<ValidatePasswordResetTokenResult> {
+  if (!token) {
+    return { success: false, message: "Token no proporcionado" };
+  }
+
+  const [record] = await db
+    .select({
+      id: securityUser.id,
+      expiresAt: securityUser.passwordResetExpires,
+    })
+    .from(securityUser)
+    .where(eq(securityUser.passwordResetToken, token));
+
+  if (!record) {
+    return { success: false, message: "Token invalido" };
+  }
+
+  if (!record.expiresAt) {
+    return { success: false, message: "Token expirado" };
+  }
+
+  const now = new DateTime();
+  if (record.expiresAt.isBefore(now)) {
+    return { success: false, message: "Token expirado" };
+  }
+
+  return {
+    success: true,
+    message: "Token valido",
+    userId: record.id,
+    expiresAt: record.expiresAt.toISOString(),
+  };
+}
+
+/**
+ * Cambia la contrasena usando un token.
+ *
+ * @permission public.security.password.reset
+ */
+export async function resetPasswordWithToken(
+  input: ResetPasswordInput
+): Promise<ResetPasswordResult> {
+  const { token, newPassword } = input;
+
+  if (!newPassword || newPassword.length < 6) {
+    return { success: false, message: "La contrasena debe tener al menos 6 caracteres" };
+  }
+
+  const [record] = await db
+    .select({
+      id: securityUser.id,
+      employeeId: securityUser.employeeId,
+      expiresAt: securityUser.passwordResetExpires,
+      firstName: person.firstName,
+      lastName: person.lastName,
+    })
+    .from(securityUser)
+    .innerJoin(employee, eq(employee.id, securityUser.employeeId))
+    .innerJoin(person, eq(person.id, employee.id))
+    .where(eq(securityUser.passwordResetToken, token));
+
+  if (!record) {
+    return { success: false, message: "Token invalido" };
+  }
+
+  if (!record.expiresAt || record.expiresAt.isBefore(new DateTime())) {
+    return { success: false, message: "Token expirado" };
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+
+  await db
+    .update(securityUser)
+    .set({
+      passwordHash,
+      passwordChangedAt: new DateTime(),
+      mustChangePassword: false,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+    })
+    .where(eq(securityUser.id, record.id));
+
+  const [emailRecord] = await db
+    .select({ email: contactMethod.value })
+    .from(contactMethod)
+    .where(
+      and(
+        eq(contactMethod.userId, record.employeeId),
+        eq(contactMethod.type, "email"),
+        eq(contactMethod.isPrimary, true),
+        eq(contactMethod.isActive, true)
+      )
+    );
+
+  if (emailRecord?.email) {
+    const systemConfig = await getSystemConfig();
+    const companyName = systemConfig.companyName || "Agape";
+    const employeeName = `${record.firstName} ${record.lastName}`.trim();
+
+    await MailManager.sendMail({
+      to: emailRecord.email,
+      subject: generatePasswordChangedEmailSubject(companyName),
+      html: generatePasswordChangedEmailHtml({
+        employeeName,
+        companyName,
+        supportEmail: systemConfig.companyEmail || undefined,
+      }),
+    });
+  }
+
+  return {
+    success: true,
+    message: "Contrasena actualizada exitosamente",
+  };
 }
 
 export interface IUserSession extends Omit<IContext, "session"> {
