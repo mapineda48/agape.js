@@ -55,6 +55,12 @@ describe("NewEmployeePage", () => {
     },
   ];
 
+  const defaultProps = {
+    documentTypes: mockDocumentTypes,
+    jobPositions: [],
+    departments: [],
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as any).mockReturnValue({ navigate: mockNavigate });
@@ -72,7 +78,7 @@ describe("NewEmployeePage", () => {
   describe("Rendering", () => {
     it("renders the page with correct header", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       expect(screen.getByText("Nuevo Empleado")).toBeInTheDocument();
@@ -83,7 +89,7 @@ describe("NewEmployeePage", () => {
 
     it("renders all form sections", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       expect(screen.getByText("Identificación")).toBeInTheDocument();
@@ -93,20 +99,20 @@ describe("NewEmployeePage", () => {
 
     it("auto-selects Cedula document type if available", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
-      const select = screen.getByRole("combobox");
+      const select = screen.getByTestId("document-type-select-hidden");
       // CC has id=1 and should be auto-selected
       expect(select).toHaveValue("1");
     });
 
     it("filters out company document types from select options", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
-      const select = screen.getByRole("combobox");
+      const select = screen.getByTestId("document-type-select-hidden");
       const options = Array.from(select.querySelectorAll("option"));
 
       // Should have: placeholder + CC + TI (NIT filtered out)
@@ -118,17 +124,15 @@ describe("NewEmployeePage", () => {
 
     it("renders all form fields", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       // Document fields
-      expect(
-        screen.getByPlaceholderText("Número de documento")
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("document-number-input")).toBeInTheDocument();
 
       // Personal fields
-      expect(screen.getByPlaceholderText("Juan")).toBeInTheDocument(); // firstName
-      expect(screen.getByPlaceholderText("Pérez")).toBeInTheDocument(); // lastName
+      expect(screen.getByTestId("first-name-input")).toBeInTheDocument();
+      expect(screen.getByTestId("last-name-input")).toBeInTheDocument();
 
       // Work fields
       expect(screen.getByText("Fecha de Contratación")).toBeInTheDocument();
@@ -138,59 +142,59 @@ describe("NewEmployeePage", () => {
 
     it("sets isActive to true by default", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
-      const checkbox = screen.getByRole("checkbox");
-      expect(checkbox).toBeChecked();
+      const checkbox = screen.getByTestId("is-active-checkbox") as HTMLInputElement;
+      expect(checkbox.checked).toBe(true);
     });
   });
 
   describe("Form Interaction", () => {
-    it("allows typing in all text fields", () => {
+    it("allows typing in all text fields", async () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       // Document number
-      const docNumber = screen.getByPlaceholderText("Número de documento");
-      fireEvent.change(docNumber, { target: { value: "123456789" } });
+      const docNumber = screen.getByTestId("document-number-input");
+      await fireEvent.change(docNumber, { target: { value: "123456789" } });
       expect(docNumber).toHaveValue("123456789");
 
       // First name
-      const firstName = screen.getByPlaceholderText("Juan");
-      fireEvent.change(firstName, { target: { value: "Carlos" } });
+      const firstName = screen.getByTestId("first-name-input");
+      await fireEvent.change(firstName, { target: { value: "Carlos" } });
       expect(firstName).toHaveValue("Carlos");
 
       // Last name
-      const lastName = screen.getByPlaceholderText("Pérez");
-      fireEvent.change(lastName, { target: { value: "García" } });
+      const lastName = screen.getByTestId("last-name-input");
+      await fireEvent.change(lastName, { target: { value: "García" } });
       expect(lastName).toHaveValue("García");
     });
 
-    it("allows changing document type", () => {
+    it("allows changing document type", async () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
-      const select = screen.getByRole("combobox");
-      fireEvent.change(select, { target: { value: "2" } }); // TI
+      const select = screen.getByTestId("document-type-select-hidden");
+      await fireEvent.change(select, { target: { value: "2" } }); // TI
       expect(select).toHaveValue("2");
     });
 
-    it("allows toggling isActive checkbox", () => {
+    it("allows toggling isActive checkbox", async () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
-      const checkbox = screen.getByRole("checkbox");
-      expect(checkbox).toBeChecked();
+      const checkbox = screen.getByTestId("is-active-checkbox") as HTMLInputElement;
+      expect(checkbox.checked).toBe(true);
 
-      fireEvent.click(checkbox);
-      expect(checkbox).not.toBeChecked();
+      await fireEvent.click(checkbox);
+      expect(checkbox.checked).toBe(false);
 
-      fireEvent.click(checkbox);
-      expect(checkbox).toBeChecked();
+      await fireEvent.click(checkbox);
+      expect(checkbox.checked).toBe(true);
     });
   });
 
@@ -199,17 +203,17 @@ describe("NewEmployeePage", () => {
       (upsertEmployee as any).mockResolvedValue({ id: 1 });
 
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       // Fill all required fields
-      fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
+      await fireEvent.change(screen.getByTestId("document-number-input"), {
         target: { value: "1234567890" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Juan"), {
+      await fireEvent.change(screen.getByTestId("first-name-input"), {
         target: { value: "María" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Pérez"), {
+      await fireEvent.change(screen.getByTestId("last-name-input"), {
         target: { value: "López" },
       });
 
@@ -250,17 +254,17 @@ describe("NewEmployeePage", () => {
       (upsertEmployee as any).mockResolvedValue({ id: 2 });
 
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       // Fill all fields
-      fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
+      await fireEvent.change(screen.getByTestId("document-number-input"), {
         target: { value: "9876543210" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Juan"), {
+      await fireEvent.change(screen.getByTestId("first-name-input"), {
         target: { value: "Pedro" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Pérez"), {
+      await fireEvent.change(screen.getByTestId("last-name-input"), {
         target: { value: "Martínez" },
       });
 
@@ -295,17 +299,17 @@ describe("NewEmployeePage", () => {
         },
       ];
 
-      renderWithProviders(<NewEmployeePage documentTypes={typesWithoutCC} />);
+      renderWithProviders(<NewEmployeePage {...defaultProps} documentTypes={typesWithoutCC} />);
 
       // Don't select document type (should be empty)
-      const select = screen.getByRole("combobox");
-      fireEvent.change(select, { target: { value: "" } });
+      const select = screen.getByTestId("document-type-select-hidden");
+      await fireEvent.change(select, { target: { value: "" } });
 
       // Fill required personal fields
-      fireEvent.change(screen.getByPlaceholderText("Juan"), {
+      await fireEvent.change(screen.getByTestId("first-name-input"), {
         target: { value: "Test" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Pérez"), {
+      await fireEvent.change(screen.getByTestId("last-name-input"), {
         target: { value: "User" },
       });
 
@@ -333,17 +337,17 @@ describe("NewEmployeePage", () => {
       (upsertEmployee as any).mockRejectedValue(error);
 
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       // Fill required fields
-      fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
+      await fireEvent.change(screen.getByTestId("document-number-input"), {
         target: { value: "111222333" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Juan"), {
+      await fireEvent.change(screen.getByTestId("first-name-input"), {
         target: { value: "Test" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Pérez"), {
+      await fireEvent.change(screen.getByTestId("last-name-input"), {
         target: { value: "User" },
       });
 
@@ -373,17 +377,17 @@ describe("NewEmployeePage", () => {
       (upsertEmployee as any).mockResolvedValue({ id: 1 });
 
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       // Fill minimum required fields
-      fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
+      await fireEvent.change(screen.getByTestId("document-number-input"), {
         target: { value: "12345" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Juan"), {
+      await fireEvent.change(screen.getByTestId("first-name-input"), {
         target: { value: "Test" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Pérez"), {
+      await fireEvent.change(screen.getByTestId("last-name-input"), {
         target: { value: "User" },
       });
 
@@ -408,7 +412,7 @@ describe("NewEmployeePage", () => {
   describe("Navigation", () => {
     it("navigates back when cancel is clicked", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       const cancelBtn = screen.getByText("Cancelar");
@@ -418,7 +422,7 @@ describe("NewEmployeePage", () => {
 
     it("navigates back when header back button is clicked", () => {
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       const backBtn = screen.getByText("Volver a Empleados");
@@ -430,17 +434,17 @@ describe("NewEmployeePage", () => {
       (upsertEmployee as any).mockResolvedValue({ id: 1 });
 
       renderWithProviders(
-        <NewEmployeePage documentTypes={mockDocumentTypes} />
+        <NewEmployeePage {...defaultProps} />
       );
 
       // Fill required fields
-      fireEvent.change(screen.getByPlaceholderText("Número de documento"), {
+      await fireEvent.change(screen.getByTestId("document-number-input"), {
         target: { value: "111" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Juan"), {
+      await fireEvent.change(screen.getByTestId("first-name-input"), {
         target: { value: "Test" },
       });
-      fireEvent.change(screen.getByPlaceholderText("Pérez"), {
+      await fireEvent.change(screen.getByTestId("last-name-input"), {
         target: { value: "User" },
       });
 

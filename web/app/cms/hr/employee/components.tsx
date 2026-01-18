@@ -320,6 +320,7 @@ export function EmployeeForm({
                 </label>
                 <Form.Select.Int
                   path="documentTypeId"
+                  data-testid="document-type-select"
                 >
                   <SelectItem value={0 as any}>Seleccionar tipo...</SelectItem>
                   {personDocumentTypes.map((type) => (
@@ -337,6 +338,7 @@ export function EmployeeForm({
                   path="documentNumber"
                   placeholder="Número de documento"
                   required
+                  data-testid="document-number-input"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </div>
@@ -369,17 +371,20 @@ export function EmployeeForm({
                   path="firstName"
                   placeholder="Juan"
                   required
+                  data-testid="first-name-input"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
                 <Form.Text
                   path="lastName"
                   placeholder="Pérez"
                   required
+                  data-testid="last-name-input"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
                 <Form.DatePicker
                   path="birthdate"
                   placeholder="Fecha de nacimiento"
+                  data-testid="birthdate-picker"
                 />
               </Form.Scope>
             </div>
@@ -410,6 +415,7 @@ export function EmployeeForm({
                   path="email"
                   type="email"
                   placeholder="correo@ejemplo.com"
+                  data-testid="email-input"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </div>
@@ -465,13 +471,17 @@ export function EmployeeForm({
                 path="hireDate"
                 required
                 placeholder="Fecha de contratación"
+                data-testid="hire-date-picker"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Departamento
               </label>
-              <Form.Select.Int path="departmentId">
+              <Form.Select.Int
+                path="departmentId"
+                data-testid="department-select"
+              >
                 <SelectItem value={0 as any}>Sin departamento</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
@@ -488,6 +498,7 @@ export function EmployeeForm({
                 <Form.Checkbox
                   path="isActive"
                   materialize
+                  data-testid="is-active-checkbox"
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
                 <span className="ml-2 text-sm text-gray-700">Activo</span>
@@ -536,6 +547,7 @@ export function EmployeeForm({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleJobPosition(jp.id)}
+                      data-testid={`job-position-checkbox-${jp.id}`}
                       className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
                     />
                     <div className="min-w-0 flex-1">

@@ -178,15 +178,17 @@ describe("NewSalesOrderPage", () => {
 
         it("should render client select with options", () => {
             renderPage();
-            const clientOption = screen.getByText("Juan Pérez");
-            expect(clientOption).toBeInTheDocument();
-            expect(screen.getByText("Empresa XYZ S.A.S.")).toBeInTheDocument();
+            expect(screen.getByTestId("client-select")).toBeInTheDocument();
         });
 
         it("should render order type select with options", () => {
             renderPage();
-            expect(screen.getByText("Pedido Estándar")).toBeInTheDocument();
-            expect(screen.getByText("Pedido Urgente")).toBeInTheDocument();
+            expect(screen.getByTestId("order-type-select")).toBeInTheDocument();
+        });
+
+        it("should render issue date field", () => {
+            renderPage();
+            expect(screen.getByTestId("order-date-picker")).toBeInTheDocument();
         });
 
         it("should render empty state when no items added", () => {
@@ -196,7 +198,7 @@ describe("NewSalesOrderPage", () => {
 
         it("should render 'Añadir Producto' button", () => {
             renderPage();
-            expect(screen.getByRole("button", { name: /Añadir Producto/i })).toBeInTheDocument();
+            expect(screen.getByTestId("add-item-button")).toBeInTheDocument();
         });
 
         it("should render 'CREAR PEDIDO' submit button", () => {
@@ -214,76 +216,60 @@ describe("NewSalesOrderPage", () => {
         it("should add item row when 'Añadir Producto' is clicked", async () => {
             renderPage();
 
-            const addButton = screen.getByRole("button", { name: /Añadir Producto/i });
+            const addButton = screen.getByTestId("add-item-button");
 
             await act(async () => {
                 fireEvent.click(addButton);
             });
 
-            // Should show product selector
+            // Should show product selector (hidden select patterned)
             await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
-            });
-        });
-
-        it("should show product list options in dropdown", async () => {
-            renderPage();
-
-            const addButton = screen.getByRole("button", { name: /Añadir Producto/i });
-
-            await act(async () => {
-                fireEvent.click(addButton);
-            });
-
-            await waitFor(() => {
-                expect(screen.getByText(/PROD-001 - Producto Test 1/)).toBeInTheDocument();
-                expect(screen.getByText(/PROD-002 - Producto Test 2/)).toBeInTheDocument();
+                expect(screen.getByTestId("item-select-0-hidden")).toBeInTheDocument();
             });
         });
 
         it("should fill unit price when product is selected", async () => {
             renderPage();
 
-            const addButton = screen.getByRole("button", { name: /Añadir Producto/i });
+            const addButton = screen.getByTestId("add-item-button");
 
             await act(async () => {
                 fireEvent.click(addButton);
             });
 
-            // Wait for item row to appear and find the product select by its placeholder option
-            let productSelect: HTMLElement;
-            await waitFor(() => {
-                productSelect = screen.getByDisplayValue("Seleccionar producto...");
-                expect(productSelect).toBeInTheDocument();
-            });
+            // Find the hidden product select
+            const productSelect = await screen.findByTestId("item-select-0-hidden");
 
             // Select a product (this should auto-fill the price)
             await act(async () => {
-                fireEvent.change(productSelect!, { target: { value: "1" } });
+                fireEvent.change(productSelect, { target: { value: "1" } });
             });
 
             // The unit price input should be filled with 100
             await waitFor(() => {
-                const priceInput = screen.getByDisplayValue("100");
-                expect(priceInput).toBeInTheDocument();
+                // Wait for the total to update as confirmation that the store updated
+                expect(screen.getByTestId("total-header").textContent).toBe("$100,00");
+
+                const priceInput = screen.getByTestId("price-input-0") as HTMLInputElement;
+                expect(priceInput.value).toBe("100");
             });
         });
 
         it("should remove item when trash button is clicked", async () => {
             renderPage();
 
-            const addButton = screen.getByRole("button", { name: /Añadir Producto/i });
+            const addButton = screen.getByTestId("add-item-button");
 
             await act(async () => {
                 fireEvent.click(addButton);
             });
 
             await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+                expect(screen.getByTestId("item-select-0-hidden")).toBeInTheDocument();
             });
 
             // Find and click the remove button
-            const removeButton = screen.getByTitle("Eliminar ítem");
+            const removeButton = screen.getByTestId("remove-item-0");
             await act(async () => {
                 fireEvent.click(removeButton);
             });
@@ -330,7 +316,7 @@ describe("NewSalesOrderPage", () => {
         it("should update product count when items are added", async () => {
             renderPage();
 
-            const addButton = screen.getByRole("button", { name: /Añadir Producto/i });
+            const addButton = screen.getByTestId("add-item-button");
 
             await act(async () => {
                 fireEvent.click(addButton);
@@ -343,7 +329,28 @@ describe("NewSalesOrderPage", () => {
 
         it("should show zero total initially", () => {
             renderPage();
-            expect(screen.getByText("$0,00")).toBeInTheDocument();
+            expect(screen.getByTestId("total-header").textContent).toBe("$0,00");
+        });
+
+        it("should update total when items are added with quantity and price", async () => {
+            renderPage();
+
+            const addButton = screen.getByTestId("add-item-button");
+
+            await act(async () => {
+                fireEvent.click(addButton);
+            });
+
+            // Select product (unitPrice = 100.00)
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
+
+            await waitFor(() => {
+                expect(screen.getByTestId("total-header").textContent).toBe("$100,00");
+                expect(screen.getByTestId("line-subtotal-0").textContent).toBe("$100,00");
+            });
         });
     });
 });

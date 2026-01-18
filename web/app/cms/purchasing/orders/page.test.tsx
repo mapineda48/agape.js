@@ -188,13 +188,17 @@ describe("PurchaseOrdersPage", () => {
     it("shows supplier filter dropdown", () => {
       renderWithProviders();
 
-      expect(screen.getByText("Todos los proveedores")).toBeInTheDocument();
+      // The placeholder text appears in both the visible trigger button and the hidden select option
+      const supplierPlaceholders = screen.getAllByText("Todos los proveedores");
+      expect(supplierPlaceholders.length).toBeGreaterThan(0);
     });
 
     it("shows status filter dropdown", () => {
       renderWithProviders();
 
-      expect(screen.getByText("Todos los estados")).toBeInTheDocument();
+      // The placeholder text appears in both the visible trigger button and the hidden select option
+      const statusPlaceholders = screen.getAllByText("Todos los estados");
+      expect(statusPlaceholders.length).toBeGreaterThan(0);
     });
   });
 

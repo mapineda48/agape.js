@@ -503,6 +503,7 @@ export function ClientForm({
                 <Form.Select.Int
                   path="documentTypeId"
                   required
+                  data-testid="document-type-select"
                   onChange={handleDocumentTypeChange}
                 >
                   <SelectItem value={0 as any}>Seleccionar tipo...</SelectItem>
@@ -517,6 +518,7 @@ export function ClientForm({
                   placeholder="Número de documento"
                   required
                   onBlur={handleDocumentBlur}
+                  data-testid="document-number-input"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
               </Form.Scope>
@@ -646,6 +648,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="typeId"
+                  data-testid="client-type-select"
                 >
                   <SelectItem value={0}>Seleccionar tipo...</SelectItem>
                   {clientTypes.map((type) => (
@@ -757,6 +760,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="priceListId"
+                  data-testid="price-list-select"
                 >
                   <SelectItem value={0 as any}>Lista por defecto</SelectItem>
                   {priceLists.map((pl) => (
@@ -774,6 +778,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="paymentTermsId"
+                  data-testid="payment-terms-select"
                 >
                   <SelectItem value={0 as any}>Condiciones por defecto</SelectItem>
                   {paymentTerms.map((pt) => (
@@ -791,6 +796,7 @@ export function ClientForm({
                 </label>
                 <Form.Select.Int
                   path="salespersonId"
+                  data-testid="salesperson-select"
                 >
                   <SelectItem value={0 as any}>Vendedor por defecto</SelectItem>
                   {salespersons.map((s) => (

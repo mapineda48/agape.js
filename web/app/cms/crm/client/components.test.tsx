@@ -77,7 +77,8 @@ describe("ClientForm", () => {
       renderForm();
       // Verify document types dropdown has options
       const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
+      // document-type-select-hidden is the one we want
+      const docSelect = screen.getByTestId("document-type-select-hidden");
       const options = Array.from(docSelect.querySelectorAll("option"));
       expect(options.map((o) => o.textContent)).toContain("Cédula de Ciudadanía");
     });
@@ -85,8 +86,8 @@ describe("ClientForm", () => {
     it("switches to Company fields when Company document selected", async () => {
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "2" } }); // NIT
@@ -102,8 +103,7 @@ describe("ClientForm", () => {
     it("shows microcopy for person document type", async () => {
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
+      const docSelect = screen.getByTestId("document-type-select-hidden");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } }); // CC
@@ -117,8 +117,7 @@ describe("ClientForm", () => {
     it("shows microcopy for company document type", async () => {
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
+      const docSelect = screen.getByTestId("document-type-select-hidden");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "2" } }); // NIT
@@ -139,9 +138,8 @@ describe("ClientForm", () => {
 
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
@@ -165,7 +163,7 @@ describe("ClientForm", () => {
 
       // Should show modal instead of navigating
       await waitFor(() => {
-        expect(screen.getByText("Cliente Existente")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Cliente Existente");
         expect(screen.getByText("Carlos Perez")).toBeInTheDocument();
       });
 
@@ -181,9 +179,8 @@ describe("ClientForm", () => {
 
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
@@ -199,7 +196,7 @@ describe("ClientForm", () => {
 
       // Wait for modal
       await waitFor(() => {
-        expect(screen.getByText("Cliente Existente")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Cliente Existente");
       });
 
       // Click "Ver Cliente"
@@ -219,9 +216,8 @@ describe("ClientForm", () => {
 
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
@@ -237,7 +233,7 @@ describe("ClientForm", () => {
 
       // Wait for modal
       await waitFor(() => {
-        expect(screen.getByText("Cliente Existente")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Cliente Existente");
       });
 
       // Click "Continuar Editando"
@@ -247,7 +243,7 @@ describe("ClientForm", () => {
 
       // Modal should close
       await waitFor(() => {
-        expect(screen.queryByText("Cliente Existente")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("document-validation-title")).not.toBeInTheDocument();
       });
 
       // Should NOT navigate
@@ -269,8 +265,7 @@ describe("ClientForm", () => {
 
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
+      const docSelect = screen.getByTestId("document-type-select-hidden");
 
       // Select Person Type
       await act(async () => {
@@ -278,7 +273,7 @@ describe("ClientForm", () => {
       });
 
       // Type document number
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docInput = screen.getByTestId("document-number-input");
       await act(async () => {
         fireEvent.change(docInput, { target: { value: "99999" } });
       });
@@ -296,7 +291,7 @@ describe("ClientForm", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Usuario Encontrado")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Usuario Encontrado");
         expect(screen.getByText("Found One")).toBeInTheDocument();
       });
 
@@ -321,10 +316,8 @@ describe("ClientForm", () => {
 
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
@@ -340,7 +333,7 @@ describe("ClientForm", () => {
 
       // Wait for modal
       await waitFor(() => {
-        expect(screen.getByText("Usuario Encontrado")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Usuario Encontrado");
       });
 
       // Click "Sí, Usar Datos"
@@ -388,9 +381,8 @@ describe("ClientForm", () => {
       expect(getClientByDocument).not.toHaveBeenCalled();
 
       // Now change the document to something new that doesn't exist
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "2" } }); // Change to NIT
@@ -414,7 +406,7 @@ describe("ClientForm", () => {
 
       // Should show modal instead of navigating
       await waitFor(() => {
-        expect(screen.getByText("Documento No Encontrado")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Documento No Encontrado");
         expect(screen.getByText("88888")).toBeInTheDocument();
       }, { timeout: 3000 });
 
@@ -432,9 +424,8 @@ describe("ClientForm", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 600));
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "2" } });
@@ -450,7 +441,7 @@ describe("ClientForm", () => {
 
       // Wait for modal specifically with the new data
       await waitFor(() => {
-        expect(screen.getByText("Documento No Encontrado")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Documento No Encontrado");
       }, { timeout: 3000 });
 
       // Click "Crear Nuevo Cliente"
@@ -480,9 +471,8 @@ describe("ClientForm", () => {
 
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
@@ -506,7 +496,7 @@ describe("ClientForm", () => {
 
       // Should show error modal
       await waitFor(() => {
-        expect(screen.getByText("Error de Validación")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Error de Validación");
         expect(screen.getAllByText("Network error").length).toBeGreaterThan(0);
       });
     });
@@ -516,9 +506,8 @@ describe("ClientForm", () => {
 
       renderForm();
 
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docSelect = screen.getByTestId("document-type-select-hidden");
+      const docInput = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "1" } });
@@ -534,7 +523,7 @@ describe("ClientForm", () => {
 
       // Wait for error modal
       await waitFor(() => {
-        expect(screen.getByText("Error de Validación")).toBeInTheDocument();
+        expect(screen.getByTestId("document-validation-title")).toHaveTextContent("Error de Validación");
       });
 
       // Click "Continuar Sin Verificar"
@@ -544,7 +533,7 @@ describe("ClientForm", () => {
 
       // Modal should close
       await waitFor(() => {
-        expect(screen.queryByText("Error de Validación")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("document-validation-title")).not.toBeInTheDocument();
       });
 
       // Form should still be usable
@@ -574,8 +563,7 @@ describe("ClientForm", () => {
       });
 
       // Change to NIT (company)
-      const selects = screen.getAllByRole("combobox");
-      const docSelect = selects[0];
+      const docSelect = screen.getByTestId("document-type-select-hidden");
 
       await act(async () => {
         fireEvent.change(docSelect, { target: { value: "2" } }); // NIT

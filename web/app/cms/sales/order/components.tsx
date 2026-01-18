@@ -110,11 +110,13 @@ export function SalesOrderForm({
                     </div>
                     <div className="text-right">
                         <p className="text-indigo-100 text-sm font-medium uppercase tracking-wider mb-1">Total Estimado</p>
-                        <p className="text-4xl font-extrabold text-white">
-                            $
-                            {subtotal.toNumber().toLocaleString("es-CO", {
+                        <p
+                            data-testid="total-header"
+                            className="text-4xl font-extrabold text-white"
+                        >
+                            {`$${subtotal.toNumber().toLocaleString("es-CO", {
                                 minimumFractionDigits: 2,
-                            })}
+                            })}`}
                         </p>
                     </div>
                 </div>
@@ -135,6 +137,7 @@ export function SalesOrderForm({
                             path="clientId"
                             required
                             placeholder="Seleccionar cliente..."
+                            data-testid="client-select"
                         >
                             <SelectItem value={0}>Seleccionar cliente...</SelectItem>
                             {clients.map((client) => (
@@ -159,6 +162,7 @@ export function SalesOrderForm({
                             path="orderTypeId"
                             required
                             placeholder="Seleccionar tipo..."
+                            data-testid="order-type-select"
                         >
                             <SelectItem value={0}>Seleccionar tipo...</SelectItem>
                             {orderTypes.map((type) => (
@@ -181,6 +185,7 @@ export function SalesOrderForm({
                             path="orderDate"
                             showTime
                             placeholder="Seleccionar fecha..."
+                            data-testid="order-date-picker"
                         />
                     </div>
                 </div>
@@ -197,6 +202,7 @@ export function SalesOrderForm({
                         <button
                             type="button"
                             onClick={handleAddItem}
+                            data-testid="add-item-button"
                             className="inline-flex items-center px-6 py-2.5 text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-100"
                         >
                             <PlusIcon className="h-4 w-4 mr-2 stroke-2" />
@@ -217,20 +223,19 @@ export function SalesOrderForm({
                                         <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
                                             Producto
                                         </label>
-                                        <Form.Scope path={index}>
-                                            <Form.Select.Int
-                                                path="itemId"
-                                                placeholder="Seleccionar producto..."
-                                                onChange={(itemId) => handleItemSelect(index, itemId)}
-                                            >
-                                                <SelectItem value={0}>Seleccionar producto...</SelectItem>
-                                                {items.map((product) => (
-                                                    <SelectItem key={product.id} value={product.id}>
-                                                        {product.code} - {product.fullName}
-                                                    </SelectItem>
-                                                ))}
-                                            </Form.Select.Int>
-                                        </Form.Scope>
+                                        <Form.Select.Int
+                                            path="itemId"
+                                            placeholder="Seleccionar producto..."
+                                            onChange={(itemId) => handleItemSelect(index, itemId)}
+                                            data-testid={`item-select-${index}`}
+                                        >
+                                            <SelectItem value={0}>Seleccionar producto...</SelectItem>
+                                            {items.map((product) => (
+                                                <SelectItem key={product.id} value={product.id}>
+                                                    {product.code} - {product.fullName}
+                                                </SelectItem>
+                                            ))}
+                                        </Form.Select.Int>
                                     </div>
 
                                     {/* Quantity */}
@@ -242,6 +247,7 @@ export function SalesOrderForm({
                                             path="quantity"
                                             min={1}
                                             required
+                                            data-testid={`quantity-input-${index}`}
                                             className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-bold text-center text-gray-700"
                                         />
                                     </div>
@@ -254,6 +260,7 @@ export function SalesOrderForm({
                                         <Form.Decimal
                                             path="unitPrice"
                                             required
+                                            data-testid={`price-input-${index}`}
                                             className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-bold text-right text-gray-700"
                                         />
                                     </div>
@@ -263,11 +270,11 @@ export function SalesOrderForm({
                                         <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 text-right">
                                             Subtotal
                                         </label>
-                                        <div className="px-4 py-2.5 bg-indigo-50/50 rounded-xl text-sm font-black text-indigo-700 text-right">
-                                            $
-                                            {(
-                                                toNum(item.quantity) * toNum(item.unitPrice)
-                                            ).toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+                                        <div
+                                            data-testid={`line-subtotal-${index}`}
+                                            className="px-4 py-2.5 bg-indigo-50/50 rounded-xl text-sm font-black text-indigo-700 text-right"
+                                        >
+                                            {`$${(toNum(item.quantity) * toNum(item.unitPrice)).toLocaleString("es-CO", { minimumFractionDigits: 2 })}`}
                                         </div>
                                     </div>
 
@@ -279,7 +286,10 @@ export function SalesOrderForm({
                                             className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-90"
                                             title="Eliminar ítem"
                                         >
-                                            <TrashIcon className="h-5 w-5 stroke-2" />
+                                            <TrashIcon
+                                                data-testid={`remove-item-${index}`}
+                                                className="h-5 w-5 stroke-2"
+                                            />
                                         </button>
                                     </div>
                                 </div>

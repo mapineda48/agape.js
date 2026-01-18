@@ -140,6 +140,7 @@ export function OrderForm({
             path="supplierId"
             required
             placeholder="Seleccionar proveedor..."
+            data-testid="supplier-select"
           >
             <SelectItem value={0}>Seleccionar proveedor...</SelectItem>
             {suppliers.map((supplier) => (
@@ -224,6 +225,7 @@ export function OrderForm({
                       <Form.Select.Int
                         path="itemId"
                         placeholder="Seleccionar producto..."
+                        data-testid="item-select"
                         onChange={(itemId) => handleItemSelect(index, itemId)}
                       >
                         <SelectItem value={0}>Seleccionar producto...</SelectItem>

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement } from "react";
 import { HistoryManager, HistoryContext } from "@/components/router/router";
@@ -203,13 +203,14 @@ describe("NewSalesInvoicePage", () => {
         it("should render the client selector", () => {
             renderPage();
             expect(screen.getByText("Cliente")).toBeInTheDocument();
-            expect(screen.getByText("Seleccionar cliente...")).toBeInTheDocument();
+            expect(screen.getByTestId("client-select")).toBeInTheDocument();
         });
 
         it("should render client options in the selector", () => {
             renderPage();
-            expect(screen.getByText("Juan Pérez")).toBeInTheDocument();
-            expect(screen.getByText("Empresa XYZ S.A.S.")).toBeInTheDocument();
+            const clientSelect = screen.getByTestId("client-select-hidden");
+            expect(clientSelect).toContainElement(screen.getByText("Juan Pérez"));
+            expect(clientSelect).toContainElement(screen.getByText("Empresa XYZ S.A.S."));
         });
 
         it("should render the issue date field", () => {
@@ -284,12 +285,14 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
+            await act(async () => {
+                fireEvent.click(addButton);
+            });
 
             await waitFor(() => {
-                expect(screen.getByText("Producto")).toBeInTheDocument();
-                expect(screen.getByText("Cant.")).toBeInTheDocument();
-                expect(screen.getByText("Precio Unit.")).toBeInTheDocument();
+                expect(screen.getByTestId("item-select-0-hidden")).toBeInTheDocument();
+                expect(screen.getByTestId("quantity-input-0")).toBeInTheDocument();
+                expect(screen.getByTestId("price-input-0")).toBeInTheDocument();
             });
         });
 
@@ -297,39 +300,32 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(
-                    screen.getByText("Seleccionar producto...")
-                ).toBeInTheDocument();
-                expect(screen.getByText("PROD-001 - Producto de Prueba 1")).toBeInTheDocument();
-                expect(screen.getByText("PROD-002 - Producto de Prueba 2")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
+
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            expect(itemSelect).toContainElement(screen.getByText("PROD-001 - Producto de Prueba 1"));
+            expect(itemSelect).toContainElement(screen.getByText("PROD-002 - Producto de Prueba 2"));
         });
 
         it("should update unit price when product is selected", async () => {
             renderPage();
 
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select a product
-            const productSelect = screen.getByDisplayValue("");
-            if (productSelect.tagName === "SELECT") {
-                fireEvent.change(productSelect, { target: { value: "1" } });
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
-                await waitFor(() => {
-                    // The unit price should be set from the product's basePrice
-                    const priceInputs = screen.getAllByRole("spinbutton");
-                    // One of them should have the product's base price
-                    expect(priceInputs.length).toBeGreaterThan(0);
-                });
-            }
+            await waitFor(() => {
+                const priceInput = screen.getByTestId("price-input-0") as HTMLInputElement;
+                expect(priceInput.value).toBe("100");
+            });
         });
 
         it("should remove item row when delete button is clicked", async () => {
@@ -337,15 +333,14 @@ describe("NewSalesInvoicePage", () => {
 
             // Add an item first
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Producto")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Find and click the delete button
-            const deleteButton = screen.getByTitle("Eliminar ítem");
-            fireEvent.click(deleteButton);
+            const deleteButton = await screen.findByTestId("remove-item-0");
+            await act(async () => {
+                fireEvent.click(deleteButton);
+            });
 
             await waitFor(() => {
                 expect(screen.getByText("No hay ítems en la factura")).toBeInTheDocument();
@@ -358,14 +353,18 @@ describe("NewSalesInvoicePage", () => {
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
 
             // Add first item
-            fireEvent.click(addButton);
+            await act(async () => {
+                fireEvent.click(addButton);
+            });
 
             // Add second item
-            fireEvent.click(addButton);
+            await act(async () => {
+                fireEvent.click(addButton);
+            });
 
             await waitFor(() => {
-                const deleteButtons = screen.getAllByTitle("Eliminar ítem");
-                expect(deleteButtons.length).toBe(2);
+                expect(screen.getByTestId("remove-item-0")).toBeInTheDocument();
+                expect(screen.getByTestId("remove-item-1")).toBeInTheDocument();
             });
         });
     });
@@ -385,7 +384,9 @@ describe("NewSalesInvoicePage", () => {
             const submitButton = screen.getByRole("button", {
                 name: /Guardar Borrador/i,
             });
-            fireEvent.click(submitButton);
+            await act(async () => {
+                fireEvent.click(submitButton);
+            });
 
             await waitFor(() => {
                 expect(mockNotify).toHaveBeenCalledWith(
@@ -401,16 +402,17 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select a client
-            const clientSelect = screen.getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             const submitButton = screen.getByRole("button", {
                 name: /Guardar Borrador/i,
             });
-            fireEvent.click(submitButton);
+            await act(async () => {
+                fireEvent.click(submitButton);
+            });
 
             await waitFor(() => {
                 expect(mockNotify).toHaveBeenCalledWith(
@@ -440,37 +442,29 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product in the item row
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Submit as draft
             const draftButton = screen.getByRole("button", {
                 name: /Guardar Borrador/i,
             });
-            fireEvent.click(draftButton);
+            await act(async () => {
+                fireEvent.click(draftButton);
+            });
 
             await waitFor(() => {
                 expect(createSalesInvoice).toHaveBeenCalledWith(
@@ -497,31 +491,21 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // IMPORTANT: Clear any calls that might have happened before clicking
             (postSalesInvoice as ReturnType<typeof vi.fn>).mockClear();
@@ -530,7 +514,9 @@ describe("NewSalesInvoicePage", () => {
             const draftButton = screen.getByRole("button", {
                 name: /Guardar Borrador/i,
             });
-            fireEvent.click(draftButton);
+            await act(async () => {
+                fireEvent.click(draftButton);
+            });
 
             await waitFor(() => {
                 expect(createSalesInvoice).toHaveBeenCalled();
@@ -556,31 +542,21 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Clear createSalesInvoice mock to count only the clicks
             (createSalesInvoice as ReturnType<typeof vi.fn>).mockClear();
@@ -589,7 +565,9 @@ describe("NewSalesInvoicePage", () => {
             const draftButton = screen.getByRole("button", {
                 name: /Guardar Borrador/i,
             });
-            fireEvent.click(draftButton);
+            await act(async () => {
+                fireEvent.click(draftButton);
+            });
 
             // Wait for the submit to complete
             await waitFor(() => {
@@ -609,37 +587,29 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Submit as draft
             const draftButton = screen.getByRole("button", {
                 name: /Guardar Borrador/i,
             });
-            fireEvent.click(draftButton);
+            await act(async () => {
+                fireEvent.click(draftButton);
+            });
 
             await waitFor(() => {
                 expect(mockNotify).toHaveBeenCalledWith(
@@ -659,37 +629,29 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Submit as draft
             const draftButton = screen.getByRole("button", {
                 name: /Guardar Borrador/i,
             });
-            fireEvent.click(draftButton);
+            await act(async () => {
+                fireEvent.click(draftButton);
+            });
 
             await waitFor(() => {
                 expect(router.navigateTo).toHaveBeenCalled();
@@ -717,37 +679,29 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Submit with "Crear y Emitir"
             const postButton = screen.getByRole("button", {
                 name: /Crear y Emitir/i,
             });
-            fireEvent.click(postButton);
+            await act(async () => {
+                fireEvent.click(postButton);
+            });
 
             await waitFor(() => {
                 expect(createSalesInvoice).toHaveBeenCalled();
@@ -770,37 +724,29 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Submit with "Crear y Emitir"
             const postButton = screen.getByRole("button", {
                 name: /Crear y Emitir/i,
             });
-            fireEvent.click(postButton);
+            await act(async () => {
+                fireEvent.click(postButton);
+            });
 
             await waitFor(() => {
                 expect(mockNotify).toHaveBeenCalledWith(
@@ -823,37 +769,29 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Submit with "Crear y Emitir"
             const postButton = screen.getByRole("button", {
                 name: /Crear y Emitir/i,
             });
-            fireEvent.click(postButton);
+            await act(async () => {
+                fireEvent.click(postButton);
+            });
 
             await waitFor(() => {
                 expect(router.navigateTo).toHaveBeenCalled();
@@ -871,37 +809,29 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             // Select client
-            const clientSelect = screen
-                .getByText("Seleccionar cliente...")
-                .closest("select");
-            if (clientSelect) {
+            const clientSelect = await screen.findByTestId("client-select-hidden");
+            await act(async () => {
                 fireEvent.change(clientSelect, { target: { value: "1" } });
-            }
+            });
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // Submit with "Crear y Emitir"
             const postButton = screen.getByRole("button", {
                 name: /Crear y Emitir/i,
             });
-            fireEvent.click(postButton);
+            await act(async () => {
+                fireEvent.click(postButton);
+            });
 
             await waitFor(() => {
                 expect(mockNotify).toHaveBeenCalledWith(
@@ -927,7 +857,9 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             const backButton = screen.getByText("Volver a Facturas");
-            fireEvent.click(backButton);
+            await act(async () => {
+                fireEvent.click(backButton);
+            });
 
             await waitFor(() => {
                 expect(router.navigateTo).toHaveBeenCalled();
@@ -938,7 +870,9 @@ describe("NewSalesInvoicePage", () => {
             renderPage();
 
             const cancelButton = screen.getByRole("button", { name: /Cancelar/i });
-            fireEvent.click(cancelButton);
+            await act(async () => {
+                fireEvent.click(cancelButton);
+            });
 
             await waitFor(() => {
                 expect(router.navigateTo).toHaveBeenCalled();
@@ -960,28 +894,54 @@ describe("NewSalesInvoicePage", () => {
 
             // Add an item
             const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
-            fireEvent.click(addButton);
-
-            await waitFor(() => {
-                expect(screen.getByText("Seleccionar producto...")).toBeInTheDocument();
+            await act(async () => {
+                fireEvent.click(addButton);
             });
 
-            // Select product (which should set the unit price)
-            const productSelects = screen.getAllByRole("combobox");
-            const itemProductSelect = productSelects.find(
-                (select) =>
-                    select.querySelector('option[value="0"]')?.textContent ===
-                    "Seleccionar producto..."
-            );
-            if (itemProductSelect) {
-                fireEvent.change(itemProductSelect, { target: { value: "1" } });
-            }
+            // Select product (which should set the unit price to 100.00)
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
 
             // The subtotal/total should reflect quantity=1 × price=100.00 = $100.00
             await waitFor(() => {
-                // The form should show the item subtotal
-                const subtotalLabels = screen.getAllByText(/Subtotal/);
-                expect(subtotalLabels.length).toBeGreaterThan(0);
+                // Total en la cabecera
+                expect(screen.getByTestId("total-header").textContent).toBe("$100,00");
+                // Total en el resumen
+                expect(screen.getByTestId("summary-total").textContent).toBe("$100,00");
+                // Subtotal en la línea
+                const lineSubtotal = screen.getByTestId("line-subtotal-0");
+                expect(lineSubtotal.textContent).toContain("100,00");
+            });
+        });
+
+        it("should update subtotal when global discount is applied", async () => {
+            renderPage();
+
+            // Add an item
+            const addButton = screen.getByRole("button", { name: /Agregar Ítem/i });
+            await act(async () => {
+                fireEvent.click(addButton);
+            });
+
+            // Select product (unitPrice = 100.00)
+            const itemSelect = await screen.findByTestId("item-select-0-hidden");
+            await act(async () => {
+                fireEvent.change(itemSelect, { target: { value: "1" } });
+            });
+
+            // Apply 10% global discount
+            const discountInput = screen.getByTestId("global-discount-input");
+            await act(async () => {
+                fireEvent.change(discountInput, { target: { value: "10" } });
+            });
+
+            // Total should be 90.00
+            await waitFor(() => {
+                expect(screen.getByTestId("total-header").textContent).toBe("$90,00");
+                expect(screen.getByTestId("summary-total").textContent).toBe("$90,00");
+                expect(screen.getByTestId("summary-discount-label").textContent).toBe("Descuento (10%):");
             });
         });
     });

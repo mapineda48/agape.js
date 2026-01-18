@@ -73,6 +73,13 @@ describe("EditEmployeePage", () => {
     countryCode: "CO",
     languageCode: "es",
     currencyCode: "COP",
+    jobPositionIds: [],
+    contacts: {
+      email: undefined,
+      phone: undefined,
+      mobile: undefined,
+    },
+    departmentId: null,
   };
 
   beforeEach(() => {
@@ -94,13 +101,15 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
-      expect(screen.getByText("Editar Empleado")).toBeInTheDocument();
+      expect(screen.getByText("Datos del Empleado")).toBeInTheDocument();
       expect(
-        screen.getByText("Actualiza la información del empleado")
+        screen.getByText("Actualiza la información personal y laboral")
       ).toBeInTheDocument();
     });
 
@@ -108,6 +117,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -121,24 +132,26 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
       // Document type
-      const select = screen.getByRole("combobox");
+      const select = screen.getByTestId("document-type-select-hidden");
       expect(select).toHaveValue("1");
 
       // Document number
-      expect(screen.getByDisplayValue("1234567890")).toBeInTheDocument();
+      expect(screen.getByTestId("document-number-input")).toHaveValue("1234567890");
 
       // Personal data
-      expect(screen.getByDisplayValue("Juan")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("Perez")).toBeInTheDocument();
+      expect(screen.getByTestId("first-name-input")).toHaveValue("Juan");
+      expect(screen.getByTestId("last-name-input")).toHaveValue("Perez");
 
       // isActive checkbox
-      const checkbox = screen.getByRole("checkbox");
-      expect(checkbox).toBeChecked();
+      const checkbox = screen.getByTestId("is-active-checkbox") as HTMLInputElement;
+      expect(checkbox.checked).toBe(true);
     });
 
     it("maps inactive employee correctly", () => {
@@ -147,23 +160,27 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={inactiveEmployee}
         />
       );
 
-      const checkbox = screen.getByRole("checkbox");
-      expect(checkbox).not.toBeChecked();
+      const checkbox = screen.getByTestId("is-active-checkbox") as HTMLInputElement;
+      expect(checkbox.checked).toBe(false);
     });
 
     it("filters out company document types", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
-      const select = screen.getByRole("combobox");
+      const select = screen.getByTestId("document-type-select-hidden");
       const options = Array.from(select.querySelectorAll("option"));
 
       const optionTexts = options.map((o) => o.textContent);
@@ -182,12 +199,14 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={employeeWithNulls}
         />
       );
 
       // Should render without errors
-      expect(screen.getByText("Editar Empleado")).toBeInTheDocument();
+      expect(screen.getByText("Datos del Empleado")).toBeInTheDocument();
     });
   });
 
@@ -196,11 +215,13 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
-      const firstNameInput = screen.getByDisplayValue("Juan");
+      const firstNameInput = screen.getByTestId("first-name-input");
       fireEvent.change(firstNameInput, { target: { value: "Carlos" } });
       expect(firstNameInput).toHaveValue("Carlos");
     });
@@ -209,11 +230,13 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
-      const lastNameInput = screen.getByDisplayValue("Perez");
+      const lastNameInput = screen.getByTestId("last-name-input");
       fireEvent.change(lastNameInput, { target: { value: "García" } });
       expect(lastNameInput).toHaveValue("García");
     });
@@ -222,11 +245,13 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
-      const docInput = screen.getByDisplayValue("1234567890");
+      const docInput = screen.getByTestId("document-number-input");
       fireEvent.change(docInput, { target: { value: "0987654321" } });
       expect(docInput).toHaveValue("0987654321");
     });
@@ -235,11 +260,13 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
-      const select = screen.getByRole("combobox");
+      const select = screen.getByTestId("document-type-select-hidden");
       fireEvent.change(select, { target: { value: "2" } }); // TI
       expect(select).toHaveValue("2");
     });
@@ -248,15 +275,17 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
-      const checkbox = screen.getByRole("checkbox");
-      expect(checkbox).toBeChecked();
+      const checkbox = screen.getByTestId("is-active-checkbox") as HTMLInputElement;
+      expect(checkbox.checked).toBe(true);
 
       fireEvent.click(checkbox);
-      expect(checkbox).not.toBeChecked();
+      expect(checkbox.checked).toBe(false);
     });
   });
 
@@ -267,12 +296,14 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
       // Modify firstName
-      const nameInput = screen.getByDisplayValue("Juan");
+      const nameInput = screen.getByTestId("first-name-input");
       fireEvent.change(nameInput, { target: { value: "Juan Modified" } });
 
       // Click the submit button (required for Submit component to process the event)
@@ -297,14 +328,16 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
       // Get all input references FIRST before modifying any
-      const firstNameInput = screen.getByPlaceholderText("Juan");
-      const lastNameInput = screen.getByPlaceholderText("Pérez");
-      const docNumberInput = screen.getByPlaceholderText("Número de documento");
+      const firstNameInput = screen.getByTestId("first-name-input");
+      const lastNameInput = screen.getByTestId("last-name-input");
+      const docNumberInput = screen.getByTestId("document-number-input");
 
       // Modify all fields
       fireEvent.change(firstNameInput, { target: { value: "Carlos" } });
@@ -312,7 +345,7 @@ describe("EditEmployeePage", () => {
       fireEvent.change(docNumberInput, { target: { value: "0000000001" } });
 
       // Toggle isActive off
-      fireEvent.click(screen.getByRole("checkbox"));
+      fireEvent.click(screen.getByTestId("is-active-checkbox"));
 
       // Click the submit button
       const submitButton = screen.getByRole("button", { name: /guardar/i });
@@ -347,6 +380,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -370,6 +405,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -392,6 +429,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -415,6 +454,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -439,6 +480,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -464,12 +507,14 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
 
       // Clear document type
-      const select = screen.getByRole("combobox");
+      const select = screen.getByTestId("document-type-select-hidden");
       fireEvent.change(select, { target: { value: "" } });
 
       // Click the submit button
@@ -493,6 +538,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -506,6 +553,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -523,11 +572,13 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={employeeWithTI}
         />
       );
 
-      const select = screen.getByRole("combobox");
+      const select = screen.getByTestId("document-type-select-hidden");
       expect(select).toHaveValue("2");
     });
 
@@ -535,6 +586,8 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={mockEmployee}
         />
       );
@@ -551,12 +604,14 @@ describe("EditEmployeePage", () => {
       renderWithProviders(
         <EditEmployeePage
           documentTypes={mockDocumentTypes}
+          jobPositions={[]}
+          departments={[]}
           employee={employeeWithAvatar}
         />
       );
 
       // Should render without errors
-      expect(screen.getByText("Editar Empleado")).toBeInTheDocument();
+      expect(screen.getByText("Datos del Empleado")).toBeInTheDocument();
     });
   });
 });

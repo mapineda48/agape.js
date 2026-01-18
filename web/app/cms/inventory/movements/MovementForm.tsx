@@ -57,7 +57,8 @@ export function MovementForm(props: Props) {
     details: [],
   };
 
-  const isReadOnly = props.initialData?.status && props.initialData.status !== "draft";
+  const isReadOnly =
+    props.initialData?.status && props.initialData.status !== "draft";
 
   return (
     <Form.Root<MovementFormState>
@@ -76,6 +77,8 @@ function MovementFormContent(props: Props & { isReadOnly: boolean }) {
   const isEditing = !!props.initialData?.id;
   const dispatch = useAppDispatch();
 
+  const movementTypeReadOnly = isReadOnly || isEditing;
+
   // Set default date if new
   useEffect(() => {
     if (!isEditing) {
@@ -87,7 +90,10 @@ function MovementFormContent(props: Props & { isReadOnly: boolean }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <GeneralInfoCard types={props.types} isReadOnly={isReadOnly} />
+          <GeneralInfoCard
+            types={props.types}
+            isReadOnly={movementTypeReadOnly}
+          />
           <DetailsCard isReadOnly={isReadOnly} />
         </div>
         <div className="space-y-6">
@@ -116,13 +122,14 @@ function MovementFormContent(props: Props & { isReadOnly: boolean }) {
                   };
 
                   if (isEditing) {
-                    throw new Error("Edición no permitida para movimientos ya creados. Use cancelar/revertir.");
+                    await createInventoryMovement(payload);
                   } else {
                     await createInventoryMovement(payload);
                   }
                   props.onSuccess?.();
                 }}
                 className="w-full py-4 px-6 text-white font-bold rounded-2xl shadow-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:scale-95 transition-all shadow-indigo-500/30 flex items-center justify-center gap-2"
+                data-testid="submit-btn"
               >
                 <CubeIcon className="w-5 h-5" />
                 {isEditing ? "Guardar Cambios" : "Crear Movimiento"}
@@ -160,6 +167,7 @@ function GeneralInfoCard({
             required
             placeholder="- Seleccionar -"
             disabled={isReadOnly}
+            data-testid="type-select"
           >
             <SelectItem value={0}>- Seleccionar -</SelectItem>
             {types.map((t) => (
@@ -171,7 +179,7 @@ function GeneralInfoCard({
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Fecha Contable
+            Fecha
           </label>
           <Form.DatePicker
             path="movementDate"
@@ -182,7 +190,7 @@ function GeneralInfoCard({
         </div>
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Notas / Observaciones
+            Observación
           </label>
           <Form.TextArea
             path="observation"
@@ -215,17 +223,20 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
         <div className="flex items-center gap-2">
           <CubeIcon className="w-5 h-5 text-indigo-500" />
           <h2 className="text-lg font-bold text-gray-900">
-            Detalles de Ítems
+            Detalles del Movimiento
           </h2>
+
         </div>
         {!isReadOnly && (
           <button
             type="button"
-            onClick={() => details.addItem({ quantity: 1, unitCost: new Decimal(0) })}
+            onClick={() =>
+              details.addItem({ quantity: 1, unitCost: new Decimal(0) })
+            }
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-xl text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none transition-all"
           >
             <PlusIcon className="h-4 w-4 mr-2" />
-            Añadir Línea
+            Agregar Item
           </button>
         )}
       </div>
@@ -245,7 +256,7 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
             {details.length === 0 ? (
               <tr>
                 <td colSpan={isReadOnly ? 5 : 6} className="px-6 py-12 text-center text-gray-400 italic">
-                  No hay ítems registrados en este movimiento.
+                  No hay items agregados.
                 </td>
               </tr>
             ) : (
@@ -265,9 +276,10 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                       </div>
                     ) : (
                       <Form.Select.Int
-                        path={`details.${index}.itemId`}
+                        path="itemId"
                         required
                         placeholder="- Seleccionar -"
+                        data-testid={`item-select-${index}`}
                       >
                         <SelectItem value={0}>- Seleccionar -</SelectItem>
                         {items.map((i) => (
@@ -286,16 +298,18 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                       </div>
                     ) : (
                       <Form.Select.Int
-                        path={`details.${index}.locationId`}
+                        path="locationId"
                         required
                         placeholder="- Ubicación -"
+                        data-testid={`location-select-${index}`}
                       >
                         <SelectItem value={0}>- Ubicación -</SelectItem>
                         {locations.map((loc) => (
                           <SelectItem key={loc.id} value={loc.id}>
-                            {loc.name}
+                            {loc.code} - {loc.name}
                           </SelectItem>
                         ))}
+
                       </Form.Select.Int>
                     )}
                   </td>
@@ -306,8 +320,9 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                       </span>
                     ) : (
                       <Form.Decimal
-                        path={`details.${index}.quantity`}
+                        path="quantity"
                         required
+                        data-testid={`quantity-input-${index}`}
                         className="w-24 rounded-lg border-gray-200 text-sm text-right focus:border-indigo-500 focus:ring-indigo-500 bg-transparent"
                       />
                     )}
@@ -319,7 +334,8 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                       </span>
                     ) : (
                       <Form.Decimal
-                        path={`details.${index}.unitCost`}
+                        path="unitCost"
+                        data-testid={`unit-cost-input-${index}`}
                         className="w-32 rounded-lg border-gray-200 text-sm text-right focus:border-indigo-500 focus:ring-indigo-500 bg-transparent"
                       />
                     )}
@@ -331,6 +347,8 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <button
                         type="button"
+                        title="Remover linea"
+                        aria-label="Remover linea"
                         onClick={() => details.removeItem(index)}
                         className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
                       >
@@ -338,6 +356,7 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
                       </button>
                     </td>
                   )}
+
                 </tr>
               ))
             )}
@@ -349,7 +368,9 @@ function DetailsCard({ isReadOnly }: { isReadOnly: boolean }) {
 }
 
 function SummaryCard() {
-  const details = Form.useSelector((state: any) => state.details || []) as MovementFormState["details"];
+  const details = Form.useSelector(
+    (state: any) => state.details || []
+  ) as MovementFormState["details"];
 
   const totals = details.reduce(
     (acc: { items: number; quantity: number; totalCost: number }, curr) => {
@@ -367,7 +388,7 @@ function SummaryCard() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-        <h2 className="text-lg font-bold text-gray-900">Resumen Financiero</h2>
+        <h2 className="text-lg font-bold text-gray-900">Resumen</h2>
       </div>
       <div className="p-6 space-y-4">
         <div className="flex justify-between items-center text-sm">

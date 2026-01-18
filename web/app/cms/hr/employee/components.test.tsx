@@ -81,7 +81,7 @@ describe("EmployeeForm", () => {
       expect(screen.getByText("Información Laboral")).toBeInTheDocument();
 
       // Check Document Type options
-      const select = screen.getByRole("combobox"); // The select element
+      const select = screen.getByTestId("document-type-select-hidden"); // The select element
       const options = Array.from(select.querySelectorAll("option"));
 
       // Expect "Seleccionar tipo..." + "Cédula de Ciudadanía" + "Tarjeta de Identidad" (NIT should be filtered out)
@@ -109,8 +109,8 @@ describe("EmployeeForm", () => {
         </Form.Root>
       );
 
-      const select = screen.getByRole("combobox");
-      const input = screen.getByPlaceholderText("Número de documento");
+      const select = screen.getByTestId("document-type-select-hidden");
+      const input = screen.getByTestId("document-number-input");
 
       // Select document type
       await act(async () => {
@@ -160,8 +160,8 @@ describe("EmployeeForm", () => {
         </Form.Root>
       );
 
-      const select = screen.getByRole("combobox");
-      const input = screen.getByPlaceholderText("Número de documento");
+      const select = screen.getByTestId("document-type-select-hidden");
+      const input = screen.getByTestId("document-number-input");
 
       // Select document type
       await act(async () => {
@@ -206,8 +206,8 @@ describe("EmployeeForm", () => {
         </Form.Root>
       );
 
-      const select = screen.getByRole("combobox");
-      const input = screen.getByPlaceholderText("Número de documento");
+      const select = screen.getByTestId("document-type-select-hidden");
+      const input = screen.getByTestId("document-number-input");
 
       // Select document type and type document number
       await act(async () => {
@@ -351,7 +351,7 @@ describe("EmployeeForm", () => {
       expect(getEmployeeByDocument).not.toHaveBeenCalled();
 
       // Now change the document number to trigger the validation
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docInput = screen.getByTestId("document-number-input");
       await act(async () => {
         fireEvent.change(docInput, { target: { value: "9999999999" } });
       });
@@ -422,7 +422,7 @@ describe("EmployeeForm", () => {
       await new Promise((resolve) => setTimeout(resolve, 700));
 
       // Change document to trigger validation
-      const docInput = screen.getByPlaceholderText("Número de documento");
+      const docInput = screen.getByTestId("document-number-input");
       await act(async () => {
         fireEvent.change(docInput, { target: { value: "8888888888" } });
       });
@@ -458,8 +458,8 @@ describe("EmployeeForm", () => {
         </Form.Root>
       );
 
-      const select = screen.getByRole("combobox");
-      const input = screen.getByPlaceholderText("Número de documento");
+      const select = screen.getByTestId("document-type-select-hidden");
+      const input = screen.getByTestId("document-number-input");
 
       await act(async () => {
         fireEvent.change(select, { target: { value: "1" } });

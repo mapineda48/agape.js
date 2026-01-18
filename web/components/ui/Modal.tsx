@@ -116,6 +116,9 @@ export default function Modal({
             initial="hidden"
             animate="visible"
             exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? "modal-title" : undefined}
             className={clsx(
               "relative flex w-full flex-col overflow-hidden",
               "rounded-2xl bg-white shadow-2xl",
@@ -140,7 +143,7 @@ export default function Modal({
                 {header ? (
                   <div className="flex-1">{header}</div>
                 ) : (
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white">
+                  <h3 id="modal-title" className="text-lg font-semibold leading-6 text-gray-900 dark:text-white">
                     {title}
                   </h3>
                 )}

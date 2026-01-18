@@ -280,15 +280,17 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                     </div>
                     <div className="text-right">
                         <p className="text-emerald-100 text-sm">Total estimado</p>
-                        <p className="text-3xl font-bold text-white">
-                            $
-                            {total.toNumber().toLocaleString("es-CO", {
+                        <p
+                            data-testid="total-header"
+                            className="text-3xl font-bold text-white"
+                        >
+                            {`$${total.toNumber().toLocaleString("es-CO", {
                                 minimumFractionDigits: 2,
-                            })}
+                            })}`}
                         </p>
                         {discountAmount.gt(0) && (
                             <p className="text-emerald-200 text-sm">
-                                Descuento: -${discountAmount.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+                                {`Descuento: -$${discountAmount.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}`}
                             </p>
                         )}
                     </div>
@@ -320,6 +322,7 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                         path="clientId"
                         required
                         placeholder="Seleccionar cliente..."
+                        data-testid="client-select"
                     >
                         <SelectItem value={0}>Seleccionar cliente...</SelectItem>
                         {clients.map((client) => (
@@ -409,6 +412,7 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                             min={0}
                             max={100}
                             step={0.01}
+                            data-testid="global-discount-input"
                             className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                         />
                     </div>
@@ -457,20 +461,19 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                             Producto
                                         </label>
-                                        <Form.Scope path={index}>
-                                            <Form.Select.Int
-                                                path="itemId"
-                                                placeholder="Seleccionar producto..."
-                                                onChange={(itemId) => handleItemSelect(index, itemId)}
-                                            >
-                                                <SelectItem value={0}>Seleccionar producto...</SelectItem>
-                                                {items.map((product) => (
-                                                    <SelectItem key={product.id} value={product.id}>
-                                                        {product.code} - {product.fullName}
-                                                    </SelectItem>
-                                                ))}
-                                            </Form.Select.Int>
-                                        </Form.Scope>
+                                        <Form.Select.Int
+                                            path="itemId"
+                                            placeholder="Seleccionar producto..."
+                                            onChange={(itemId) => handleItemSelect(index, itemId)}
+                                            data-testid={`item-select-${index}`}
+                                        >
+                                            <SelectItem value={0}>Seleccionar producto...</SelectItem>
+                                            {items.map((product) => (
+                                                <SelectItem key={product.id} value={product.id}>
+                                                    {product.code} - {product.fullName}
+                                                </SelectItem>
+                                            ))}
+                                        </Form.Select.Int>
                                     </div>
 
                                     {/* Quantity */}
@@ -482,6 +485,7 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                                             path="quantity"
                                             min={1}
                                             required
+                                            data-testid={`quantity-input-${index}`}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                                         />
                                     </div>
@@ -494,6 +498,7 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                                         <Form.Decimal
                                             path="unitPrice"
                                             required
+                                            data-testid={`price-input-${index}`}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                                         />
                                     </div>
@@ -507,6 +512,7 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                                             path="discountPercent"
                                             min={0}
                                             max={100}
+                                            data-testid={`discount-input-${index}`}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                                         />
                                     </div>
@@ -516,7 +522,10 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                             Subtotal
                                         </label>
-                                        <div className="px-3 py-2 bg-gray-100 dark:bg-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-white">
+                                        <div
+                                            data-testid={`line-subtotal-${index}`}
+                                            className="px-3 py-2 bg-gray-100 dark:bg-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-white"
+                                        >
                                             $
                                             {(() => {
                                                 const qty = Number(item.quantity || 0);
@@ -536,6 +545,7 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                                             onClick={() => handleRemoveItem(index)}
                                             className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
                                             title="Eliminar ítem"
+                                            data-testid={`remove-item-${index}`}
                                         >
                                             <TrashIcon className="h-5 w-5" />
                                         </button>
@@ -605,20 +615,26 @@ function InvoiceForm({ clients, items, children }: InvoiceFormProps) {
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                     <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                            ${subtotal.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+                        <span
+                            data-testid="summary-subtotal"
+                            className="font-medium text-gray-900 dark:text-white"
+                        >
+                            {`$${subtotal.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}`}
                         </span>
                     </div>
                     {discountAmount.gt(0) && (
                         <div className="flex justify-between text-sm mb-2 text-red-600 dark:text-red-400">
-                            <span>Descuento ({formState.globalDiscountPercent}%):</span>
-                            <span>-${discountAmount.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}</span>
+                            <span data-testid="summary-discount-label">{`Descuento (${formState.globalDiscountPercent}%):`}</span>
+                            <span data-testid="summary-discount-amount">{`-$${discountAmount.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}`}</span>
                         </div>
                     )}
                     <div className="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
                         <span className="text-gray-900 dark:text-white">Total:</span>
-                        <span className="text-emerald-600 dark:text-emerald-400">
-                            ${total.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+                        <span
+                            data-testid="summary-total"
+                            className="text-emerald-600 dark:text-emerald-400"
+                        >
+                            {`$${total.toNumber().toLocaleString("es-CO", { minimumFractionDigits: 2 })}`}
                         </span>
                     </div>
                 </div>

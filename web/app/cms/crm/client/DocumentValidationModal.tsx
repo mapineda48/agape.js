@@ -86,7 +86,7 @@ function DocumentValidationContent({
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconBgColor}`}>
             {getIcon(decision.type, iconColor)}
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white" data-testid="document-validation-title">
             {getTitle(decision.type)}
           </h3>
         </div>

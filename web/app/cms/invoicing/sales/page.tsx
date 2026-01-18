@@ -131,6 +131,7 @@ export default function SalesInvoicesPage(props: Props) {
                                     Cliente
                                 </label>
                                 <Select
+                                    id="client-filter"
                                     value={filters.clientId ?? undefined}
                                     onChange={(value: number | undefined) =>
                                         updateFilter({
@@ -157,6 +158,7 @@ export default function SalesInvoicesPage(props: Props) {
                                     Estado
                                 </label>
                                 <Select
+                                    id="status-filter"
                                     value={filters.status ?? undefined}
                                     onChange={(value) =>
                                         updateFilter({
@@ -180,6 +182,7 @@ export default function SalesInvoicesPage(props: Props) {
                                     Desde
                                 </label>
                                 <DatePicker
+                                    id="date-from-filter"
                                     placeholder="Desde..."
                                     value={filters.fromDate ? (typeof filters.fromDate === "object" ? filters.fromDate : new Date(filters.fromDate as any)) : undefined}
                                     onChange={(date) =>

@@ -14,9 +14,9 @@ import clsx from "clsx";
 import { Portal } from "@/components/util/portal";
 import DateTime from "@utils/data/DateTime";
 
-interface DatePickerProps {
+interface DatePickerProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
     value?: Date | DateTime;
-    onChange?: (date: Date) => void;
+    onChange?: (date: Date) => any;
     placeholder?: string;
     className?: string;
     disabled?: boolean;
@@ -32,6 +32,7 @@ export function DatePicker({
     disabled = false,
     required = false,
     showTime = false,
+    ...props
 }: DatePickerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'day' | 'year'>('day');
@@ -215,6 +216,7 @@ export function DatePicker({
                         isOpen ? "border-indigo-500 ring-2 ring-indigo-500/20" : "border-gray-300",
                         required && !value && "border-red-300"
                     )}
+                    {...props}
                 />
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <CalendarIcon className={clsx("w-5 h-5", selectedDate ? "text-indigo-500" : "text-gray-400")} />

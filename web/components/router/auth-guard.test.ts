@@ -5,6 +5,13 @@ import type { INavigateTo } from "./types";
 const mockIsAuthenticated = vi.fn();
 vi.mock("@agape/security/access", () => ({
   isAuthenticated: () => mockIsAuthenticated(),
+  session: { permissions: [] },
+}));
+
+// Mock @/lib/rbac - by default allow all routes
+vi.mock("@/lib/rbac", () => ({
+  canAccessRoute: () => true,
+  getRoutePermission: () => null,
 }));
 
 describe("AuthGuard", () => {
@@ -23,7 +30,7 @@ describe("AuthGuard", () => {
       // /cms-other should pass through since it's not actually /cms or /cms/*
       const result = await guard.check("/cms-other", ctx);
 
-      expect(result).toBe("/cms-other");
+      expect(result.pathname).toBe("/cms-other");
       expect(ctx.replace).toBeUndefined(); // Not set for non-protected routes
     });
 
@@ -33,7 +40,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/login-restore", ctx);
 
-      expect(result).toBe("/login-restore");
+      expect(result.pathname).toBe("/login-restore");
       expect(ctx.replace).toBeUndefined();
     });
 
@@ -43,7 +50,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/cms", ctx);
 
-      expect(result).toBe("/cms");
+      expect(result.pathname).toBe("/cms");
       expect(ctx.replace).toBe(true);
     });
 
@@ -53,7 +60,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/cms/dashboard", ctx);
 
-      expect(result).toBe("/cms/dashboard");
+      expect(result.pathname).toBe("/cms/dashboard");
       expect(ctx.replace).toBe(true);
     });
 
@@ -64,7 +71,7 @@ describe("AuthGuard", () => {
       const result = await guard.check("/login", ctx);
 
       // Authenticated user at /login should redirect to /cms
-      expect(result).toBe("/cms");
+      expect(result.pathname).toBe("/cms");
       expect(ctx.replace).toBe(true);
     });
 
@@ -74,7 +81,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/login/forgot-password", ctx);
 
-      expect(result).toBe("/login");
+      expect(result.pathname).toBe("/login");
       expect(ctx.replace).toBe(true);
     });
   });
@@ -86,7 +93,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/cms", ctx);
 
-      expect(result).toBe("/cms");
+      expect(result.pathname).toBe("/cms");
     });
 
     it("should redirect unauthenticated user from /cms to /login", async () => {
@@ -95,7 +102,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/cms", ctx);
 
-      expect(result).toBe("/login");
+      expect(result.pathname).toBe("/login");
     });
 
     it("should redirect authenticated user from /login to /cms", async () => {
@@ -104,7 +111,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/login", ctx);
 
-      expect(result).toBe("/cms");
+      expect(result.pathname).toBe("/cms");
     });
 
     it("should keep unauthenticated user at /login", async () => {
@@ -113,7 +120,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/login", ctx);
 
-      expect(result).toBe("/login");
+      expect(result.pathname).toBe("/login");
     });
   });
 
@@ -144,7 +151,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/cms", ctx);
 
-      expect(result).toBe("/login");
+      expect(result.pathname).toBe("/login");
     });
 
     it("should log error in development mode", async () => {
@@ -152,7 +159,7 @@ describe("AuthGuard", () => {
 
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       mockIsAuthenticated.mockRejectedValue(new Error("Test error"));
       const ctx: INavigateTo = {};
@@ -171,7 +178,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/", ctx);
 
-      expect(result).toBe("/");
+      expect(result.pathname).toBe("/");
       expect(mockIsAuthenticated).not.toHaveBeenCalled();
     });
 
@@ -180,7 +187,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/about", ctx);
 
-      expect(result).toBe("/about");
+      expect(result.pathname).toBe("/about");
       expect(mockIsAuthenticated).not.toHaveBeenCalled();
     });
 
@@ -189,7 +196,7 @@ describe("AuthGuard", () => {
 
       const result = await guard.check("/products/123", ctx);
 
-      expect(result).toBe("/products/123");
+      expect(result.pathname).toBe("/products/123");
       expect(mockIsAuthenticated).not.toHaveBeenCalled();
     });
   });

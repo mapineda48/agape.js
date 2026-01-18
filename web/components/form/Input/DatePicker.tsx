@@ -15,7 +15,7 @@ export interface DatePickerProps {
     required?: boolean;
 }
 
-const DatePickerInput = ({ path, materialize = true, autoCleanup, placeholder, className, showTime, disabled, required }: DatePickerProps) => {
+const DatePickerInput = ({ path, materialize = true, autoCleanup, placeholder, className, showTime, disabled, required, ...props }: DatePickerProps & Record<string, any>) => {
     const paths = useMemo(() => stringToPath(path), [path]);
 
     const [state, setState] = useInput<DateTime>(paths, new DateTime(), {
@@ -36,6 +36,7 @@ const DatePickerInput = ({ path, materialize = true, autoCleanup, placeholder, c
             showTime={showTime}
             disabled={disabled}
             required={required}
+            {...props}
         />
     );
 };

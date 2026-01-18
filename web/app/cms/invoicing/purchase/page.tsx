@@ -128,6 +128,7 @@ export default function PurchaseInvoicesPage(props: Props) {
                                     Proveedor
                                 </label>
                                 <Select
+                                    id="supplier-filter"
                                     value={filters.supplierId ?? undefined}
                                     onChange={(value: number | undefined) =>
                                         updateFilter({
@@ -154,6 +155,7 @@ export default function PurchaseInvoicesPage(props: Props) {
                                     Desde
                                 </label>
                                 <DatePicker
+                                    id="date-from-filter"
                                     placeholder="Desde..."
                                     value={filters.fromDate instanceof DateTime ? filters.fromDate : (filters.fromDate ? new Date(filters.fromDate as any) : undefined)}
                                     onChange={(date) =>

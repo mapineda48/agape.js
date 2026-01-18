@@ -73,8 +73,18 @@ export function Select<T>({
 
     const childrenArray = useMemo(() => React.Children.toArray(children), [children]);
 
+    // Helper to compare values accounting for type differences (e.g., number 0 vs string "0")
+    const valuesMatch = (childValue: unknown, currentValue: T | undefined): boolean => {
+        if (childValue === currentValue) return true;
+        // For numeric/boolean comparisons with string option values
+        if (currentValue !== undefined && currentValue !== null) {
+            return String(childValue) === String(currentValue);
+        }
+        return false;
+    };
+
     const selectedChild = childrenArray.find(
-        (child) => React.isValidElement(child) && child.props.value === value
+        (child) => React.isValidElement(child) && valuesMatch(child.props.value, value)
     ) as React.ReactElement | undefined;
 
     // Pre-calculate options for the hidden native select
@@ -106,6 +116,7 @@ export function Select<T>({
                 aria-haspopup="listbox"
                 onClick={handleToggle}
                 disabled={disabled}
+                data-testid={testId}
                 className={clsx(
                     "flex items-center justify-between w-full px-4 py-2.5 text-sm transition-all duration-200 bg-white border rounded-xl shadow-sm hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400",
                     isOpen ? "border-indigo-500 ring-2 ring-indigo-500/20" : "border-gray-300",
@@ -131,7 +142,7 @@ export function Select<T>({
                 name={name}
                 aria-label={ariaLabel}
                 aria-labelledby={ariaLabelledBy}
-                data-testid={testId}
+                data-testid={testId ? `${testId}-hidden` : undefined}
                 required={required}
                 disabled={disabled}
                 value={value !== undefined && value !== null ? String(value) : ""}
@@ -196,7 +207,7 @@ export function Select<T>({
                                             <SelectItem
                                                 key={child.props.value}
                                                 value={child.props.value}
-                                                active={child.props.value === value}
+                                                active={valuesMatch(child.props.value, value)}
                                                 onClick={() => {
                                                     onChange?.(child.props.value);
                                                     setIsOpen(false);
@@ -208,7 +219,7 @@ export function Select<T>({
                                     }
 
                                     return React.cloneElement(child, {
-                                        active: child.props.value === value,
+                                        active: valuesMatch(child.props.value, value),
                                         onClick: () => {
                                             onChange?.(child.props.value);
                                             setIsOpen(false);

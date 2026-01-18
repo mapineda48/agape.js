@@ -17,11 +17,9 @@ describe("Select Components", () => {
   );
 
   const selectOption = async (user: any, testId: string, optionText: string) => {
-    const button = screen.getByTestId(testId);
-    await user.click(button);
-    // As it uses a Portal, we look in document.body or the whole screen
-    const option = await screen.findByText(optionText);
-    await user.click(option);
+    // Use the hidden select element for testing - this is more reliable than clicking the custom dropdown
+    const hiddenSelect = screen.getByTestId(`${testId}-hidden`);
+    await user.selectOptions(hiddenSelect, screen.getByRole("option", { name: optionText }));
   };
 
   const getSelectValue = (testId: string) => {
@@ -212,10 +210,7 @@ describe("Select Components", () => {
         </Form.Root>
       );
 
-      const button = screen.getByTestId("select");
-      await user.click(button);
-      const option = await screen.findByText("Invalid");
-      await user.click(option);
+      await selectOption(user, "select", "Invalid");
 
       expect(getSelectValue("select")).toBe("0");
     });

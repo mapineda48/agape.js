@@ -121,7 +121,7 @@ describe("OrderForm Component", () => {
     it("shows supplier selection dropdown", () => {
       renderForm();
       expect(screen.getByText("Proveedor")).toBeInTheDocument();
-      expect(screen.getByText("Seleccionar proveedor...")).toBeInTheDocument();
+      expect(screen.getByTestId("supplier-select")).toBeInTheDocument();
     });
 
     it("shows order date field", () => {
