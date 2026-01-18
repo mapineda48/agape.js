@@ -166,7 +166,7 @@ export function createRpcMiddleware(options: CreateMiddlewareOptions): Middlewar
       };
 
     // Run handler within the async context
-    runContext(context, async () => {
+    await runContext(context, async () => {
       try {
         // 🔐 RBAC: Validate permissions before executing handler (if validator provided)
         if (validatePermission) {

@@ -23,7 +23,16 @@ vi.mock("./error", () => ({
     default: vi.fn((error) => ({
         name: error.name || "Error",
         message: error.message || "Unknown error",
+        code: error.code,
     })),
+}));
+
+// Mock context module
+vi.mock("#lib/context", () => ({
+    runContext: vi.fn(async (context, callback) => {
+        // Execute callback and return the result
+        return await callback();
+    }),
 }));
 
 // Import after mocks are set up
@@ -65,6 +74,7 @@ function createMockResponse(): Response & {
         _mockSend: vi.fn(),
         _mockSet: vi.fn(),
         _mockStatus: vi.fn(),
+        locals: {}, // Add locals object for authPayload
     };
 
     res._mockStatus.mockReturnValue({ send: res._mockSend });
@@ -260,7 +270,7 @@ describe("createRpcMiddleware", () => {
         });
 
         it("should return error when permission validation fails", async () => {
-            const permissionError = new Error("Access denied");
+            const permissionError = { name: "ForbiddenError", message: "Access denied", code: "FORBIDDEN_ERROR" };
             validatePermission.mockRejectedValue(permissionError);
 
             const middleware = createRpcMiddleware({ moduleMap, validatePermission });
@@ -271,7 +281,7 @@ describe("createRpcMiddleware", () => {
             await middleware(req, res, next);
 
             expect(mockHandler).not.toHaveBeenCalled();
-            expect(res._mockStatus).toHaveBeenCalledWith(HTTP_STATUS.BAD_REQUEST);
+            expect(res._mockStatus).toHaveBeenCalledWith(HTTP_STATUS.UNAUTHORIZED);
         });
 
         it("should not execute handler when permission is denied", async () => {
@@ -528,7 +538,10 @@ describe("createRpcMiddleware - Integration scenarios", () => {
 
         const roleValidator: PermissionValidator = async (endpoint) => {
             if (endpoint.startsWith("/admin") && currentUserRole !== "admin") {
-                throw new Error("Admin access required");
+                const error: any = new Error("Admin access required");
+                error.code = "FORBIDDEN_ERROR";
+                error.name = "ForbiddenError";
+                throw error;
             }
         };
 
@@ -543,7 +556,7 @@ describe("createRpcMiddleware - Integration scenarios", () => {
         await middleware(req, res, createMockNext());
 
         expect(adminHandler).not.toHaveBeenCalled();
-        expect(res._mockStatus).toHaveBeenCalledWith(HTTP_STATUS.BAD_REQUEST);
+        expect(res._mockStatus).toHaveBeenCalledWith(HTTP_STATUS.UNAUTHORIZED);
 
         // Admin user accesses admin endpoint
         currentUserRole = "admin";

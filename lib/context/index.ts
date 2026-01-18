@@ -21,8 +21,8 @@ const als = new AsyncLocalStorage<IContext>();
  */
 export function runContext(ctx: IContext, next: (...args: unknown[]) => unknown) {
     // Crea un store por request y ejecuta el callback dentro del contexto async
-    als.run({ ...ctx, session: new Map() }, () => {
-        next();
+    return als.run({ ...ctx, session: new Map() }, () => {
+        return next();
     });
 }
 
