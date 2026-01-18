@@ -46,29 +46,7 @@ export const accountNatureEnum = schema.enum("finance_gl_account_nature", [
  * Solo las cuentas de detalle (allowPosting = true) pueden recibir asientos.
  * Las cuentas padre (allowPosting = false) son solo para agrupación.
  *
- * @example
- * ```ts
- * // Cuenta padre de nivel 1
- * {
- *   code: "1",
- *   name: "ACTIVO",
- *   type: "asset",
- *   nature: "debit",
- *   allowPosting: false,
- *   parentId: null
- * }
- *
- * // Cuenta de detalle
- * {
- *   code: "1.1.01",
- *   name: "Caja General",
- *   type: "asset",
- *   nature: "debit",
- *   allowPosting: true,
- *   parentId: 2  // ID de cuenta "1.1 Disponible"
- * }
- * ```
- */
+  */
 export const glAccount = schema.table(
   "finance_gl_account",
   {

@@ -17,20 +17,7 @@ import { tax } from "./tax";
  * - Factura basada en orden: invoice_item → order_item
  * - Factura directa (sin orden previa): solo itemId, sin referencias
  *
- * @example
- * ```ts
- * // Línea de factura vinculada a orden de venta
- * {
- *   salesInvoiceId: 1,
- *   orderItemId: 10,       // Vinculada a la línea de orden
- *   itemId: 100,
- *   quantity: 50,
- *   unitPrice: "150.00",
- *   taxId: 1,
- *   taxAmount: "28.50"     // IVA calculado
- * }
- * ```
- */
+  */
 const sales_invoice_item = schema.table(
   "finance_sales_invoice_item",
   {

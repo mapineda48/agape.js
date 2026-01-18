@@ -19,19 +19,7 @@ import { decimal } from "../../lib/db/custom-types";
  * - Incluye ubicación destino en almacén
  * - Captura costo unitario al momento de recepción
  *
- * @example
- * ```ts
- * // Línea de recepción vinculada a OC
- * {
- *   goodsReceiptId: 1,
- *   orderItemId: 10,      // Línea de OC origen
- *   itemId: 100,
- *   quantity: 50,         // Recibidos (puede ser menor al pedido)
- *   locationId: 1,        // Bodega principal
- *   unitCost: "150.00"
- * }
- * ```
- */
+  */
 const goods_receipt_item = schema.table(
   "purchasing_goods_receipt_item",
   {

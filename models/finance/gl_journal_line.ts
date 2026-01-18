@@ -19,29 +19,7 @@ import { glAccount } from "./gl_account";
  *
  * Al contabilizar (status = posted), los saldos de las cuentas se actualizan.
  *
- * @example
- * ```ts
- * // Línea de débito (Aumenta Cuentas por Cobrar)
- * {
- *   journalEntryId: 1,
- *   accountId: 10,         // Cuenta: Clientes
- *   lineNumber: 1,
- *   description: "Factura FV-2024-001",
- *   debitAmount: "1190.00",
- *   creditAmount: "0.00"
- * }
- *
- * // Línea de crédito (Aumenta Ventas)
- * {
- *   journalEntryId: 1,
- *   accountId: 50,         // Cuenta: Ingresos por Ventas
- *   lineNumber: 2,
- *   description: "Factura FV-2024-001",
- *   debitAmount: "0.00",
- *   creditAmount: "1000.00"
- * }
- * ```
- */
+  */
 const gl_journal_line = schema.table(
   "finance_gl_journal_line",
   {

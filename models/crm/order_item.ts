@@ -27,25 +27,7 @@ import { item } from "../catalogs/item";
  * - Reportes de ventas por producto
  * - Cálculo de totales, descuentos e impuestos por línea
  *
- * @example
- * ```ts
- * // Línea de orden: 10 unidades de producto X a $50 c/u con 10% de descuento
- * const orderItem = {
- *   orderId: 1,
- *   itemId: 100,
- *   lineNumber: 1,
- *   quantity: 10,
- *   unitPrice: 50.00,
- *   discountPercent: 10.00,
- *   taxPercent: 19.00,
- *   // subtotal = 10 * 50 = 500
- *   // descuento = 500 * 0.10 = 50
- *   // base imponible = 450
- *   // impuesto = 450 * 0.19 = 85.50
- *   // total = 535.50
- * };
- * ```
- */
+  */
 export const orderItem = schema.table(
   "crm_order_item",
   {

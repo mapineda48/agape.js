@@ -30,27 +30,7 @@ import { contactMethodTypeEnum, type ContactMethodType } from "./enums";
  * - Múltiples teléfonos (móvil, fijo, WhatsApp)
  * - Otros canales (redes sociales, mensajería)
  *
- * @example
- * ```ts
- * // Agregar email principal
- * const emailContacto = {
- *   userId: 1,
- *   type: "email",
- *   value: "contacto@empresa.com",
- *   isPrimary: true,
- *   label: "Email corporativo",
- * };
- *
- * // Agregar WhatsApp
- * const whatsapp = {
- *   userId: 1,
- *   type: "whatsapp",
- *   value: "+57 300 123 4567",
- *   isPrimary: false,
- *   label: "WhatsApp ventas",
- * };
- * ```
- */
+  */
 export const contactMethod = schema.table(
   "contact_method",
   {

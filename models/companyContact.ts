@@ -31,26 +31,7 @@ import person from "./person";
  * - Contacto de facturación
  * - Contacto técnico
  *
- * @example
- * ```ts
- * // Agregar representante legal
- * const representante = {
- *   companyId: 100,
- *   personId: 50,
- *   role: "Representante Legal",
- *   isPrimary: true,
- * };
- *
- * // Agregar contacto de compras
- * const contactoCompras = {
- *   companyId: 100,
- *   personId: 51,
- *   role: "Jefe de Compras",
- *   isPrimary: false,
- *   department: "Compras",
- * };
- * ```
- */
+  */
 export const companyContact = schema.table(
   "company_contact",
   {

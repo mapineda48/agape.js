@@ -16,15 +16,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * - Integración con pasarelas de pago
  * - Conciliación bancaria
  *
- * @example
- * ```ts
- * // Efectivo
- * { code: "CASH", fullName: "Efectivo", requiresReference: false }
- *
- * // Transferencia bancaria
- * { code: "TRANSFER", fullName: "Transferencia Bancaria", requiresReference: true }
- * ```
- */
+  */
 export const paymentMethod = schema.table(
   "finance_payment_method",
   {

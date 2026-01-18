@@ -21,15 +21,7 @@ import DateTime from "../../lib/utils/data/DateTime";
  * - Calcular fechas de vencimiento de cuentas por cobrar/pagar
  * - Gestionar políticas de crédito por cliente
  *
- * @example
- * ```ts
- * // Contado
- * { code: "CASH", fullName: "Pago de Contado", dueDays: 0 }
- *
- * // Crédito 30 días
- * { code: "NET30", fullName: "Neto 30 días", dueDays: 30 }
- * ```
- */
+  */
 export const paymentTerms = schema.table(
   "finance_payment_terms",
   {

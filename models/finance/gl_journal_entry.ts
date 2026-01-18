@@ -59,21 +59,7 @@ export const journalEntryTypeEnum = schema.enum(
  * - Manuales: Creados directamente por el usuario
  * - Automáticos: Generados por otros módulos (ventas, compras, pagos, inventario)
  *
- * @example
- * ```ts
- * // Asiento de venta
- * {
- *   type: "sales",
- *   entryDate: new Date(),
- *   description: "Venta factura FV-2024-001",
- *   referenceType: "sales_invoice",
- *   referenceId: 1,
- *   totalDebit: "1190.00",
- *   totalCredit: "1190.00",
- *   status: "posted"
- * }
- * ```
- */
+  */
 const gl_journal_entry = schema.table(
   "finance_gl_journal_entry",
   {

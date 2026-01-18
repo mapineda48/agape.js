@@ -26,23 +26,7 @@ import purchase_invoice from "./purchase_invoice";
  * - payment.unallocatedAmount
  * - accounts_receivable.pendingAmount o accounts_payable.pendingAmount
  *
- * @example
- * ```ts
- * // Asignación de cobro a factura de venta
- * {
- *   paymentId: 1,
- *   salesInvoiceId: 10,     // Factura de venta
- *   amount: "500.00"        // Monto aplicado
- * }
- *
- * // Asignación de pago a factura de compra
- * {
- *   paymentId: 2,
- *   purchaseInvoiceId: 5,   // Factura de compra
- *   amount: "750.00"        // Monto aplicado
- * }
- * ```
- */
+  */
 const payment_allocation = schema.table(
   "finance_payment_allocation",
   {

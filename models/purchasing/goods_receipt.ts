@@ -32,17 +32,7 @@ export const goodsReceiptStatusEnum = schema.enum(
  * 3. El GRN genera movimientos de inventario (inventory_movement)
  * 4. La factura de compra puede referenciar el GRN o la OC
  *
- * @example
- * ```ts
- * // Recepción parcial de OC
- * {
- *   purchaseOrderId: 123,
- *   supplierId: 456,
- *   status: "posted",
- *   receiptDate: new DateTime()
- * }
- * ```
- */
+  */
 const goods_receipt = schema.table(
   "purchasing_goods_receipt",
   {

@@ -19,20 +19,7 @@ import { tax } from "./tax";
  * - Factura basada en recepción: invoice_item → goods_receipt_item → order_item
  * - Factura sin documento previo: solo itemId, sin referencias
  *
- * @example
- * ```ts
- * // Línea de factura vinculada a recepción
- * {
- *   purchaseInvoiceId: 1,
- *   goodsReceiptItemId: 10,  // Vinculada al GRN
- *   itemId: 100,
- *   quantity: 50,
- *   unitPrice: "150.00",
- *   taxId: 1,
- *   taxAmount: "28.50"       // IVA calculado
- * }
- * ```
- */
+  */
 const purchase_invoice_item = schema.table(
   "finance_purchase_invoice_item",
   {

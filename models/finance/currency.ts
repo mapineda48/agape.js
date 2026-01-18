@@ -14,15 +14,7 @@ import { decimal } from "../../lib/db/custom-types";
  * - No se puede deshabilitar la moneda base.
  * - No se puede establecer como base una moneda deshabilitada.
  *
- * @example
- * ```ts
- * // Moneda base (local)
- * { code: "COP", fullName: "Peso Colombiano", isBase: true, symbol: "$" }
- *
- * // Moneda extranjera
- * { code: "USD", fullName: "Dólar Estadounidense", isBase: false, symbol: "$" }
- * ```
- */
+  */
 export const currency = schema.table(
   "finance_currency",
   {

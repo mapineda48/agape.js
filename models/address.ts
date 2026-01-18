@@ -25,18 +25,7 @@ import { addressTypeEnum, type AddressType } from "./enums";
  * siguiendo el patrón estándar de ERPs que requieren distinguir entre
  * direcciones de facturación, envío, oficina principal, sucursales, etc.
  *
- * @example
- * ```ts
- * // Crear una nueva dirección
- * const newAddress = {
- *   street: "Calle 123 #45-67",
- *   city: "Bogotá",
- *   state: "Cundinamarca",
- *   zipCode: "110111",
- *   countryCode: "CO",
- * };
- * ```
- */
+  */
 export const address = schema.table("address", {
   /** Identificador único de la dirección */
   id: serial("id").primaryKey(),
@@ -87,18 +76,7 @@ export const address = schema.table("address", {
  * permitiendo que una entidad tenga múltiples direcciones tipificadas
  * (facturación, envío, principal, sucursal, etc.).
  *
- * @example
- * ```ts
- * // Asociar dirección de facturación a un cliente
- * const userAddress = {
- *   userId: 1,
- *   addressId: 100,
- *   type: "billing",
- *   isDefault: true,
- *   label: "Oficina Principal",
- * };
- * ```
- */
+  */
 export const userAddress = schema.table(
   "user_address",
   {

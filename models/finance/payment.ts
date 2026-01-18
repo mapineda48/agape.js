@@ -53,20 +53,7 @@ export const paymentStatusEnum = schema.enum("finance_payment_status", [
  * El campo `pendingAmount` en AR/AP se actualiza automáticamente
  * cuando se crean/modifican las asignaciones.
  *
- * @example
- * ```ts
- * // Recibo de cobro de cliente
- * {
- *   type: "receipt",
- *   userId: 100,           // ID del cliente (user)
- *   paymentMethodId: 1,     // Transferencia bancaria
- *   paymentDate: new Date(),
- *   amount: "1500.00",
- *   reference: "TRF-2024-001",
- *   status: "posted"
- * }
- * ```
- */
+  */
 const payment = schema.table(
   "finance_payment",
   {

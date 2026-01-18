@@ -15,18 +15,7 @@ import { schema } from "./schema";
  * y garantizar la integridad referencial con las tablas de detalle
  * (`person` o `company`).
  *
- * @example
- * ```ts
- * import { UserType, userTypeEnum } from "@models/enums";
- *
- * // Uso en modelo
- * type: userTypeEnum("user_type").notNull(),
- *
- * // Valores disponibles
- * const tipo: UserType = "person";
- * const tipo2: UserType = "company";
- * ```
- */
+  */
 export const userTypeEnum = schema.enum("user_type_enum", ["person", "company"]);
 /**
  * Tipo TypeScript derivado del enum de base de datos.
@@ -54,18 +43,7 @@ export const USER_TYPE_VALUES = userTypeEnum.enumValues;
  * - `branch`: Sucursal
  * - `other`: Otro tipo
  *
- * @example
- * ```ts
- * import { AddressType, addressTypeEnum } from "@models/enums";
- *
- * // Uso en modelo
- * type: addressTypeEnum("address_type").notNull(),
- *
- * // Valores disponibles
- * const tipo: AddressType = "billing";
- * const tipo2: AddressType = "shipping";
- * ```
- */
+  */
 export const addressTypeEnum = schema.enum("address_type_enum", [
   "billing",
   "shipping",
@@ -102,18 +80,7 @@ export const ADDRESS_TYPE_VALUES = addressTypeEnum.enumValues;
  * - `fax`: Fax
  * - `other`: Otro tipo
  *
- * @example
- * ```ts
- * import { ContactMethodType, contactMethodTypeEnum } from "@models/enums";
- *
- * // Uso en modelo
- * type: contactMethodTypeEnum("contact_type").notNull(),
- *
- * // Valores disponibles
- * const tipo: ContactMethodType = "email";
- * const tipo2: ContactMethodType = "whatsapp";
- * ```
- */
+  */
 export const contactMethodTypeEnum = schema.enum("contact_method_type_enum", [
   "email",
   "phone",
