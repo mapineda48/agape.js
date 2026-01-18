@@ -139,9 +139,9 @@ beforeAll(async () => {
   locationId = loc.id;
 
   // 7. Crear usuario/empleado
-  const { user } = await import("#models/core/user");
+  const { user } = await import("#models/user");
   const { documentType: coreDocType } = await import(
-    "#models/core/documentType"
+    "#models/documentType"
   );
 
   const [idDocType] = await db
@@ -165,7 +165,7 @@ beforeAll(async () => {
     .returning();
 
   const { default: employee } = await import("#models/hr/employee");
-  const { default: person } = await import("#models/core/person");
+  const { default: person } = await import("#models/person");
 
   await db.insert(person).values({
     id: createdUser.id,

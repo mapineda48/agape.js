@@ -11,9 +11,9 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { schema } from "../schema";
-import { dateTime } from "../../lib/db/custom-types";
-import DateTime from "../../lib/utils/data/DateTime";
+import { schema } from "./schema";
+import { dateTime } from "../lib/db/custom-types";
+import DateTime from "../lib/utils/data/DateTime";
 import user from "./user";
 import { contactMethodTypeEnum, type ContactMethodType } from "./enums";
 
@@ -52,7 +52,7 @@ import { contactMethodTypeEnum, type ContactMethodType } from "./enums";
  * ```
  */
 export const contactMethod = schema.table(
-  "core_contact_method",
+  "contact_method",
   {
     /** Identificador único del método de contacto */
     id: serial("id").primaryKey(),

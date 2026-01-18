@@ -89,7 +89,7 @@ SET "name" = EXCLUDED."name",
 -- ============================================================
 -- 0.4 Tipos de documento (identidad) - por seguridad (root ya lo hace)
 -- ============================================================
-INSERT INTO "agape_app_development_demo"."core_identity_document_type"
+INSERT INTO "agape_app_development_demo"."identity_document_type"
     ("code", "name", "is_enabled", "applies_to_person", "applies_to_company")
 VALUES
     ('CC',  'Cédula de ciudadanía',          true, true,  false),
@@ -817,7 +817,7 @@ SET
 -- Clientes / Proveedores + Contactos + Direcciones
 -- ============================================================
 -- Notas:
--- - "user" NO guarda email/teléfono/dirección: eso va en core_contact_method y core_user_address.
+-- - "user" NO guarda email/teléfono/dirección: eso va en contact_method y user_address.
 -- - crm_client y purchasing_supplier heredan del user (PK = user.id).
 -- - Este seed es idempotente: puedes ejecutarlo varias veces.
 -- ============================================================
@@ -827,7 +827,7 @@ BEGIN;
 -- ============================================================
 -- 0. Asegurar tipos mínimos (por si se corre sin el Seed 00)
 -- ============================================================
-INSERT INTO "agape_app_development_demo"."core_identity_document_type"
+INSERT INTO "agape_app_development_demo"."identity_document_type"
     ("code", "name", "is_enabled", "applies_to_person", "applies_to_company")
 VALUES
     ('CC',  'Cédula de ciudadanía',          true, true,  false),
@@ -872,7 +872,7 @@ WHERE NOT EXISTS (
 -- ------------------------------------------------------------
 WITH
 doc_cc AS (
-  SELECT id FROM "agape_app_development_demo"."core_identity_document_type" WHERE code='CC' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."identity_document_type" WHERE code='CC' LIMIT 1
 ),
 u_src AS (
   SELECT
@@ -905,7 +905,7 @@ u AS (
   LIMIT 1
 ),
 p_upsert AS (
-  INSERT INTO "agape_app_development_demo"."core_person" ("id","first_name","last_name","birthdate")
+  INSERT INTO "agape_app_development_demo"."person" ("id","first_name","last_name","birthdate")
   SELECT id, 'Juan', 'Pérez', '1990-05-10'::timestamptz
   FROM u
   ON CONFLICT ("id") DO UPDATE
@@ -929,10 +929,10 @@ c_upsert AS (
   RETURNING id
 ),
 addr AS (
-  SELECT id FROM "agape_app_development_demo"."core_address" WHERE reference='seed:client:juan:main' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."address" WHERE reference='seed:client:juan:main' LIMIT 1
 ),
 addr_ins AS (
-  INSERT INTO "agape_app_development_demo"."core_address"
+  INSERT INTO "agape_app_development_demo"."address"
     ("street","street_line_2","city","state","zip_code","country_code","reference","notes","is_active")
   SELECT
     'Cra 7 # 45-12', NULL, 'Bogotá', 'Cundinamarca', '110311', 'CO',
@@ -947,7 +947,7 @@ addr_id AS (
   SELECT id FROM addr
 ),
 ua AS (
-  INSERT INTO "agape_app_development_demo"."core_user_address"
+  INSERT INTO "agape_app_development_demo"."user_address"
     ("user_id","address_id","address_type","is_default","label")
   SELECT u.id, a.id, 'main'::"agape_app_development_demo"."address_type_enum", true, 'Casa'
   FROM u, addr_id a
@@ -955,7 +955,7 @@ ua AS (
   RETURNING id
 )
 -- Contactos (email/whatsapp)
-INSERT INTO "agape_app_development_demo"."core_contact_method"
+INSERT INTO "agape_app_development_demo"."contact_method"
   ("user_id","contact_type","value","is_primary","label","is_verified","is_active","notes")
 SELECT u.id, x.contact_type, x.value, x.is_primary, x.label, false, true, 'seed'
 FROM u
@@ -967,7 +967,7 @@ JOIN (
 ) AS x(contact_type, value, is_primary, label) ON true
 WHERE NOT EXISTS (
   SELECT 1
-  FROM "agape_app_development_demo"."core_contact_method" cm
+  FROM "agape_app_development_demo"."contact_method" cm
   WHERE cm.user_id = u.id AND cm.contact_type = x.contact_type AND cm.value = x.value
 );
 
@@ -976,7 +976,7 @@ WHERE NOT EXISTS (
 -- ------------------------------------------------------------
 WITH
 doc_cc AS (
-  SELECT id FROM "agape_app_development_demo"."core_identity_document_type" WHERE code='CC' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."identity_document_type" WHERE code='CC' LIMIT 1
 ),
 u_src AS (
   SELECT
@@ -1009,7 +1009,7 @@ u AS (
   LIMIT 1
 ),
 p_upsert AS (
-  INSERT INTO "agape_app_development_demo"."core_person" ("id","first_name","last_name","birthdate")
+  INSERT INTO "agape_app_development_demo"."person" ("id","first_name","last_name","birthdate")
   SELECT id, 'María', 'Gómez', '1994-11-22'::timestamptz
   FROM u
   ON CONFLICT ("id") DO UPDATE
@@ -1032,10 +1032,10 @@ c_upsert AS (
   RETURNING id
 ),
 addr AS (
-  SELECT id FROM "agape_app_development_demo"."core_address" WHERE reference='seed:client:maria:main' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."address" WHERE reference='seed:client:maria:main' LIMIT 1
 ),
 addr_ins AS (
-  INSERT INTO "agape_app_development_demo"."core_address"
+  INSERT INTO "agape_app_development_demo"."address"
     ("street","street_line_2","city","state","zip_code","country_code","reference","notes","is_active")
   SELECT
     'Cl 72 # 12-34', 'Apto 302', 'Bogotá', 'Cundinamarca', '110221', 'CO',
@@ -1049,7 +1049,7 @@ addr_id AS (
   UNION ALL
   SELECT id FROM addr
 )
-INSERT INTO "agape_app_development_demo"."core_user_address"
+INSERT INTO "agape_app_development_demo"."user_address"
   ("user_id","address_id","address_type","is_default","label")
 SELECT u.id, a.id, 'main'::"agape_app_development_demo"."address_type_enum", true, 'Apartamento'
 FROM u, addr_id a
@@ -1058,11 +1058,11 @@ ON CONFLICT DO NOTHING;
 WITH u AS (
   SELECT u2.id
   FROM "agape_app_development_demo"."user" u2
-  JOIN "agape_app_development_demo"."core_identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='CC'
+  JOIN "agape_app_development_demo"."identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='CC'
   WHERE u2.document_number='1022334455'
   LIMIT 1
 )
-INSERT INTO "agape_app_development_demo"."core_contact_method"
+INSERT INTO "agape_app_development_demo"."contact_method"
   ("user_id","contact_type","value","is_primary","label","is_verified","is_active","notes")
 SELECT u.id, x.contact_type, x.value, x.is_primary, x.label, false, true, 'seed'
 FROM u
@@ -1073,7 +1073,7 @@ JOIN (
 ) AS x(contact_type, value, is_primary, label) ON true
 WHERE NOT EXISTS (
   SELECT 1
-  FROM "agape_app_development_demo"."core_contact_method" cm
+  FROM "agape_app_development_demo"."contact_method" cm
   WHERE cm.user_id = u.id AND cm.contact_type = x.contact_type AND cm.value = x.value
 );
 
@@ -1082,7 +1082,7 @@ WHERE NOT EXISTS (
 -- ------------------------------------------------------------
 WITH
 doc_nit AS (
-  SELECT id FROM "agape_app_development_demo"."core_identity_document_type" WHERE code='NIT' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."identity_document_type" WHERE code='NIT' LIMIT 1
 ),
 u_src AS (
   SELECT
@@ -1115,7 +1115,7 @@ u AS (
   LIMIT 1
 ),
 co_upsert AS (
-  INSERT INTO "agape_app_development_demo"."core_company" ("id","legal_name","trade_name")
+  INSERT INTO "agape_app_development_demo"."company" ("id","legal_name","trade_name")
   SELECT id, 'Colegio San José S.A.S', 'Colegio San José'
   FROM u
   ON CONFLICT ("id") DO UPDATE
@@ -1137,10 +1137,10 @@ c_upsert AS (
   RETURNING id
 ),
 addr AS (
-  SELECT id FROM "agape_app_development_demo"."core_address" WHERE reference='seed:client:colegio:main' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."address" WHERE reference='seed:client:colegio:main' LIMIT 1
 ),
 addr_ins AS (
-  INSERT INTO "agape_app_development_demo"."core_address"
+  INSERT INTO "agape_app_development_demo"."address"
     ("street","street_line_2","city","state","zip_code","country_code","reference","notes","is_active")
   SELECT
     'Av. 68 # 15-20', NULL, 'Bogotá', 'Cundinamarca', '111311', 'CO',
@@ -1154,7 +1154,7 @@ addr_id AS (
   UNION ALL
   SELECT id FROM addr
 )
-INSERT INTO "agape_app_development_demo"."core_user_address"
+INSERT INTO "agape_app_development_demo"."user_address"
   ("user_id","address_id","address_type","is_default","label")
 SELECT u.id, a.id, 'main'::"agape_app_development_demo"."address_type_enum", true, 'Sede principal'
 FROM u, addr_id a
@@ -1163,11 +1163,11 @@ ON CONFLICT DO NOTHING;
 WITH u AS (
   SELECT u2.id
   FROM "agape_app_development_demo"."user" u2
-  JOIN "agape_app_development_demo"."core_identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
+  JOIN "agape_app_development_demo"."identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
   WHERE u2.document_number='900123456-7'
   LIMIT 1
 )
-INSERT INTO "agape_app_development_demo"."core_contact_method"
+INSERT INTO "agape_app_development_demo"."contact_method"
   ("user_id","contact_type","value","is_primary","label","is_verified","is_active","notes")
 SELECT u.id, x.contact_type, x.value, x.is_primary, x.label, false, true, 'seed'
 FROM u
@@ -1178,7 +1178,7 @@ JOIN (
 ) AS x(contact_type, value, is_primary, label) ON true
 WHERE NOT EXISTS (
   SELECT 1
-  FROM "agape_app_development_demo"."core_contact_method" cm
+  FROM "agape_app_development_demo"."contact_method" cm
   WHERE cm.user_id = u.id AND cm.contact_type = x.contact_type AND cm.value = x.value
 );
 
@@ -1191,7 +1191,7 @@ WHERE NOT EXISTS (
 -- ------------------------------------------------------------
 WITH
 doc_nit AS (
-  SELECT id FROM "agape_app_development_demo"."core_identity_document_type" WHERE code='NIT' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."identity_document_type" WHERE code='NIT' LIMIT 1
 ),
 u_src AS (
   SELECT
@@ -1224,7 +1224,7 @@ u AS (
   LIMIT 1
 ),
 co_upsert AS (
-  INSERT INTO "agape_app_development_demo"."core_company" ("id","legal_name","trade_name")
+  INSERT INTO "agape_app_development_demo"."company" ("id","legal_name","trade_name")
   SELECT id, 'Distribuidora Escolar Andina S.A.S', 'Andina Mayorista'
   FROM u
   ON CONFLICT ("id") DO UPDATE
@@ -1245,10 +1245,10 @@ sup_upsert AS (
   RETURNING id
 ),
 addr AS (
-  SELECT id FROM "agape_app_development_demo"."core_address" WHERE reference='seed:supplier:andina:main' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."address" WHERE reference='seed:supplier:andina:main' LIMIT 1
 ),
 addr_ins AS (
-  INSERT INTO "agape_app_development_demo"."core_address"
+  INSERT INTO "agape_app_development_demo"."address"
     ("street","street_line_2","city","state","zip_code","country_code","reference","notes","is_active")
   SELECT
     'Autopista Norte Km 18', 'Bodega 12', 'Bogotá', 'Cundinamarca', '110111', 'CO',
@@ -1262,7 +1262,7 @@ addr_id AS (
   UNION ALL
   SELECT id FROM addr
 )
-INSERT INTO "agape_app_development_demo"."core_user_address"
+INSERT INTO "agape_app_development_demo"."user_address"
   ("user_id","address_id","address_type","is_default","label")
 SELECT u.id, a.id, 'main'::"agape_app_development_demo"."address_type_enum", true, 'Bodega'
 FROM u, addr_id a
@@ -1271,11 +1271,11 @@ ON CONFLICT DO NOTHING;
 WITH u AS (
   SELECT u2.id
   FROM "agape_app_development_demo"."user" u2
-  JOIN "agape_app_development_demo"."core_identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
+  JOIN "agape_app_development_demo"."identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
   WHERE u2.document_number='901987654-3'
   LIMIT 1
 )
-INSERT INTO "agape_app_development_demo"."core_contact_method"
+INSERT INTO "agape_app_development_demo"."contact_method"
   ("user_id","contact_type","value","is_primary","label","is_verified","is_active","notes")
 SELECT u.id, x.contact_type, x.value, x.is_primary, x.label, false, true, 'seed'
 FROM u
@@ -1286,14 +1286,14 @@ JOIN (
 ) AS x(contact_type, value, is_primary, label) ON true
 WHERE NOT EXISTS (
   SELECT 1
-  FROM "agape_app_development_demo"."core_contact_method" cm
+  FROM "agape_app_development_demo"."contact_method" cm
   WHERE cm.user_id = u.id AND cm.contact_type = x.contact_type AND cm.value = x.value
 );
 
--- Crear contacto persona para el proveedor Andina (core_company_contact)
+-- Crear contacto persona para el proveedor Andina (company_contact)
 WITH
 doc_cc AS (
-  SELECT id FROM "agape_app_development_demo"."core_identity_document_type" WHERE code='CC' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."identity_document_type" WHERE code='CC' LIMIT 1
 ),
 contact_user_src AS (
   SELECT
@@ -1319,7 +1319,7 @@ contact_user AS (
   LIMIT 1
 ),
 contact_person AS (
-  INSERT INTO "agape_app_development_demo"."core_person" ("id","first_name","last_name","birthdate")
+  INSERT INTO "agape_app_development_demo"."person" ("id","first_name","last_name","birthdate")
   SELECT id, 'Laura', 'Ramírez', '1988-02-03'::timestamptz
   FROM contact_user
   ON CONFLICT ("id") DO UPDATE
@@ -1329,17 +1329,17 @@ contact_person AS (
 company AS (
   SELECT u3.id AS company_id
   FROM "agape_app_development_demo"."user" u3
-  JOIN "agape_app_development_demo"."core_identity_document_type" dt ON dt.id=u3.document_type_id AND dt.code='NIT'
+  JOIN "agape_app_development_demo"."identity_document_type" dt ON dt.id=u3.document_type_id AND dt.code='NIT'
   WHERE u3.document_number='901987654-3'
   LIMIT 1
 )
-INSERT INTO "agape_app_development_demo"."core_company_contact"
+INSERT INTO "agape_app_development_demo"."company_contact"
   ("company_id","person_id","role","department","is_primary","is_active","notes")
 SELECT company.company_id, contact_user.id, 'Ejecutiva de ventas', 'Ventas', true, true, 'seed'
 FROM company, contact_user
 WHERE NOT EXISTS (
   SELECT 1
-  FROM "agape_app_development_demo"."core_company_contact" cc
+  FROM "agape_app_development_demo"."company_contact" cc
   WHERE cc.company_id = company.company_id AND cc.person_id = contact_user.id
 );
 
@@ -1348,7 +1348,7 @@ WHERE NOT EXISTS (
 -- ------------------------------------------------------------
 WITH
 doc_nit AS (
-  SELECT id FROM "agape_app_development_demo"."core_identity_document_type" WHERE code='NIT' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."identity_document_type" WHERE code='NIT' LIMIT 1
 ),
 u_src AS (
   SELECT
@@ -1378,7 +1378,7 @@ u AS (
   LIMIT 1
 ),
 co_upsert AS (
-  INSERT INTO "agape_app_development_demo"."core_company" ("id","legal_name","trade_name")
+  INSERT INTO "agape_app_development_demo"."company" ("id","legal_name","trade_name")
   SELECT id, 'TechPrint Colombia S.A.S', 'TechPrint'
   FROM u
   ON CONFLICT ("id") DO UPDATE
@@ -1403,15 +1403,15 @@ SELECT 1;
 WITH u AS (
   SELECT u2.id
   FROM "agape_app_development_demo"."user" u2
-  JOIN "agape_app_development_demo"."core_identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
+  JOIN "agape_app_development_demo"."identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
   WHERE u2.document_number='900777888-1'
   LIMIT 1
 ),
 addr AS (
-  SELECT id FROM "agape_app_development_demo"."core_address" WHERE reference='seed:supplier:techprint:main' LIMIT 1
+  SELECT id FROM "agape_app_development_demo"."address" WHERE reference='seed:supplier:techprint:main' LIMIT 1
 ),
 addr_ins AS (
-  INSERT INTO "agape_app_development_demo"."core_address"
+  INSERT INTO "agape_app_development_demo"."address"
     ("street","street_line_2","city","state","zip_code","country_code","reference","notes","is_active")
   SELECT
     'Cra 30 # 10-55', NULL, 'Bogotá', 'Cundinamarca', '111711', 'CO',
@@ -1425,7 +1425,7 @@ addr_id AS (
   UNION ALL
   SELECT id FROM addr
 )
-INSERT INTO "agape_app_development_demo"."core_user_address"
+INSERT INTO "agape_app_development_demo"."user_address"
   ("user_id","address_id","address_type","is_default","label")
 SELECT u.id, a.id, 'main'::"agape_app_development_demo"."address_type_enum", true, 'Oficina'
 FROM u, addr_id a
@@ -1434,11 +1434,11 @@ ON CONFLICT DO NOTHING;
 WITH u AS (
   SELECT u2.id
   FROM "agape_app_development_demo"."user" u2
-  JOIN "agape_app_development_demo"."core_identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
+  JOIN "agape_app_development_demo"."identity_document_type" dt ON dt.id=u2.document_type_id AND dt.code='NIT'
   WHERE u2.document_number='900777888-1'
   LIMIT 1
 )
-INSERT INTO "agape_app_development_demo"."core_contact_method"
+INSERT INTO "agape_app_development_demo"."contact_method"
   ("user_id","contact_type","value","is_primary","label","is_verified","is_active","notes")
 SELECT u.id, x.contact_type, x.value, x.is_primary, x.label, false, true, 'seed'
 FROM u
@@ -1449,7 +1449,7 @@ JOIN (
 ) AS x(contact_type, value, is_primary, label) ON true
 WHERE NOT EXISTS (
   SELECT 1
-  FROM "agape_app_development_demo"."core_contact_method" cm
+  FROM "agape_app_development_demo"."contact_method" cm
   WHERE cm.user_id = u.id AND cm.contact_type = x.contact_type AND cm.value = x.value
 );
 

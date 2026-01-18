@@ -507,7 +507,7 @@ describe("user service", () => {
 
   describe("UserType enum validation", () => {
     it("should only allow valid enum values from USER_TYPE_VALUES", async () => {
-      const { USER_TYPE_VALUES } = await import("#models/core/user");
+      const { USER_TYPE_VALUES } = await import("#models/user");
 
       expect(USER_TYPE_VALUES).toContain("person");
       expect(USER_TYPE_VALUES).toContain("company");

@@ -1,5 +1,5 @@
 import { db } from "#lib/db";
-import { contactMethod } from "#models/core/contactMethod";
+import { contactMethod } from "#models/contactMethod";
 import { and, eq, ne } from "drizzle-orm";
 import type {
   IContactMethod,

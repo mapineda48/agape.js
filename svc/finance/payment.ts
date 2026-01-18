@@ -5,7 +5,7 @@ import sales_invoice from "#models/finance/sales_invoice";
 import purchase_invoice from "#models/finance/purchase_invoice";
 import { documentSeries } from "#models/numbering/document_series";
 import { documentSequence } from "#models/numbering/document_sequence";
-import { user } from "#models/core/user";
+import { user } from "#models/user";
 import DateTime from "#utils/data/DateTime";
 import Decimal from "#utils/data/Decimal";
 import { eq, and, sql } from "drizzle-orm";
@@ -190,8 +190,8 @@ export async function listPayments(
     const pageSize = params.pageSize ?? 15;
     const offset = pageIndex * pageSize;
 
-    const { person } = await import("#models/core/person");
-    const { company } = await import("#models/core/company");
+    const { person } = await import("#models/person");
+    const { company } = await import("#models/company");
     const { documentSeries } = await import("#models/numbering/document_series");
     const { documentType } = await import("#models/numbering/document_type");
 

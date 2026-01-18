@@ -1,4 +1,4 @@
-import { schema } from "../schema";
+import { schema } from "./schema";
 import user from "./user";
 import { integer, varchar } from "drizzle-orm/pg-core";
 import {
@@ -18,9 +18,9 @@ import companyContact from "./companyContact";
  *
  * - **User**: Cada empresa ES un user (herencia CTI).
  * - **Contactos**: Una empresa puede tener múltiples personas de contacto
- *   asociadas a través de `core_company_contact`. Ver `./companyContact.ts`.
+ *   asociadas a través de `company_contact`. Ver `./companyContact.ts`.
  */
-export const company = schema.table("core_company", {
+export const company = schema.table("company", {
   /**
    * Identificador único de la empresa.
    * Es FK a user.id (una empresa ES un user).

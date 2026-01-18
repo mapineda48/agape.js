@@ -12,7 +12,7 @@ import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
 import { schema } from "../schema";
 import order from "../crm/order";
 import client from "../crm/client";
-import { user } from "../core/user";
+import { user } from "../user";
 import {
   decimal,
   dateTime,

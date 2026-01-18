@@ -13,7 +13,7 @@ import { schema } from "../schema";
 import supplier from "../purchasing/supplier";
 import purchase_order from "../purchasing/purchase_order";
 import goods_receipt from "../purchasing/goods_receipt";
-import { user } from "../core/user";
+import { user } from "../user";
 import { decimal, type AddressSnapshot } from "../../lib/db/custom-types";
 import { documentSeries } from "../numbering/document_series";
 import { paymentTerms } from "./payment_terms";

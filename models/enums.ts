@@ -1,4 +1,4 @@
-import { schema } from "../schema";
+import { schema } from "./schema";
 
 // ============================================================================
 // User Type Enum
@@ -13,11 +13,11 @@ import { schema } from "../schema";
  *
  * Se utiliza en el modelo `user` para determinar el tipo de entidad
  * y garantizar la integridad referencial con las tablas de detalle
- * (`core_person` o `core_company`).
+ * (`person` o `company`).
  *
  * @example
  * ```ts
- * import { UserType, userTypeEnum } from "@models/core/enums";
+ * import { UserType, userTypeEnum } from "@models/enums";
  *
  * // Uso en modelo
  * type: userTypeEnum("user_type").notNull(),
@@ -56,7 +56,7 @@ export const USER_TYPE_VALUES = userTypeEnum.enumValues;
  *
  * @example
  * ```ts
- * import { AddressType, addressTypeEnum } from "@models/core/enums";
+ * import { AddressType, addressTypeEnum } from "@models/enums";
  *
  * // Uso en modelo
  * type: addressTypeEnum("address_type").notNull(),
@@ -104,7 +104,7 @@ export const ADDRESS_TYPE_VALUES = addressTypeEnum.enumValues;
  *
  * @example
  * ```ts
- * import { ContactMethodType, contactMethodTypeEnum } from "@models/core/enums";
+ * import { ContactMethodType, contactMethodTypeEnum } from "@models/enums";
  *
  * // Uso en modelo
  * type: contactMethodTypeEnum("contact_type").notNull(),

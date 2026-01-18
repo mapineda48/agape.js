@@ -11,9 +11,9 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { schema } from "../schema";
-import { dateTime } from "../../lib/db/custom-types";
-import DateTime from "../../lib/utils/data/DateTime";
+import { schema } from "./schema";
+import { dateTime } from "../lib/db/custom-types";
+import DateTime from "../lib/utils/data/DateTime";
 import user from "./user";
 import { addressTypeEnum, type AddressType } from "./enums";
 
@@ -37,7 +37,7 @@ import { addressTypeEnum, type AddressType } from "./enums";
  * };
  * ```
  */
-export const address = schema.table("core_address", {
+export const address = schema.table("address", {
   /** Identificador único de la dirección */
   id: serial("id").primaryKey(),
 
@@ -100,7 +100,7 @@ export const address = schema.table("core_address", {
  * ```
  */
 export const userAddress = schema.table(
-  "core_user_address",
+  "user_address",
   {
     /** Identificador único del registro */
     id: serial("id").primaryKey(),

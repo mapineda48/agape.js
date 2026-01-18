@@ -1,13 +1,13 @@
 import { db } from "#lib/db";
-import { company, type NewCompany } from "#models/core/company";
-import { person, type NewPerson } from "#models/core/person";
+import { company, type NewCompany } from "#models/company";
+import { person, type NewPerson } from "#models/person";
 import {
   user,
   type NewUser,
   type User,
   type UserType,
   USER_TYPE_VALUES,
-} from "#models/core/user";
+} from "#models/user";
 import { and, eq } from "drizzle-orm";
 
 /**
@@ -48,8 +48,8 @@ export async function getUserByDocument(
 
   const {
     user: userData,
-    core_person: personData,
-    core_company: companyData,
+    person: personData,
+    company: companyData,
   } = record;
 
   return {

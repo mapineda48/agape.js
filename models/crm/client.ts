@@ -1,7 +1,7 @@
 import { integer, boolean, varchar } from "drizzle-orm/pg-core";
 import { sql, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
 import { schema } from "../schema";
-import user from "../core/user";
+import user from "../user";
 import client_type from "./client_type";
 import { dateTime, decimal } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";

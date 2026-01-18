@@ -12,7 +12,7 @@ import { schema } from "../schema";
 import { decimal, dateTime } from "../../lib/db/custom-types";
 import DateTime from "../../lib/utils/data/DateTime";
 import { documentSeries } from "../numbering/document_series";
-import { user } from "../core/user";
+import { user } from "../user";
 
 /**
  * Enum de estado del asiento contable.

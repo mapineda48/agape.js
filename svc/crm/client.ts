@@ -1,8 +1,8 @@
 import { db } from "#lib/db";
 import client from "#models/crm/client";
-import person from "#models/core/person";
-import company from "#models/core/company";
-import { user } from "#models/core/user";
+import person from "#models/person";
+import company from "#models/company";
+import { user } from "#models/user";
 import clientType from "#models/crm/client_type";
 import { priceList } from "#models/catalogs/price_list";
 import { paymentTerms } from "#models/finance/payment_terms";

@@ -11,9 +11,9 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { schema } from "../schema";
-import { dateTime } from "../../lib/db/custom-types";
-import DateTime from "../../lib/utils/data/DateTime";
+import { schema } from "./schema";
+import { dateTime } from "../lib/db/custom-types";
+import DateTime from "../lib/utils/data/DateTime";
 import company from "./company";
 import person from "./person";
 
@@ -52,7 +52,7 @@ import person from "./person";
  * ```
  */
 export const companyContact = schema.table(
-  "core_company_contact",
+  "company_contact",
   {
     /** Identificador único del registro */
     id: serial("id").primaryKey(),

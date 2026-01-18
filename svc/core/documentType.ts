@@ -13,8 +13,8 @@
  */
 
 import { db } from "#lib/db";
-import { documentType, type NewDocumentType } from "#models/core/documentType";
-import { user } from "#models/core/user";
+import { documentType, type NewDocumentType } from "#models/documentType";
+import { user } from "#models/user";
 import { and, eq, count } from "drizzle-orm";
 import type {
   IUpsertDocumentType,

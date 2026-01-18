@@ -81,7 +81,7 @@ beforeAll(async () => {
     clientId = client.id;
 
     // ============ Employee ============
-    const { user } = await import("#models/core/user");
+    const { user } = await import("#models/user");
     const [createdUser] = await db.insert(user).values({
         type: "person",
         documentTypeId: idDocType.id,
@@ -89,7 +89,7 @@ beforeAll(async () => {
     }).returning();
     employeeId = createdUser.id;
 
-    const { default: person } = await import("#models/core/person");
+    const { default: person } = await import("#models/person");
     await db.insert(person).values({ id: employeeId, firstName: "Empleado", lastName: "Test" });
 
     const { default: employee } = await import("#models/hr/employee");

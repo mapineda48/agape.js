@@ -162,12 +162,12 @@ beforeAll(async () => {
   locationId2 = loc2.id;
 
   // Usuario
-  const { user } = await import("#models/core/user");
+  const { user } = await import("#models/user");
   const { documentType: coreDocType } = await import(
-    "#models/core/documentType"
+    "#models/documentType"
   );
   const employee = await import("#models/hr/employee");
-  const person = await import("#models/core/person");
+  const person = await import("#models/person");
 
   const [idDocType] = await db
     .insert(coreDocType)

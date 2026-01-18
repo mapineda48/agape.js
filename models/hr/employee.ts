@@ -8,7 +8,7 @@ import {
 import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { schema } from "../schema";
-import person from "../core/person";
+import person from "../person";
 import jobPosition from "./job_position";
 import department from "./department";
 import { dateTime } from "../../lib/db/custom-types";

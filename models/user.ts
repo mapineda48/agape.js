@@ -1,4 +1,4 @@
-import { schema } from "../schema";
+import { schema } from "./schema";
 import {
   serial,
   varchar,
@@ -12,8 +12,8 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { dateTime } from "../../lib/db/custom-types";
-import DateTime from "../../lib/utils/data/DateTime";
+import { dateTime } from "../lib/db/custom-types";
+import DateTime from "../lib/utils/data/DateTime";
 import documentType from "./documentType";
 import person from "./person";
 import company from "./company";
@@ -32,11 +32,11 @@ import contactMethod from "./contactMethod";
  * ## Relaciones con otros modelos
  *
  * - **Direcciones**: Un user puede tener múltiples direcciones a través
- *   de `core_user_address`. Ver `./address.ts`.
+ *   de `user_address`. Ver `./address.ts`.
  *
  * - **Métodos de contacto**: Un user puede tener múltiples métodos de
  *   contacto (emails, teléfonos, WhatsApp, etc.) a través de
- *   `core_contact_method`. Ver `./contactMethod.ts`.
+ *   `contact_method`. Ver `./contactMethod.ts`.
  *
  * ## Campos legacy
  *

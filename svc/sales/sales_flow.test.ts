@@ -54,7 +54,7 @@ beforeAll(async () => {
     clientId = activeClient.id;
 
     // 3. User/Employee for movements
-    const { user } = await import("#models/core/user");
+    const { user } = await import("#models/user");
     const [createdUser] = await db.insert(user).values({
         type: "person",
         documentTypeId: idDocType.id,
@@ -62,7 +62,7 @@ beforeAll(async () => {
     }).returning();
     userId = createdUser.id;
 
-    const { default: person } = await import("#models/core/person");
+    const { default: person } = await import("#models/person");
     await db.insert(person).values({ id: userId, firstName: "Emply", lastName: "Eee" });
 
     const { default: employee } = await import("#models/hr/employee");

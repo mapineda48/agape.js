@@ -3,7 +3,7 @@ import { db } from "#lib/db";
 import securityUser from "#models/security/user";
 import { verifyPassword, hashPassword } from "#lib/security/password";
 import employee, { employeeJobPosition } from "#models/hr/employee";
-import person from "#models/core/person";
+import person from "#models/person";
 import jobPosition from "#models/hr/job_position";
 import { securityRole, securityUserRole } from "#models/security/role";
 import type { IContext } from "#lib/context";
@@ -11,7 +11,7 @@ import { BusinessRuleError } from "#lib/error";
 import DateTime from "#lib/utils/data/DateTime";
 import MailManager from "#lib/services/mail/MailManager";
 import { getSystemConfig } from "#svc/config/systemConfig";
-import { contactMethod } from "#models/core/contactMethod";
+import { contactMethod } from "#models/contactMethod";
 import crypto from "node:crypto";
 import {
   generatePasswordResetEmailHtml,

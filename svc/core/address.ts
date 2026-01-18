@@ -1,5 +1,5 @@
 import { db } from "#lib/db";
-import { address, userAddress } from "#models/core/address";
+import { address, userAddress } from "#models/address";
 import { and, eq, ne } from "drizzle-orm";
 import type {
   IAddress,

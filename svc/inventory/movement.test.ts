@@ -174,7 +174,7 @@ beforeAll(async () => {
   locationId = loc.id;
 
   // 7. Crear usuario (necesitamos crear user primero)
-  const { user } = await import("#models/core/user");
+  const { user } = await import("#models/user");
   const { upsertDocumentType: upsertIdDocType } = await import("#svc/core/documentType");
 
   // Crear tipo de documento de identidad usando el servicio (para evitar duplicados)
@@ -198,7 +198,7 @@ beforeAll(async () => {
 
   // Crear empleado
   const { default: employee } = await import("#models/hr/employee");
-  const { default: person } = await import("#models/core/person");
+  const { default: person } = await import("#models/person");
 
   await db.insert(person).values({
     id: createdUser.id,

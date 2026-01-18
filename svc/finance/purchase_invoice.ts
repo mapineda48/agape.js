@@ -1,9 +1,9 @@
 import { db } from "#lib/db";
 import purchase_invoice from "#models/finance/purchase_invoice";
 import supplier from "#models/purchasing/supplier";
-import person from "#models/core/person";
-import { company } from "#models/core/company";
-import { user } from "#models/core/user";
+import person from "#models/person";
+import { company } from "#models/company";
+import { user } from "#models/user";
 import { documentType } from "#models/numbering/document_type";
 import { documentSequence } from "#models/numbering/document_sequence";
 import { documentSeries } from "#models/numbering/document_series";

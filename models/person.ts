@@ -1,7 +1,7 @@
 import { integer, varchar } from "drizzle-orm/pg-core";
-import { schema } from "../schema";
+import { schema } from "./schema";
 import user from "./user";
-import { dateTime } from "../../lib/db/custom-types";
+import { dateTime } from "../lib/db/custom-types";
 import {
   relations,
   type InferInsertModel,
@@ -19,10 +19,11 @@ import companyContact from "./companyContact";
  *
  * - **User**: Cada persona ES un user (herencia CTI).
  * - **Empresas como contacto**: Una persona puede estar asociada como
- *   contacto a múltiples empresas a través de `core_company_contact`.
+  *   contacto a múltiples empresas a través de `company_contact`.
+
  *   Ver `./companyContact.ts`.
  */
-export const person = schema.table("core_person", {
+export const person = schema.table("person", {
   /**
    * Identificador único de la persona.
    * Es FK a user.id (una persona ES un user).

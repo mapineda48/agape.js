@@ -3,9 +3,9 @@ import sales_invoice from "#models/finance/sales_invoice";
 import sales_invoice_item from "#models/finance/sales_invoice_item";
 import order from "#models/crm/order";
 import client from "#models/crm/client";
-import person from "#models/core/person";
-import { company } from "#models/core/company";
-import { user } from "#models/core/user";
+import person from "#models/person";
+import { company } from "#models/company";
+import { user } from "#models/user";
 import { documentType } from "#models/numbering/document_type";
 import { documentSequence } from "#models/numbering/document_sequence";
 import { documentSeries } from "#models/numbering/document_series";
@@ -847,7 +847,7 @@ import {
   generateSalesInvoiceEmailHtml,
   generateSalesInvoiceEmailSubject,
 } from "#lib/services/mail/template/salesInvoice";
-import { contactMethod } from "#models/core/contactMethod";
+import { contactMethod } from "#models/contactMethod";
 
 /**
  * Envía una factura de venta por correo electrónico al cliente.

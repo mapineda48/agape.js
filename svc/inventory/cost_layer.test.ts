@@ -71,11 +71,11 @@ beforeAll(async () => {
     documentTypeId: dt.id,
   });
 
-  const { user } = await import("#models/core/user");
+  const { user } = await import("#models/user");
   // User needs documentTypeId too
   /* Fix upsertDocumentType for user: Use direct DB insert for Identity Document Type */
   const { documentType: coreDocType } = await import(
-    "#models/core/documentType"
+    "#models/documentType"
   );
   const [dtUser] = await db
     .insert(coreDocType)
@@ -88,7 +88,7 @@ beforeAll(async () => {
     })
     .returning();
 
-  const { default: person } = await import("#models/core/person");
+  const { default: person } = await import("#models/person");
   const { default: employee } = await import("#models/hr/employee");
 
   const [usr] = await db

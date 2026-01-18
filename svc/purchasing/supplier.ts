@@ -1,7 +1,7 @@
 import { db } from "#lib/db";
-import { company } from "#models/core/company";
-import person from "#models/core/person";
-import { user } from "#models/core/user";
+import { company } from "#models/company";
+import person from "#models/person";
+import { user } from "#models/user";
 import supplier from "#models/purchasing/supplier";
 import supplierType from "#models/purchasing/supplier_type";
 import { upsertUser, type IUser, type IUpsertUser } from "#svc/core/user";

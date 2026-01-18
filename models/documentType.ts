@@ -1,5 +1,5 @@
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
-import { schema } from "../schema";
+import { schema } from "./schema";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 /**
@@ -11,7 +11,7 @@ import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
  * documentos de negocio (facturas, órdenes, etc.).
  */
 export const documentType = schema.table(
-  "core_identity_document_type",
+  "identity_document_type",
   {
     /** Identificador único del tipo de documento */
     id: serial("id").primaryKey(),

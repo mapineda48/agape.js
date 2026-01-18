@@ -1,7 +1,7 @@
 -- ============================================
 -- 1. Tipo de documento base para personas
 -- ============================================
-INSERT INTO "agape_app_development_demo"."core_identity_document_type"
+INSERT INTO "agape_app_development_demo"."identity_document_type"
     ("code", "name", "is_enabled", "applies_to_person", "applies_to_company")
 VALUES
     ('CC', 'Cédula de ciudadanía', true, true, false),
@@ -21,11 +21,11 @@ BEGIN;
 
 WITH person_doc_type AS (
     SELECT id AS document_type_id
-    FROM "agape_app_development_demo"."core_identity_document_type"
+    FROM "agape_app_development_demo"."identity_document_type"
     WHERE code = 'CC'
 ),
 
--- 1) Usuario base (sin email/phone/address; ahora van a core_contact_method / core_address)
+-- 1) Usuario base (sin email/phone/address; ahora van a contact_method / address)
 upsert_user AS (
     INSERT INTO "agape_app_development_demo"."user"
         (user_type, document_type_id, document_number, country_code, language_code, currency_code, is_active)
@@ -49,9 +49,9 @@ upsert_user AS (
     RETURNING id
 ),
 
--- 2) core_person (PK = user.id)
-upsert_core_person AS (
-    INSERT INTO "agape_app_development_demo"."core_person"
+-- 2) person (PK = user.id)
+upsert_person AS (
+    INSERT INTO "agape_app_development_demo"."person"
         (id, first_name, last_name, birthdate)
     SELECT
         u.id,
@@ -67,7 +67,7 @@ upsert_core_person AS (
     RETURNING id
 ),
 
--- 3) hr_employee (PK = core_person.id)
+-- 3) hr_employee (PK = person.id)
 upsert_employee AS (
     INSERT INTO "agape_app_development_demo"."hr_employee"
         (id, hire_date, is_active, metadata, avatar_url)
@@ -77,7 +77,7 @@ upsert_employee AS (
         true,
         NULL,
         '/admin.jpg'
-    FROM upsert_core_person p
+    FROM upsert_person p
     ON CONFLICT (id)
     DO UPDATE SET
         is_active  = EXCLUDED.is_active,
@@ -132,7 +132,7 @@ ins_security_user_role AS (
 
 -- 7) Contactos del root (email/phone)
 ins_root_email AS (
-    INSERT INTO "agape_app_development_demo"."core_contact_method"
+    INSERT INTO "agape_app_development_demo"."contact_method"
         (user_id, contact_type, value, is_primary, label, is_verified, is_active)
     SELECT
         u.id,
@@ -145,7 +145,7 @@ ins_root_email AS (
     FROM upsert_user u
     WHERE NOT EXISTS (
         SELECT 1
-        FROM "agape_app_development_demo"."core_contact_method" cm
+        FROM "agape_app_development_demo"."contact_method" cm
         WHERE cm.user_id = u.id
           AND cm.contact_type = 'email'
           AND cm.value = 'root@agape.com'
@@ -153,7 +153,7 @@ ins_root_email AS (
     RETURNING id
 ),
 ins_root_phone AS (
-    INSERT INTO "agape_app_development_demo"."core_contact_method"
+    INSERT INTO "agape_app_development_demo"."contact_method"
         (user_id, contact_type, value, is_primary, label, is_verified, is_active)
     SELECT
         u.id,
@@ -166,7 +166,7 @@ ins_root_phone AS (
     FROM upsert_user u
     WHERE NOT EXISTS (
         SELECT 1
-        FROM "agape_app_development_demo"."core_contact_method" cm
+        FROM "agape_app_development_demo"."contact_method" cm
         WHERE cm.user_id = u.id
           AND cm.contact_type = 'phone'
           AND cm.value = '000000000000'
@@ -176,7 +176,7 @@ ins_root_phone AS (
 
 SELECT
     (SELECT id FROM upsert_user)           AS user_id,
-    (SELECT id FROM upsert_core_person)    AS core_person_id,
+    (SELECT id FROM upsert_person)    AS person_id,
     (SELECT id FROM upsert_employee)       AS employee_id,
     (SELECT id FROM upsert_security_user)  AS access_user_id,
     (SELECT id FROM upsert_role)           AS role_id;

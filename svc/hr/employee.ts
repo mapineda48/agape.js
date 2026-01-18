@@ -1,8 +1,8 @@
 import { db } from "#lib/db";
 import employee, { employeeJobPosition } from "#models/hr/employee";
-import person from "#models/core/person";
-import { user } from "#models/core/user";
-import { contactMethod } from "#models/core/contactMethod";
+import person from "#models/person";
+import { user } from "#models/user";
+import { contactMethod } from "#models/contactMethod";
 import BlobStorage from "#lib/services/storage/AzureBlobStorage";
 import { and, count, eq, sql, desc } from "drizzle-orm";
 import DateTime from "#utils/data/DateTime";

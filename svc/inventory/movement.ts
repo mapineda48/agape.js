@@ -13,7 +13,7 @@ import { location } from "#models/inventory/location";
 import { inventoryItem } from "#models/inventory/item";
 import { itemUom } from "#models/inventory/item_uom";
 import employee from "#models/hr/employee";
-import person from "#models/core/person";
+import person from "#models/person";
 import * as StockService from "./stock";
 import * as CostingService from "./cost_layer";
 import * as LotService from "./lot";
