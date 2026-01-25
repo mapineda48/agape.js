@@ -9,6 +9,7 @@ import {
 import type { ReactFormState } from 'react-dom/client'
 import { Root } from '../root.tsx'
 import { parseRenderRequest } from './request.tsx'
+import { decodeRsc, encodeResponse } from './serialization/rsc.ts'
 
 // The schema of payload which is serialized into RSC stream on rsc environment
 // and deserialized on ssr/client environments.
@@ -45,13 +46,14 @@ async function handler(request: Request): Promise<Response> {
         ? await request.formData()
         : await request.text()
       temporaryReferences = createTemporaryReferenceSet()
-      const args = await decodeReply(body, { temporaryReferences })
+      const customArgs = await decodeReply(body, { temporaryReferences })
+      const args = await decodeRsc(customArgs)
       const action = await loadServerAction(renderRequest.actionId)
       try {
         const data = await action.apply(null, args)
-        returnValue = { ok: true, data }
+        returnValue = { ok: true, data: encodeResponse(data) }
       } catch (e) {
-        returnValue = { ok: false, data: e }
+        returnValue = { ok: false, data: encodeResponse(e) }
         actionStatus = 500
       }
     } else {

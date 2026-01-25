@@ -11,6 +11,7 @@ import { rscStream } from 'rsc-html-stream/client'
 import type { RscPayload } from './entry.rsc'
 import { GlobalErrorBoundary } from './error-boundary'
 import { createRscRenderRequest } from './request'
+import { decodeBrowser, encodeBrowser } from './serialization/browser'
 
 async function main() {
   // stash `setPayload` function to trigger re-rendering
@@ -52,15 +53,16 @@ async function main() {
     const temporaryReferences = createTemporaryReferenceSet()
     const renderRequest = createRscRenderRequest(window.location.href, {
       id,
-      body: await encodeReply(args, { temporaryReferences }),
+      body: await encodeReply(encodeBrowser(args), { temporaryReferences }),
     })
     const payload = await createFromFetch<RscPayload>(fetch(renderRequest), {
       temporaryReferences,
     })
     setPayload(payload)
+    console.log(payload);
     const { ok, data } = payload.returnValue!
-    if (!ok) throw data
-    return data
+    if (!ok) throw decodeBrowser(data)
+    return decodeBrowser(data)
   })
 
   // hydration
