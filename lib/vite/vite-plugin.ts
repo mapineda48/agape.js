@@ -13,7 +13,11 @@
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 import type { Plugin } from "vite";
-import { VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_PREFIX } from "./constants";
+import {
+  VIRTUAL_MODULE_ID,
+  VIRTUAL_MODULE_NAMESPACE,
+  VIRTUAL_MODULE_PREFIX,
+} from "./constants";
 
 // ============================================================================
 // Types
@@ -78,7 +82,10 @@ const vitePluginRpc: Plugin = {
    */
   resolveId(id: string): string | undefined {
     if (id.startsWith(VIRTUAL_MODULE_NAMESPACE)) {
-      return VIRTUAL_MODULE_PREFIX + id;
+      return (
+        VIRTUAL_MODULE_PREFIX +
+        id.replace(VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_ID)
+      );
     }
   },
 

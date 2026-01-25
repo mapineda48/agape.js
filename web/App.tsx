@@ -2,8 +2,8 @@ import { useState, useMemo } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import { sayHello } from "@services/public";
-import socket from "@services/chat";
+import { sayHello } from "#services/public";
+import socket from "#services/chat";
 
 function App() {
   const [count, setCount] = useState(0);

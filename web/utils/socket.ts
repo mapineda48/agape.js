@@ -14,8 +14,8 @@
  */
 
 import { io } from "socket.io-client";
-import { decode } from "@shared/msgpackr";
-import type { ConnectedSocket, EventMap } from "@shared/socket";
+import { decode } from "#shared/msgpackr";
+import type { ConnectedSocket, EventMap } from "#shared/socket";
 
 // ============================================================================
 // Configuration

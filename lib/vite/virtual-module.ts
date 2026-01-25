@@ -12,7 +12,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import fs from "fs-extra";
 import { cwd, findServices, toPublicUrl } from "../rpc/path";
-import { VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_PREFIX } from "./constants";
+import { VIRTUAL_MODULE_ID, VIRTUAL_MODULE_PREFIX } from "./constants";
 import { NamespaceManager } from "../socket/namespace";
 
 // ============================================================================
@@ -32,8 +32,8 @@ type ModuleExports = Record<string, unknown>;
 /**
  * Import statement for the RPC client factory.
  */
-const RPC_IMPORT = 'import makeRcp from "@/utils/rpc";';
-const SOCKET_IMPORT = 'import makeSocket from "@/utils/socket";';
+const RPC_IMPORT = 'import makeRcp from "#/utils/rpc";';
+const SOCKET_IMPORT = 'import makeSocket from "#/utils/socket";';
 
 /**
  * Generates the JavaScript code for a virtual module.
@@ -107,9 +107,7 @@ function getEndpointUrl(moduleUrl: string, exportName: string): string {
  * indicate to Vite that they are virtual.
  */
 function toVirtualModuleId(moduleUrl: string): string {
-  return (
-    VIRTUAL_MODULE_PREFIX + path.posix.join(VIRTUAL_MODULE_NAMESPACE, moduleUrl)
-  );
+  return VIRTUAL_MODULE_PREFIX + path.posix.join(VIRTUAL_MODULE_ID, moduleUrl);
 }
 
 // ============================================================================
