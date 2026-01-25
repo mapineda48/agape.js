@@ -11,7 +11,9 @@ import { rscStream } from 'rsc-html-stream/client'
 import type { RscPayload } from './entry.rsc'
 import { GlobalErrorBoundary } from './error-boundary'
 import { createRscRenderRequest } from './request'
-import { decodeBrowser, encodeBrowser } from './serialization/browser'
+import { encodeBrowser } from './serialization/browser'
+import { MSGPACK_CONTENT_TYPE } from './serialization/consts'
+import { decode } from '../utils/msgpack'
 
 async function main() {
   // stash `setPayload` function to trigger re-rendering
@@ -49,20 +51,39 @@ async function main() {
 
   // register a handler which will be internally called by React
   // on server function request after hydration.
+  // Optimized: returns binary msgpack response directly for maximum efficiency
   setServerCallback(async (id, args) => {
     const temporaryReferences = createTemporaryReferenceSet()
     const renderRequest = createRscRenderRequest(window.location.href, {
       id,
       body: await encodeReply(encodeBrowser(args), { temporaryReferences }),
     })
-    const payload = await createFromFetch<RscPayload>(fetch(renderRequest), {
+
+    const response = await fetch(renderRequest)
+    const contentType = response.headers.get('content-type')
+
+    // Handle binary msgpack response directly (Server Actions with msgpack)
+    if (contentType === MSGPACK_CONTENT_TYPE) {
+      const buffer = await response.arrayBuffer()
+      const { ok, data } = decode<{ ok: boolean; data: unknown }>(new Uint8Array(buffer))
+      if (!ok) throw data
+      return data
+    }
+
+    // Fallback to RSC stream for legacy responses (without msgpack encoding)
+    const payload = await createFromFetch<RscPayload>(Promise.resolve(response), {
       temporaryReferences,
     })
     setPayload(payload)
-    console.log(payload);
-    const { ok, data } = payload.returnValue!
-    if (!ok) throw decodeBrowser(data)
-    return decodeBrowser(data)
+
+    // Handle returnValue from legacy RSC stream
+    if (payload.returnValue) {
+      const { ok, data } = payload.returnValue
+      if (!ok) throw data
+      return data
+    }
+
+    return undefined
   })
 
   // hydration

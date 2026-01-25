@@ -9,7 +9,9 @@ import {
 import type { ReactFormState } from 'react-dom/client'
 import { Root } from '../root.tsx'
 import { parseRenderRequest } from './request.tsx'
-import { decodeRsc, encodeResponse } from './serialization/rsc.ts'
+import { decodeRsc } from './serialization/rsc.ts'
+import { encode } from '../utils/msgpack'
+import { MSGPACK_CONTENT_TYPE } from './serialization/consts'
 
 // The schema of payload which is serialized into RSC stream on rsc environment
 // and deserialized on ssr/client environments.
@@ -18,7 +20,7 @@ export type RscPayload = {
   // but this mechanism can be changed to render/fetch different parts of components
   // based on your own route conventions.
   root: React.ReactNode
-  // server action return value of non-progressive enhancement case
+  // server action return value of non-progressive enhancement case (legacy, when not using msgpack)
   returnValue?: { ok: boolean; data: unknown }
   // server action form state (e.g. useActionState) of progressive enhancement case
   formState?: ReactFormState
@@ -34,10 +36,11 @@ async function handler(request: Request): Promise<Response> {
   request = renderRequest.request
 
   // handle server function request
-  let returnValue: RscPayload['returnValue'] | undefined
   let formState: ReactFormState | undefined
+  let returnValue: { ok: boolean; data: unknown } | undefined
   let temporaryReferences: unknown | undefined
   let actionStatus: number | undefined
+
   if (renderRequest.isAction === true) {
     if (renderRequest.actionId) {
       // action is called via `ReactClient.setServerCallback`.
@@ -47,13 +50,35 @@ async function handler(request: Request): Promise<Response> {
         : await request.text()
       temporaryReferences = createTemporaryReferenceSet()
       const customArgs = await decodeReply(body, { temporaryReferences })
-      const args = await decodeRsc(customArgs)
+      const { withMsgpack, args } = await decodeRsc(customArgs)
       const action = await loadServerAction(renderRequest.actionId)
+
       try {
         const data = await action.apply(null, args)
-        returnValue = { ok: true, data: encodeResponse(data) }
+
+        // Return binary msgpack response directly for maximum efficiency
+        if (withMsgpack) {
+          const encoded = encode({ ok: true, data })
+          return new Response(encoded, {
+            status: 200,
+            headers: { 'content-type': MSGPACK_CONTENT_TYPE },
+          })
+        }
+
+        // Legacy: return via RSC stream
+        returnValue = { ok: true, data }
       } catch (e) {
-        returnValue = { ok: false, data: encodeResponse(e) }
+        // Return binary msgpack error response
+        if (withMsgpack) {
+          const encoded = encode({ ok: false, data: e })
+          return new Response(encoded, {
+            status: 500,
+            headers: { 'content-type': MSGPACK_CONTENT_TYPE },
+          })
+        }
+
+        // Legacy: return error via RSC stream
+        returnValue = { ok: false, data: e }
         actionStatus = 500
       }
     } else {

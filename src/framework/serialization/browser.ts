@@ -1,28 +1,5 @@
-import { decode, encode } from "../../utils/msgpack";
+import { encode } from "../../utils/msgpack";
 import { MSGPACK_FIELD, type Paths } from "./consts"
-
-interface BufferLike {
-    type: 'Buffer';
-    data: number[];
-}
-
-function isBufferLike(payload: unknown): payload is BufferLike {
-    return (
-        typeof payload === 'object' &&
-        payload !== null &&
-        'type' in payload &&
-        'data' in payload &&
-        (payload as BufferLike).type === 'Buffer' &&
-        Array.isArray((payload as BufferLike).data)
-    );
-}
-
-export function decodeBrowser(payload: unknown): unknown {
-    if (isBufferLike(payload)) {
-        return decode(new Uint8Array(payload.data));
-    }
-    return payload;
-}
 
 export function encodeBrowser(args: unknown[]): unknown[] {
     if (args.find((arg) => isFormData(arg))) {

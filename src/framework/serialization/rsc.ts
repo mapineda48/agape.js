@@ -1,7 +1,7 @@
-import { decode, encode } from "../../utils/msgpack";
+import { decode } from "../../utils/msgpack";
 import { MSGPACK_FIELD, type Paths } from "./consts";
 
-export async function decodeRsc(customArgs: unknown[]): Promise<unknown[]> {
+export async function decodeRsc(customArgs: unknown[]): Promise<{ withMsgpack: boolean; args: unknown[] }> {
 
     const [formData] = customArgs;
 
@@ -13,7 +13,7 @@ export async function decodeRsc(customArgs: unknown[]): Promise<unknown[]> {
         const pathsPrefix = entries.at(-1);
 
         if (!isFile(msgpackField) || !isFile(pathsPrefix)) {
-            return customArgs;
+            return { withMsgpack: false, args: customArgs };
         }
 
         const files = entries.slice(1, -1);
@@ -36,18 +36,12 @@ export async function decodeRsc(customArgs: unknown[]): Promise<unknown[]> {
             parent[targetKey] = file;
         }
 
-        return payload;
+        return { withMsgpack: true, args: payload };
     }
 
-    return customArgs;
+    return { withMsgpack: false, args: customArgs };
 }
 
 function isFile(file: unknown): file is File {
     return file instanceof File;
-}
-
-export function encodeResponse(payload: unknown): { type: 'Buffer'; data: number[] } {
-    const encoded = encode(payload);
-    // RSC can't serialize Uint8Array, convert to plain object
-    return { type: 'Buffer', data: Array.from(encoded) };
 }
