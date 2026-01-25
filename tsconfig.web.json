@@ -25,7 +25,12 @@
     "baseUrl": "web",
     "paths": {
       /* Frontend aliases */
-      "@/*": ["*"]
+      "@/*": ["*"],
+      "@shared/*": ["../shared/*"],
+      "@services/*": ["../services/*"],
+
+      /* Internal aliases (shared with backend) */
+      "#shared/*": ["../shared/*"]
     }
   },
   "include": ["web"],

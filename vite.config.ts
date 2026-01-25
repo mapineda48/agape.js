@@ -2,6 +2,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import virtualModulePlugin from "./lib/vite/vite-plugin";
 
 const cwd = process.cwd();
 
@@ -12,14 +13,16 @@ export default defineConfig({
       babel: {
         plugins: [["babel-plugin-react-compiler"]],
       },
-    })
+    }),
+    virtualModulePlugin,
   ],
 
   root: "web",
 
   resolve: {
     alias: {
-      "@": path.resolve("web")
+      "@": path.resolve("web"),
+      "@shared": path.resolve("shared"),
     },
   },
 
@@ -39,10 +42,13 @@ export default defineConfig({
           const facadeModuleId =
             chunkInfo.facadeModuleId || chunkInfo.moduleIds.at(-1) || "";
 
-
           const rel = path.relative(cwd, facadeModuleId);
 
-          const hash = crypto.createHash("sha256").update(rel).digest("hex").slice(0, 10);
+          const hash = crypto
+            .createHash("sha256")
+            .update(rel)
+            .digest("hex")
+            .slice(0, 10);
 
           return `${hash}.[hash].js`;
         },

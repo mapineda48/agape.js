@@ -1,0 +1,26 @@
+services:
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: azurite-dev
+    restart: unless-stopped
+    command: >
+      azurite-blob
+      --blobHost 0.0.0.0
+      --blobPort 10000
+      --location /data
+      --disableTelemetry
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue (opcional)
+      - "10002:10002"  # Table (opcional)
+
+  redis:
+    # Redis 8 ya es GA; si prefieres estabilidad con menor riesgo de breaking changes, usa 7-alpine
+    image: redis:8-alpine
+    container_name: redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server --appendonly yes --save ""
