@@ -4,7 +4,10 @@ This document provides guidelines for AI coding agents working in the agape.js r
 
 ## Project Overview
 
-Agape.js is a full-stack TypeScript framework with:
+Agape.js is a full-stack TypeScript framework implementing a **basic ERP**.
+**Important Architecture Note**: This project is designed for a **single-tenant** environment. It is NOT multi-tenant, and no multi-tenant logic (e.g., tenant isolation in queries, tenant context propagation) should be added.
+
+The framework consists of:
 - **Backend**: Express 5 + Socket.IO server with RPC-style endpoints
 - **Frontend**: React 19 + Vite 7 with React Compiler
 - **Database**: PostgreSQL with Drizzle ORM
