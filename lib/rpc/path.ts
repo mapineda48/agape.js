@@ -119,3 +119,22 @@ export function toUrl(root: string, filename: string, ...chunks: string[]): stri
 export function toPublicUrl(filename: string, ...chunks: string[]): string {
   return toUrl("/", filename, ...chunks);
 }
+
+/**
+ * Generates the endpoint path for an exported function.
+ *
+ * Default exports map to the module URL root.
+ * Named exports append the export name to the module URL.
+ *
+ * @example
+ * getEndpointPath("/users", "getById") → "/users/getById"
+ * getEndpointPath("/users", "default") → "/users"
+ *
+ * @param moduleUrl - Base URL path for the module
+ * @param exportName - Name of the exported function
+ * @returns Complete endpoint path
+ */
+export function getEndpointPath(moduleUrl: string, exportName: string): string {
+  const suffix = exportName !== "default" ? exportName : "";
+  return path.posix.join("/", moduleUrl, suffix);
+}

@@ -12,7 +12,20 @@ import { CONTENT_TYPES } from "#shared/rpc";
 /** Directory for temporary file uploads */
 const UPLOAD_DIR = os.tmpdir();
 
-export async function decodeArgs(req: RpcRequest) {
+/** Path segments to locate a value within nested objects/arrays */
+type PropertyPath = (string | number)[];
+
+/**
+ * Decodes RPC arguments from a multipart request.
+ *
+ * Handles:
+ * 1. MessagePack-encoded arguments
+ * 2. File uploads with path metadata for reassembly
+ *
+ * @param req - The incoming RPC request
+ * @returns Decoded arguments with files placed at their original positions
+ */
+export async function decodeArgs(req: RpcRequest): Promise<unknown[]> {
   const form = new IncomingForm({
     uploadDir: UPLOAD_DIR,
     keepExtensions: true,
@@ -31,7 +44,7 @@ export async function decodeArgs(req: RpcRequest) {
 
   const openingFiles: Promise<File>[] = [];
 
-  form.on("file", (name: string, file: FormidableFile) => {
+  form.on("file", (_name: string, file: FormidableFile) => {
     openingFiles.push(
       openAsBlob(file.filepath).then((blob) => {
         return new File([blob], file.originalFilename!, {
@@ -48,24 +61,46 @@ export async function decodeArgs(req: RpcRequest) {
   const [argsBuffer, pathsBuffer] = buffers;
 
   const args = decode<unknown[]>(Buffer.concat(argsBuffer));
-  const paths = decode<(string | number)[][]>(Buffer.concat(pathsBuffer));
+  const paths = decode<PropertyPath[]>(Buffer.concat(pathsBuffer));
 
+  // Reassemble files at their original positions in the args structure
   for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const path = paths[i];
-
-    const targetKey = path[path.length - 1];
-    const parentPath = path.slice(0, -1);
-
-    const parent = parentPath.reduce<Record<string | number, unknown>>(
-      (current, key) => current[key] as Record<string | number, unknown>,
-      args as unknown as Record<string | number, unknown>,
-    );
-
-    parent[targetKey] = file;
+    setValueAtPath(args, paths[i], files[i]);
   }
 
   return args;
+}
+
+/**
+ * Sets a value at a nested path within an object/array structure.
+ *
+ * @example
+ * const obj = { users: [{ name: "John" }] };
+ * setValueAtPath(obj, ["users", 0, "avatar"], file);
+ * // Result: { users: [{ name: "John", avatar: file }] }
+ *
+ * @param root - The root object or array
+ * @param path - Array of keys representing the path to the target location
+ * @param value - The value to set
+ */
+function setValueAtPath(
+  root: unknown,
+  path: PropertyPath,
+  value: unknown,
+): void {
+  if (path.length === 0) return;
+
+  const targetKey = path[path.length - 1];
+  const parentPath = path.slice(0, -1);
+
+  // Navigate to the parent of the target location
+  let current = root as Record<string | number, unknown>;
+  for (const key of parentPath) {
+    current = current[key] as Record<string | number, unknown>;
+  }
+
+  // Set the value at the target location
+  current[targetKey] = value;
 }
 
 /**

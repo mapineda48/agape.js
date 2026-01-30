@@ -15,8 +15,8 @@ import { pathToFileURL } from "node:url";
 import type { Server as HttpServer } from "node:http";
 import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { cwd, findServices, toPublicUrl } from "../rpc/path";
-import { Server, type Namespace } from "socket.io";
+import { cwd, findServices, toPublicUrl, getEndpointPath } from "../rpc/path";
+import { Server } from "socket.io";
 import { NamespaceManager } from "./namespace";
 import logger from "../log/logger";
 import Jwt from "../security/Jwt";
@@ -166,19 +166,4 @@ async function registerSocketNamespaces(
       }
     }
   }
-}
-
-/**
- * Generates the endpoint path for an exported function.
- *
- * Default exports map to the module URL root.
- * Named exports append the export name to the module URL.
- *
- * @example
- * getEndpointPath("/users", "getById") → "/users/getById"
- * getEndpointPath("/users", "default") → "/users"
- */
-function getEndpointPath(moduleUrl: string, exportName: string): string {
-  const suffix = exportName !== "default" ? exportName : "";
-  return path.posix.join("/", moduleUrl, suffix);
 }

@@ -6,6 +6,10 @@
  */
 
 import { PG_ERROR_CODES, type DatabaseError } from "./types";
+import logger from "#lib/log/logger";
+
+/** Logger scoped for RPC error handling */
+const log = logger.scope("RPC");
 
 // ============================================================================
 // Database Error Detection
@@ -336,7 +340,7 @@ function normalizeDatabaseError(error: DatabaseError): Error {
       return new Error(ERROR_MESSAGES.schemaError);
 
     default:
-      console.warn("Unhandled database error code:", error.code, error.message);
+      log.warn(`Unhandled database error code: ${error.code} - ${error.message}`);
       return new Error(ERROR_MESSAGES.genericDbError);
   }
 }
@@ -358,7 +362,12 @@ function normalizeDatabaseError(error: DatabaseError): Error {
  * @returns A normalized Error instance with a user-friendly message
  */
 export default function parseError(error: unknown): Error {
-  console.error(error);
+  // Log error with structured logger for better debugging
+  if (error instanceof Error) {
+    log.error("RPC handler error:", error.message, error.stack);
+  } else {
+    log.error("RPC handler error (unknown type):", error);
+  }
 
   // Try to extract a PostgreSQL database error from the error chain
   const dbError = extractDatabaseError(error);

@@ -17,6 +17,7 @@ import parseError from "./error";
 import { decodeArgs } from "./args";
 import { CONTENT_TYPES } from "#shared/rpc";
 import { HTTP_STATUS } from "./constants";
+import { isForbiddenError } from "./types";
 
 // ============================================================================
 // Types for Auth Payload
@@ -90,15 +91,9 @@ function sendError(res: Response, error: unknown): void {
   const normalizedError = parseError(error);
   const payload = encode(normalizedError);
 
-  let status: number = HTTP_STATUS.BAD_REQUEST;
-
-  // Check for specific error types to set appropriate HTTP status
-  if (
-    (normalizedError as any).code === "FORBIDDEN_ERROR" ||
-    (normalizedError as any).name === "ForbiddenError"
-  ) {
-    status = HTTP_STATUS.UNAUTHORIZED;
-  }
+  const status = isForbiddenError(normalizedError)
+    ? HTTP_STATUS.UNAUTHORIZED
+    : HTTP_STATUS.BAD_REQUEST;
 
   res.set("Content-Type", CONTENT_TYPES.MSGPACK);
   res.status(status).send(payload);
@@ -196,22 +191,7 @@ export function createRpcMiddleware(
 
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { cwd, findServices, toPublicUrl } from "./path";
-
-/**
- * Generates the endpoint path for an exported function.
- *
- * Default exports map to the module URL root.
- * Named exports append the export name to the module URL.
- *
- * @example
- * getEndpointPath("/users", "getById") → "/users/getById"
- * getEndpointPath("/users", "default") → "/users"
- */
-function getEndpointPath(moduleUrl: string, exportName: string): string {
-  const suffix = exportName !== "default" ? exportName : "";
-  return path.posix.join("/", moduleUrl, suffix);
-}
+import { cwd, findServices, toPublicUrl, getEndpointPath } from "./path";
 
 /**
  * Checks if a module export is a valid service function.

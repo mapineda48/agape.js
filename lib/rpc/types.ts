@@ -36,6 +36,32 @@ export interface UploadedFileMetadata {
 export type RpcRequest = Request;
 
 /**
+ * Extended Error interface for RPC errors with optional code and name properties.
+ * Used for type-safe error checking in the RPC middleware.
+ */
+export interface RpcError extends Error {
+    /** Error code (e.g., "FORBIDDEN_ERROR") */
+    code?: string;
+    /** Error name (e.g., "ForbiddenError") */
+    name: string;
+}
+
+/**
+ * Type guard to check if an error has RPC error properties.
+ */
+export function isRpcError(error: unknown): error is RpcError {
+    return error instanceof Error;
+}
+
+/**
+ * Checks if an error indicates a forbidden/unauthorized access.
+ */
+export function isForbiddenError(error: Error): boolean {
+    const rpcError = error as RpcError;
+    return rpcError.code === "FORBIDDEN_ERROR" || rpcError.name === "ForbiddenError";
+}
+
+/**
  * PostgreSQL SQLSTATE error codes for common database errors.
  * @see https://www.postgresql.org/docs/current/errcodes-appendix.html
  */

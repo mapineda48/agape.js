@@ -34,7 +34,7 @@ export default function makeClientRpc(pathname: string) {
       throw new Error(`unsupport responde ${res.headers.get("content-type")}`);
     }
 
-    const buffer: any = await res.arrayBuffer();
+    const buffer = await res.arrayBuffer();
 
     const payload = decode(buffer);
 
@@ -46,14 +46,14 @@ export default function makeClientRpc(pathname: string) {
   };
 }
 
-export function prepareBody(args: unknown[]): unknown {
-  const argsBuffer = encode(args) as any;
+export function prepareBody(args: unknown[]): FormData {
+  const argsBuffer = encode(args);
 
   const formData = new FormData();
 
   formData.append(
     MSGPACK_FILE_FIELD,
-    new Blob([argsBuffer], { type: CONTENT_TYPES.MSGPACK }),
+    new Blob([argsBuffer.slice()], { type: CONTENT_TYPES.MSGPACK }),
     MSGPACK_FILE_NAME,
   );
 
@@ -64,11 +64,11 @@ export function prepareBody(args: unknown[]): unknown {
     formData.append(MSGPACK_FILE_FIELD, file);
   }
 
-  const pathsBuffer = encode(paths) as any;
+  const pathsBuffer = encode(paths);
 
   formData.append(
     MSGPACK_FILE_FIELD,
-    new Blob([pathsBuffer], { type: CONTENT_TYPES.MSGPACK }),
+    new Blob([pathsBuffer.slice()], { type: CONTENT_TYPES.MSGPACK }),
     MSGPACK_FILE_NAME,
   );
 
