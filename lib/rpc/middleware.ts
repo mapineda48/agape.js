@@ -17,7 +17,7 @@ import parseError from "./error";
 import { decodeArgs } from "./args";
 import { CONTENT_TYPES } from "#shared/rpc";
 import { HTTP_STATUS } from "./constants";
-import { isForbiddenError } from "./types";
+import { isForbiddenError, isUnauthorizedError } from "./types";
 
 // ============================================================================
 // Types for Auth Payload
@@ -69,6 +69,12 @@ export interface CreateMiddlewareOptions {
    * Value: the service function to call
    */
   moduleMap: ModuleMap;
+
+  /**
+   * Permission validator function.
+   * Validates if the current request has permission to access the endpoint.
+   */
+  permissionValidator?: PermissionValidator;
 }
 
 // ============================================================================
@@ -91,9 +97,13 @@ function sendError(res: Response, error: unknown): void {
   const normalizedError = parseError(error);
   const payload = encode(normalizedError);
 
-  const status = isForbiddenError(normalizedError)
-    ? HTTP_STATUS.UNAUTHORIZED
-    : HTTP_STATUS.BAD_REQUEST;
+  let status: number = HTTP_STATUS.BAD_REQUEST;
+
+  if (isUnauthorizedError(normalizedError)) {
+    status = HTTP_STATUS.UNAUTHORIZED;
+  } else if (isForbiddenError(normalizedError)) {
+    status = HTTP_STATUS.FORBIDDEN;
+  }
 
   res.set("Content-Type", CONTENT_TYPES.MSGPACK);
   res.status(status).send(payload);
@@ -133,7 +143,7 @@ function isMultipart(req: Request): boolean {
 export function createRpcMiddleware(
   options: CreateMiddlewareOptions,
 ): Middleware {
-  const { moduleMap } = options;
+  const { moduleMap, permissionValidator } = options;
 
   const rpcMiddleware: Middleware = async (req, res, next) => {
     // Only handle requests that explicitly accept msgpack and are multipart
@@ -173,6 +183,11 @@ export function createRpcMiddleware(
     // Run handler within the async context
     await runContext(context, async () => {
       try {
+        // Validate permissions before executing handler
+        if (permissionValidator) {
+          await permissionValidator(endpoint);
+        }
+
         const args = await decodeArgs(req);
         const result = await handler.call(null, ...args);
         sendSuccess(res, result);
@@ -234,6 +249,12 @@ export async function createModuleMap(): Promise<ModuleMap> {
   return rpcEndpoints;
 }
 
+// ============================================================================
+// Default Production Instance
+// ============================================================================
+
+import { validateEndpointPermission } from "./rbac/authorization";
+
 /**
  * Pre-configured RPC middleware for production use.
  *
@@ -246,6 +267,7 @@ const moduleMap = await createModuleMap();
 
 const rpcMiddleware = createRpcMiddleware({
   moduleMap,
+  permissionValidator: validateEndpointPermission,
 });
 
 export default rpcMiddleware;

@@ -62,6 +62,14 @@ export function isForbiddenError(error: Error): boolean {
 }
 
 /**
+ * Checks if an error indicates an authentication failure.
+ */
+export function isUnauthorizedError(error: Error): boolean {
+    const rpcError = error as RpcError;
+    return rpcError.code === "UNAUTHORIZED_ERROR" || rpcError.name === "UnauthorizedError";
+}
+
+/**
  * PostgreSQL SQLSTATE error codes for common database errors.
  * @see https://www.postgresql.org/docs/current/errcodes-appendix.html
  */
