@@ -12,27 +12,12 @@ import path from "node:path";
 import { cwd, findServices } from "../path";
 
 // ============================================================================
-// Types
+// Types (re-exported from unified RBAC)
 // ============================================================================
 
-/**
- * Special permission values for access control.
- *
- * - `PUBLIC`: Endpoint is publicly accessible without authentication
- * - `AUTHENTICATED`: Endpoint requires any authenticated user
- */
-export const PermissionLevel = {
-  /** Public endpoint - no authentication required */
-  PUBLIC: "__public__",
-  /** Requires any authenticated user */
-  AUTHENTICATED: "__authenticated__",
-} as const;
+import { PermissionLevel, type PermissionInfo } from "#lib/rbac";
 
-export interface PermissionInfo {
-  permission: string | null;
-  isProtected: boolean;
-  isPublic: boolean;
-}
+export { PermissionLevel, type PermissionInfo };
 
 // ============================================================================
 // Production Strategy: Use Generated File

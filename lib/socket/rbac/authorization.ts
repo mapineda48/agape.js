@@ -2,7 +2,7 @@
  * Socket Namespace Authorization Module
  *
  * Provides authorization utilities for Socket.IO namespace connections.
- * Validates user permissions against required namespace permissions.
+ * Uses the unified RBAC module for permission checking.
  *
  * Access Control Levels:
  * - @public: No authentication required to connect
@@ -11,7 +11,15 @@
  */
 
 import { ForbiddenError, UnauthorizedError } from "#lib/error";
-import { getRequiredPermission, PermissionLevel } from "./permissions";
+import {
+  hasPermission,
+  createPermissionChecker,
+  PermissionLevel,
+} from "#lib/rbac";
+import { getRequiredPermission } from "./permissions";
+
+// Re-export from unified RBAC for backwards compatibility
+export { hasPermission } from "#lib/rbac";
 
 // ============================================================================
 // Types
@@ -38,44 +46,13 @@ export interface NamespaceAuthResult {
 }
 
 // ============================================================================
-// Permission Checking
+// Authorization Functions
 // ============================================================================
 
 /**
- * Checks if a user has a specific permission.
- *
- * Supports:
- * - Exact match: "sales.flow.deliver" matches "sales.flow.deliver"
- * - Wildcard: "sales.*" matches "sales.flow.deliver"
- * - Module wildcard: "sales.flow.*" matches "sales.flow.deliver"
- * - Super admin: "*" matches everything
- *
- * @param userPermissions - Array of permissions the user has
- * @param requiredPermission - The permission required for the operation
- * @returns true if user has the required permission
+ * Internal permission checker using the unified RBAC.
  */
-export function hasPermission(
-  userPermissions: string[],
-  requiredPermission: string,
-): boolean {
-  if (!requiredPermission) return true;
-
-  return userPermissions.some((userPerm) => {
-    // Exact match
-    if (userPerm === requiredPermission) return true;
-
-    // Super admin wildcard
-    if (userPerm === "*") return true;
-
-    // Module wildcard: "sales.*" matches "sales.flow.deliver"
-    if (userPerm.endsWith(".*")) {
-      const prefix = userPerm.slice(0, -2); // Remove ".*"
-      return requiredPermission.startsWith(prefix + ".");
-    }
-
-    return false;
-  });
-}
+const checkPermission = createPermissionChecker(getRequiredPermission);
 
 /**
  * Validates that a user can connect to a namespace.
@@ -133,49 +110,11 @@ export async function checkNamespaceAccess(
   namespace: string,
   user: SocketUserPayload | null,
 ): Promise<NamespaceAuthResult> {
-  const requiredPermission = await getRequiredPermission(namespace);
-
-  // @public namespace
-  if (requiredPermission === PermissionLevel.PUBLIC) {
-    return {
-      allowed: true,
-      isPublic: true,
-      requiresAuth: false,
-      requiredPermission: null,
-    };
-  }
-
-  // Check authentication
-  const isAuthenticated = user && user.id !== 0;
-  if (!isAuthenticated) {
-    return {
-      allowed: false,
-      isPublic: false,
-      requiresAuth: true,
-      requiredPermission,
-    };
-  }
-
-  // No specific permission - any authenticated user
-  if (!requiredPermission) {
-    return {
-      allowed: true,
-      isPublic: false,
-      requiresAuth: true,
-      requiredPermission: null,
-    };
-  }
-
-  // Check specific permission
-  const userPermissions = user.permissions ?? [];
-  const allowed = hasPermission(userPermissions, requiredPermission);
-
-  return {
-    allowed,
-    isPublic: false,
-    requiresAuth: true,
-    requiredPermission,
-  };
+  return checkPermission(
+    namespace,
+    user?.permissions ?? null,
+    user?.id ?? null,
+  );
 }
 
 /**
@@ -192,7 +131,9 @@ export async function getNamespacePermissionInfo(namespace: string): Promise<{
   return {
     namespace,
     requiredPermission,
-    isProtected: requiredPermission !== null && requiredPermission !== PermissionLevel.PUBLIC,
+    isProtected:
+      requiredPermission !== null &&
+      requiredPermission !== PermissionLevel.PUBLIC,
     isPublic: requiredPermission === PermissionLevel.PUBLIC,
   };
 }

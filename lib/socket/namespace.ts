@@ -37,11 +37,8 @@ import EventEmitter from "node:events";
 import type { Namespace, Socket } from "socket.io";
 import { encode, decode } from "#shared/msgpackr";
 import type { ConnectedSocket, EventMap } from "#shared/socket";
-import {
-  runSocketContext,
-  getContextFromSocket,
-  type ISocketContext,
-} from "./context";
+import type { IContext } from "#lib/context";
+import { runSocketContext, getContextFromSocket } from "./context";
 
 // ============================================================================
 // Types
@@ -57,7 +54,7 @@ export interface EventHandlerContext {
   /** The socket that triggered the event */
   socket: Socket;
   /** User context (id, tenant, permissions) */
-  context: ISocketContext | null;
+  context: IContext | null;
 }
 
 /**
@@ -152,7 +149,7 @@ export class NamespaceManager {
     event: symbol,
     data: unknown,
     socket: Socket,
-    context: ISocketContext | null,
+    context: IContext | null,
   ): void {
     const handlerContext: EventHandlerContext = { socket, context };
 

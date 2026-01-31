@@ -13,6 +13,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { encode } from "#shared/msgpackr";
 import { runContext, type IContext } from "#lib/context";
+import type { UserPayload } from "#lib/context";
 import parseError from "./error";
 import { decodeArgs } from "./args";
 import { CONTENT_TYPES } from "#shared/rpc";
@@ -24,13 +25,10 @@ import { isForbiddenError, isUnauthorizedError } from "./types";
 // ============================================================================
 
 /**
- * Auth payload passed from security middleware via res.locals
+ * Auth payload passed from security middleware via res.locals.
+ * Re-uses UserPayload from context types.
  */
-interface AuthPayload {
-  id: number;
-  tenant: string;
-  permissions: string[];
-}
+type AuthPayload = UserPayload;
 
 // ============================================================================
 // Types
@@ -172,12 +170,14 @@ export function createRpcMiddleware(
           tenant: authPayload.tenant,
           permissions: authPayload.permissions,
           session: new Map(),
+          source: "http",
         }
       : {
           id: 0,
           tenant: "",
           permissions: [],
           session: new Map(),
+          source: "http",
         };
 
     // Run handler within the async context
