@@ -7,20 +7,41 @@
  *
  * The manager uses msgpack for efficient binary serialization of event data.
  *
+ * Features:
+ * - User context propagation via AsyncLocalStorage
+ * - Automatic msgpack encoding/decoding
+ * - Type-safe event handling
+ *
  * @example
- * // In svc/notifications/socket.ts
+ * // In services/notifications.ts
  * type Events = {
  *     "notification:new": { id: string; message: string };
  *     "notification:read": { id: string };
  * };
  *
- * export default registerNamespace<Events>();
+ * // Create a public namespace (no auth required)
+ * /** @public *\/
+ * const socket = registerNamespace<Events>();
+ *
+ * // Create an authenticated namespace
+ * const socket = registerNamespace<Events>();
+ *
+ * // Create a permission-protected namespace
+ * /** @permission admin.notifications *\/
+ * const socket = registerNamespace<Events>();
+ *
+ * export default socket;
  */
 
 import EventEmitter from "node:events";
-import type { Namespace } from "socket.io";
+import type { Namespace, Socket } from "socket.io";
 import { encode, decode } from "#shared/msgpackr";
 import type { ConnectedSocket, EventMap } from "#shared/socket";
+import {
+  runSocketContext,
+  getContextFromSocket,
+  type ISocketContext,
+} from "./context";
 
 // ============================================================================
 // Types
@@ -28,6 +49,24 @@ import type { ConnectedSocket, EventMap } from "#shared/socket";
 
 /** Internal event emitter for cross-socket communication */
 const emitter = new EventEmitter();
+
+/**
+ * Event handler context passed to event callbacks.
+ */
+export interface EventHandlerContext {
+  /** The socket that triggered the event */
+  socket: Socket;
+  /** User context (id, tenant, permissions) */
+  context: ISocketContext | null;
+}
+
+/**
+ * Extended event handler that receives context.
+ */
+export type ContextAwareHandler<T = unknown> = (
+  data: T,
+  ctx: EventHandlerContext,
+) => void | Promise<void>;
 
 // ============================================================================
 // Namespace Manager
@@ -41,6 +80,7 @@ const emitter = new EventEmitter();
  * - Automatically decodes msgpack data from clients
  * - Encodes outgoing data with msgpack for efficient transmission
  * - Each instance has its own internal emitter for event isolation
+ * - Propagates user context through AsyncLocalStorage
  */
 export class NamespaceManager {
   /** Maps event names to internal symbols for scoped event handling */
@@ -73,15 +113,17 @@ export class NamespaceManager {
 
     // Handle new client connections
     this.nsp.on("connection", (socket) => {
-      // Emit connection event via mitt
+      const context = getContextFromSocket(socket);
+
+      // Emit connection event with context
       const connectEvent = this.getOrRegisterInternalEvent("socket:connect");
-      emitter.emit(connectEvent, {});
+      this.emitInternalWithContext(connectEvent, {}, socket, context);
 
       // Handle disconnection
       socket.on("disconnect", () => {
         const disconnectEvent =
           this.getOrRegisterInternalEvent("socket:disconnect");
-        emitter.emit(disconnectEvent, {});
+        this.emitInternalWithContext(disconnectEvent, {}, socket, context);
       });
 
       // Use onAny to capture all events from this socket
@@ -89,18 +131,40 @@ export class NamespaceManager {
         const internalEvent = this.getOrRegisterInternalEvent(event);
 
         // Decode msgpack if binary data, otherwise pass through
+        let decodedData: unknown;
         if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
           const decoded = decode(data as Uint8Array);
           // Standard Socket.IO emit with msgpackr wraps args in an array [payload]
-          emitter.emit(
-            internalEvent,
-            Array.isArray(decoded) ? decoded[0] : decoded,
-          );
+          decodedData = Array.isArray(decoded) ? decoded[0] : decoded;
         } else {
-          emitter.emit(internalEvent, data);
+          decodedData = data;
         }
+
+        this.emitInternalWithContext(internalEvent, decodedData, socket, context);
       });
     });
+  }
+
+  /**
+   * Emits an internal event with proper context propagation.
+   */
+  private emitInternalWithContext(
+    event: symbol,
+    data: unknown,
+    socket: Socket,
+    context: ISocketContext | null,
+  ): void {
+    const handlerContext: EventHandlerContext = { socket, context };
+
+    if (context) {
+      // Run within AsyncLocalStorage context
+      runSocketContext(context, () => {
+        emitter.emit(event, data, handlerContext);
+      });
+    } else {
+      // No context (should not happen, but handle gracefully)
+      emitter.emit(event, data, handlerContext);
+    }
   }
 
   /**
@@ -120,11 +184,12 @@ export class NamespaceManager {
 
   /**
    * Subscribes to an event from connected clients.
+   * The handler receives the event data and an optional context object.
    *
    * @param event - The event name to listen for
    * @param handler - Callback function to handle the event
    */
-  on(event: string, handler: (data: unknown) => void): void {
+  on(event: string, handler: ContextAwareHandler): void {
     const internalEvent = this.getOrRegisterInternalEvent(event);
     emitter.on(internalEvent, handler);
   }
@@ -133,9 +198,9 @@ export class NamespaceManager {
    * Unsubscribes from an event.
    *
    * @param event - The event name to stop listening for
-   * @param handler - The specific handler to remove (optional)
+   * @param handler - The specific handler to remove
    */
-  off(event: string, handler: (data: unknown) => void): void {
+  off(event: string, handler: ContextAwareHandler): void {
     const internalEvent = this.getOrRegisterInternalEvent(event);
     emitter.off(internalEvent, handler);
   }
@@ -150,6 +215,13 @@ export class NamespaceManager {
   emit(event: string, ...args: unknown[]): void {
     this.nsp?.emit(event, encode(args));
   }
+
+  /**
+   * Gets the underlying namespace for advanced operations.
+   */
+  getNamespace(): Namespace | undefined {
+    return this.nsp;
+  }
 }
 
 // ============================================================================
@@ -163,19 +235,25 @@ export class NamespaceManager {
  * The returned object implements the ConnectedSocket interface for
  * type-safe event handling.
  *
+ * Access Control (via JSDoc tags):
+ * - No tag: Any authenticated user can connect
+ * - @public: No authentication required
+ * - @permission <name>: Specific permission required
+ *
  * @template Events - Type map of event names to their payload types
  * @returns A type-safe namespace manager
  *
  * @example
- * // Define your events
- * type ChatEvents = {
- *     "message:new": { userId: string; text: string; timestamp: Date };
- *     "user:typing": { userId: string };
- *     "user:joined": { userId: string; username: string };
- * };
+ * // Public namespace (no auth required)
+ * /** @public *\/
+ * export const publicSocket = registerNamespace<Events>();
  *
- * // Create and export the namespace
- * export default registerNamespace<ChatEvents>();
+ * // Authenticated namespace (any logged-in user)
+ * export default registerNamespace<Events>();
+ *
+ * // Permission-protected namespace
+ * /** @permission admin.dashboard *\/
+ * export const adminSocket = registerNamespace<Events>();
  */
 export function registerNamespace<
   Events extends EventMap,

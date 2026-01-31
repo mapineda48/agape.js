@@ -46,6 +46,10 @@ type ChatEvents = {
 // Namespace Export & Logic
 // ============================================================================
 
+/**
+ * Public chat namespace - no authentication required.
+ * @public
+ */
 const socket = registerNamespace<ChatEvents>();
 
 // Redis key for online users counter (stateless across replicas)

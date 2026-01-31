@@ -2,12 +2,15 @@
  * Socket.IO Server Handler
  *
  * Creates and configures the Socket.IO server, automatically registering
- * namespaces from socket module files in svc/. Supports Redis adapter for
+ * namespaces from socket module files in services/. Supports Redis adapter for
  * horizontal scaling across multiple server instances.
  *
- * Authentication:
- * - Namespaces under /public/* are public (no authentication required)
- * - All other namespaces require valid JWT cookie authentication
+ * Authentication & Authorization:
+ * - @public namespaces: No authentication required
+ * - @permission <name> namespaces: Require specific permission to connect
+ * - No tag namespaces: Require any authenticated user
+ *
+ * The RBAC system uses JSDoc tags on namespace exports, similar to RPC endpoints.
  */
 
 import path from "node:path";
@@ -21,6 +24,12 @@ import { NamespaceManager } from "./namespace";
 import logger from "../log/logger";
 import Jwt from "../security/Jwt";
 import getCookie from "../security/getCookie";
+import {
+  checkNamespaceAccess,
+  initSocketPermissions,
+  type SocketUserPayload,
+} from "./rbac";
+import { attachUserToSocket } from "./context";
 
 // ============================================================================
 // Types
@@ -94,6 +103,9 @@ export default async function createSocketServer(
   // Create JWT instance if secret provided (for authenticated namespaces)
   const jwt = jwtSecret ? new Jwt(jwtSecret) : null;
 
+  // Initialize socket permission system
+  await initSocketPermissions();
+
   // Register all socket namespaces
   await registerSocketNamespaces(io, jwt);
 
@@ -103,8 +115,10 @@ export default async function createSocketServer(
 /**
  * Registers all socket namespaces from socket module files.
  *
- * Authentication middleware is applied to namespaces NOT under /public.
- * Public namespaces allow unauthenticated connections.
+ * Authentication and authorization middleware is applied based on JSDoc tags:
+ * - @public: No authentication required
+ * - @permission <name>: Specific permission required
+ * - No tag: Any authenticated user can connect
  *
  * @param io - Socket.IO server instance
  * @param jwt - JWT instance for authentication (null = all public)
@@ -125,41 +139,71 @@ async function registerSocketNamespaces(
     for (const [exportName, exportValue] of Object.entries(module)) {
       if (exportValue instanceof NamespaceManager) {
         const endpoint = getEndpointPath(publicUrl, exportName);
-        //const isPublic = endpoint.startsWith("/public");
-        const isPublic = true;
+
+        // Check namespace permissions
+        const { isPublic, requiredPermission } =
+          await checkNamespaceAccess(endpoint, null);
+
+        const accessType = isPublic
+          ? "public"
+          : requiredPermission
+            ? `permission: ${requiredPermission}`
+            : "authenticated";
 
         logger
           .scope("Socket")
-          .info(
-            `Registering socket namespace: ${endpoint} (${isPublic ? "public" : "authenticated"})`,
-          );
+          .info(`Registering socket namespace: ${endpoint} (${accessType})`);
 
         const nsp = io.of(endpoint);
 
-        // Apply authentication middleware for non-public namespaces
-        if (!isPublic && jwt) {
-          nsp.use(async (socket, next) => {
-            try {
+        // Apply authentication/authorization middleware
+        nsp.use(async (socket, next) => {
+          try {
+            let user: SocketUserPayload | null = null;
+
+            // Try to authenticate if JWT is available
+            if (jwt) {
               const cookieHeader = socket.handshake.headers.cookie;
               const token = getCookie(cookieHeader);
 
-              if (!token) {
+              if (token) {
+                try {
+                  user = await jwt.verifyToken<SocketUserPayload>(token);
+                } catch {
+                  // Token invalid - user remains null
+                  // For public namespaces this is fine
+                  // For auth-required namespaces, will fail below
+                }
+              }
+            }
+
+            // Check access permissions
+            const accessResult = await checkNamespaceAccess(endpoint, user);
+
+            if (!accessResult.allowed) {
+              if (accessResult.requiresAuth && !user) {
                 return next(new Error("Authentication required"));
               }
-
-              const payload = await jwt.verifyToken(token);
-
-              // Attach user data to socket for later use
-              socket.data.user = payload;
-              next();
-            } catch (error) {
-              logger
-                .scope("Socket")
-                .warn(`Auth failed for ${endpoint}: ${error}`);
-              next(new Error("Authentication failed"));
+              if (accessResult.requiredPermission) {
+                return next(
+                  new Error(
+                    `Permission denied. Required: ${accessResult.requiredPermission}`,
+                  ),
+                );
+              }
+              return next(new Error("Access denied"));
             }
-          });
-        }
+
+            // Attach user context to socket
+            attachUserToSocket(socket, user);
+            next();
+          } catch (error) {
+            logger
+              .scope("Socket")
+              .warn(`Auth failed for ${endpoint}: ${error}`);
+            next(new Error("Authentication failed"));
+          }
+        });
 
         exportValue.connect(nsp);
         break;

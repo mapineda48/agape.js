@@ -13,11 +13,11 @@ export const {
   AGAPE_CDN_HOST = "http://127.0.0.1:10000",
 
   DATABASE_URI = "postgresql://postgres:mypassword@localhost",
-  AZURE_CONNECTION_STRING = "UseDevelopmentStorage=true",
+  AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;",
   CACHE_URL = "redis://localhost:6379",
   RESEND_API_KEY,
 
-  DEVELOPMENT = NODE_ENV === "development",
-  PRODUCTION = NODE_ENV === "production",
-  TEST = NODE_ENV === "test",
+  IsDevelopment = NODE_ENV === "development",
+  IsProduction = NODE_ENV === "production",
+  IsTest = NODE_ENV === "test",
 } = process.env;
