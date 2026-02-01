@@ -13,10 +13,12 @@ const baseURL =
 const credentials =
   process.env.NODE_ENV === "development" ? "include" : "same-origin";
 
-export default function makeClientRpc(pathname: string) {
+export default function makeClientRpc<A extends unknown[], R>(
+  pathname: string,
+) {
   const url = new URL(pathname, baseURL).toString();
 
-  return async (...args: unknown[]) => {
+  return async (...args: A) => {
     const body = prepareBody(args) as BodyInit;
 
     const headers: HeadersInit = {
@@ -36,7 +38,7 @@ export default function makeClientRpc(pathname: string) {
 
     const buffer = await res.arrayBuffer();
 
-    const payload = decode(buffer);
+    const payload = decode<R>(buffer);
 
     if (res.status === 200) {
       return payload;

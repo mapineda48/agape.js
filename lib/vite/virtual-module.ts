@@ -10,10 +10,12 @@
 
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import fs from "fs-extra";
 import { cwd, findServices, toPublicUrl } from "../rpc/path";
 import { VIRTUAL_MODULE_ID, VIRTUAL_MODULE_PREFIX } from "./constants";
 import { NamespaceManager } from "../socket/namespace";
+import Schema from "../db/schema";
+
+Schema.setSchemaName(import.meta.filename);
 
 // ============================================================================
 // Types
@@ -139,12 +141,10 @@ async function generateVirtualModules(): Promise<VirtualModuleMap> {
  * Adds static virtual modules that don't come from service files.
  */
 function addStaticModules(modules: VirtualModuleMap): void {
-  // Security access module
-  const securityModuleId = VIRTUAL_MODULE_PREFIX + "@agape/security/access";
-  modules[securityModuleId] = fs.readFileSync(
-    "lib/security/browser.js",
-    "utf8",
-  );
+  // Security access module - use same convention as dynamic modules
+  const securityModuleId =
+    VIRTUAL_MODULE_PREFIX + VIRTUAL_MODULE_ID + "/security/session";
+  modules[securityModuleId] = "export * from '#/utils/session'";
 }
 
 // ============================================================================
@@ -158,7 +158,7 @@ function addStaticModules(modules: VirtualModuleMap): void {
  */
 async function main(): Promise<void> {
   const virtualModules = await generateVirtualModules();
-  //addStaticModules(virtualModules);
+  addStaticModules(virtualModules);
 
   // Output as JSON for the Vite plugin to consume
   console.log(JSON.stringify(virtualModules));
