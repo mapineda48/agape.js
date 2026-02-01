@@ -11,6 +11,7 @@ import { forwardRef, type ReactNode, type JSX } from "react";
 import { useFieldContextOptional } from "./context";
 import { useFieldError } from "../validation";
 import { pathToString } from "../validation/types";
+import { usePaths } from "../paths";
 
 // ============================================================================
 // Types
@@ -72,11 +73,18 @@ export const Error = forwardRef<HTMLSpanElement, ErrorProps>(
   ({ name, children, renderEmpty = false, ...props }, ref) => {
     // Try to get field context (may be null if used standalone)
     const fieldContext = useFieldContextOptional();
+    
+    // Get the full path from PathProvider context
+    // When inside Form.Field, the PathProvider already has the complete path
+    const fullPath = usePaths();
+    
+    // Determine which field to get error for:
+    // 1. If explicit name prop is provided, use it
+    // 2. If inside Form.Field (with PathProvider), use the full path
+    // 3. Fall back to fieldContext.name for backwards compatibility
+    const fieldPath = name ?? (fullPath.length > 0 ? pathToString(fullPath) : fieldContext?.name);
 
-    // Determine which field to get error for
-    const fieldName = name ?? fieldContext?.name;
-
-    if (!fieldName) {
+    if (!fieldPath) {
       if (process.env.NODE_ENV === "development") {
         console.warn(
           "Form.Error: No field name provided and not inside a Form.Field. " +
@@ -87,7 +95,7 @@ export const Error = forwardRef<HTMLSpanElement, ErrorProps>(
     }
 
     // Get error from validation store
-    const error = useFieldError(fieldName);
+    const error = useFieldError(fieldPath);
 
     // Don't render if no error and not renderEmpty
     if (!error && !renderEmpty) {
@@ -95,7 +103,7 @@ export const Error = forwardRef<HTMLSpanElement, ErrorProps>(
     }
 
     // Determine the id for aria-describedby
-    const errorId = fieldContext?.errorId ?? `error-${pathToString(fieldName)}`;
+    const errorId = fieldContext?.errorId ?? `error-${pathToString(fieldPath)}`;
 
     // Handle render prop children
     const content =

@@ -45,9 +45,11 @@ const DecimalInput = forwardRef<HTMLInputElement, DecimalProps>(
 
     // Get path from Field context if not provided
     const fieldContext = useFieldContextOptional();
-    const path = pathProp ?? fieldContext?.name ?? "";
+    // When inside Form.Field (fieldContext exists), pass undefined to let PathProvider handle the path
+    // Only use empty string fallback when there's no fieldContext
+    const path = pathProp !== undefined ? pathProp : (fieldContext ? undefined : "");
 
-    const paths = useMemo(() => stringToPath(path), [path]);
+    const paths = useMemo(() => path !== undefined ? stringToPath(path) : undefined, [path]);
 
     const { value, onChange, onBlur } = useInput<Decimal>(
       paths,

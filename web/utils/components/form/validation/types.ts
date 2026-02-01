@@ -209,17 +209,12 @@ export interface ValidationActions {
 
 /**
  * Converts a path array to a dot-notation string.
+ * Uses dot notation for all segments, including numeric indices.
+ * Example: ["items", 0, "name"] -> "items.0.name"
  */
 export function pathToString(path: FieldPath): string {
   if (typeof path === "string") return path;
-  return path
-    .map((segment, index) => {
-      if (typeof segment === "number") {
-        return `[${segment}]`;
-      }
-      return index === 0 ? segment : `.${segment}`;
-    })
-    .join("");
+  return path.map(String).join(".");
 }
 
 /**

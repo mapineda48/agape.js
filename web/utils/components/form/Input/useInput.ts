@@ -101,7 +101,7 @@ export interface UseInputReturn<T> {
  * ```
  */
 export default function useInput<T = unknown>(
-  path: Path,
+  path?: Path,
   defaultValue?: T,
   options?: UseInputOptions
 ): UseInputReturn<T> {
@@ -175,13 +175,15 @@ export default function useInput<T = unknown>(
     function onBlur() {
       if (validationStore) {
         const store = validationStore.getState();
-        // Mark as touched
-        store.setTouched(pathStrRef.current, true);
-
-        // Trigger validation if configured
+        
+        // Trigger validation BEFORE marking as touched
+        // This is important for "onTouched" mode which validates on first blur
         if (options?.validateOnBlur) {
           store.triggerValidation(pathStrRef.current, "blur");
         }
+        
+        // Mark as touched AFTER triggering validation
+        store.setTouched(pathStrRef.current, true);
       }
     },
     [validationStore, options?.validateOnBlur]

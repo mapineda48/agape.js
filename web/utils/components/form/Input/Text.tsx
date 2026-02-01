@@ -60,11 +60,16 @@ const Text = forwardRef<HTMLInputElement, TextProps>((props, ref) => {
     ...core
   } = props;
 
-  // Get path from Field context if not provided
+  // Get field context for accessibility and path resolution
   const fieldContext = useFieldContextOptional();
-  const path = pathProp ?? fieldContext?.name ?? "";
+  
+  // When inside Form.Field (fieldContext exists), Form.Field already creates
+  // a PathProvider with the field name. So we should NOT provide a path to
+  // useInput - it will use the PathProvider context automatically.
+  // Only use pathProp if explicitly provided, otherwise let PathProvider handle it.
+  const path = pathProp !== undefined ? pathProp : (fieldContext ? undefined : "");
 
-  const paths = useMemo(() => stringToPath(path), [path]);
+  const paths = useMemo(() => path !== undefined ? stringToPath(path) : undefined, [path]);
 
   const { value, onChange, onBlur } = useInput<string>(paths, defaultValue, {
     materialize,
