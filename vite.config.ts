@@ -21,7 +21,7 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      "#": path.resolve("web"),
+      "#web": path.resolve("web"),
       "#shared": path.resolve("shared"),
     },
   },

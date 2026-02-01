@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
-import reactLogo from "./assets/react.svg";
+import reactLogo from "#web/assets/react.svg";
 import viteLogo from "/vite.svg";
-import "./App.css";
+import "./page.css";
 import { sayHello } from "#services/public";
 import socket from "#services/chat";
+import { useRouter } from "#web/utils/components/router/hook";
+import Decimal from "#shared/data/Decimal";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -11,6 +13,7 @@ function App() {
   const [files, setFiles] = useState<File[] | undefined>(undefined);
 
   const chat = useMemo(() => socket.connect(), []);
+  const router = useRouter();
 
   return (
     <>
@@ -22,7 +25,13 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>Vite + React</h1>
+      <h1
+        onClick={() =>
+          router.navigate("/about", { state: { decimal: new Decimal(1) } })
+        }
+      >
+        Vite + React
+      </h1>
       <div className="card">
         <button
           onClick={() => {

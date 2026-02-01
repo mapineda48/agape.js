@@ -34,8 +34,8 @@ type ModuleExports = Record<string, unknown>;
 /**
  * Import statement for the RPC client factory.
  */
-const RPC_IMPORT = 'import makeRcp from "#/utils/rpc";';
-const SOCKET_IMPORT = 'import makeSocket from "#/utils/socket";';
+const RPC_IMPORT = 'import makeRcp from "#web/utils/rpc";';
+const SOCKET_IMPORT = 'import makeSocket from "#web/utils/socket";';
 
 /**
  * Generates the JavaScript code for a virtual module.
@@ -144,7 +144,7 @@ function addStaticModules(modules: VirtualModuleMap): void {
   // Security access module - use same convention as dynamic modules
   const securityModuleId =
     VIRTUAL_MODULE_PREFIX + VIRTUAL_MODULE_ID + "/security/session";
-  modules[securityModuleId] = "export * from '#/utils/session'";
+  modules[securityModuleId] = "export * from '#web/utils/session'";
 }
 
 // ============================================================================
