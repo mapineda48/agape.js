@@ -1,0 +1,173 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { Form } from "../index";
+import Checkbox from "./index";
+import { Submit } from "../Submit";
+import EventEmitter from "#web/utils/components/event-emitter";
+
+describe("Checkbox Component", () => {
+  const SubmitWrapper = ({
+    children,
+    ...props
+  }: React.ComponentProps<typeof Form.Root>) => (
+    <EventEmitter>
+      <Form.Root {...props}>{children}</Form.Root>
+    </EventEmitter>
+  );
+
+  it("should initialize with default value (false)", () => {
+    render(
+      <Form.Root state={{ isActive: false }}>
+        <Checkbox path="isActive" data-testid="checkbox" />
+      </Form.Root>,
+    );
+
+    const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+  });
+
+  it("should initialize with true value", () => {
+    render(
+      <Form.Root state={{ isActive: true }}>
+        <Checkbox path="isActive" data-testid="checkbox" />
+      </Form.Root>,
+    );
+
+    const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
+  });
+
+  it("should update state on toggle", async () => {
+    const user = userEvent.setup();
+    render(
+      <Form.Root state={{ isActive: false }}>
+        <Checkbox path="isActive" data-testid="checkbox" />
+      </Form.Root>,
+    );
+
+    const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
+    await user.click(checkbox);
+    expect(checkbox.checked).toBe(true);
+
+    await user.click(checkbox);
+    expect(checkbox.checked).toBe(false);
+  });
+
+  it("should submit with correct boolean value", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <SubmitWrapper state={{ isActive: false }}>
+        <Checkbox path="isActive" data-testid="checkbox" />
+        <Submit onSubmit={onSubmit} data-testid="submit">
+          Submit
+        </Submit>
+      </SubmitWrapper>,
+    );
+
+    const checkbox = screen.getByTestId("checkbox") as HTMLInputElement;
+    const submit = screen.getByTestId("submit");
+
+    await user.click(checkbox);
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ isActive: true });
+    });
+  });
+
+  it("should submit without initialization (default false)", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <SubmitWrapper>
+        <Checkbox path="isActive" materialize data-testid="checkbox" />
+        <Submit onSubmit={onSubmit} data-testid="submit">
+          Submit
+        </Submit>
+      </SubmitWrapper>,
+    );
+
+    const submit = screen.getByTestId("submit");
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ isActive: false });
+    });
+  });
+
+  it("should submit without initialization (default true)", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <SubmitWrapper>
+        <Checkbox
+          path="isActive"
+          defaultChecked={true}
+          materialize
+          data-testid="checkbox"
+        />
+        <Submit onSubmit={onSubmit} data-testid="submit">
+          Submit
+        </Submit>
+      </SubmitWrapper>,
+    );
+
+    const submit = screen.getByTestId("submit");
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ isActive: true });
+    });
+  });
+
+  it("should exclude untouched field without materialize from submit payload", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <SubmitWrapper>
+        <Checkbox path="untouchedField" data-testid="checkbox" />
+        <Submit onSubmit={onSubmit} data-testid="submit">
+          Submit
+        </Submit>
+      </SubmitWrapper>,
+    );
+
+    const submit = screen.getByTestId("submit");
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({});
+      expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("untouchedField");
+    });
+  });
+
+  it("should include touched field without materialize in submit payload", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <SubmitWrapper>
+        <Checkbox path="touchedField" data-testid="checkbox" />
+        <Submit onSubmit={onSubmit} data-testid="submit">
+          Submit
+        </Submit>
+      </SubmitWrapper>,
+    );
+
+    const checkbox = screen.getByTestId("checkbox");
+    const submit = screen.getByTestId("submit");
+
+    // Touch the checkbox (toggle it)
+    await user.click(checkbox);
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ touchedField: true });
+    });
+  });
+});
