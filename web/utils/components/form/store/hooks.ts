@@ -9,6 +9,7 @@
  */
 
 import { useMemo } from "react";
+import { useStore } from "zustand";
 import {
   useFormStoreApi,
   useSelectPath as useZustandSelectPath,
@@ -92,15 +93,16 @@ export function useSelectPath<T = unknown>(path: Path, fallback?: T): T {
 }
 
 /**
- * Typed selector hook - kept for API compatibility.
- * In the new Zustand implementation, this is less commonly needed
- * since useSelectPath handles most cases.
+ * Typed selector hook - kept for API compatibility with Redux-style selectors.
+ * This hook is REACTIVE - it will re-render when the selected data changes.
  *
  * @deprecated Prefer useSelectPath for path-based selection
  */
 export function useAppSelector<T>(selector: (state: { form: { data: any } }) => T): T {
   const store = useFormStoreApi();
-  const data = store.getState().data;
+  
+  // Use Zustand's useStore to make this reactive
+  const data = useStore(store, (state) => state.data);
   
   // Run selector with a Redux-like state shape for compatibility
   return selector({ form: { data } });

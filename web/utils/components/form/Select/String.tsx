@@ -1,9 +1,10 @@
 import React from "react";
-import { Select, SelectItem } from "../../ui/select";
 import useInput from "../Input/useInput";
+import { usePaths } from "../paths";
+import { stringToPath } from "#web/utils/stringToPath";
 
 export interface StringProps {
-  path: string;
+  path?: string;
   materialize?: boolean;
   autoCleanup?: boolean;
   onChange?: (value: string) => void;
@@ -16,7 +17,7 @@ export interface StringProps {
 }
 
 const SelectString = ({
-  path,
+  path = "",
   materialize,
   autoCleanup,
   onChange,
@@ -27,26 +28,34 @@ const SelectString = ({
   required,
   "data-testid": testId,
 }: StringProps) => {
-  const [state, setState] = useInput<string>(path, "", {
+  const paths = usePaths(stringToPath(path));
+  const { value, setValue } = useInput<string>(paths, "", {
     materialize,
     autoCleanup,
   });
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    onChange?.(newValue);
+  };
+
   return (
-    <Select
-      value={state}
-      onChange={(val) => {
-        setState(val);
-        onChange?.(val);
-      }}
-      placeholder={placeholder}
+    <select
+      value={value ?? ""}
+      onChange={handleChange}
       className={className}
       disabled={disabled}
       required={required}
       data-testid={testId}
     >
+      {placeholder && (
+        <option value="" disabled>
+          {placeholder}
+        </option>
+      )}
       {children}
-    </Select>
+    </select>
   );
 };
 

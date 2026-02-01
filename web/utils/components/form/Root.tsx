@@ -13,9 +13,10 @@ import {
  * Props for the Form.Root component.
  * @template T The type of the form state object
  */
-export interface RootProps<T extends object | unknown[] = object>
-  extends FormProviderProps<T> {
-  children: ReactNode;
+export interface RootProps<
+  T extends object | unknown[] = object,
+> extends FormProviderProps<T> {
+  children?: ReactNode;
 }
 
 /**
@@ -39,7 +40,7 @@ function FormWithValidation<T extends object | unknown[]>({
       getFormData: () => formStore.getState().data,
       getInitialData: () => props.state ?? {},
     }),
-    [schema, mode, reValidateMode, formStore, props.state]
+    [schema, mode, reValidateMode, formStore, props.state],
   );
 
   // If schema is provided, wrap with validation provider

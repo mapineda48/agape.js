@@ -1,9 +1,10 @@
 import React from "react";
-import { Select, SelectItem } from "../../ui/select";
 import useInput from "../Input/useInput";
+import { usePaths } from "../paths";
+import { stringToPath } from "#web/utils/stringToPath";
 
 export interface IntProps {
-  path: string;
+  path?: string;
   materialize?: boolean;
   autoCleanup?: boolean;
   onChange?: (value: number, index: number) => void;
@@ -16,7 +17,7 @@ export interface IntProps {
 }
 
 const SelectInt = ({
-  path,
+  path = "",
   materialize,
   autoCleanup,
   onChange,
@@ -27,37 +28,47 @@ const SelectInt = ({
   required,
   "data-testid": testId,
 }: IntProps) => {
-  const [state, setState] = useInput<number>(path, 0, {
+  const paths = usePaths(stringToPath(path));
+  const { value, setValue } = useInput<number>(paths, 0, {
     materialize,
     autoCleanup,
   });
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    const numVal = parseInt(val, 10);
+    const finalVal = isNaN(numVal) ? 0 : numVal;
+
+    setValue(finalVal);
+
+    if (onChange) {
+      // Find index of the selected value among children for backward compatibility
+      const childrenArray = React.Children.toArray(children);
+      const index = childrenArray.findIndex(
+        (child) =>
+          React.isValidElement(child) &&
+          String((child.props as { value?: unknown }).value) === val
+      );
+      onChange(finalVal, index);
+    }
+  };
+
   return (
-    <Select
-      value={state}
-      onChange={(val) => {
-        const numVal = typeof val === "string" ? parseInt(val, 10) : Number(val);
-        const finalVal = isNaN(numVal) ? 0 : numVal;
-
-        setState(finalVal);
-
-        if (onChange) {
-          // Find index of the selected value among children for backward compatibility
-          const childrenArray = React.Children.toArray(children);
-          const index = childrenArray.findIndex((child: any) =>
-            String(child.props.value) === String(val)
-          );
-          onChange(finalVal, index);
-        }
-      }}
-      placeholder={placeholder}
+    <select
+      value={String(value ?? 0)}
+      onChange={handleChange}
       className={className}
       disabled={disabled}
       required={required}
       data-testid={testId}
     >
+      {placeholder && (
+        <option value="" disabled>
+          {placeholder}
+        </option>
+      )}
       {children}
-    </Select>
+    </select>
   );
 };
 

@@ -123,7 +123,25 @@ export function useSelectPath<T = unknown>(path: Path, fallback?: T): T {
         return a === b;
       }
 
-      // For objects/arrays, use JSON comparison for deep equality
+      // Special handling for custom class instances (Decimal, DateTime, etc.)
+      // These have custom toString() methods that preserve full precision,
+      // unlike toJSON() which may truncate or format differently
+      const aConstructor = (a as any).constructor;
+      const bConstructor = (b as any).constructor;
+      const isCustomClass =
+        aConstructor &&
+        bConstructor &&
+        aConstructor !== Object &&
+        aConstructor !== Array &&
+        bConstructor !== Object &&
+        bConstructor !== Array;
+
+      if (isCustomClass) {
+        // Compare using toString() for full precision comparison
+        return (a as any).toString() === (b as any).toString();
+      }
+
+      // For plain objects/arrays, use JSON comparison for deep equality
       // This is safe because we control what goes into the store
       try {
         return JSON.stringify(a) === JSON.stringify(b);

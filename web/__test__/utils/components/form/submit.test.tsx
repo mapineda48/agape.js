@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React, { useEffect } from "react";
-import { Form } from "../index";
-import { Submit } from "./index";
-import { useEvent } from "../provider";
+import { Form } from "#web/utils/components/form";
+import { Submit } from "#web/utils/components/form/Submit";
+import { useEvent } from "#web/utils/components/form/provider";
 import EventEmitter, {
   useEventEmitter,
 } from "#web/utils/components/event-emitter";

@@ -1,68 +1,83 @@
 /**
- * Deep Clone Utilities using msgpackr
+ * Deep Clone Utility
  *
- * This module provides deep cloning capabilities using msgpackr for
- * serialization/deserialization. It properly handles custom types like
- * Decimal, DateTime, and File through the registered msgpackr extensions.
+ * This module provides deep cloning capabilities.
+ * For the form store, values pass through directly without cloning.
  *
  * @module #web/utils/clone
  */
 
-import { encode, decode } from "#shared/msgpackr";
-
 /**
- * Deep clones a value using msgpackr serialization.
- *
- * This function creates a complete deep copy of the input value,
- * properly handling:
- * - Primitive types (string, number, boolean, null, undefined)
- * - Plain objects and arrays
- * - Custom types registered in msgpackr (Decimal, DateTime, File, Error)
+ * Deep clones a value, preserving File, Blob, and other special objects.
  *
  * @template T - The type of the value to clone
  * @param value - The value to deep clone
  * @returns A deep clone of the input value
- *
- * @example
- * ```ts
- * const original = { user: { name: 'John' }, price: new Decimal('19.99') };
- * const cloned = deepClone(original);
- * // cloned is a completely independent copy
- * ```
  */
 export function deepClone<T>(value: T): T {
-  const encoded = encode(value);
-  return decode<T>(encoded);
+  // Handle null/undefined
+  if (value == null) {
+    return value;
+  }
+
+  // Handle primitives
+  if (typeof value !== "object") {
+    return value;
+  }
+
+  // Preserve File and Blob - they are not clonable
+  if (typeof File !== "undefined" && value instanceof File) {
+    return value;
+  }
+
+  if (typeof Blob !== "undefined" && value instanceof Blob) {
+    return value;
+  }
+
+  // Preserve Date
+  if (value instanceof Date) {
+    return new Date(value.getTime()) as T;
+  }
+
+  // Handle arrays
+  if (Array.isArray(value)) {
+    return value.map((item) => deepClone(item)) as T;
+  }
+
+  // Check for custom types with clone methods or special handling
+  const proto = Object.getPrototypeOf(value);
+  
+  // Preserve instances of custom classes (Decimal, DateTime, etc.)
+  // These are typically immutable and don't need deep cloning
+  if (proto !== Object.prototype && proto !== null) {
+    return value;
+  }
+
+  // Handle plain objects
+  const result: Record<string, unknown> = {};
+  for (const key in value) {
+    if (Object.prototype.hasOwnProperty.call(value, key)) {
+      result[key] = deepClone((value as Record<string, unknown>)[key]);
+    }
+  }
+
+  return result as T;
 }
 
 /**
- * Alias for deepClone - used for serialization to Redux store.
- *
- * This function is used when setting values in the Redux store to ensure
- * that custom types (Decimal, DateTime, File) are properly serialized
- * and can be stored/retrieved correctly.
- *
- * @template T - The type of the value to serialize
- * @param value - The value to serialize
- * @returns A deep clone suitable for Redux store
+ * Pass-through function - values go directly to store without transformation.
+ * @deprecated Use values directly
  */
 export function deepCloneWithHelpersToSerialized<T>(value: T): T {
-  return deepClone(value);
+  return value;
 }
 
 /**
- * Alias for deepClone - used when reading values from Redux store.
- *
- * This function is used when retrieving values from the Redux store
- * to ensure that the returned value is a clean copy that won't
- * accidentally mutate the store state.
- *
- * @template T - The type of the value to clone
- * @param value - The value to clone
- * @returns A deep clone of the value
+ * Pass-through function - values come directly from store without transformation.
+ * @deprecated Use values directly
  */
 export function deepCloneWithOutHelpers<T>(value: T): T {
-  return deepClone(value);
+  return value;
 }
 
 export default deepClone;

@@ -1,9 +1,10 @@
 import React from "react";
-import { Select, SelectItem } from "../../ui/select";
 import useInput from "../Input/useInput";
+import { usePaths } from "../paths";
+import { stringToPath } from "#web/utils/stringToPath";
 
 export interface BooleanProps {
-  path: string;
+  path?: string;
   materialize?: boolean;
   autoCleanup?: boolean;
   required?: boolean;
@@ -14,7 +15,7 @@ export interface BooleanProps {
 }
 
 const SelectBoolean = ({
-  path,
+  path = "",
   materialize,
   autoCleanup,
   placeholder = "Seleccionar...",
@@ -23,24 +24,34 @@ const SelectBoolean = ({
   required,
   "data-testid": testId,
 }: BooleanProps) => {
-  const [state, setState] = useInput<boolean>(path, false, {
+  const paths = usePaths(stringToPath(path));
+  const { value, setValue } = useInput<boolean>(paths, false, {
     materialize,
     autoCleanup,
   });
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newValue = e.target.value === "true";
+    setValue(newValue);
+  };
+
   return (
-    <Select
-      value={state}
-      onChange={(val) => setState(val)}
-      placeholder={placeholder}
+    <select
+      value={String(value ?? false)}
+      onChange={handleChange}
       className={className}
       disabled={disabled}
       required={required}
       data-testid={testId}
     >
-      <SelectItem value={true}>Sí</SelectItem>
-      <SelectItem value={false}>No</SelectItem>
-    </Select>
+      {placeholder && (
+        <option value="" disabled>
+          {placeholder}
+        </option>
+      )}
+      <option value="true">Sí</option>
+      <option value="false">No</option>
+    </select>
   );
 };
 

@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Form } from "./index";
-import * as Input from "./Input";
-import { Submit } from "./Submit";
-import { useInputArray } from "./hooks";
+import { Form } from "#web/utils/components/form";
+import * as Input from "#web/utils/components/form/Input";
+import { Submit } from "#web/utils/components/form/Submit";
+import { useInputArray } from "#web/utils/components/form/hooks";
 import EventEmitter from "#web/utils/components/event-emitter";
 
 describe("Form.Scope Nested Paths", () => {

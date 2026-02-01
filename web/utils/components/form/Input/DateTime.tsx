@@ -62,9 +62,9 @@ const DateTimeInput = forwardRef<HTMLInputElement, DateTimeProps>(
       }
     );
 
-    // Use instanceof for type checking - more robust than duck-typing
+    // Use instanceof for type checking - handle both DateTime and Date
     const displayValue =
-      value instanceof DateTime ? format(value, "yyyy-MM-dd'T'HH:mm") : "";
+      value instanceof Date ? format(value, "yyyy-MM-dd'T'HH:mm") : "";
 
     // Get accessibility attributes from field context
     const inputId = fieldContext?.inputId;

@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Form } from "../index";
-import * as Input from "./index";
-import { useAppSelector } from "../store/hooks";
-import Decimal from "@utils/data/Decimal";
-import DateTime from "@utils/data/DateTime";
+import { Form } from "#web/utils/components/form";
+import * as Input from "#web/utils/components/form/Input";
+import { useAppSelector } from "#web/utils/components/form/store";
+import Decimal from "#shared/data/Decimal";
+import DateTime from "#shared/data/DateTime";
 
 beforeAll(() => {
   if (!globalThis.structuredClone) {
@@ -465,7 +465,7 @@ describe("Extended Inputs", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const EventEmitter = (await import("#web/utils/components/event-emitter"))
         .default;
-      const { Submit } = await import("../Submit");
+      const { Submit } = await import("#web/utils/components/form/Submit");
 
       render(
         <EventEmitter>
@@ -492,7 +492,7 @@ describe("Extended Inputs", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const EventEmitter = (await import("#web/utils/components/event-emitter"))
         .default;
-      const { Submit } = await import("../Submit");
+      const { Submit } = await import("#web/utils/components/form/Submit");
 
       render(
         <EventEmitter>
@@ -521,7 +521,7 @@ describe("Extended Inputs", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const EventEmitter = (await import("#web/utils/components/event-emitter"))
         .default;
-      const { Submit } = await import("../Submit");
+      const { Submit } = await import("#web/utils/components/form/Submit");
 
       render(
         <EventEmitter>
@@ -548,7 +548,7 @@ describe("Extended Inputs", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const EventEmitter = (await import("#web/utils/components/event-emitter"))
         .default;
-      const { Submit } = await import("../Submit");
+      const { Submit } = await import("#web/utils/components/form/Submit");
 
       render(
         <EventEmitter>
@@ -575,7 +575,7 @@ describe("Extended Inputs", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const EventEmitter = (await import("#web/utils/components/event-emitter"))
         .default;
-      const { Submit } = await import("../Submit");
+      const { Submit } = await import("#web/utils/components/form/Submit");
 
       render(
         <EventEmitter>
@@ -991,7 +991,7 @@ describe("Extended Inputs", () => {
       expect(input.value).toBe("999999999999.99");
     });
 
-    it("should handle very small decimal values", async () => {
+    it("should handle very small decimal values", () => {
       render(
         <Form.Root state={{ rate: new Decimal(0) }}>
           <Input.Decimal path="rate" data-testid="input" />

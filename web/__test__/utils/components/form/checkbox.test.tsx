@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Form } from "../index";
-import Checkbox from "./index";
-import { Submit } from "../Submit";
+import { Form } from "#web/utils/components/form";
+import Checkbox from "#web/utils/components/form/CheckBox";
+import { Submit } from "#web/utils/components/form/Submit";
 import EventEmitter from "#web/utils/components/event-emitter";
 
 describe("Checkbox Component", () => {

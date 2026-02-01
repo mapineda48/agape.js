@@ -79,7 +79,7 @@ const DecimalInput = forwardRef<HTMLInputElement, DecimalProps>(
         ref={ref}
         id={inputId}
         type="number"
-        step="0.01"
+        step="any"
         value={displayValue}
         onChange={({ currentTarget }) => {
           try {
