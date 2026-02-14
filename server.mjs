@@ -60,8 +60,35 @@ function parseAcceptLanguage(value) {
     .map((item) => item.code)
 }
 
-function resolveLocale(acceptLanguage, supportedLocales) {
+function parseCookies(cookieHeader) {
+  if (!cookieHeader) return {}
+
+  return cookieHeader
+    .split(';')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .reduce((acc, pair) => {
+      const separatorIndex = pair.indexOf('=')
+      if (separatorIndex <= 0) return acc
+
+      const key = pair.slice(0, separatorIndex).trim()
+      const value = pair.slice(separatorIndex + 1).trim()
+      if (!key) return acc
+
+      acc[key] = decodeURIComponent(value)
+      return acc
+    }, {})
+}
+
+function resolveLocale(cookieHeader, acceptLanguage, supportedLocales) {
   const normalizedSet = new Set(supportedLocales.map((locale) => locale.toLowerCase()))
+
+  const cookies = parseCookies(cookieHeader)
+  const preferred = cookies.preferred_locale?.toLowerCase()
+  if (preferred && normalizedSet.has(preferred)) {
+    return preferred
+  }
+
   const ranked = parseAcceptLanguage(acceptLanguage)
 
   for (const requested of ranked) {
@@ -88,8 +115,12 @@ function sanitizeRequestPath(requestPath) {
 const supportedLocales = getSupportedLocales()
 
 app.use((req, res, next) => {
-  res.setHeader('Vary', 'Accept-Language')
-  res.locals.locale = resolveLocale(req.headers['accept-language'], supportedLocales)
+  res.setHeader('Vary', 'Accept-Language, Cookie')
+  res.locals.locale = resolveLocale(
+    req.headers.cookie,
+    req.headers['accept-language'],
+    supportedLocales,
+  )
   next()
 })
 
