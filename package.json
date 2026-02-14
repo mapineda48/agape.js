@@ -7,11 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve:i18n": "node server.mjs"
   },
   "dependencies": {
     "@fontsource/space-grotesk": "^5.2.10",
     "@fontsource/work-sans": "^5.2.8",
+    "express": "^5.2.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
