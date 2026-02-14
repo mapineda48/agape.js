@@ -23,6 +23,18 @@ function fileExists(filePath) {
   }
 }
 
+function sendLocalizedHtml(res, filePath, locale) {
+  try {
+    const html = fs.readFileSync(filePath, 'utf-8')
+    const updatedHtml = html.replace(/<html\s+lang="[^"]*"/i, `<html lang="${locale}"`)
+    res.setHeader('Content-Language', locale)
+    res.type('html').send(updatedHtml)
+    return true
+  } catch {
+    return false
+  }
+}
+
 function getSupportedLocales() {
   if (!isDirectory(distRoot)) return [fallbackLocale]
 
@@ -86,19 +98,19 @@ function resolveLocale(cookieHeader, acceptLanguage, supportedLocales) {
   const cookies = parseCookies(cookieHeader)
   const preferred = cookies.preferred_locale?.toLowerCase()
   if (preferred && normalizedSet.has(preferred)) {
-    return preferred
+    return { locale: preferred, source: 'cookie' }
   }
 
   const ranked = parseAcceptLanguage(acceptLanguage)
 
   for (const requested of ranked) {
-    if (normalizedSet.has(requested)) return requested
+    if (normalizedSet.has(requested)) return { locale: requested, source: 'accept-language' }
 
     const base = requested.split('-')[0]
-    if (normalizedSet.has(base)) return base
+    if (normalizedSet.has(base)) return { locale: base, source: 'accept-language' }
   }
 
-  return fallbackLocale
+  return { locale: fallbackLocale, source: 'fallback' }
 }
 
 function sanitizeRequestPath(requestPath) {
@@ -116,11 +128,14 @@ const supportedLocales = getSupportedLocales()
 
 app.use((req, res, next) => {
   res.setHeader('Vary', 'Accept-Language, Cookie')
-  res.locals.locale = resolveLocale(
+  const { locale, source } = resolveLocale(
     req.headers.cookie,
     req.headers['accept-language'],
     supportedLocales,
   )
+  res.locals.locale = locale
+  res.locals.localeSource = source
+  res.setHeader('X-Locale-Source', source)
   next()
 })
 
@@ -134,13 +149,28 @@ app.use((req, res) => {
   const locale = res.locals.locale
   const localeFile = path.join(distRoot, locale, safePath)
   const fallbackFile = path.join(distRoot, fallbackLocale, safePath)
+  const isHtmlRequest = safePath.endsWith('.html')
 
   if (fileExists(localeFile)) {
+    res.setHeader('Content-Language', locale)
+    if (isHtmlRequest) {
+      if (sendLocalizedHtml(res, localeFile, locale)) return
+      res.status(500).send('Server error')
+      return
+    }
+
     res.sendFile(localeFile)
     return
   }
 
   if (fileExists(fallbackFile)) {
+    res.setHeader('Content-Language', fallbackLocale)
+    if (isHtmlRequest) {
+      if (sendLocalizedHtml(res, fallbackFile, fallbackLocale)) return
+      res.status(500).send('Server error')
+      return
+    }
+
     res.sendFile(fallbackFile)
     return
   }
@@ -150,12 +180,14 @@ app.use((req, res) => {
     const fallbackIndex = path.join(distRoot, fallbackLocale, 'index.html')
 
     if (fileExists(localeIndex)) {
-      res.sendFile(localeIndex)
+      if (sendLocalizedHtml(res, localeIndex, locale)) return
+      res.status(500).send('Server error')
       return
     }
 
     if (fileExists(fallbackIndex)) {
-      res.sendFile(fallbackIndex)
+      if (sendLocalizedHtml(res, fallbackIndex, fallbackLocale)) return
+      res.status(500).send('Server error')
       return
     }
   }
