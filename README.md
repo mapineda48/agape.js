@@ -1,73 +1,109 @@
-# React + TypeScript + Vite
+# Demo i18n con Vite + React + Express
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Objetivo del repositorio
 
-Currently, two official plugins are available:
+Este proyecto demuestra una estrategia de internacionalizacion orientada a archivos estaticos:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Generar una build independiente por idioma con Vite.
+- Servir siempre la URL raiz (`/`) sin exponer prefijos de idioma (`/en`, `/es`, etc.).
+- Resolver idioma en servidor usando prioridad por cookie y fallback automatico.
+- Permitir pruebas manuales de idioma en produccion con un selector visible solo en build.
 
-## React Compiler
+## Arquitectura de la solucion
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1) Build multi-idioma en Vite
 
-## Expanding the ESLint configuration
+Se implementa un plugin personalizado en `plugins/vite-multi-i18n-build.ts`.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Funcionamiento:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Detecta idiomas leyendo carpetas dentro de `i18n/<locale>/`.
+2. Durante el build principal, apunta el alias `i18n` a `i18n/en` (idioma base).
+3. En `closeBundle`, ejecuta builds adicionales programaticos con `build()` de Vite,
+   cambiando el alias a cada locale.
+4. Cada idioma se escribe en `dist/<locale>`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Resultado esperado:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+dist/
+  en/
+  es/
+  pt/
+  fr/
+  de/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2) Contenido por idioma
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+El contenido de la pagina se define por locale en:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `i18n/en/content.ts`
+- `i18n/es/content.ts`
+- `i18n/pt/content.ts`
+- `i18n/fr/content.ts`
+- `i18n/de/content.ts`
+
+La app importa siempre `i18n/content`; el alias decide que archivo real se empaqueta en cada build.
+
+### 3) App de una sola pagina
+
+La pagina principal (`src/App.tsx`) renderiza "Hello World" con contenido de prueba.
+
+Adicionalmente:
+
+- Muestra el locale activo mediante la constante `__LOCALE__` inyectada por Vite.
+- Incluye un selector de idioma visible solo cuando `import.meta.env.PROD` es `true`.
+- Al cambiar idioma, guarda `preferred_locale` en cookie y recarga.
+
+### 4) Servidor Express con negociacion de idioma
+
+El servidor se implementa en `server.mjs` y sirve archivos estaticos desde `dist`.
+
+Reglas de resolucion del locale:
+
+1. Cookie `preferred_locale` (si existe y es valida).
+2. Header `Accept-Language`.
+3. Fallback a `en`.
+
+Comportamiento clave:
+
+- La URL visible no cambia: siempre se puede usar `/`.
+- El servidor selecciona internamente el archivo correcto en `dist/<locale>/...`.
+- Para HTML, ajusta dinamicamente `<html lang="...">`.
+- Incluye headers de trazabilidad:
+  - `Content-Language`: idioma finalmente servido.
+  - `X-Locale-Source`: origen de la decision (`cookie`, `accept-language`, `fallback`).
+  - `Vary: Accept-Language, Cookie` para caches intermedias.
+
+## Scripts principales
+
+- `pnpm dev`: entorno de desarrollo con Vite (locale base `en`).
+- `pnpm build`: genera todas las builds por idioma.
+- `pnpm serve:i18n`: levanta Express para servir build multi-idioma.
+
+## Flujo de ejecucion recomendado
+
+1. Build multi-idioma:
+
+```bash
+pnpm build
 ```
+
+2. Servir estaticos con negociacion de idioma:
+
+```bash
+pnpm serve:i18n
+```
+
+3. Probar en navegador:
+
+- Abrir `http://localhost:3000/`.
+- Cambiar idioma con el selector (modo build).
+- Verificar en DevTools los headers `Content-Language` y `X-Locale-Source`.
+
+## Notas tecnicas
+
+- En desarrollo (`pnpm dev`) no se muestra el selector porque depende de `PROD`.
+- El tipado de `__LOCALE__` esta en `src/vite-env.d.ts`.
+- La configuracion de alias para TypeScript se mantiene en `tsconfig.app.json` para que el editor resuelva `i18n/*` en local.
