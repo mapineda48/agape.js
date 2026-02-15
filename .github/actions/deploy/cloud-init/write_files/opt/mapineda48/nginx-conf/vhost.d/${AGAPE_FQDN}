@@ -1,0 +1,51 @@
+# ===============================================================
+# Security Headers - Applied to domain-specific vhost
+# This file is copied as ${AGAPE_FQDN} during deploy
+# ===============================================================
+
+# Quitar headers del upstream (Express) sin tocar la app
+proxy_hide_header X-Powered-By;
+
+# ---- HSTS: HTTP Strict Transport Security ----
+# NOTE: nginx-proxy with acme-companion automatically adds HSTS for SSL vhosts
+# Commenting this out to avoid duplicate header (detected by security audit)
+# add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+# ---- Core Security Headers ----
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "no-referrer" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header Permissions-Policy "geolocation=(self), camera=(self), microphone=(self), fullscreen=(self)" always;
+
+# X-XSS-Protection is obsolete but setting to 0 disables buggy legacy filters
+add_header X-XSS-Protection "0" always;
+
+# ---- Cross-Origin Isolation (COOP/CORP) ----
+# Required for SharedArrayBuffer / WASM threads
+# WARNING: May break OAuth popups or cross-origin integrations
+add_header Cross-Origin-Opener-Policy "same-origin" always;
+add_header Cross-Origin-Resource-Policy "same-origin" always;
+
+# ---- Content Security Policy ----
+# Optimized for Vite + WASM applications
+# CDN_HOST is substituted during cloud-init rendering
+add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; script-src-attr 'none'; style-src 'self' https: 'unsafe-inline'; img-src 'self' data: blob: ${AGAPE_CDN_HOST}; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' data: blob: wss:; frame-src 'self' blob:; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests;" always;
+
+# ===============================================================
+# NOTE: Rate Limiting
+# ===============================================================
+# Rate limiting requires limit_req_zone/limit_conn_zone directives in the
+# http{} context, which cannot be configured via vhost.d/ in nginx-proxy.
+# To enable rate limiting, you would need to either:
+#
+# 1. Create a custom nginx-proxy image with a custom nginx.conf
+# 2. Mount a custom nginx.conf file at /etc/nginx/nginx.conf
+# 3. Use an external rate-limiting solution (CloudFlare, fail2ban, etc.)
+#
+# Example zones that would be needed in http{}:
+#   limit_req_zone $binary_remote_addr zone=req_per_ip:10m rate=10r/s;
+#   limit_conn_zone $binary_remote_addr zone=conn_per_ip:10m;
+#
+# Then in this file you could add:
+#   limit_req zone=req_per_ip burst=20 nodelay;
+#   limit_conn conn_per_ip 20;

@@ -1,0 +1,11 @@
+# Loki Runtime Configuration
+# This file allows dynamic configuration updates without restarting Loki
+# Loki checks this file periodically (every 10s by default)
+
+# Per-tenant overrides (empty for single-tenant setup)
+overrides: {}
+
+# Multi-KV configuration (optional)
+# multi_kv_config:
+#   mirror_enabled: false
+#   primary: inmemory

@@ -1,0 +1,27 @@
+[Unit]
+Description=Grafana Loki Log Aggregator
+Documentation=https://grafana.com/docs/loki/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/loki \
+    --config.file=/etc/loki/config.yml \
+    --config.expand-env=true
+
+# Restart configuration
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=60
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=1G
+
+# Security hardening
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

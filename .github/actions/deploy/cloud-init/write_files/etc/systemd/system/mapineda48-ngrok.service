@@ -1,0 +1,19 @@
+[Unit]
+Description=Ngrok dev tunnel (fixed hostname)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ngrok http 8081 \
+  --hostname=${NGROK_DEV_DOMAIN} \
+  --log=stdout \
+  --log-level=info
+Restart=no
+KillSignal=SIGINT
+TimeoutStopSec=5
+StandardOutput=append:/var/log/ngrok.log
+StandardError=append:/var/log/ngrok.log
+
+[Install]
+# Sin WantedBy (inicio manual)

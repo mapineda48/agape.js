@@ -1,0 +1,95 @@
+version: "3.9"
+
+networks:
+  mapineda48-net:
+    name: mapineda48-net
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.9
+    container_name: mapineda48-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      TRUST_DOWNSTREAM_PROXY: "false"
+    volumes:
+      # Persistent certificates in Azure Blob Storage (survives redeploys)
+      - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs
+      # Local disk: configuration from repo (recreated on each deploy)
+      - /opt/mapineda48/nginx-conf/vhost.d:/etc/nginx/vhost.d
+      - /opt/mapineda48/nginx-conf/html:/usr/share/nginx/html
+      # Docker socket for dynamic configuration
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - mapineda48-net
+    restart: unless-stopped
+
+  nginx-proxy-acme:
+    image: nginxproxy/acme-companion:2.6
+    container_name: mapineda48-acme
+    environment:
+      DEFAULT_EMAIL: ${AGAPE_EMAIL_ACME}
+      ACME_CA_URI: https://acme-v02.api.letsencrypt.org/directory
+      NGINX_PROXY_CONTAINER: mapineda48-proxy
+    volumes:
+      # Persistent certificates and ACME state in Azure Blob Storage
+      - /mnt/deploy/vm/agape.js/docker/certs:/etc/nginx/certs:rw
+      - /mnt/deploy/vm/agape.js/docker/acme:/etc/acme.sh
+      # Local disk: configuration from repo (same as nginx-proxy)
+      - /opt/mapineda48/nginx-conf/vhost.d:/etc/nginx/vhost.d
+      - /opt/mapineda48/nginx-conf/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - mapineda48-net
+    depends_on:
+      - nginx-proxy
+    restart: unless-stopped
+
+  # Valkey: Open-source Redis alternative (Linux Foundation)
+  # https://valkey.io/
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: mapineda48-valkey
+    networks:
+      - mapineda48-net
+    restart: unless-stopped
+
+  socket-bridge:
+    container_name: mapineda48-socket-bridge
+    image: alpine/socat
+    command: >
+      -d -d TCP-LISTEN:8081,fork,reuseaddr UNIX-CONNECT:/run/mapineda48.sock
+    volumes:
+      - /run/mapineda48.sock:/run/mapineda48.sock:ro
+    networks:
+      - mapineda48-net
+    restart: unless-stopped
+
+  agape-app:
+    image: mapineda48/agape.js:develop
+    expose:
+      - "3000"
+    deploy:
+      replicas: ${AGAPE_REPLICAS}
+    environment:
+      VIRTUAL_HOST: ${AGAPE_FQDN}
+      LETSENCRYPT_HOST: ${AGAPE_FQDN}
+      LETSENCRYPT_EMAIL: ${AGAPE_EMAIL_ACME}
+      DATABASE_URI: ${NEON_DATABASE_URI}
+      AZURE_CONNECTION_STRING: ${STORAGE_CONNECTION_STRING}
+      AGAPE_CDN_HOST: ${AGAPE_CDN_HOST}
+      AGAPE_ADMIN: ${AGAPE_ADMIN}
+      AGAPE_PASSWORD: ${AGAPE_PASSWORD}
+      AGAPE_SECRET: ${AGAPE_SECRET}
+      AGAPE_HOOK: ${AGAPE_HOOK}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      CACHE_URL: redis://valkey:6379
+      NODE_ENV: production
+    depends_on:
+      - nginx-proxy
+      - nginx-proxy-acme
+      - valkey
+    networks:
+      - mapineda48-net
+    restart: unless-stopped

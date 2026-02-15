@@ -1,0 +1,23 @@
+[Unit]
+Description=Mapineda48 per-connection handler
+# Se activa automáticamente por mapineda48.socket
+
+[Service]
+Type=simple
+# Conecta stdin/stdout del proceso al socket aceptado
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+
+# Ejecuta el handler Bash
+ExecStart=/opt/mapineda48/scripts/socket.sh
+
+# Seguridad adicional (opcional)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=yes
+
+# Usuario (puedes cambiarlo si lo deseas)
+User=root
+Group=root

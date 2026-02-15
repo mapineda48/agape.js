@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <title>Host no configurado</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+      display:grid;
+      place-items:center;
+      min-height:100vh;
+      background:linear-gradient(135deg,#0a0f1a 0%,#1a1f3a 50%,#0f1629 100%);
+      color:#e8eefc;
+      padding:1rem;
+    }
+    .card{
+      max-width:640px;
+      width:100%;
+      padding:2.5rem;
+      border-radius:20px;
+      background:linear-gradient(145deg,rgba(30,41,70,0.9),rgba(15,22,41,0.95));
+      box-shadow:
+        0 25px 50px -12px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.05),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      backdrop-filter:blur(10px);
+      text-align:center;
+    }
+    .icon{
+      width:80px;
+      height:80px;
+      margin:0 auto 1.5rem;
+      background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      box-shadow:0 10px 40px rgba(59,130,246,0.3);
+    }
+    .icon svg{width:40px;height:40px;stroke:#fff;stroke-width:2;fill:none}
+    h1{
+      font-size:1.75rem;
+      font-weight:700;
+      margin-bottom:1rem;
+      background:linear-gradient(135deg,#fff,#a5b4fc);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    p{
+      margin:0.75rem 0;
+      opacity:0.85;
+      line-height:1.6;
+      font-size:1rem;
+    }
+    code{
+      background:rgba(139,92,246,0.2);
+      padding:0.2rem 0.5rem;
+      border-radius:6px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;
+      font-size:0.875rem;
+      border:1px solid rgba(139,92,246,0.3);
+    }
+    .hint{
+      margin-top:1.5rem;
+      padding-top:1.5rem;
+      border-top:1px solid rgba(255,255,255,0.1);
+      font-size:0.875rem;
+      opacity:0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+    </div>
+    <h1>Dominio no configurado</h1>
+    <p>Este servidor requiere un <b>Host</b> válido para mostrar contenido.</p>
+    <p>Si esperabas ver un sitio aquí, verifica la configuración DNS o el virtual host.</p>
+    <p class="hint">Si estás probando con <code>curl -H "Host: ..."</code>, este es el comportamiento esperado.</p>
+  </div>
+</body>
+</html>

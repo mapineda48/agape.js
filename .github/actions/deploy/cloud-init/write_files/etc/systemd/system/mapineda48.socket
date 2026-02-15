@@ -1,0 +1,13 @@
+[Unit]
+Description=Mapineda48 UNIX Socket (systemd-managed)
+
+[Socket]
+# Coloca el socket en /run (tmpfs, se recrea a cada boot)
+ListenStream=/run/mapineda48.sock
+SocketMode=0660
+SocketUser=root
+SocketGroup=root
+Accept=yes
+
+[Install]
+WantedBy=sockets.target

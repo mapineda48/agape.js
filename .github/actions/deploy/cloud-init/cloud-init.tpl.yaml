@@ -1,0 +1,88 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  - fuse3
+  - micro
+  - unzip
+  - nginx
+
+write_files:
+  - path: /etc/fuse.conf
+    append: true
+    content: |
+      user_allow_other
+
+runcmd:
+  # Monitoring
+  - rm -f /etc/nginx/sites-enabled/default
+  - ln -sf /etc/nginx/sites-available/monitoring /etc/nginx/sites-enabled/monitoring
+  - nginx -t
+  - systemctl enable --now nginx
+  - systemctl restart nginx
+
+  - curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+  - echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" |  tee /etc/apt/sources.list.d/ngrok.list
+  - apt-get update
+  - apt-get install -y ngrok
+  - ngrok config add-authtoken ${NGROK_AUTHTOKEN}
+
+  # https://github.com/google/cadvisor
+  - wget https://github.com/google/cadvisor/releases/download/v0.53.0/cadvisor-v0.53.0-linux-amd64 -O /usr/local/bin/cadvisor
+  - chmod +x /usr/local/bin/cadvisor
+  - systemctl enable --now mapineda48-cadvisor
+
+  # https://github.com/prometheus/node_exporter/releases
+  - wget https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz -O /tmp/node_exporter.tar.gz
+  - tar xvfz /tmp/node_exporter.tar.gz -C /tmp --strip-components=1
+  - install -m 0755 /tmp/node_exporter /usr/local/bin/node_exporter
+  - systemctl enable --now mapineda48-node-exporter
+
+  # https://prometheus.io/download/
+  # https://github.com/prometheus/prometheus/releases
+  - wget https://github.com/prometheus/prometheus/releases/download/v3.7.3/prometheus-3.7.3.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
+  - tar xvfz /tmp/prometheus.tar.gz -C /tmp --strip-components=1
+  - install -m 0755 /tmp/prometheus /usr/local/bin/prometheus
+  - mkdir -p /var/lib/prometheus /etc/prometheus/rules
+  - systemctl enable --now mapineda48-prometheus
+
+  # https://github.com/grafana/loki/releases
+  - wget https://github.com/grafana/loki/releases/download/v3.5.7/loki-linux-amd64.zip -O /tmp/loki.zip
+  - unzip /tmp/loki.zip -d /tmp
+  - install -m 0755 /tmp/loki-linux-amd64 /usr/local/bin/loki
+  - mkdir -p /var/lib/loki/{tsdb-index,tsdb-cache,chunks,wal,compactor} /var/log/cadvisor
+  - systemctl enable --now mapineda48-loki
+
+  # Install Blobfuse2 (BEFORE Docker to ensure mount availability)
+  - curl -L https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -o packages-microsoft-prod.deb
+  - dpkg -i packages-microsoft-prod.deb
+  - apt-get update
+  - apt-get install -y blobfuse2
+  - systemctl enable --now mapineda48-blobfuse2
+  - /opt/mapineda48/scripts/blobfuse2.sh
+  - /opt/mapineda48/scripts/nginx-init.sh
+
+  # Install Docker (after blobfuse2 for drop-in to work correctly)
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io
+  - systemctl daemon-reload  # Load Docker drop-in
+  - systemctl restart docker  # Restart Docker with new dependencies
+  - /opt/mapineda48/scripts/docker-plugin-loki.sh
+
+  # Enable services and start Docker Compose
+  - systemctl enable --now mapineda48.socket
+
+  # Set API replicas to number of processors
+  - tmp="$(mktemp)" && AGAPE_REPLICAS="$(nproc)" envsubst '${AGAPE_REPLICAS}' < /opt/mapineda48/compose/docker-compose.yml > "$tmp" && mv "$tmp" /opt/mapineda48/compose/docker-compose.yml
+
+  # Start Docker Compose
+  - docker compose -f /opt/mapineda48/compose/docker-compose.yml up -d

@@ -1,0 +1,54 @@
+# Git / CI
+.git
+.gitignore
+.github
+
+# Tooling / editor
+.vscode
+.idea
+.DS_Store
+
+# AI agent metadata
+.agent
+.opencode
+
+# Dependencies / package managers
+node_modules
+**/node_modules
+.pnpm-store
+.pnp.*
+
+# Build outputs
+dist
+dist-ssr
+**/dist
+**/dist-ssr
+coverage
+.nyc_output
+
+# Caches
+.cache
+**/.cache
+.vite
+**/.vite
+.turbo
+.eslintcache
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Local env / secrets
+.env
+.env.*
+*.local
+
+# Compose overrides / runtime data
+docker-compose.override.yml
+*.sqlite
+*.sqlite3

@@ -1,0 +1,22 @@
+[Unit]
+Description=Mount Blob Storage with Blobfuse2
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/blobfuse2.yaml
+# Don't start if already mounted
+ConditionPathIsMountPoint=!/mnt/deploy
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+StandardOutput=journal+console
+StandardError=journal+console
+Restart=on-failure
+RestartSec=3
+# Note: Runs as root, uses --allow-other for container access
+ExecStartPre=/bin/mkdir -p /mnt/deploy /var/cache/blobfuse2
+ExecStartPre=/bin/sh -c 'mountpoint -q /mnt/deploy && fusermount3 -u /mnt/deploy && rm -rf /mnt/deploy/* || true'
+ExecStart=/usr/bin/blobfuse2 mount /mnt/deploy --config-file=/etc/blobfuse2.yaml --allow-other
+
+[Install]
+WantedBy=multi-user.target

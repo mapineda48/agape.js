@@ -1,0 +1,8 @@
+# Bloquear acceso directo por IP (IPv4)
+if ($host ~* "^\d{1,3}(\.\d{1,3}){3}$") { return 444; }
+
+# (opcional) Bloquear IPv6 literal
+if ($host ~* "^\[?[0-9a-f:]+\]?$") { return 444; }
+
+# Para cualquier host no configurado, cortar
+return 444;
