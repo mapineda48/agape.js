@@ -14,6 +14,14 @@ export const EXT_DATETIME = 40;
  * Clase que extiende Date con helpers de date-fns.
  */
 export default class DateTime extends Date {
+  /**
+   * Creates a DateTime instance for the current moment.
+   * Unlike Date.now() which returns a number, this returns a DateTime instance.
+   */
+  static create(): DateTime {
+    return new DateTime();
+  }
+
   addHours(hours: number): DateTime {
     return new DateTime(dfAddHours(this, hours));
   }

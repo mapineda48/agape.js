@@ -1,14 +1,57 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.web.json"
-    },
-    {
-      "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.app.json"
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "#web/*": ["web/*"],
+      "#shared/*": ["shared/*"],
+      "#services/*": ["web/__generated__/services/*"],
+      "#lib/*": ["lib/*"],
+      "#svc/*": ["services/*"],
+      "#models/*": ["models/*"]
     }
+  },
+  "include": [
+    "app",
+    "web",
+    "shared",
+    "lib",
+    "services",
+    "models",
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next"
   ]
 }

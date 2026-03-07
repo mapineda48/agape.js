@@ -5,13 +5,9 @@ import {
   MSGPACK_FILE_NAME,
 } from "#shared/rpc";
 
-// Determines the base URL depending on the environment (production or development)
+// Base URL for RPC requests - same origin (custom server handles both Next.js and RPC)
 const baseURL =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:3000/"
-    : location.origin;
-const credentials =
-  process.env.NODE_ENV === "development" ? "include" : "same-origin";
+  typeof window !== "undefined" ? location.origin : "http://localhost:3000";
 
 export default function makeClientRpc<A extends unknown[], R>(
   pathname: string,
@@ -27,7 +23,7 @@ export default function makeClientRpc<A extends unknown[], R>(
 
     const res = await fetch(url, {
       method: "POST",
-      credentials,
+      credentials: "same-origin",
       headers,
       body,
     });
@@ -36,7 +32,7 @@ export default function makeClientRpc<A extends unknown[], R>(
       throw new Error(`unsupport responde ${res.headers.get("content-type")}`);
     }
 
-    const buffer = await res.arrayBuffer();
+    const buffer = new Uint8Array(await res.arrayBuffer());
 
     const payload = decode<R>(buffer);
 

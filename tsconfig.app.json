@@ -1,23 +1,19 @@
 {
   "compilerOptions": {
-    "incremental": true,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "es2024",
+    "target": "ES2024",
+    "lib": ["ESNext"],
     "module": "ESNext",
     "moduleResolution": "node",
-    "outDir": "dist",
     "strict": true,
+    "noEmit": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "sourceMap": false,
-    "resolveJsonModule": true,
-    "types": ["node"],
-    "lib": ["ESNext"],
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
-    "rewriteRelativeImportExtensions": true,
-    "noEmit": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "types": ["node"],
     "baseUrl": ".",
     "paths": {
       "#models/*": ["models/*"],
@@ -26,6 +22,6 @@
       "#shared/*": ["shared/*"]
     }
   },
-  "include": ["bin", "services", "shared", "lib", "models"],
-  "exclude": ["dist", "web"]
+  "include": ["bin", "server.ts", "services", "shared", "lib", "models"],
+  "exclude": ["node_modules", "dist", "web", "app", ".next"]
 }

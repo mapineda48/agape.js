@@ -27,9 +27,7 @@ import type { ConnectedSocket, EventMap } from "#shared/socket";
  * - Production: Uses the current page origin
  */
 const BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:3000"
-    : location.origin;
+  typeof window !== "undefined" ? location.origin : "http://localhost:3000";
 
 // ============================================================================
 // Types
@@ -110,7 +108,7 @@ export default function createSocketClient<Events extends EventMap = any>(
       // Create Socket.IO connection
       const socket = io(url, {
         transports: ["websocket"],
-        withCredentials: process.env.NODE_ENV === "development",
+        withCredentials: true,
       });
 
       // Track wrapped handlers for proper cleanup
