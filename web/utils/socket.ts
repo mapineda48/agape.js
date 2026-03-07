@@ -27,9 +27,11 @@ import type { ConnectedSocket, EventMap } from "#shared/socket";
  * - Production: Uses the current page origin
  */
 const BASE_URL =
-  process.env.NODE_ENV === "development"
+  typeof window === "undefined"
     ? "http://localhost:3000"
-    : location.origin;
+    : process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : location.origin;
 
 // ============================================================================
 // Types

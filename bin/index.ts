@@ -109,6 +109,7 @@ if (!IsDevelopment) {
   // Path to frontend Vite build output
   const frontendRoot = path.resolve("web/www");
   const indexHtml = path.resolve("web/index.html");
+  const ssgRoot = path.resolve("web/ssg");
 
   // Enable GZIP compression for responses
   app.use(compression());
@@ -121,6 +122,32 @@ if (!IsDevelopment) {
       immutable: true,
     }),
   );
+
+  // SSR routes: render pages on the server per request
+  const ssrServerPath = path.resolve("web/server/entry-server.js");
+  const { existsSync } = await import("node:fs");
+
+  if (existsSync(ssrServerPath)) {
+    const ssrModule = await import(ssrServerPath);
+    const { createSSRHandlers } = await import("#lib/ssr/middleware");
+
+    const ssrHandlers = createSSRHandlers(ssrModule, indexHtml);
+
+    for (const [pattern, handler] of ssrHandlers) {
+      app.get(pattern, handler);
+      logger.scope("SSR").info(`Registered SSR route: ${pattern}`);
+    }
+  }
+
+  // SSG routes: serve pre-rendered static HTML files
+  if (existsSync(ssgRoot)) {
+    app.use(
+      express.static(ssgRoot, {
+        maxAge: "1h",
+        extensions: ["html"],
+      }),
+    );
+  }
 
   // Fallback to SPA entrypoint (for client-side routing)
   app.get(/.*/, (_req, res) => {

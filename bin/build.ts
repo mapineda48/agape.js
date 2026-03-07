@@ -13,6 +13,7 @@
 import fs from "fs-extra";
 import path from "node:path";
 import { glob } from "node:fs/promises";
+import { execSync } from "node:child_process";
 import chalk from "chalk";
 import { name, version, type, dependencies } from "../package.json";
 import { compilerOptions } from "../tsconfig.app.json";
@@ -458,6 +459,76 @@ async function generatePermissions(): Promise<void> {
 }
 
 /**
+ * Builds the SSR server bundle using Vite.
+ *
+ * Produces a Node.js-compatible module at dist/web/server/entry-server.js
+ * that can render pages to HTML strings.
+ */
+async function buildSSR(): Promise<void> {
+  console.log(chalk.blue("🖥️  Building SSR server bundle..."));
+
+  try {
+    execSync("pnpm vite build --ssr entry-server.tsx --outDir ../dist/web/server", {
+      stdio: "inherit",
+    });
+
+    console.log(chalk.green("✓ SSR server bundle built\n"));
+  } catch (error) {
+    console.error(chalk.red("✗ Failed to build SSR bundle:"), error);
+    throw error;
+  }
+}
+
+/**
+ * Generates static HTML for SSG pages.
+ *
+ * Imports the SSR server bundle and uses it to pre-render all pages
+ * marked with `rendering: "ssg"` into static HTML files.
+ */
+async function generateStaticPages(): Promise<void> {
+  console.log(chalk.blue("📄 Generating static pages (SSG)..."));
+
+  try {
+    const serverEntryPath = path.resolve("dist/web/server/entry-server.js");
+
+    if (!fs.existsSync(serverEntryPath)) {
+      console.log(chalk.gray("  ⊘ No SSR bundle found, skipping SSG"));
+      console.log(chalk.green("✓ SSG step complete\n"));
+      return;
+    }
+
+    const ssrModule = await import(serverEntryPath);
+    const staticPaths: string[] = ssrModule.getStaticPaths();
+
+    if (staticPaths.length === 0) {
+      console.log(chalk.gray("  ⊘ No SSG pages found"));
+      console.log(chalk.green("✓ SSG step complete\n"));
+      return;
+    }
+
+    const templatePath = path.resolve("dist/web/index.html");
+    const outputDir = path.resolve("dist/web/ssg");
+
+    const { generateStaticPages: generate } = await import(
+      "../lib/ssr/middleware"
+    );
+
+    const generated = await generate(ssrModule, templatePath, outputDir);
+
+    for (const p of generated) {
+      console.log(chalk.gray(`  ✓ Pre-rendered: ${p}`));
+    }
+
+    console.log(
+      chalk.green(`✓ Generated ${generated.length} static pages\n`),
+    );
+  } catch (error) {
+    console.error(chalk.red("✗ Failed to generate static pages:"), error);
+    throw error;
+  }
+}
+
+/**
  * Main build script execution.
  *
  * Runs all post-build tasks in sequence:
@@ -467,6 +538,8 @@ async function generatePermissions(): Promise<void> {
  * 4. Move source maps
  * 5. Generate production package.json
  * 6. Generate permissions map
+ * 7. Build SSR server bundle
+ * 8. Generate static pages (SSG)
  */
 async function main(): Promise<void> {
   console.log(chalk.bold.cyan("\n🚀 Running post-build tasks...\n"));
@@ -480,6 +553,8 @@ async function main(): Promise<void> {
     await runTask(moveSourceMaps);
     await runTask(generateProductionPackageJson);
     await runTask(generatePermissions);
+    await runTask(buildSSR);
+    await runTask(generateStaticPages);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(

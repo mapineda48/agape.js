@@ -7,7 +7,7 @@ import virtualModulePlugin from "./lib/vite/vite-plugin";
 const cwd = process.cwd();
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
     react({
       babel: {
@@ -26,13 +26,20 @@ export default defineConfig({
     },
   },
 
+  ssr: {
+    // Externalize node_modules but bundle browser-oriented deps
+    noExternal: isSsrBuild
+      ? ["msgpackr", "socket.io-client", "engine.io-client", "framer-motion"]
+      : undefined,
+  },
+
   build: {
-    outDir: path.resolve("dist/web/www/"),
+    outDir: path.resolve(isSsrBuild ? "dist/web/server/" : "dist/web/www/"),
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
       output: {
-        entryFileNames: "[name].[hash].js",
+        entryFileNames: isSsrBuild ? "[name].js" : "[name].[hash].js",
 
         chunkFileNames: (chunkInfo) => {
           if (chunkInfo.name.startsWith("vendor/")) {
@@ -72,4 +79,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
