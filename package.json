@@ -8,8 +8,11 @@
     "app": "tsx watch --tsconfig ./tsconfig.app.json bin/index.ts",
     "web": "vite",
     "test:web": "vitest --project frontend",
-    "tsc:app": "tsc -p ./tsconfig.app.json",
-    "tsc:web": "tsc -p ./tsconfig.web.json"
+    "tsc:app": "tsc -p ./tsconfig.app.json  --noEmit true --incremental true",
+    "tsc:web": "tsc -p ./tsconfig.web.json",
+    "prebuild": "rimraf dist && tsc -p ./tsconfig.app.json && vite build",
+    "drizzle:push": "drizzle-kit push",
+    "build": "tsx bin/build.ts"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.30.0",
@@ -71,6 +74,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-pdf": "^10.3.0",
+    "rimraf": "^6.1.3",
     "socket.io-client": "^4.8.3",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",

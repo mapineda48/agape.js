@@ -25,7 +25,7 @@ import ts from "typescript";
 // ============================================================================
 
 /** Root directory for service files */
-const SVC_DIR = path.resolve("svc");
+const SVC_DIR = path.resolve("services");
 
 /** Output file path */
 const OUTPUT_FILE = path.resolve("lib/rpc/permissions.generated.ts");

@@ -129,7 +129,7 @@ function resolveRelativePath(spec: string, basedir: string): ResolvedPath {
   for (const ext of SUPPORTED_EXTENSIONS) {
     const indexPath = path.join(base, `index${ext}`);
     if (fs.existsSync(indexPath)) {
-      return path.posix.join(spec, `index${ext}`);
+      return `${spec}/index${ext}`;
     }
   }
 
