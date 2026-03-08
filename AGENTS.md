@@ -59,9 +59,10 @@ agape.js/
 │   ├── socket/    # Socket.IO namespace management
 │   └── vite/      # Vite plugins for virtual modules
 ├── models/        # Drizzle ORM schemas (CTI pattern)
-├── services/      # RPC endpoints (auto-discovered)
+├── services/      # RPC endpoints (auto-discovered, backend only)
 ├── shared/        # Shared frontend/backend code
-│   └── data/      # DateTime, Decimal, File types
+│   ├── data/      # DateTime, Decimal, File types
+│   └── services/  # Service contracts (type-only .d.ts for frontend)
 └── web/           # React frontend application
     ├── app/       # File-based routing pages
     └── utils/     # Components (form, router, etc.)
@@ -86,7 +87,7 @@ import logger from "#lib/log/logger";               // Path aliases
 | `#svc/*` | `services/*` | Service modules |
 | `#shared/*` | `shared/*` | Shared code |
 | `#/*` | `web/*` | Frontend modules |
-| `#services/*` | `services/*` | Virtual modules for frontend RPC |
+| `#services/*` | `shared/services/*` (web) / `services/*` (Vite runtime) | Service contracts for type-checking; Vite generates implementations at runtime |
 | `#web/*` | `web/*` | Frontend utilities |
 
 ### TypeScript
@@ -366,16 +367,29 @@ export default myEntity;
 
 ## WebSocket (Real-Time)
 
-### Server-Side
+### Service Contract (shared/services/)
+
+Event types and interfaces are defined in `shared/services/` as `.d.ts` files. Both frontend and backend import types from here:
 
 ```typescript
-// services/chat.ts
-import { registerNamespace } from "#lib/socket/namespace";
+// shared/services/chat.d.ts (type-only contract)
+import type { ConnectedSocket } from "#shared/socket";
 
-type ChatEvents = {
+export type ChatEvents = {
   "message:send": { text: string; sender: string };
   "message:received": { id: string; text: string; sender: string };
 };
+
+declare const socket: ConnectedSocket<ChatEvents>;
+export default socket;
+```
+
+### Server-Side
+
+```typescript
+// services/chat.ts (backend implementation)
+import { registerNamespace } from "#lib/socket/namespace";
+import type { ChatEvents } from "#shared/services/chat";
 
 /**
  * Public chat namespace

@@ -38,7 +38,7 @@ export default function makeClientRpc<A extends unknown[], R>(
 
     const buffer = await res.arrayBuffer();
 
-    const payload = decode<R>(buffer);
+    const payload = decode<R>(new Uint8Array(buffer));
 
     if (res.status === 200) {
       return payload;

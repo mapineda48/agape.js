@@ -9,38 +9,9 @@ import { registerNamespace } from "#lib/socket/namespace";
 import { CacheManager } from "#lib/infrastructure/CacheManager";
 import logger from "#lib/log/logger";
 import type { ConnectedSocket } from "#shared/socket";
+import type { ChatEvents } from "#shared/services/chat";
 
-// ============================================================================
-// Event Types
-// ============================================================================
-
-/** Message structure */
-export interface ChatMessage {
-  id: string;
-  text: string;
-  sender: string;
-  timestamp: number;
-}
-
-/**
- * Events emitted/received by this socket namespace.
- */
-type ChatEvents = {
-  /** Client sends a message to the server */
-  "message:send": { text: string; sender: string };
-  /** Server broadcasts message to all clients */
-  "message:received": ChatMessage;
-  /** Client notifies they are typing */
-  "user:typing": { sender: string };
-  /** Client notifies they stopped typing (e.g. sent message) */
-  "user:typing:stop": { sender: string };
-  /** Internal: socket connected */
-  "socket:connect": Record<string, never>;
-  /** Internal: socket disconnected */
-  "socket:disconnect": Record<string, never>;
-  /** Server broadcasts current online users count */
-  "users:count": { count: number };
-};
+export type { ChatMessage, ChatEvents } from "#shared/services/chat";
 
 // ============================================================================
 // Namespace Export & Logic

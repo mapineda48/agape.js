@@ -15,7 +15,7 @@ export function encode(value: unknown): Uint8Array {
   return pack(value);
 }
 
-export function decode<T = unknown>(buffer: Buffer | Uint8Array): T {
+export function decode<T = unknown>(buffer: Uint8Array): T {
   return unpack(buffer);
 }
 

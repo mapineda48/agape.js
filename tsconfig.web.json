@@ -27,7 +27,7 @@
       /* Frontend aliases */
       "#web/*": ["*"],
       "#shared/*": ["../shared/*"],
-      "#services/*": ["../services/*"]
+      "#services/*": ["../shared/services/*"]
     }
   },
   "include": ["web"],
