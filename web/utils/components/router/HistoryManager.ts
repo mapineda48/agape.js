@@ -12,6 +12,7 @@ import {
   type AuthGuardConfig,
 } from "./auth-guard";
 import type { RouteParams, INavigateTo } from "./types";
+import type { SSRPageData } from "#shared/ssr";
 import { checkError } from "#web/utils/error";
 import { isAuthenticated, session } from "#services/security/session";
 import { canAccessRoute, getRoutePermission } from "#web/utils/rbca";
@@ -94,7 +95,7 @@ export default class HistoryManager {
     return unlisten;
   }
 
-  public listenPage(cb: (page: JSX.Element) => void) {
+  public listenPage(cb: (page: JSX.Element) => void, ssrData?: SSRPageData) {
     const unlisten = this.navigator.listen((pathname, action, state: any) => {
       // Check if this navigation was denied by RBAC
       if (state?.deniedPermission) {
@@ -139,12 +140,74 @@ export default class HistoryManager {
       cb(createElement(NotFoundPage));
     });
 
-    // Primera navegación al path actual
-    const initialPath =
-      this.navigator.pathname + this.navigator.history.location.search;
-    this.navigateTo(initialPath, { replace: true });
+    if (ssrData) {
+      // SSR hydration: the page was already rendered on the server.
+      // Build the initial element using SSR data so it matches the server HTML,
+      // then do a full navigateTo to load lazy modules for subsequent navigation.
+      this.hydrateFromSSR(cb, ssrData);
+    } else {
+      // SPA: primera navegación al path actual
+      const initialPath =
+        this.navigator.pathname + this.navigator.history.location.search;
+      this.navigateTo(initialPath, { replace: true });
+    }
 
     return unlisten;
+  }
+
+  /**
+   * Handles SSR hydration: renders the initial page from server data,
+   * then eagerly loads modules so subsequent SPA navigation works.
+   */
+  private hydrateFromSSR(cb: (page: JSX.Element) => void, ssrData: SSRPageData) {
+    const { pathname, params, props } = ssrData;
+
+    // Find the page in the registry (it's a lazy loader at this point)
+    const result = this.registry.getPageWithParams(pathname);
+    if (!result) {
+      // Fallback to normal SPA navigation if page not found
+      this.navigateTo(pathname, { replace: true });
+      return;
+    }
+
+    // Load page and layout modules eagerly, then render with SSR props
+    (async () => {
+      const { page } = result;
+
+      // Lazy-load the page module
+      if (!page.Component) {
+        await page();
+      }
+
+      // Lazy-load all required layouts
+      const layoutMatches = this.registry.getLayoutPaths(pathname);
+      for (const { pattern } of layoutMatches) {
+        const layout = this.registry.getLayout(pattern);
+        if (layout && !layout.Component) {
+          await layout();
+        }
+      }
+
+      // Build element with server props (matches server render)
+      this.currentParams = params;
+      const pageProps = { ...props, params };
+      const element = this.wrapWithLayouts(
+        pathname,
+        createElement(page.Component!, pageProps),
+      );
+
+      cb(element);
+
+      // Replace history state with SSR props so POP navigation works
+      this.navigator.updateHistory(
+        pathname + this.navigator.history.location.search,
+        { state: props, replace: true },
+      );
+    })().catch((error) => {
+      checkError(error);
+      // Fallback to normal SPA navigation
+      this.navigateTo(pathname, { replace: true });
+    });
   }
 
   public navigateTo(pathname: string, opt: INavigateTo = {}) {

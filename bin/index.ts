@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import express from "express";
@@ -80,20 +81,42 @@ await import("#lib/socket").then(({ default: createSocketServer }) => {
   logger.scope("Socket").info("Socket.IO server initialized");
 });
 
-// Development-only: embed Vite dev server as middleware (single process, no CORS needed)
-// In development, Vite middleware serves frontend assets and handles HMR
+// SSR middleware (works in both dev and prod)
+const { createSSRMiddleware } = await import("#lib/ssr/middleware");
+
 if (IsDevelopment) {
+  // Development: embed Vite dev server as middleware (single process, no CORS needed)
   const { createServer: createViteServer } = await import("vite");
 
   const viteDevServer = await createViteServer({
     server: { middlewareMode: true },
-    appType: "spa",
+    appType: "custom", // We handle HTML serving ourselves for SSR
   });
 
   logger.scope("Server").info("Vite dev server running in middleware mode");
 
+  // Vite middleware handles static assets and HMR
   app.use(viteDevServer.middlewares);
-}else {
+
+  // SSR middleware intercepts SSR pages (after Vite serves static assets)
+  app.use(createSSRMiddleware({ vite: viteDevServer }));
+
+  // SPA fallback for non-SSR pages (appType: "custom" doesn't serve index.html)
+  app.use(async (req, res, next) => {
+    if (req.method !== "GET") return next();
+    const url = req.originalUrl;
+    if (url.startsWith("/api/") || url.includes(".")) return next();
+
+    try {
+      const rawHtml = fs.readFileSync(path.resolve("web/index.html"), "utf-8");
+      const html = await viteDevServer.transformIndexHtml(url, rawHtml);
+      res.setHeader("Content-Type", "text/html");
+      res.status(200).end(html);
+    } catch (error) {
+      next(error);
+    }
+  });
+} else {
   // Path to frontend Vite build output
   const frontendRoot = path.resolve("web/www");
   const indexHtml = path.resolve("web/index.html");
@@ -103,12 +126,21 @@ if (IsDevelopment) {
 
   // Serve static frontend assets with aggressive caching
   // Vite includes content hash in filenames, safe to cache for 1 year
+  // HTML files are excluded from immutable caching (they change between deployments)
   app.use(
     express.static(frontendRoot, {
-      maxAge: "1y",
-      immutable: true,
+      setHeaders(res, filePath) {
+        if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "public, max-age=0");
+        } else {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
     }),
   );
+
+  // SSR middleware for server-rendered pages
+  app.use(createSSRMiddleware({}));
 
   // Fallback to SPA entrypoint (for client-side routing)
   app.get(/.*/, (_req, res) => {

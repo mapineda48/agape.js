@@ -30,6 +30,7 @@ export default defineConfig({
     outDir: path.resolve("dist/web/www/"),
     emptyOutDir: true,
     sourcemap: true,
+    ssrManifest: true,
     rollupOptions: {
       output: {
         entryFileNames: "[name].[hash].js",

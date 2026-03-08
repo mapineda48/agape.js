@@ -458,6 +458,94 @@ async function generatePermissions(): Promise<void> {
 }
 
 /**
+ * Pre-renders SSG pages at build time.
+ *
+ * Imports the SSR entry-server bundle, finds all SSG routes,
+ * renders each one to a static HTML file, and writes it to
+ * dist/web/www/ so Express serves it as a static asset.
+ */
+async function preRenderSSGPages(): Promise<void> {
+  console.log(chalk.blue("📄 Pre-rendering SSG pages..."));
+
+  try {
+    const ssrEntryPath = path.resolve("dist/web/ssr/entry-server.js");
+
+    if (!fs.existsSync(ssrEntryPath)) {
+      console.log(chalk.gray("  ⓘ No SSR bundle found, skipping SSG pre-rendering"));
+      return;
+    }
+
+    const entryModule = await import(ssrEntryPath);
+    const { render, getSSRRoutes } = entryModule;
+
+    if (!getSSRRoutes || !render) {
+      console.log(chalk.gray("  ⓘ SSR entry missing render/getSSRRoutes exports, skipping"));
+      return;
+    }
+
+    // Read the production HTML template
+    const template = fs.readFileSync(
+      path.resolve("dist/web/index.html"),
+      "utf-8",
+    );
+
+    const routes = await getSSRRoutes();
+    const ssgRoutes = routes.filter((r: { rendering: string }) => r.rendering === "ssg");
+
+    if (ssgRoutes.length === 0) {
+      console.log(chalk.gray("  ⓘ No SSG routes found"));
+      console.log(chalk.green("✓ SSG pre-rendering complete\n"));
+      return;
+    }
+
+    let pagesRendered = 0;
+
+    for (const route of ssgRoutes) {
+      // Skip dynamic routes (contain :param) - can't pre-render without known params
+      if (route.pathname.includes(":")) {
+        console.log(chalk.yellow(`  ⚠ Skipping dynamic SSG route: ${route.pathname}`));
+        continue;
+      }
+
+      const result = await render(route.pathname);
+
+      if (!result) {
+        console.log(chalk.yellow(`  ⚠ Render returned null for: ${route.pathname}`));
+        continue;
+      }
+
+      // Build the SSR data script tag
+      const ssrDataScript = `<script id="__SSR_DATA__" type="application/json">${
+        JSON.stringify(result.ssrData).replace(/</g, "\\u003c")
+      }</script>`;
+
+      // Inject into template
+      let html = template;
+      html = html.replace("<!--ssr-outlet-->", result.html);
+      html = html.replace("<!--ssr-data-->", ssrDataScript);
+
+      // Write static HTML file: /about → dist/web/www/about/index.html
+      const outputDir = route.pathname === "/"
+        ? path.resolve("dist/web/www")
+        : path.resolve("dist/web/www", route.pathname.slice(1));
+      const outputFile = path.join(outputDir, "index.html");
+
+      await fs.ensureDir(outputDir);
+      await fs.writeFile(outputFile, html, "utf8");
+
+      console.log(chalk.gray(`  ✓ ${route.pathname} → ${path.relative("dist", outputFile)}`));
+      pagesRendered++;
+    }
+
+    console.log(chalk.gray(`  ✓ Pre-rendered ${pagesRendered} SSG pages`));
+    console.log(chalk.green("✓ SSG pre-rendering complete\n"));
+  } catch (error) {
+    console.error(chalk.red("✗ Failed to pre-render SSG pages:"), error);
+    throw error;
+  }
+}
+
+/**
  * Main build script execution.
  *
  * Runs all post-build tasks in sequence:
@@ -467,6 +555,7 @@ async function generatePermissions(): Promise<void> {
  * 4. Move source maps
  * 5. Generate production package.json
  * 6. Generate permissions map
+ * 7. Pre-render SSG pages
  */
 async function main(): Promise<void> {
   console.log(chalk.bold.cyan("\n🚀 Running post-build tasks...\n"));
@@ -480,6 +569,7 @@ async function main(): Promise<void> {
     await runTask(moveSourceMaps);
     await runTask(generateProductionPackageJson);
     await runTask(generatePermissions);
+    await runTask(preRenderSSGPages);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(

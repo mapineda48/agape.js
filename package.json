@@ -10,7 +10,7 @@
     "test:web": "vitest --project frontend",
     "tsc:app": "tsc -p ./tsconfig.app.json  --noEmit true --incremental true",
     "tsc:web": "tsc -p ./tsconfig.web.json",
-    "prebuild": "rimraf dist && tsc -p ./tsconfig.app.json && vite build",
+    "prebuild": "rimraf dist && tsc -p ./tsconfig.app.json && vite build && vite build --ssr entry-server.tsx --outDir $PWD/dist/web/ssr --config vite.config.ssr.ts",
     "drizzle:push": "drizzle-kit push",
     "build": "tsx bin/build.ts"
   },

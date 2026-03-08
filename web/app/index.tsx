@@ -2,6 +2,7 @@ import { type JSX, useEffect, useMemo, useState } from "react";
 import HistoryManager from "#web/utils/components/router/HistoryManager";
 import HistoryContext from "#web/utils/components/router/HistoryContext";
 import ErrorBoundary from "#web/utils/components/error-boundary";
+import type { SSRPageData } from "#shared/ssr";
 
 /**
  * Routes component for React apps. Subscribes to router events
@@ -10,7 +11,7 @@ import ErrorBoundary from "#web/utils/components/error-boundary";
  * Note: Global UI components (Chat, CartDrawer) are now rendered
  * in the root layout (_layout.tsx), not here.
  */
-export default function Routes() {
+export default function Routes({ ssrData }: { ssrData?: SSRPageData | null }) {
   const [state, setState] = useState<null | JSX.Element>(null);
 
   const router = useMemo(() => {
@@ -21,7 +22,7 @@ export default function Routes() {
   }, []);
 
   // Start listening for route changes
-  useEffect(() => router.listenPage(setState), []);
+  useEffect(() => router.listenPage(setState, ssrData ?? undefined), []);
 
   // Render the current page, or null until first route executes
   return (
