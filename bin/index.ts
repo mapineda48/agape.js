@@ -59,28 +59,6 @@ if (IsProduction) {
   app.disable("x-powered-by");
 }
 
-// Development-only settings (e.g., CORS for Vite dev server)
-if (IsDevelopment) {
-  const { default: cors } = await import("cors");
-
-  logger.scope("Server").info("Enabled CORS for http://localhost:5173");
-
-  const corsConfig = cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    optionsSuccessStatus: 204, // OK para preflight
-  });
-
-  app.use(corsConfig);
-
-  // Simple test endpoint to verify Express is running
-  app.get("/express", (req, res) => {
-    res.send("express");
-  });
-}
-
 /**
  * Dynamic imports for middleware after the database is initialized
  * Importing middleware before the database is initialized will throw an error
@@ -95,9 +73,6 @@ await import("#lib/rpc/middleware").then(({ default: rpcMiddleware }) => {
 const socketOptions = {
   redisUrl: CACHE_URL,
   jwtSecret: AGAPE_SECRET,
-  ...(IsDevelopment && {
-    cors: { origin: "http://localhost:5173", credentials: true },
-  }),
 };
 
 await import("#lib/socket").then(({ default: createSocketServer }) => {
@@ -105,7 +80,20 @@ await import("#lib/socket").then(({ default: createSocketServer }) => {
   logger.scope("Socket").info("Socket.IO server initialized");
 });
 
-if (!IsDevelopment) {
+// Development-only: embed Vite dev server as middleware (single process, no CORS needed)
+// In development, Vite middleware serves frontend assets and handles HMR
+if (IsDevelopment) {
+  const { createServer: createViteServer } = await import("vite");
+
+  const viteDevServer = await createViteServer({
+    server: { middlewareMode: true },
+    appType: "spa",
+  });
+
+  logger.scope("Server").info("Vite dev server running in middleware mode");
+
+  app.use(viteDevServer.middlewares);
+}else {
   // Path to frontend Vite build output
   const frontendRoot = path.resolve("web/www");
   const indexHtml = path.resolve("web/index.html");

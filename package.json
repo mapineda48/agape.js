@@ -7,7 +7,9 @@
     "tsx": "tsx watch --tsconfig ./tsconfig.app.json",
     "app": "tsx watch --tsconfig ./tsconfig.app.json bin/index.ts",
     "web": "vite",
-    "test:web": "vitest --project frontend"
+    "test:web": "vitest --project frontend",
+    "tsc:app": "tsc -p ./tsconfig.app.json",
+    "tsc:web": "tsc -p ./tsconfig.web.json"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.30.0",
