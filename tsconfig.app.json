@@ -27,5 +27,5 @@
     }
   },
   "include": ["bin", "services", "shared", "lib", "models"],
-  "exclude": ["dist", "web"]
+  "exclude": ["dist", "web", "**/*.test.ts", "**/*.test.tsx"]
 }
