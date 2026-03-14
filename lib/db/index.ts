@@ -4,7 +4,28 @@ import applyMigrations from "./migrations/applyMigrations";
 import Schema from "./schema";
 import { syncRootUserPg } from "./migrations/syncRootUserPg";
 
-export let db: Database = null as any;
+let _db: Database | null = null;
+
+/**
+ * Returns the initialized database instance.
+ * Throws a descriptive error if the database has not been initialized yet.
+ *
+ * Prefer this over the legacy `db` export for better error messages and type safety.
+ */
+export function getDb(): Database {
+  if (!_db) {
+    throw new Error("Database not initialized. Call initDatabase() first.");
+  }
+  return _db;
+}
+
+/**
+ * Legacy export for backwards compatibility.
+ * Prefer `getDb()` for new code — it provides a clear error if uninitialized.
+ *
+ * @deprecated Use `getDb()` instead.
+ */
+export { _db as db };
 
 /**
  * Configuration options for the database initialization.
@@ -45,7 +66,7 @@ export default async function initDatabase(
   connectionString: string,
   config: DatabaseConfig = {},
 ) {
-  if (db) {
+  if (_db) {
     throw new Error("Database already initialized");
   }
 
@@ -66,9 +87,9 @@ export default async function initDatabase(
   // );
 
   // Initialize the Drizzle ORM instance
-  db = drizzle(pool);
+  _db = drizzle(pool);
 
-  return db;
+  return _db;
 }
 
 /**

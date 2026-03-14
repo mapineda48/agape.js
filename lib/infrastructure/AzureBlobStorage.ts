@@ -33,6 +33,15 @@ export default class AzureBlobStorage {
     return hostCdn ? hostCdn : hostname;
   }
 
+  /**
+   * Resets the static state (for testing only).
+   * After calling this, `connect()` must be called again before using the class.
+   */
+  static reset(): void {
+    this.hostCdn = undefined as any;
+    this.containerClient = undefined as any;
+  }
+
   static async uploadFile(dir: string, file: File): Promise<string> {
     const stream: Stream.Readable = file.stream() as any;
 

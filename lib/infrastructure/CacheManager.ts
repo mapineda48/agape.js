@@ -82,6 +82,14 @@ export class CacheManager {
     return this.instance;
   }
 
+  /**
+   * Resets the singleton instance (for testing only).
+   * Callers should ensure the previous instance is disconnected before calling this.
+   */
+  public static reset(): void {
+    this.instance = null;
+  }
+
   /** Obtén la instancia ya inicializada */
   public static get(): CacheManager {
     if (!this.instance) {

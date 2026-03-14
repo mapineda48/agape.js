@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { db } from "#lib/db";
+import { getDb } from "#lib/db";
 import securityUser from "#models/security/user";
 import { verifyPassword } from "#lib/security/password";
 import user from "#models/user";
@@ -25,7 +25,7 @@ const userSessionSelect = {
  * Joins securityUser -> user -> person.
  */
 function buildUserSessionQuery() {
-  return db
+  return getDb()
     .select(userSessionSelect)
     .from(securityUser)
     .innerJoin(user, eq(user.id, securityUser.userId))
@@ -36,7 +36,7 @@ function buildUserSessionQuery() {
  * Obtiene los permisos combinados de todos los roles de un usuario.
  */
 async function getUserPermissions(userId: number): Promise<string[]> {
-  const roles = await db
+  const roles = await getDb()
     .select({
       permissions: securityRole.permissions,
     })
