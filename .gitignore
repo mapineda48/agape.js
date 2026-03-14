@@ -12,6 +12,24 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Certificates and keys
+*.pem
+*.key
+
+# Claude Code
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
