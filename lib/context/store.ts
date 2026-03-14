@@ -57,7 +57,9 @@ export function getStore(): IContext {
 
   if (!store) {
     throw new Error(
-      "No hay contexto activo (¿faltó runContext en el request/handler?)",
+      "Cannot access context outside of a request scope. " +
+        "Ensure this code runs within runContext() " +
+        "(RPC handler or Socket.IO event).",
     );
   }
 
@@ -81,4 +83,34 @@ export function getStoreOrNull(): IContext | null {
  */
 export function hasContext(): boolean {
   return als.getStore() !== undefined;
+}
+
+/**
+ * Asserts that a context is currently active and returns it.
+ *
+ * Use this in service functions to explicitly verify they are running
+ * within a request scope. Provides a clear error when the assertion fails,
+ * making debugging easier during development.
+ *
+ * @throws Error if called outside of a runContext callback
+ * @returns The current context
+ *
+ * @example
+ * ```typescript
+ * import { assertContext } from "#lib/context";
+ *
+ * export async function sensitiveOperation() {
+ *   const ctx = assertContext();
+ *   // ctx is guaranteed to be a valid IContext here
+ * }
+ * ```
+ */
+export function assertContext(): IContext {
+  const store = getStoreOrNull();
+  if (!store) {
+    throw new Error(
+      "Context assertion failed: not running within a request scope.",
+    );
+  }
+  return store;
 }
