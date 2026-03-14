@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { withValidation } from "#lib/rpc/validation";
 import type Decimal from "#shared/data/Decimal";
 
 /**
@@ -22,3 +24,15 @@ export function sayHello(
 
   return Promise.resolve(`Hello ${fullName}`);
 }
+
+/**
+ * Public endpoint with input validation.
+ * Demonstrates using withValidation to attach a Zod schema.
+ * @public
+ */
+export const addNumbers = withValidation(
+  z.tuple([z.number(), z.number()]),
+  (a: number, b: number) => {
+    return a + b;
+  },
+);

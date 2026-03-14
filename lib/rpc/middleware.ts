@@ -16,6 +16,7 @@ import { runContext, type IContext } from "#lib/context";
 import type { UserPayload } from "#lib/context";
 import parseError from "./error";
 import { decodeArgs } from "./args";
+import { getSchema } from "./validation";
 import { CONTENT_TYPES } from "#shared/rpc";
 import { HTTP_STATUS } from "./constants";
 import { isForbiddenError, isUnauthorizedError } from "./types";
@@ -189,6 +190,20 @@ export function createRpcMiddleware(
         }
 
         const args = await decodeArgs(req);
+
+        // Validate arguments against schema if one is attached
+        const schema = getSchema(handler);
+        if (schema) {
+          const parseResult = schema.safeParse(args);
+          if (!parseResult.success) {
+            res.set("Content-Type", CONTENT_TYPES.MSGPACK);
+            res.status(HTTP_STATUS.BAD_REQUEST).send(
+              encode({ message: "Validation failed", issues: parseResult.error.issues }),
+            );
+            return;
+          }
+        }
+
         const result = await handler.call(null, ...args);
         sendSuccess(res, result);
       } catch (error) {
