@@ -13,7 +13,7 @@ import {
 } from "drizzle-orm";
 import { schema } from "./schema";
 import { dateTime } from "../lib/db/custom-types";
-import DateTime from "#shared/data/DateTime";
+import DateTime from "@mapineda48/agape/data/DateTime";
 import user from "./user";
 import { addressTypeEnum } from "./enums";
 

@@ -1,7 +1,7 @@
 import { text, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { dateTime } from "../lib/db/custom-types";
-import DateTime from "#shared/data/DateTime";
+import DateTime from "@mapineda48/agape/data/DateTime";
 import schema from "./schema";
 
 /**

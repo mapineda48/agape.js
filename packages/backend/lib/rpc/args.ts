@@ -5,9 +5,9 @@ import {
   type Part,
   type File as FormidableFile,
 } from "formidable";
-import { decode } from "#shared/msgpackr";
+import { decode } from "@mapineda48/agape/msgpackr";
 import type { RpcRequest } from "./types";
-import { CONTENT_TYPES } from "#shared/rpc";
+import { CONTENT_TYPES } from "@mapineda48/agape/rpc";
 
 /** Directory for temporary file uploads */
 const UPLOAD_DIR = os.tmpdir();

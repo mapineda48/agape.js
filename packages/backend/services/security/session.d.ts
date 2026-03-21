@@ -1,4 +1,4 @@
-import type { IUserSession, LoginRequest } from "#shared/security/types";
+import type { IUserSession, LoginRequest } from "@mapineda48/agape/security/types";
 
 export function login(request: LoginRequest): Promise<IUserSession>;
 export function isAuthenticated(): Promise<IUserSession | null>;

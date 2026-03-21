@@ -23,8 +23,7 @@
     "paths": {
       "#models/*": ["models/*"],
       "#lib/*": ["lib/*"],
-      "#svc/*": ["services/*"],
-      "#shared/*": ["../shared/*"]
+      "#svc/*": ["services/*"]
     }
   },
   "include": ["bin", "services", "lib", "models"],

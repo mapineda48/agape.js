@@ -35,8 +35,8 @@
 
 import EventEmitter from "node:events";
 import type { Namespace, Socket } from "socket.io";
-import { encode, decode } from "#shared/msgpackr";
-import type { ConnectedSocket, EventMap } from "#shared/socket";
+import { encode, decode } from "@mapineda48/agape/msgpackr";
+import type { ConnectedSocket, EventMap } from "@mapineda48/agape/socket";
 import type { IContext } from "#lib/context";
 import { runSocketContext, getContextFromSocket } from "./context";
 

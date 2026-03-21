@@ -1,6 +1,6 @@
 import { customType } from "drizzle-orm/pg-core";
-import Decimal from "#shared/data/Decimal";
-import DateTime from "#shared/data/DateTime";
+import Decimal from "@mapineda48/agape/data/Decimal";
+import DateTime from "@mapineda48/agape/data/DateTime";
 
 // ============================================================================
 // Interfaces para Snapshots (Desnormalización Controlada)

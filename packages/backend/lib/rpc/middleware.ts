@@ -11,13 +11,13 @@
  */
 
 import type { Request, Response, NextFunction } from "express";
-import { encode } from "#shared/msgpackr";
+import { encode } from "@mapineda48/agape/msgpackr";
 import { runContext, type IContext } from "#lib/context";
 import type { UserPayload } from "#lib/context";
 import parseError from "./error";
 import { decodeArgs } from "./args";
 import { getSchema } from "./validation";
-import { CONTENT_TYPES } from "#shared/rpc";
+import { CONTENT_TYPES } from "@mapineda48/agape/rpc";
 import { HTTP_STATUS } from "./constants";
 import { isForbiddenError, isUnauthorizedError } from "./types";
 

@@ -8,10 +8,10 @@
 import { registerNamespace } from "#lib/socket/namespace";
 import { CacheManager } from "#lib/infrastructure/CacheManager";
 import logger from "#lib/log/logger";
-import type { ConnectedSocket } from "#shared/socket";
-import type { ChatEvents } from "#shared/services/chat";
+import type { ConnectedSocket } from "@mapineda48/agape/socket";
+import type { ChatEvents } from "@mapineda48/agape/services/chat";
 
-export type { ChatMessage, ChatEvents } from "#shared/services/chat";
+export type { ChatMessage, ChatEvents } from "@mapineda48/agape/services/chat";
 
 // ============================================================================
 // Namespace Export & Logic

@@ -17,14 +17,14 @@ import express, { type Response } from "express";
 
 import Jwt from "./Jwt";
 import ctx, { type IContext } from "../context";
-import { decode, encode } from "#shared/msgpackr";
+import { decode, encode } from "@mapineda48/agape/msgpackr";
 import {
   findUserByCredentials,
   findUserById,
   type IUserSession,
 } from "#svc/security/user";
-import { routes } from "#shared/security/route";
-import type { LoginRequest } from "#shared/security/types";
+import { routes } from "@mapineda48/agape/security/route";
+import type { LoginRequest } from "@mapineda48/agape/security/types";
 
 // ============================================================================
 // Constants

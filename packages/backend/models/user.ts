@@ -13,7 +13,7 @@ import {
   type InferSelectModel,
 } from "drizzle-orm";
 import { dateTime } from "../lib/db/custom-types";
-import DateTime from "#shared/data/DateTime";
+import DateTime from "@mapineda48/agape/data/DateTime";
 import documentType from "./documentType";
 import { userTypeEnum } from "./enums";
 import { userAddress } from "./address";

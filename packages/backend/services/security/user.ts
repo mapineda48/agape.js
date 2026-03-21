@@ -5,7 +5,7 @@ import { verifyPassword } from "#lib/security/password";
 import user from "#models/user";
 import person from "#models/person";
 import { securityRole, securityUserRole } from "#models/security/role";
-import type { IUserSession } from "#shared/security/types";
+import type { IUserSession } from "@mapineda48/agape/security/types";
 
 export type { IUserSession };
 
