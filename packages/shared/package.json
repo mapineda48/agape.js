@@ -12,7 +12,7 @@
     "access": "restricted"
   },
   "exports": {
-    "./*.ts": "./*.ts",
+    "./*.js": "./*.js",
     "./*": "./*.js"
   },
   "scripts": {

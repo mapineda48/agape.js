@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { glob } from "node:fs/promises";
 import chalk from "chalk";
 import { name, version, type, dependencies } from "../package.json";
-import { dependencies as sharedDependencies } from "../../shared/package.json";
+import { version as sharedVersion } from "../../shared/package.json";
 import { compilerOptions } from "../tsconfig.json";
 import {
   buildPermissionMap,
@@ -94,7 +94,13 @@ async function flattenTscOutput(): Promise<void> {
       console.log(chalk.gray("  ✓ Flattened dist/backend/ → dist/"));
     }
 
-    // dist/shared/ is kept — #shared/* resolves here via package.json imports
+    // Remove dist/shared/ — production resolves #shared/* via @mapineda48/agape npm package
+    const sharedDist = path.join(DIST, "shared");
+    if (fs.existsSync(sharedDist)) {
+      await fs.remove(sharedDist);
+      console.log(chalk.gray("  ✓ Removed dist/shared/ (resolved via npm in production)"));
+    }
+
     console.log(chalk.green("✓ tsc output flattened\n"));
   } catch (error) {
     console.error(chalk.red("✗ Failed to flatten tsc output:"), error);
@@ -217,23 +223,25 @@ async function generateProductionPackageJson(): Promise<void> {
   console.log(chalk.blue("📝 Generating production package.json..."));
 
   try {
-    // Merge backend + shared deps for production (shared is bundled inline)
+    // Remove workspace reference, add published shared package as real dependency
     const backendDeps = Object.fromEntries(
       Object.entries(dependencies).filter(([key]) => key !== "@mapineda48/agape"),
     );
-    const allDependencies = { ...backendDeps, ...sharedDependencies };
 
     const productionPackage = {
       name,
       version,
       type,
-      dependencies: allDependencies,
+      dependencies: {
+        ...backendDeps,
+        "@mapineda48/agape": sharedVersion,
+      },
       scripts: {
         start: "node bin/index.js",
         cluster: "node bin/cluster.js",
       },
       imports: {
-        "#shared/*": "./shared/*",
+        "#shared/*": "@mapineda48/agape/*",
         ...Object.fromEntries(
           Object.entries(IMPORT_ALIASES).map(normalizeImportPath),
         ),

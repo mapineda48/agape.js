@@ -16,7 +16,7 @@ RUN pnpm install --frozen-lockfile
 
 # 1.3 Copia el resto del código y genera build
 COPY . .
-RUN pnpm -C packages/frontend build && pnpm -C packages/backend build
+RUN pnpm -C packages/shared build && pnpm -C packages/frontend build && pnpm -C packages/backend build
 
 # 2. Runner: stage ligero para producción
 FROM node:22-alpine AS runner
@@ -31,8 +31,12 @@ USER app
 # 2.2 Copia únicamente el resultado compilado
 COPY --from=builder /usr/src/builder/packages/backend/dist .
 
-# Install production dependencies
-RUN npm install --production
+# 2.3 Configura GitHub Packages registry y descarga dependencias
+ARG NODE_AUTH_TOKEN
+RUN echo "@mapineda48:registry=https://npm.pkg.github.com" > .npmrc \
+    && echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc \
+    && npm install --production \
+    && rm -f .npmrc
 
 # Command to run the app
 CMD [ "npm", "start" ]
