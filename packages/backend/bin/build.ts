@@ -218,8 +218,9 @@ async function generateProductionPackageJson(): Promise<void> {
 
   try {
     // Merge backend + shared deps for production (shared is bundled inline)
-    const backendDeps = { ...dependencies };
-    delete backendDeps["@mapineda48/shared"];
+    const backendDeps = Object.fromEntries(
+      Object.entries(dependencies).filter(([key]) => key !== "@mapineda48/shared"),
+    );
     const allDependencies = { ...backendDeps, ...sharedDependencies };
 
     const productionPackage = {
