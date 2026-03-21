@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { glob } from "node:fs/promises";
 import chalk from "chalk";
 import { name, version, type, dependencies } from "../package.json";
+import { dependencies as sharedDependencies } from "../../shared/package.json";
 import { compilerOptions } from "../tsconfig.json";
 import {
   buildPermissionMap,
@@ -35,10 +36,9 @@ const DIST = path.resolve(BACKEND_ROOT, "dist");
 
 /** Import path aliases from tsconfig (used for production package.json generation) */
 const IMPORT_ALIASES = Object.fromEntries(
-  Object.entries(compilerOptions.paths).map(([alias, [pattern]]) => [
-    alias,
-    pattern,
-  ]),
+  Object.entries(compilerOptions.paths)
+    .filter(([alias]) => alias !== "#shared/*") // #shared is handled separately
+    .map(([alias, [pattern]]) => [alias, pattern]),
 );
 
 /**
@@ -64,6 +64,43 @@ function normalizeImportPath([key, pattern]: [string, string]): [
 // ============================================================================
 // Build Tasks
 // ============================================================================
+
+/**
+ * Flattens the tsc output structure.
+ *
+ * Because rootDir covers both backend/ and shared/ (to compile shared
+ * imports), tsc emits to dist/backend/ and dist/shared/. This step
+ * moves everything up so dist/ has the expected flat structure.
+ *
+ * The #shared/* imports are preserved as subpath imports by the
+ * preserve-shared-imports.js tsc-alias replacer, and resolved at
+ * runtime via the package.json "imports" field.
+ */
+async function flattenTscOutput(): Promise<void> {
+  console.log(chalk.blue("📁 Flattening tsc output structure..."));
+
+  try {
+    const backendDist = path.join(DIST, "backend");
+
+    if (fs.existsSync(backendDist)) {
+      for (const entry of await fs.readdir(backendDist)) {
+        await fs.move(
+          path.join(backendDist, entry),
+          path.join(DIST, entry),
+          { overwrite: true },
+        );
+      }
+      await fs.remove(backendDist);
+      console.log(chalk.gray("  ✓ Flattened dist/backend/ → dist/"));
+    }
+
+    // dist/shared/ is kept — #shared/* resolves here via package.json imports
+    console.log(chalk.green("✓ tsc output flattened\n"));
+  } catch (error) {
+    console.error(chalk.red("✗ Failed to flatten tsc output:"), error);
+    throw error;
+  }
+}
 
 /**
  * Copies frontend build output into the backend dist directory.
@@ -180,18 +217,26 @@ async function generateProductionPackageJson(): Promise<void> {
   console.log(chalk.blue("📝 Generating production package.json..."));
 
   try {
+    // Merge backend + shared deps for production (shared is bundled inline)
+    const backendDeps = { ...dependencies };
+    delete backendDeps["@mapineda48/shared"];
+    const allDependencies = { ...backendDeps, ...sharedDependencies };
+
     const productionPackage = {
       name,
       version,
       type,
-      dependencies,
+      dependencies: allDependencies,
       scripts: {
         start: "node bin/index.js",
         cluster: "node bin/cluster.js",
       },
-      imports: Object.fromEntries(
-        Object.entries(IMPORT_ALIASES).map(normalizeImportPath),
-      ),
+      imports: {
+        "#shared/*": "./shared/*",
+        ...Object.fromEntries(
+          Object.entries(IMPORT_ALIASES).map(normalizeImportPath),
+        ),
+      },
     };
 
     await fs.outputJSON(path.join(DIST, "package.json"), productionPackage, { spaces: 2 });
@@ -314,6 +359,7 @@ async function main(): Promise<void> {
   const startTime = Date.now();
 
   try {
+    await flattenTscOutput();
     await copyFrontendBuild();
     await reorganizeDistFiles();
     await copyStaticAssets();

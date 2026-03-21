@@ -1,8 +1,24 @@
 {
-  "name": "@agape/shared",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@mapineda48/shared",
+  "version": "0.1.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mapineda48/agape.js.git",
+    "directory": "packages/shared"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "exports": {
+    "./*.ts": "./*.ts",
+    "./*": "./*.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "tsc": "tsc -p tsconfig.json --noEmit"
+  },
   "dependencies": {
     "date-fns": "^4.1.0",
     "decimal.js": "^10.6.0",

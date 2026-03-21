@@ -6,7 +6,7 @@
   "scripts": {
     "dev:app": "pnpm -C packages/backend dev",
     "dev:web": "pnpm -C packages/frontend dev",
-    "build": "pnpm -C packages/frontend build && pnpm -C packages/backend build",
+    "build": "pnpm -C packages/shared build && pnpm -C packages/frontend build && pnpm -C packages/backend build",
     "tsc": "pnpm -r tsc",
     "test": "pnpm -r test:run",
     "lint": "eslint .",

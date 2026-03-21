@@ -11,7 +11,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@agape/shared": "workspace:*",
+    "@mapineda48/shared": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
