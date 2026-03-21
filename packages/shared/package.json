@@ -1,0 +1,14 @@
+{
+  "name": "@agape/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "decimal.js": "^10.6.0",
+    "msgpackr": "^1.11.8",
+    "source-map": "^0.7.6",
+    "stacktrace-parser": "^0.1.11",
+    "zod": "^4.3.6"
+  }
+}

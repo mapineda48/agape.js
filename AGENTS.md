@@ -21,51 +21,51 @@ The framework consists of:
 
 ```bash
 # Development
-pnpm app                              # Backend server (watch mode)
-pnpm web                              # Frontend Vite dev server
-pnpm tsx <file.ts>                    # Run any TS file with watch
+pnpm dev:app                          # Backend server (watch mode)
+pnpm dev:web                          # Frontend Vite dev server
 
 # Docker services (Redis, Azurite)
 docker compose up -d
 
 # Linting
-npx eslint .                          # Lint all files
-npx eslint path/to/file.ts            # Lint specific file
-npx eslint . --fix                    # Auto-fix issues
+pnpm lint                             # Lint all files
+pnpm lint:fix                         # Auto-fix issues
 
 # Type checking
-npx tsc --noEmit -p tsconfig.app.json # Backend
-npx tsc --noEmit -p tsconfig.web.json # Frontend
+pnpm tsc                              # Type-check all packages
+pnpm -C packages/backend tsc          # Backend only
+pnpm -C packages/frontend tsc         # Frontend only
+
+# Testing
+pnpm test                             # Run all tests
+pnpm -C packages/backend test:run     # Backend tests
+pnpm -C packages/frontend test:run    # Frontend tests
 
 # Build
-npx vite build                        # Build frontend for production
+pnpm build                            # Build all (frontend then backend)
 ```
 
-**Note**: No test runner is currently configured.
-
-## Project Structure
+## Project Structure (pnpm workspaces)
 
 ```
 agape.js/
-├── .agent/        # AI agent documentation and rules
-│   ├── docs/      # Detailed documentation (rpc.md, services.md, models.md, etc.)
-│   └── rules/     # Context-specific rules for agents
-├── bin/           # Express server bootstrap
-├── lib/           # Core library (middleware, utilities)
-│   ├── context.ts # AsyncLocalStorage request context
-│   ├── error.ts   # Pre-defined error classes
-│   ├── rpc/       # RPC middleware system
-│   ├── security/  # JWT, authentication
-│   ├── socket/    # Socket.IO namespace management
-│   └── vite/      # Vite plugins for virtual modules
-├── models/        # Drizzle ORM schemas (CTI pattern)
-├── services/      # RPC endpoints (auto-discovered, backend only)
-├── shared/        # Shared frontend/backend code
-│   ├── data/      # DateTime, Decimal, File types
-│   └── services/  # Service contracts (type-only .d.ts for frontend)
-└── web/           # React frontend application
-    ├── app/       # File-based routing pages
-    └── utils/     # Components (form, router, etc.)
+├── packages/
+│   ├── shared/        # Shared frontend/backend code (@agape/shared)
+│   │   ├── data/      # DateTime, Decimal, File types
+│   │   ├── services/  # Service contracts (type-only .d.ts for frontend)
+│   │   └── rbac/      # RBAC catalog
+│   ├── backend/       # Express server (@agape/backend)
+│   │   ├── bin/       # Server bootstrap & build scripts
+│   │   ├── lib/       # Core library (middleware, utilities)
+│   │   ├── models/    # Drizzle ORM schemas (CTI pattern)
+│   │   └── services/  # RPC endpoints (auto-discovered)
+│   └── frontend/      # React app (@agape/frontend)
+│       ├── app/       # File-based routing pages
+│       ├── utils/     # Components (form, router, etc.)
+│       └── __test__/  # Frontend tests
+├── .agent/            # AI agent documentation and rules
+├── package.json       # Workspace root
+└── pnpm-workspace.yaml
 ```
 
 ## Code Style Guidelines
@@ -82,13 +82,12 @@ import logger from "#lib/log/logger";               // Path aliases
 
 | Alias | Target | Usage |
 |-------|--------|-------|
-| `#lib/*` | `lib/*` | Backend library code |
-| `#models/*` | `models/*` | Database models |
-| `#svc/*` | `services/*` | Service modules |
-| `#shared/*` | `shared/*` | Shared code |
-| `#/*` | `web/*` | Frontend modules |
-| `#services/*` | `shared/services/*` (web) / `services/*` (Vite runtime) | Service contracts for type-checking; Vite generates implementations at runtime |
-| `#web/*` | `web/*` | Frontend utilities |
+| `#lib/*` | `packages/backend/lib/*` | Backend library code |
+| `#models/*` | `packages/backend/models/*` | Database models |
+| `#svc/*` | `packages/backend/services/*` | Service modules |
+| `#shared/*` | `packages/shared/*` | Shared code (both frontend & backend) |
+| `#services/*` | `packages/shared/services/*` (type-check) / Vite virtual (runtime) | Service contracts |
+| `#web/*` | `packages/frontend/*` | Frontend utilities |
 
 ### TypeScript
 
