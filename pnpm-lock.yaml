@@ -62,7 +62,7 @@ importers:
       '@azure/storage-blob':
         specifier: ^12.30.0
         version: 12.30.0
-      '@mapineda48/shared':
+      '@mapineda48/agape':
         specifier: workspace:*
         version: link:../shared
       '@socket.io/redis-adapter':
@@ -156,7 +156,7 @@ importers:
 
   packages/frontend:
     dependencies:
-      '@mapineda48/shared':
+      '@mapineda48/agape':
         specifier: workspace:*
         version: link:../shared
       react:

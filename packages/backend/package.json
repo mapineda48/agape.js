@@ -1,5 +1,5 @@
 {
-  "name": "@mapineda48/backend",
+  "name": "@mapineda48/agape.js",
   "version": "0.1.0",
   "type": "module",
   "repository": {
@@ -20,7 +20,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@mapineda48/shared": "workspace:*",
+    "@mapineda48/agape": "workspace:*",
     "@azure/storage-blob": "^12.30.0",
     "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^6.0.0",
