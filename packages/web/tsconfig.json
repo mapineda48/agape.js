@@ -24,8 +24,7 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "#web/*": ["./*"],
-      "#services/*": ["../core/services/*"]
+      "#web/*": ["./*"]
     }
   },
   "include": ["."],

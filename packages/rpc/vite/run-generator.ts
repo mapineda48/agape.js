@@ -2,15 +2,16 @@
  * Generator runner script.
  * Called by the Vite plugin via child process.
  *
- * Usage: tsx vite/run-generator.ts <servicesDir>
+ * Usage: tsx vite/run-generator.ts <servicesDir> <namespace>
  */
 
 import { generateVirtualModules, addStaticModules } from "./generator.ts";
 
 const servicesDir = process.argv[2];
+const namespace = process.argv[3];
 
-if (!servicesDir) {
-  console.error("Usage: tsx vite/run-generator.ts <servicesDir>");
+if (!servicesDir || !namespace) {
+  console.error("Usage: tsx vite/run-generator.ts <servicesDir> <namespace>");
   process.exit(1);
 }
 

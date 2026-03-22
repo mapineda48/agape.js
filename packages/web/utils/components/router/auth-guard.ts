@@ -256,7 +256,7 @@ export function createDefaultAuthGuard(
 ): Promise<AuthGuard> {
   // Dynamic imports to avoid circular dependencies and enable tree-shaking
   return Promise.all([
-    import("#services/security/session"),
+    import("@mapineda48/agape-core/services/security/session"),
     import("#web/utils/rbca"),
   ]).then(([sessionModule, rbacModule]) => {
     const authService: IAuthService = {

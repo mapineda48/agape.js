@@ -22,7 +22,6 @@ import { exec } from "node:child_process";
 import type { Plugin } from "vite";
 import {
   VIRTUAL_MODULE_ID,
-  VIRTUAL_MODULE_NAMESPACE,
   VIRTUAL_MODULE_PREFIX,
 } from "./constants.ts";
 
@@ -44,7 +43,7 @@ const execAsync = promisify(exec);
  *
  * @param servicesDir - Absolute path to the shared services directory
  */
-async function loadVirtualModules(servicesDir: string): Promise<VirtualModuleMap> {
+async function loadVirtualModules(servicesDir: string, namespace: string): Promise<VirtualModuleMap> {
   const rpcPkgRoot = path.resolve(
     path.dirname(import.meta.filename),
     "..",
@@ -57,7 +56,7 @@ async function loadVirtualModules(servicesDir: string): Promise<VirtualModuleMap
   const sharedRoot = path.dirname(servicesDir);
   const sharedTsconfig = path.join(sharedRoot, "tsconfig.json");
 
-  const cmd = `tsx --tsconfig ${sharedTsconfig} ${generatorScript} ${servicesDir}`;
+  const cmd = `tsx --tsconfig ${sharedTsconfig} ${generatorScript} ${servicesDir} ${namespace}`;
 
   const { stdout } = await execAsync(cmd, {
     cwd: sharedRoot,
@@ -74,9 +73,10 @@ async function loadVirtualModules(servicesDir: string): Promise<VirtualModuleMap
  * Creates a Vite plugin that provides virtual modules for RPC client functions.
  *
  * @param servicesDir - Absolute path to the shared services directory (domain contracts)
+ * @param namespace - The import prefix to intercept (e.g., `"@mapineda48/agape-core/services"`)
  * @returns Vite plugin
  */
-export function createVitePlugin(servicesDir: string): Plugin {
+export function createVitePlugin(servicesDir: string, namespace: string): Plugin {
   let virtualModules: VirtualModuleMap = {};
 
   return {
@@ -85,14 +85,14 @@ export function createVitePlugin(servicesDir: string): Plugin {
     apply: () => true,
 
     async buildStart() {
-      virtualModules = await loadVirtualModules(servicesDir);
+      virtualModules = await loadVirtualModules(servicesDir, namespace);
     },
 
     resolveId(id: string): string | undefined {
-      if (id.startsWith(VIRTUAL_MODULE_NAMESPACE)) {
+      if (id.startsWith(namespace)) {
         return (
           VIRTUAL_MODULE_PREFIX +
-          id.replace(VIRTUAL_MODULE_NAMESPACE, VIRTUAL_MODULE_ID)
+          id.replace(namespace, VIRTUAL_MODULE_ID)
         );
       }
     },

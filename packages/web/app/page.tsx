@@ -2,8 +2,8 @@ import { useState, useMemo } from "react";
 import reactLogo from "#web/assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./page.css";
-import { sayHello } from "#services/public";
-import socket from "#services/chat";
+import { sayHello } from "@mapineda48/agape-core/services/public";
+import socket from "@mapineda48/agape-core/services/chat";
 import { useRouter } from "#web/utils/components/router/hook";
 import Decimal from "@mapineda48/agape-rpc/data/Decimal";
 

@@ -19,7 +19,7 @@
  * - `inventory.product.*` - All product actions
  */
 
-import { session } from "#services/security/session";
+import { session } from "@mapineda48/agape-core/services/security/session";
 import {
   buildMenuPermissions,
   buildRoutePermissions,

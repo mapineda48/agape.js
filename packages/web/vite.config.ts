@@ -15,7 +15,7 @@ export default defineConfig({
         plugins: [["babel-plugin-react-compiler"]],
       },
     }),
-    createVitePlugin(servicesDir),
+    createVitePlugin(servicesDir, "@mapineda48/agape-core/services"),
   ],
 
   resolve: {

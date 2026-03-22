@@ -13,7 +13,7 @@ import {
 } from "./auth-guard";
 import type { RouteParams, INavigateTo } from "./types";
 import { checkError } from "#web/utils/error";
-import { isAuthenticated, session } from "#services/security/session";
+import { isAuthenticated, session } from "@mapineda48/agape-core/services/security/session";
 import { canAccessRoute, getRoutePermission } from "#web/utils/rbca";
 
 /**

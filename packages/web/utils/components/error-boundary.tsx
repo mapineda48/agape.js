@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { notifyError } from "#services/web";
+import { notifyError } from "@mapineda48/agape-core/services/web";
 
 interface Props {
   children: ReactNode;

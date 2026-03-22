@@ -1,4 +1,4 @@
-import { notifyError } from "#services/web";
+import { notifyError } from "@mapineda48/agape-core/services/web";
 
 if (process.env.NODE_ENV !== "development") {
   // 2.1 Errores sincronizados

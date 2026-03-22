@@ -15,7 +15,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "#web": path.resolve(__dirname),
-      "#services": path.resolve(__dirname, "./__test__/mocks/services"),
+      "@mapineda48/agape-core/services": path.resolve(__dirname, "./__test__/mocks/services"),
     },
   },
 });
