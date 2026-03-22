@@ -8,9 +8,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import type { Request, Response, NextFunction } from "express";
-import type { ViteDevServer } from "vite";
 import {
   SSR_OUTLET,
   SSR_DATA_PLACEHOLDER,
@@ -21,13 +19,18 @@ import {
 // Types
 // ============================================================================
 
-/** Resolve frontend package root relative to this module */
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FRONTEND_PKG = path.resolve(__dirname, "../../../frontend");
+/** Minimal Vite dev server interface to avoid importing vite directly */
+interface ViteDevServer {
+  transformIndexHtml(url: string, html: string): Promise<string>;
+  ssrLoadModule(url: string): Promise<unknown>;
+  ssrFixStacktrace(error: Error): void;
+}
 
 interface SSRMiddlewareOptions {
   /** Vite dev server instance (development only) */
   vite?: ViteDevServer;
+  /** Root path for frontend resources (frontend package root in dev, web/ dir in prod) */
+  frontendRoot?: string;
 }
 
 interface EntryServerModule {
@@ -49,7 +52,7 @@ interface EntryServerModule {
  * Falls through to the next middleware for SPA pages.
  */
 export function createSSRMiddleware(options: SSRMiddlewareOptions) {
-  const { vite } = options;
+  const { vite, frontendRoot } = options;
   const isDev = !!vite;
 
   // Cache template and render module in production
@@ -77,7 +80,7 @@ export function createSSRMiddleware(options: SSRMiddlewareOptions) {
       if (isDev) {
         // Development: read template from frontend package and transform with Vite
         const rawTemplate = fs.readFileSync(
-          path.resolve(FRONTEND_PKG, "index.html"),
+          path.resolve(frontendRoot!, "index.html"),
           "utf-8",
         );
         template = await vite!.transformIndexHtml(url, rawTemplate);

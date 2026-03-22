@@ -120,6 +120,9 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      '@agape/frontend':
+        specifier: workspace:*
+        version: link:../frontend
       '@types/bcrypt':
         specifier: ^6.0.0
         version: 6.0.0
@@ -150,9 +153,6 @@ importers:
       react-dom:
         specifier: ^19.2.0
         version: 19.2.3(react@19.2.3)
-      vite:
-        specifier: ^7.2.4
-        version: 7.3.1(@types/node@24.10.9)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@24.10.9)(jsdom@27.4.0(@noble/hashes@1.8.0))(tsx@4.21.0)(yaml@2.8.2)
@@ -187,6 +187,9 @@ importers:
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
+      '@types/fs-extra':
+        specifier: ^11.0.4
+        version: 11.0.4
       '@types/ms':
         specifier: ^2.1.0
         version: 2.1.0
@@ -202,6 +205,9 @@ importers:
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -217,6 +223,9 @@ importers:
       framer-motion:
         specifier: ^12.29.2
         version: 12.29.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      fs-extra:
+        specifier: ^11.3.3
+        version: 11.3.3
       history:
         specifier: ^5.3.0
         version: 5.3.0

@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "exports": {
+    "./server": "./server/index.ts",
+    "./server/build": "./server/build.ts"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && vite build --ssr entry-server.tsx --outDir dist/ssr --config vite.config.ssr.ts",
@@ -38,6 +42,9 @@
     "socket.io-client": "^4.8.3",
     "vite": "^7.2.4",
     "vitest": "^4.0.18",
+    "chalk": "^5.6.2",
+    "fs-extra": "^11.3.3",
+    "@types/fs-extra": "^11.0.4",
     "zod": "^4.3.6",
     "date-fns": "^4.1.0",
     "decimal.js": "^10.6.0",

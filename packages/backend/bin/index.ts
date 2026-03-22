@@ -115,22 +115,13 @@ await import("#lib/socket").then(({ default: createSocketServer }) => {
 // SSR middleware (works in both dev and prod)
 const { createSSRMiddleware } = await import("#lib/ssr/middleware");
 
-// Resolve frontend package root (dev: sibling package, prod: web/ inside dist)
-const frontendPkgRoot = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
-  IsDevelopment ? "../../frontend" : "../web",
-);
-
 if (IsDevelopment) {
-  // Development: embed Vite dev server as middleware (single process, no CORS needed)
-  const { createServer: createViteServer } = await import("vite");
+  // Development: import frontend facades (Vite dev server, package root)
+  const { createViteServer, frontendPkgRoot } = await import(
+    "@agape/frontend/server"
+  );
 
-  const viteDevServer = await createViteServer({
-    root: frontendPkgRoot,
-    configFile: path.resolve(frontendPkgRoot, "vite.config.ts"),
-    server: { middlewareMode: true },
-    appType: "custom", // We handle HTML serving ourselves for SSR
-  });
+  const viteDevServer = await createViteServer();
 
   logger.scope("Server").info("Vite dev server running in middleware mode");
 
@@ -138,7 +129,9 @@ if (IsDevelopment) {
   app.use(viteDevServer.middlewares);
 
   // SSR middleware intercepts SSR pages (after Vite serves static assets)
-  app.use(createSSRMiddleware({ vite: viteDevServer }));
+  app.use(
+    createSSRMiddleware({ vite: viteDevServer, frontendRoot: frontendPkgRoot }),
+  );
 
   // SPA fallback for non-SSR pages (appType: "custom" doesn't serve index.html)
   app.use(async (req, res, next) => {
@@ -147,7 +140,10 @@ if (IsDevelopment) {
     if (url.startsWith("/api/") || url.includes(".")) return next();
 
     try {
-      const rawHtml = fs.readFileSync(path.resolve(frontendPkgRoot, "index.html"), "utf-8");
+      const rawHtml = fs.readFileSync(
+        path.resolve(frontendPkgRoot, "index.html"),
+        "utf-8",
+      );
       const html = await viteDevServer.transformIndexHtml(url, rawHtml);
       res.setHeader("Content-Type", "text/html");
       res.status(200).end(html);
@@ -156,9 +152,13 @@ if (IsDevelopment) {
     }
   });
 } else {
-  // Path to frontend Vite build output
-  const frontendRoot = path.resolve(frontendPkgRoot, "www");
-  const indexHtml = path.resolve(frontendPkgRoot, "index.html");
+  // Production: frontend build output is at web/ inside dist
+  const webRoot = path.resolve(
+    path.dirname(new URL(import.meta.url).pathname),
+    "../web",
+  );
+  const frontendRoot = path.resolve(webRoot, "www");
+  const indexHtml = path.resolve(webRoot, "index.html");
 
   // Enable GZIP compression for responses
   app.use(compression());
