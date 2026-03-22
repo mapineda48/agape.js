@@ -23,8 +23,8 @@ import {
   findUserById,
   type IUserSession,
 } from "#svc/security/user";
-import { routes } from "@mapineda48/agape/security/route";
-import type { LoginRequest } from "@mapineda48/agape/security/types";
+import { routes } from "@mapineda48/agape-core/security/route";
+import type { LoginRequest } from "@mapineda48/agape-core/security/types";
 
 // ============================================================================
 // Constants

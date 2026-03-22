@@ -1,11 +1,11 @@
 {
-  "name": "@mapineda48/agape.js",
+  "name": "@mapineda48/agape-app",
   "version": "0.1.0",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/mapineda48/agape.js.git",
-    "directory": "packages/backend"
+    "directory": "packages/app"
   },
   "files": [
     "dist"
@@ -32,7 +32,7 @@
     "#svc/*": "./services/*.js"
   },
   "dependencies": {
-    "@mapineda48/agape": "workspace:*",
+    "@mapineda48/agape-core": "workspace:*",
     "@mapineda48/agape-rpc": "workspace:*",
     "@azure/storage-blob": "^12.30.0",
     "@socket.io/redis-adapter": "^8.3.0",
@@ -57,7 +57,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@agape/frontend": "workspace:*",
+    "@mapineda48/agape-web": "workspace:*",
     "@types/bcrypt": "^6.0.0",
     "@types/compression": "^1.8.1",
     "@types/express": "^5.0.6",

@@ -118,7 +118,7 @@ const { createSSRMiddleware } = await import("#lib/ssr/middleware");
 if (IsDevelopment) {
   // Development: import frontend facades (Vite dev server, package root)
   const { createViteServer, frontendPkgRoot } = await import(
-    "@agape/frontend/server"
+    "@mapineda48/agape-web/server"
   );
 
   const viteDevServer = await createViteServer();

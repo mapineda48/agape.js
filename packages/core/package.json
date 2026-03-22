@@ -1,11 +1,11 @@
 {
-  "name": "@mapineda48/agape",
+  "name": "@mapineda48/agape-core",
   "version": "0.1.0",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/mapineda48/agape.js.git",
-    "directory": "packages/shared"
+    "directory": "packages/core"
   },
   "files": [
     "dist"

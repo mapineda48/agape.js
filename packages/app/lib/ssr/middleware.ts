@@ -13,7 +13,7 @@ import {
   SSR_OUTLET,
   SSR_DATA_PLACEHOLDER,
   SSR_DATA_ID,
-} from "@mapineda48/agape/ssr";
+} from "@mapineda48/agape-core/ssr";
 
 // ============================================================================
 // Types

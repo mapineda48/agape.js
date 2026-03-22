@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev:app": "pnpm -C packages/backend dev",
-    "dev:web": "pnpm -C packages/frontend dev",
-    "build": "pnpm -C packages/shared build && pnpm -C packages/rpc build && pnpm -C packages/frontend build && pnpm -C packages/backend build",
+    "dev:app": "pnpm -C packages/app dev",
+    "dev:web": "pnpm -C packages/web dev",
+    "build": "pnpm -C packages/core build && pnpm -C packages/rpc build && pnpm -C packages/web build && pnpm -C packages/app build",
     "tsc": "pnpm -r tsc",
     "test": "pnpm -r test:run",
     "lint": "eslint .",

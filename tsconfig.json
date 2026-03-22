@@ -2,16 +2,16 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/shared"
+      "path": "./packages/core"
     },
     {
       "path": "./packages/rpc"
     },
     {
-      "path": "./packages/backend"
+      "path": "./packages/app"
     },
     {
-      "path": "./packages/frontend"
+      "path": "./packages/web"
     }
   ]
 }

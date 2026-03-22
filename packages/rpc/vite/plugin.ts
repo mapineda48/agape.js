@@ -8,7 +8,7 @@
  * ```ts
  * // In vite.config.ts:
  * import { createVitePlugin } from "@mapineda48/agape-rpc/vite/plugin";
- * import { servicesDir } from "@mapineda48/agape";
+ * import { servicesDir } from "@mapineda48/agape-core";
  *
  * export default defineConfig({
  *   plugins: [createVitePlugin(servicesDir)],

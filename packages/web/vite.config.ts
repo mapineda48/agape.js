@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { createVitePlugin } from "@mapineda48/agape-rpc/vite/plugin";
-import { servicesDir } from "@mapineda48/agape";
+import { servicesDir } from "@mapineda48/agape-core";
 
 const cwd = process.cwd();
 
@@ -21,7 +21,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "#web": path.resolve(__dirname),
-      "#shared": path.resolve(__dirname, "../shared"),
+      "#shared": path.resolve(__dirname, "../core"),
     },
   },
 

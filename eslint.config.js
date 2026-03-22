@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['**/dist', '**/node_modules', 'packages/shared/**/*.js', 'packages/rpc/**/*.js']),
+  globalIgnores(['**/dist', '**/node_modules', 'packages/core/**/*.js', 'packages/rpc/**/*.js']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -19,7 +19,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['packages/frontend/**/*.{ts,tsx}'],
+    files: ['packages/web/**/*.{ts,tsx}'],
     extends: [
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,

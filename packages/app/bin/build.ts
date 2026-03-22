@@ -10,7 +10,7 @@
  * 6. Generate permissions map
  * 7. Pre-render SSG pages
  *
- * Frontend-specific build tasks are delegated to @agape/frontend/server/build.
+ * Frontend-specific build tasks are delegated to @mapineda48/agape-web/server/build.
  *
  * @module bin/build
  */
@@ -20,7 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import pkg from "../package.json" with { type: "json" };
-import sharedPkg from "../../shared/package.json" with { type: "json" };
+import sharedPkg from "../../core/package.json" with { type: "json" };
 import {
   buildPermissionMap,
   generateJavaScriptModule,
@@ -32,7 +32,7 @@ import {
   reorganizeDistFiles,
   moveSourceMaps,
   preRenderSSGPages,
-} from "@agape/frontend/server/build";
+} from "@mapineda48/agape-web/server/build";
 
 // ============================================================================
 // Constants
@@ -75,7 +75,7 @@ async function generateProductionPackageJson(): Promise<void> {
     const { name, version, type, dependencies, imports } = pkg;
 
     // Remove workspace references, add published shared package as real dependency
-    const workspaceDeps = ["@mapineda48/agape", "@mapineda48/agape-rpc"];
+    const workspaceDeps = ["@mapineda48/agape-core", "@mapineda48/agape-rpc"];
     const backendDeps = Object.fromEntries(
       Object.entries(dependencies).filter(
         ([key]) => !workspaceDeps.includes(key),
@@ -88,7 +88,7 @@ async function generateProductionPackageJson(): Promise<void> {
       type,
       dependencies: {
         ...backendDeps,
-        "@mapineda48/agape": sharedPkg.version,
+        "@mapineda48/agape-core": sharedPkg.version,
         "@mapineda48/agape-rpc": sharedPkg.version,
       },
       scripts: {

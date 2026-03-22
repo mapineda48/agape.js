@@ -41,8 +41,8 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      - name: Publish shared
-        run: pnpm --filter './packages/shared' publish --no-git-checks
+      - name: Publish core
+        run: pnpm --filter './packages/core' publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -51,8 +51,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish backend
-        run: pnpm --filter './packages/backend' publish --no-git-checks
+      - name: Publish app
+        run: pnpm --filter './packages/app' publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

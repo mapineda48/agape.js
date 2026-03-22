@@ -1,5 +1,5 @@
 {
-  "name": "@agape/frontend",
+  "name": "@mapineda48/agape-web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,7 +15,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@mapineda48/agape": "workspace:*",
+    "@mapineda48/agape-core": "workspace:*",
     "@mapineda48/agape-rpc": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
