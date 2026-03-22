@@ -47,6 +47,30 @@ const DIST = path.resolve(BACKEND_ROOT, "dist");
 // ============================================================================
 
 /**
+ * Prepends a Node.js shebang to the CLI entry point so it can be
+ * executed directly when installed globally via npm.
+ */
+async function addShebang(): Promise<void> {
+  console.log(chalk.blue("🔧 Adding shebang to CLI entry point..."));
+
+  try {
+    const entryPath = path.join(DIST, "bin/index.js");
+    const content = await fs.readFile(entryPath, "utf8");
+
+    if (!content.startsWith("#!")) {
+      await fs.writeFile(entryPath, `#!/usr/bin/env node\n${content}`, "utf8");
+      await fs.chmod(entryPath, 0o755);
+    }
+
+    console.log(chalk.gray("  ✓ bin/index.js is now executable"));
+    console.log(chalk.green("✓ Shebang added\n"));
+  } catch (error) {
+    console.error(chalk.red("✗ Failed to add shebang:"), error);
+    throw error;
+  }
+}
+
+/**
  * Copies static assets required for production.
  */
 async function copyStaticAssets(): Promise<void> {
@@ -86,14 +110,16 @@ async function generateProductionPackageJson(): Promise<void> {
       name,
       version,
       type,
+      bin: {
+        "agape-app": "bin/index.js",
+      },
       dependencies: {
         ...backendDeps,
         "@mapineda48/agape-core": sharedPkg.version,
         "@mapineda48/agape-rpc": sharedPkg.version,
       },
       scripts: {
-        start: "node bin/index.js",
-        cluster: "node bin/cluster.js",
+        start: "agape-app",
       },
       imports,
     };
@@ -141,6 +167,7 @@ async function main(): Promise<void> {
   const startTime = Date.now();
 
   try {
+    await addShebang();
     await copyFrontendBuild(DIST);
     await reorganizeDistFiles(DIST);
     await copyStaticAssets();
@@ -148,6 +175,9 @@ async function main(): Promise<void> {
     await generateProductionPackageJson();
     await generatePermissions();
     await preRenderSSGPages(DIST);
+
+    // Remove build script from dist (dev-only, not needed in published package)
+    await fs.remove(path.join(DIST, "bin/build.js"));
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(
