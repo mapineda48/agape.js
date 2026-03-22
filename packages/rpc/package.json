@@ -7,6 +7,9 @@
     "url": "https://github.com/mapineda48/agape.js.git",
     "directory": "packages/rpc"
   },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
     "access": "restricted",
