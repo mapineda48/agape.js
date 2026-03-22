@@ -10,13 +10,14 @@ RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/shared/package.json packages/shared/package.json
+COPY packages/rpc/package.json packages/rpc/package.json
 COPY packages/backend/package.json packages/backend/package.json
 COPY packages/frontend/package.json packages/frontend/package.json
 RUN pnpm install --frozen-lockfile
 
 # 1.3 Copia el resto del código y genera build
 COPY . .
-RUN pnpm -C packages/shared build && pnpm -C packages/frontend build && pnpm -C packages/backend build
+RUN pnpm -C packages/shared build && pnpm -C packages/rpc build && pnpm -C packages/frontend build && pnpm -C packages/backend build
 
 # 2. Runner: stage ligero para producción
 FROM node:22-alpine AS runner
