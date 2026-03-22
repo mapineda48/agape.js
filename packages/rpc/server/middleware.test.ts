@@ -2,69 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response, NextFunction } from "express";
 import type { ModuleMap, PermissionValidator } from "./middleware.ts";
 
-// Mock the modules that trigger side effects before importing createRpcMiddleware
-vi.mock("./path.ts", () => ({
-  cwd: "/fake/services",
-  findServices: vi.fn(() => ({
-    async *[Symbol.asyncIterator]() {
-      // yield nothing - empty service discovery
-    },
-  })),
-  toPublicUrl: vi.fn(),
-  getEndpointPath: vi.fn(),
-}));
-
-vi.mock("./rbac/authorization.ts", () => ({
-  validateEndpointPermission: vi.fn(),
-}));
-
-// Mock shared/msgpackr to avoid loading extensions that may not be available
-vi.mock("#shared/msgpackr", () => ({
-  encode: vi.fn((val: unknown) => Buffer.from(JSON.stringify(val))),
-  decode: vi.fn((buf: Buffer) => JSON.parse(buf.toString())),
-}));
-
-// Mock the context module
-vi.mock("#lib/context", () => {
-  let currentCtx: unknown = null;
-  return {
-    runContext: vi.fn((_ctx: unknown, cb: () => unknown) => {
-      currentCtx = _ctx;
-      try {
-        return cb();
-      } finally {
-        currentCtx = null;
-      }
-    }),
-    getStore: vi.fn(() => currentCtx),
-  };
-});
-
-// Mock shared/rpc
-vi.mock("#shared/rpc", () => ({
-  CONTENT_TYPES: {
-    MSGPACK: "application/msgpack",
-    MULTIPART: "multipart/form-data",
-  },
-}));
-
-// Mock logger
-vi.mock("#lib/log/logger", () => ({
-  default: {
-    scope: () => ({
-      error: vi.fn(),
-      warn: vi.fn(),
-      info: vi.fn(),
-    }),
-  },
-}));
-
-// Mock args decoder
+// Mock the args decoder
 vi.mock("./args.ts", () => ({
   decodeArgs: vi.fn(async () => []),
 }));
 
-// Now we can safely import createRpcMiddleware (the module-level `await createModuleMap()` is avoided by mocking path.ts)
+// Mock the validation module
+vi.mock("./validation.ts", () => ({
+  getSchema: vi.fn(() => null),
+}));
+
 const { createRpcMiddleware } = await import("./middleware.ts");
 const { decodeArgs } = await import("./args.ts");
 
@@ -116,9 +63,23 @@ function createMockResponse(): Response & {
 function createNext(): NextFunction & { called: boolean } {
   const fn = vi.fn() as unknown as NextFunction & { called: boolean };
   Object.defineProperty(fn, "called", {
-    get: () => (fn as unknown as ReturnType<typeof vi.fn>).mock.calls.length > 0,
+    get: () =>
+      (fn as unknown as ReturnType<typeof vi.fn>).mock.calls.length > 0,
   });
   return fn;
+}
+
+/** Creates a simple context runner that just executes the callback */
+function mockRunContext<T>(
+  _ctx: unknown,
+  callback: () => T | Promise<T>,
+): T | Promise<T> {
+  return callback();
+}
+
+/** Creates a simple context factory */
+function mockCreateContext(authPayload?: unknown) {
+  return authPayload ?? { id: 0, tenant: "", permissions: [] };
 }
 
 // ============================================================================
@@ -136,9 +97,16 @@ describe("rpc/middleware - createRpcMiddleware", () => {
   });
 
   it("calls next() for non-msgpack requests", async () => {
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     const req = createMockRequest({
-      headers: { accept: "application/json", "content-type": "multipart/form-data" },
+      headers: {
+        accept: "application/json",
+        "content-type": "multipart/form-data",
+      },
     } as Partial<Request>);
     const res = createMockResponse();
     const next = createNext();
@@ -150,9 +118,16 @@ describe("rpc/middleware - createRpcMiddleware", () => {
   });
 
   it("calls next() for non-multipart requests", async () => {
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     const req = createMockRequest({
-      headers: { accept: "application/msgpack", "content-type": "application/json" },
+      headers: {
+        accept: "application/msgpack",
+        "content-type": "application/json",
+      },
     } as Partial<Request>);
     const res = createMockResponse();
     const next = createNext();
@@ -164,7 +139,11 @@ describe("rpc/middleware - createRpcMiddleware", () => {
   });
 
   it("calls next() for unknown endpoints", async () => {
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     const req = createMockRequest({ path: "/unknown/endpoint" });
     const res = createMockResponse();
     const next = createNext();
@@ -176,7 +155,11 @@ describe("rpc/middleware - createRpcMiddleware", () => {
   });
 
   it("calls handler for known endpoints", async () => {
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([1, "test"]);
 
     const req = createMockRequest();
@@ -190,7 +173,11 @@ describe("rpc/middleware - createRpcMiddleware", () => {
   });
 
   it("sets correct content-type on success response", async () => {
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([]);
 
     const req = createMockRequest();
@@ -205,7 +192,11 @@ describe("rpc/middleware - createRpcMiddleware", () => {
 
   it("handles handler errors with 400 status code", async () => {
     handler.mockRejectedValue(new Error("Something failed"));
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([]);
 
     const req = createMockRequest();
@@ -222,7 +213,11 @@ describe("rpc/middleware - createRpcMiddleware", () => {
     const err = new Error("Not authenticated");
     (err as unknown as Record<string, string>).code = "UNAUTHORIZED_ERROR";
     handler.mockRejectedValue(err);
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([]);
 
     const req = createMockRequest();
@@ -238,7 +233,11 @@ describe("rpc/middleware - createRpcMiddleware", () => {
     const err = new Error("Access denied");
     (err as unknown as Record<string, string>).code = "FORBIDDEN_ERROR";
     handler.mockRejectedValue(err);
-    const middleware = createRpcMiddleware({ moduleMap });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([]);
 
     const req = createMockRequest();
@@ -252,7 +251,12 @@ describe("rpc/middleware - createRpcMiddleware", () => {
 
   it("calls permission validator when provided", async () => {
     const permissionValidator: PermissionValidator = vi.fn();
-    const middleware = createRpcMiddleware({ moduleMap, permissionValidator });
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      permissionValidator,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([]);
 
     const req = createMockRequest();
@@ -268,8 +272,15 @@ describe("rpc/middleware - createRpcMiddleware", () => {
   it("permission validator rejection returns 403", async () => {
     const err = new Error("Forbidden");
     (err as unknown as Record<string, string>).code = "FORBIDDEN_ERROR";
-    const permissionValidator: PermissionValidator = vi.fn().mockRejectedValue(err);
-    const middleware = createRpcMiddleware({ moduleMap, permissionValidator });
+    const permissionValidator: PermissionValidator = vi
+      .fn()
+      .mockRejectedValue(err);
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      permissionValidator,
+      createContext: mockCreateContext,
+      runContext: mockRunContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([]);
 
     const req = createMockRequest();
@@ -283,8 +294,13 @@ describe("rpc/middleware - createRpcMiddleware", () => {
   });
 
   it("uses auth payload from res.locals when available", async () => {
-    const { runContext } = await import("#lib/context");
-    const middleware = createRpcMiddleware({ moduleMap });
+    const runContext = vi.fn(mockRunContext);
+    const createContext = vi.fn(mockCreateContext);
+    const middleware = createRpcMiddleware({
+      moduleMap,
+      createContext,
+      runContext,
+    });
     vi.mocked(decodeArgs).mockResolvedValue([]);
 
     const req = createMockRequest();
@@ -296,9 +312,12 @@ describe("rpc/middleware - createRpcMiddleware", () => {
 
     await middleware(req, res as unknown as Response, next);
 
-    expect(runContext).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 5, tenant: "acme", permissions: ["read"], source: "http" }),
-      expect.any(Function),
+    expect(createContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 5,
+        tenant: "acme",
+        permissions: ["read"],
+      }),
     );
   });
 });

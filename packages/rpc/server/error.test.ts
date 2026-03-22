@@ -1,17 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-
-// Mock the logger to prevent side effects
-vi.mock("#lib/log/logger", () => ({
-  default: {
-    scope: () => ({
-      error: vi.fn(),
-      warn: vi.fn(),
-      info: vi.fn(),
-    }),
-  },
-}));
-
-const { default: parseError } = await import("./error.ts");
+import { describe, it, expect } from "vitest";
+import parseError from "./error.ts";
 
 describe("rpc/error - parseError", () => {
   describe("standard Error objects", () => {
@@ -26,7 +14,6 @@ describe("rpc/error - parseError", () => {
     it("preserves error identity for non-DB errors", () => {
       const error = new Error("Custom app error");
       const result = parseError(error);
-      // The same error instance should be returned
       expect(result).toBe(error);
     });
   });
@@ -70,7 +57,7 @@ describe("rpc/error - parseError", () => {
     it("normalizes unique violation error", () => {
       const dbError = Object.assign(new Error("duplicate key value"), {
         code: "23505",
-        detail: 'Key (email)=(test@test.com) already exists.',
+        detail: "Key (email)=(test@test.com) already exists.",
         constraint: "users_email_key",
       });
 
@@ -119,7 +106,7 @@ describe("rpc/error - parseError", () => {
     it("extracts database error from cause property", () => {
       const pgError = Object.assign(new Error("duplicate key"), {
         code: "23505",
-        detail: 'Key (document_number)=(123) already exists.',
+        detail: "Key (document_number)=(123) already exists.",
       });
       const drizzleError = new Error("Drizzle query failed");
       (drizzleError as Error & { cause?: unknown }).cause = pgError;
@@ -134,7 +121,7 @@ describe("rpc/error - parseError", () => {
       const cause = {
         code: "23505",
         message: "duplicate key",
-        detail: 'Key (name)=(test) already exists.',
+        detail: "Key (name)=(test) already exists.",
       };
       const wrappedError = new Error("Query failed");
       (wrappedError as Error & { cause?: unknown }).cause = cause;
@@ -153,7 +140,6 @@ describe("rpc/error - parseError", () => {
       });
 
       const result = parseError(error);
-      // Not a DB error code pattern, so it passes through as-is
       expect(result).toBe(error);
       expect(result.message).toBe("Forbidden");
     });
