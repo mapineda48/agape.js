@@ -11,11 +11,11 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { schema } from "./schema";
-import { dateTime } from "../lib/db/custom-types";
+import { schema } from "./schema.js";
+import { dateTime } from "../lib/db/custom-types.js";
 import DateTime from "@mapineda48/agape-rpc/data/DateTime";
-import user from "./user";
-import { addressTypeEnum } from "./enums";
+import user from "./user.js";
+import { addressTypeEnum } from "./enums.js";
 
 /**
  * Modelo de Dirección (Address)
@@ -172,6 +172,6 @@ export type UserAddress = InferSelectModel<typeof userAddress>;
 export type NewUserAddress = InferInsertModel<typeof userAddress>;
 
 // Re-exportar tipos de enum
-export { type AddressType, ADDRESS_TYPE_VALUES } from "./enums";
+export { type AddressType, ADDRESS_TYPE_VALUES } from "./enums.js";
 
 export default address;

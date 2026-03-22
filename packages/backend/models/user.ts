@@ -1,4 +1,4 @@
-import { schema } from "./schema";
+import { schema } from "./schema.js";
 import {
   serial,
   varchar,
@@ -12,12 +12,12 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { dateTime } from "../lib/db/custom-types";
+import { dateTime } from "../lib/db/custom-types.js";
 import DateTime from "@mapineda48/agape-rpc/data/DateTime";
-import documentType from "./documentType";
-import { userTypeEnum } from "./enums";
-import { userAddress } from "./address";
-import contactMethod from "./contactMethod";
+import documentType from "./documentType.js";
+import { userTypeEnum } from "./enums.js";
+import { userAddress } from "./address.js";
+import contactMethod from "./contactMethod.js";
 
 /**
  * User (entidad genérica)
@@ -136,6 +136,6 @@ export type User = InferSelectModel<typeof user>;
 export type NewUser = InferInsertModel<typeof user>;
 
 // Re-exportar el enum de tipo de usuario para facilitar el acceso
-export { type UserType, USER_TYPE_VALUES } from "./enums";
+export { type UserType, USER_TYPE_VALUES } from "./enums.js";
 
 export default user;

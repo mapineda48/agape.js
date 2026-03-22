@@ -19,6 +19,15 @@
     "test": "vitest",
     "test:run": "vitest run"
   },
+  "imports": {
+    "#lib/context": "./lib/context/index.js",
+    "#lib/db": "./lib/db/index.js",
+    "#lib/rbac": "./lib/rbac/index.js",
+    "#lib/socket": "./lib/socket/index.js",
+    "#lib/*": "./lib/*.js",
+    "#models/*": "./models/*.js",
+    "#svc/*": "./services/*.js"
+  },
   "dependencies": {
     "@mapineda48/agape": "workspace:*",
     "@mapineda48/agape-rpc": "workspace:*",

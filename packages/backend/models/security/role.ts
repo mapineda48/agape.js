@@ -8,10 +8,10 @@ import {
   json,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import { schema } from "../schema";
-import { dateTime } from "../../lib/db/custom-types";
+import { schema } from "../schema.js";
+import { dateTime } from "../../lib/db/custom-types.js";
 import DateTime from "@mapineda48/agape-rpc/data/DateTime";
-import { securityUser } from "./user";
+import { securityUser } from "./user.js";
 
 /**
  * Modelo de Rol de Seguridad (Security Role)

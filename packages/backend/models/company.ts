@@ -1,12 +1,12 @@
-import { schema } from "./schema";
-import user from "./user";
+import { schema } from "./schema.js";
+import user from "./user.js";
 import { integer, varchar } from "drizzle-orm/pg-core";
 import {
   type InferSelectModel,
   type InferInsertModel,
   relations,
 } from "drizzle-orm";
-import companyContact from "./companyContact";
+import companyContact from "./companyContact.js";
 
 /**
  * Modelo de empresa (Company)

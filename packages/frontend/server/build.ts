@@ -11,7 +11,7 @@ import fs from "fs-extra";
 import path from "node:path";
 import { glob } from "node:fs/promises";
 import chalk from "chalk";
-import { frontendPkgRoot } from "./index.ts";
+import { frontendPkgRoot } from "./index.js";
 
 /**
  * Copies frontend build output into the backend dist directory.

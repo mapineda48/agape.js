@@ -12,9 +12,14 @@
     "access": "restricted"
   },
   "exports": {
-    ".": "./index.js",
-    "./*.js": "./*.js",
-    "./*": "./*.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./*.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

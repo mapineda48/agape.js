@@ -11,7 +11,7 @@ export {
   initSocketPermissions,
   invalidatePermissionCache,
   clearPermissionCache,
-} from "./permissions";
+} from "./permissions.js";
 
 export {
   hasPermission,
@@ -20,4 +20,4 @@ export {
   getNamespacePermissionInfo,
   type SocketUserPayload,
   type NamespaceAuthResult,
-} from "./authorization";
+} from "./authorization.js";

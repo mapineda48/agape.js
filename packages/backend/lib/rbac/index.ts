@@ -32,4 +32,4 @@ export {
   PermissionLevel,
   type PermissionInfo,
   type PermissionResolver,
-} from "./authorization";
+} from "./authorization.js";

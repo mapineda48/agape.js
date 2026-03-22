@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import applyMigrations from "./migrations/applyMigrations";
-import Schema from "./schema";
+import applyMigrations from "./migrations/applyMigrations.js";
+import Schema from "./schema.js";
 
 
 let _db: Database | null = null;

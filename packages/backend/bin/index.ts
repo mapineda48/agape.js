@@ -22,7 +22,7 @@ import {
   NODE_ENV,
   AZURE_CONNECTION_STRING,
   AGAPE_CDN_HOST,
-} from "./env";
+} from "./env.js";
 
 // Initialize DB connection and models (required before importing model-dependent logic like auth)
 await initDatabase(DATABASE_URI, {

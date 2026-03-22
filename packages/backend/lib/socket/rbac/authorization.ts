@@ -16,7 +16,7 @@ import {
   createPermissionChecker,
   PermissionLevel,
 } from "#lib/rbac";
-import { getRequiredPermission } from "./permissions";
+import { getRequiredPermission } from "./permissions.js";
 
 // Re-export from unified RBAC for backwards compatibility
 export { hasPermission } from "#lib/rbac";

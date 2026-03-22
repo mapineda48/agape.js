@@ -6,7 +6,7 @@
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { IContext } from "./types";
+import type { IContext } from "./types.js";
 
 /**
  * Single AsyncLocalStorage instance for all contexts.

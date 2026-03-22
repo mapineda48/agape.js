@@ -15,8 +15,8 @@
 
 import express, { type Response } from "express";
 
-import Jwt from "./Jwt";
-import ctx, { type IContext } from "../context";
+import Jwt from "./Jwt.js";
+import ctx, { type IContext } from "../context/index.js";
 import { decode, encode } from "@mapineda48/agape-rpc/msgpackr";
 import {
   findUserByCredentials,

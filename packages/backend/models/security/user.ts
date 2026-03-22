@@ -9,11 +9,11 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
-import { schema } from "../schema";
-import user from "../user";
-import { dateTime } from "../../lib/db/custom-types";
+import { schema } from "../schema.js";
+import user from "../user.js";
+import { dateTime } from "../../lib/db/custom-types.js";
 import DateTime from "@mapineda48/agape-rpc/data/DateTime";
-import { securityUserRole } from "./role";
+import { securityUserRole } from "./role.js";
 
 /**
  * Modelo de usuario de acceso al sistema (SecurityUser)

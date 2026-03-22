@@ -1,8 +1,8 @@
 import { text, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { dateTime } from "../lib/db/custom-types";
+import { dateTime } from "../lib/db/custom-types.js";
 import DateTime from "@mapineda48/agape-rpc/data/DateTime";
-import schema from "./schema";
+import schema from "./schema.js";
 
 /**
  * Modelo Agape

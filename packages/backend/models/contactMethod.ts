@@ -11,11 +11,11 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import { schema } from "./schema";
-import { dateTime } from "../lib/db/custom-types";
+import { schema } from "./schema.js";
+import { dateTime } from "../lib/db/custom-types.js";
 import DateTime from "@mapineda48/agape-rpc/data/DateTime";
-import user from "./user";
-import { contactMethodTypeEnum } from "./enums";
+import user from "./user.js";
+import { contactMethodTypeEnum } from "./enums.js";
 
 /**
  * Modelo de Método de Contacto (ContactMethod)
@@ -134,6 +134,6 @@ export type ContactMethod = InferSelectModel<typeof contactMethod>;
 export type NewContactMethod = InferInsertModel<typeof contactMethod>;
 
 // Re-exportar tipos de enum
-export { type ContactMethodType, CONTACT_METHOD_TYPE_VALUES } from "./enums";
+export { type ContactMethodType, CONTACT_METHOD_TYPE_VALUES } from "./enums.js";
 
 export default contactMethod;

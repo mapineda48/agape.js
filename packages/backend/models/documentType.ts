@@ -1,11 +1,11 @@
 import { serial, varchar, boolean, uniqueIndex } from "drizzle-orm/pg-core";
-import { schema } from "./schema";
+import { schema } from "./schema.js";
 import {
   relations,
   type InferSelectModel,
   type InferInsertModel,
 } from "drizzle-orm";
-import user from "./user";
+import user from "./user.js";
 
 /**
  * Modelo de tipo de documento de identificación (IdentityDocumentType)

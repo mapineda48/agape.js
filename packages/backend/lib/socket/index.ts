@@ -21,19 +21,19 @@ import {
 import {
   discoverSocketNamespaces,
 } from "@mapineda48/agape-rpc/server/socket/discover";
-import type { ServiceDiscovery } from "@mapineda48/agape-rpc/server/discovery.js";
-import logger from "../log/logger";
-import Jwt from "../security/Jwt";
-import getCookie from "../security/getCookie";
+import type { ServiceDiscovery } from "@mapineda48/agape-rpc/server/discovery";
+import logger from "../log/logger.js";
+import Jwt from "../security/Jwt.js";
+import getCookie from "../security/getCookie.js";
 import {
   checkNamespaceAccess,
   initSocketPermissions,
   type SocketUserPayload,
-} from "./rbac";
+} from "./rbac/index.js";
 import {
   attachUserToSocket,
   getContextFromSocket,
-} from "./context";
+} from "./context.js";
 import { runContext } from "#lib/context";
 
 // ============================================================================

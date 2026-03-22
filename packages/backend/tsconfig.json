@@ -2,8 +2,8 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
     "target": "es2024",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -14,17 +14,10 @@
     "lib": ["ESNext"],
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
-    "rewriteRelativeImportExtensions": true,
     "incremental": false,
     "noEmit": false,
-    "rootDir": "..",
-    "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "#models/*": ["models/*"],
-      "#lib/*": ["lib/*"],
-      "#svc/*": ["services/*"]
-    }
+    "rootDir": ".",
+    "outDir": "dist"
   },
   "include": ["bin", "services", "lib", "models"],
   "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"]

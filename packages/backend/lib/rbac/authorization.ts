@@ -12,12 +12,12 @@
 
 import ctx from "#lib/context";
 import { ForbiddenError, UnauthorizedError } from "#lib/error";
-import { PermissionLevel, type PermissionInfo } from "./constants";
-import { hasPermission } from "./hasPermission";
+import { PermissionLevel, type PermissionInfo } from "./constants.js";
+import { hasPermission } from "./hasPermission.js";
 
 // Re-export for convenience
-export { hasPermission, hasAnyPermission, hasAllPermissions } from "./hasPermission";
-export { PermissionLevel, type PermissionInfo } from "./constants";
+export { hasPermission, hasAnyPermission, hasAllPermissions } from "./hasPermission.js";
+export { PermissionLevel, type PermissionInfo } from "./constants.js";
 
 /**
  * Checks if the current context represents an authenticated user.
@@ -58,7 +58,7 @@ export type PermissionResolver = (path: string) => Promise<string | null>;
  *
  * @example
  * ```typescript
- * import { getRequiredPermission } from "./permissions";
+ * import { getRequiredPermission } from "./permissions.js";
  *
  * const validateEndpointPermission = createPermissionValidator(getRequiredPermission);
  *

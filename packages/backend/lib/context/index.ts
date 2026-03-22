@@ -27,8 +27,8 @@
  */
 
 import type { Socket } from "socket.io";
-import type { IContext } from "./types";
-import { getStore } from "./store";
+import type { IContext } from "./types.js";
+import { getStore } from "./store.js";
 
 /**
  * Context proxy for convenient access.
@@ -96,11 +96,11 @@ export function isSocketContext(context: IContext): context is ISocketContext {
 }
 
 // Re-export types and utilities
-export type { IContext, ContextSource, UserPayload } from "./types";
+export type { IContext, ContextSource, UserPayload } from "./types.js";
 export {
   runContext,
   getStore,
   getStoreOrNull,
   hasContext,
   assertContext,
-} from "./store";
+} from "./store.js";

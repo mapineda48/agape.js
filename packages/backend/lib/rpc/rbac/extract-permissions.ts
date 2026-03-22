@@ -353,7 +353,7 @@ export async function buildAndGenerate(outputPath: string = OUTPUT_FILE) {
   return permissions;
 }
 
-import { navigationPermissions } from "./permissions.generated";
+import { navigationPermissions } from "./permissions.generated.js";
 
 export function generateJavaScriptModule(permissions: PermissionMap): string {
   const rpcEntries = Object.entries(permissions)

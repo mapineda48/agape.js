@@ -43,7 +43,7 @@ async function loadGeneratedPermissions(): Promise<Record<string, string>> {
   if (generatedPermissions) return generatedPermissions;
 
   try {
-    const module = await import("./permissions.generated");
+    const module = await import("./permissions.generated.js");
     generatedPermissions = module.socketPermissions;
     return generatedPermissions ?? {};
   } catch {

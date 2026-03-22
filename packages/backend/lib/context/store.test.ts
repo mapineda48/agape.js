@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { runContext, getStore, getStoreOrNull, hasContext } from "./store.ts";
-import type { IContext } from "./types.ts";
+import { runContext, getStore, getStoreOrNull, hasContext } from "./store.js";
+import type { IContext } from "./types.js";
 
 function createContext(overrides: Partial<IContext> = {}): IContext {
   return {

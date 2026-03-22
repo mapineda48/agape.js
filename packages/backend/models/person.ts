@@ -1,13 +1,13 @@
 import { integer, varchar } from "drizzle-orm/pg-core";
-import { schema } from "./schema";
-import user from "./user";
-import { dateTime } from "../lib/db/custom-types";
+import { schema } from "./schema.js";
+import user from "./user.js";
+import { dateTime } from "../lib/db/custom-types.js";
 import {
   relations,
   type InferInsertModel,
   type InferSelectModel,
 } from "drizzle-orm";
-import companyContact from "./companyContact";
+import companyContact from "./companyContact.js";
 
 /**
  * Modelo de persona (Person)

@@ -12,6 +12,10 @@ const ColombianDecimalBase = DecimalJs.clone({
 
 // 2) Extendemos para añadir toJSON()
 export default class Decimal extends ColombianDecimalBase {
+  constructor(value: DecimalJs.Value) {
+    super(value);
+  }
+
   toJSON() {
     // Siempre dos decimales, HALF_UP
     return this.toFixed(2);

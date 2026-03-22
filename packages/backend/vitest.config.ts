@@ -13,12 +13,4 @@ export default defineConfig({
     include: ["services/**/*.test.ts", "lib/**/*.test.ts"],
     exclude: ["dist"],
   },
-  resolve: {
-    alias: {
-      "#lib": path.resolve(__dirname, "lib"),
-      "#models": path.resolve(__dirname, "models"),
-      "#svc": path.resolve(__dirname, "services"),
-      "#shared": path.resolve(__dirname, "../shared"),
-    },
-  },
 });
