@@ -9,7 +9,11 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "access": "restricted",
+    "exports": {
+      ".": "./dist/index.js",
+      "./*": "./dist/*.js"
+    }
   },
   "exports": {
     ".": {
