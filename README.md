@@ -9,7 +9,7 @@ agape.js/
 ├── packages/
 │   ├── core/   # Shared types, data primitives, service contracts
 │   ├── rpc/    # Zero-boilerplate RPC system (middleware + code generation)
-│   ├── web/    # React 19 frontend (Vite 7, file-based routing, SSR/SSG)
+│   ├── web/    # React 19 frontend (Vite 7, file-based routing, SPA)
 │   └── app/    # Express 5 backend (server, models, services, CLI)
 ├── .agent/     # AI agent documentation and rules
 └── package.json
@@ -112,7 +112,6 @@ All environment variables are validated at startup via Zod (see `packages/app/bi
 
 - **Zero-boilerplate RPC**: Backend functions in `services/` are automatically exposed as POST endpoints. No route definitions needed.
 - **Type-safe contracts**: Service contracts (`.d.ts` files) in `packages/core` provide full type-checking between frontend and backend without importing Node.js-only code.
-- **SSR/SSG support**: Vite-powered frontend with server-side rendering and static generation capabilities.
 - **Socket.IO integration**: Real-time namespaces defined alongside RPC services with typed event contracts.
 - **RBAC**: Role-based access control via JSDoc tags (`@public`, `@permission <name>`) with wildcard permission matching.
 - **MessagePack serialization**: Binary transport via msgpackr for efficient RPC communication.

@@ -24,7 +24,6 @@ Installs globally as the `agape-app` command.
 - **PostgreSQL with Drizzle ORM** using Class Table Inheritance
 - **Socket.IO** with Redis adapter for scalable real-time events
 - **Azure Blob Storage** integration
-- **SSR/SSG** via `@mapineda48/agape-web`
 - **AsyncLocalStorage** for per-request context
 
 ## Architecture

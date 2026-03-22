@@ -1,7 +1,7 @@
 /**
  * Server-side facades for the web package.
  *
- * Exports Vite dev server factory, SSR middleware, and package paths.
+ * Exports Vite dev server factory and package paths.
  */
 
 import path from "node:path";
@@ -27,12 +27,3 @@ export async function createViteServer() {
     appType: "custom",
   });
 }
-
-export { createSSRMiddleware } from "./ssr.js";
-export type {
-  SSRHandler,
-  SSRMiddlewareOptions,
-  SSRRequest,
-  SSRResponse,
-  ViteDevServer,
-} from "./ssr.js";

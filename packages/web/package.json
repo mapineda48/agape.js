@@ -27,7 +27,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr entry-server.tsx --outDir dist/ssr --config vite.config.ssr.ts && tsc -p server/tsconfig.json && tsx server/postbuild.ts",
+    "build": "vite build && tsc -p server/tsconfig.json && tsx server/postbuild.ts",
     "tsc": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run"

@@ -113,8 +113,8 @@ await import("#lib/socket").then(({ default: createSocketServer }) => {
 });
 
 if (IsDevelopment) {
-  // Development: import frontend facades (Vite dev server, SSR middleware)
-  const { createViteServer, createSSRMiddleware, frontendPkgRoot } =
+  // Development: import frontend facades (Vite dev server)
+  const { createViteServer, frontendPkgRoot } =
     await import("@mapineda48/agape-web/server");
 
   const viteDevServer = await createViteServer();
@@ -124,12 +124,7 @@ if (IsDevelopment) {
   // Vite middleware handles static assets and HMR
   app.use(viteDevServer.middlewares);
 
-  // SSR middleware intercepts SSR pages (after Vite serves static assets)
-  app.use(
-    createSSRMiddleware({ vite: viteDevServer, frontendRoot: frontendPkgRoot }),
-  );
-
-  // SPA fallback for non-SSR pages (appType: "custom" doesn't serve index.html)
+  // SPA fallback (appType: "custom" doesn't serve index.html)
   app.use(async (req, res, next) => {
     if (req.method !== "GET") return next();
     const url = req.originalUrl;
@@ -148,11 +143,10 @@ if (IsDevelopment) {
     }
   });
 } else {
-  // Production: resolve web assets and SSR middleware from @mapineda48/agape-web
-  const { wwwRoot, indexHtml, distRoot } = await import(
+  // Production: resolve web assets from @mapineda48/agape-web
+  const { wwwRoot, indexHtml } = await import(
     "@mapineda48/agape-web/paths"
   );
-  const { createSSRMiddleware } = await import("@mapineda48/agape-web/server");
 
   // Enable GZIP compression for responses
   app.use(compression());
@@ -169,9 +163,6 @@ if (IsDevelopment) {
       },
     }),
   );
-
-  // SSR middleware for server-rendered pages
-  app.use(createSSRMiddleware({ frontendRoot: distRoot }));
 
   // Fallback to SPA entrypoint (for client-side routing)
   app.get(/.*/, (_req, res) => {

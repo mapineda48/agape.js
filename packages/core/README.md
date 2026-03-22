@@ -1,6 +1,6 @@
 # @mapineda48/agape-core
 
-Shared types, service contracts, RBAC catalog, and SSR utilities for the agape.js framework.
+Shared types, service contracts, and RBAC catalog for the agape.js framework.
 
 Published to [GitHub Packages](https://github.com/mapineda48/agape.js/packages) under the `@mapineda48` scope.
 
@@ -23,16 +23,6 @@ npm install @mapineda48/agape-core
 ### Root (`@mapineda48/agape-core`)
 
 - **`servicesDir`** -- Absolute path to the `services/` directory. Pass this to the Vite plugin or RPC server to enable auto-discovery of endpoints and socket namespaces.
-
-### SSR (`@mapineda48/agape-core/ssr`)
-
-Types and constants shared between server-side rendering and client hydration:
-
-- **`RenderingMode`** -- `"spa" | "ssr" | "ssg"`
-- **`SSRPageData`** -- Serialized page data shape (`pathname`, `params`, `props`)
-- **`SSR_OUTLET`** -- HTML placeholder replaced with rendered content
-- **`SSR_DATA_ID`** -- ID of the script tag containing hydration data
-- **`SSR_DATA_PLACEHOLDER`** -- HTML placeholder replaced with the data script tag
 
 ### Security (`@mapineda48/agape-core/security/*`)
 

@@ -2,7 +2,7 @@
  * Post-build script for the web package.
  *
  * Runs after Vite build to reorganize dist, move source maps,
- * pre-render SSG pages, and generate the paths module.
+ * and generate the paths module.
  */
 
 import fs from "fs-extra";
@@ -51,73 +51,6 @@ async function moveSourceMaps(): Promise<void> {
   console.log(chalk.green("✓ Source maps reorganized\n"));
 }
 
-async function preRenderSSGPages(): Promise<void> {
-  console.log(chalk.blue("📄 Pre-rendering SSG pages..."));
-
-  const ssrEntryPath = path.join(DIST, "ssr/entry-server.js");
-  if (!fs.existsSync(ssrEntryPath)) {
-    console.log(chalk.gray("  ⓘ No SSR bundle found, skipping"));
-    return;
-  }
-
-  const entryModule = await import(ssrEntryPath);
-  const { render, getSSRRoutes } = entryModule;
-
-  if (!getSSRRoutes || !render) {
-    console.log(chalk.gray("  ⓘ SSR entry missing render/getSSRRoutes, skipping"));
-    return;
-  }
-
-  const template = fs.readFileSync(path.join(DIST, "index.html"), "utf-8");
-  const routes = await getSSRRoutes();
-  const ssgRoutes = routes.filter(
-    (r: { rendering: string }) => r.rendering === "ssg",
-  );
-
-  if (ssgRoutes.length === 0) {
-    console.log(chalk.gray("  ⓘ No SSG routes found"));
-    console.log(chalk.green("✓ SSG pre-rendering complete\n"));
-    return;
-  }
-
-  let pagesRendered = 0;
-  for (const route of ssgRoutes) {
-    if (route.pathname.includes(":")) {
-      console.log(chalk.yellow(`  ⚠ Skipping dynamic SSG route: ${route.pathname}`));
-      continue;
-    }
-
-    const result = await render(route.pathname);
-    if (!result) {
-      console.log(chalk.yellow(`  ⚠ Render returned null for: ${route.pathname}`));
-      continue;
-    }
-
-    const ssrDataScript = `<script id="__SSR_DATA__" type="application/json">${
-      JSON.stringify(result.ssrData).replace(/</g, "\\u003c")
-    }</script>`;
-
-    let html = template;
-    html = html.replace("<!--ssr-outlet-->", result.html);
-    html = html.replace("<!--ssr-data-->", ssrDataScript);
-
-    const outputDir =
-      route.pathname === "/"
-        ? path.join(DIST, "www")
-        : path.join(DIST, "www", route.pathname.slice(1));
-    const outputFile = path.join(outputDir, "index.html");
-
-    await fs.ensureDir(outputDir);
-    await fs.writeFile(outputFile, html, "utf8");
-
-    console.log(chalk.gray(`  ✓ ${route.pathname} → ${path.relative(DIST, outputFile)}`));
-    pagesRendered++;
-  }
-
-  console.log(chalk.gray(`  ✓ Pre-rendered ${pagesRendered} SSG pages`));
-  console.log(chalk.green("✓ SSG pre-rendering complete\n"));
-}
-
 async function generatePathsModule(): Promise<void> {
   console.log(chalk.blue("📦 Generating paths module..."));
 
@@ -154,7 +87,6 @@ async function main(): Promise<void> {
 
   await reorganizeDistFiles();
   await moveSourceMaps();
-  await preRenderSSGPages();
   await generatePathsModule();
 
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);

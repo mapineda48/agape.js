@@ -1,6 +1,6 @@
 # @mapineda48/agape-web
 
-React 19 frontend with SSR/SSG support, file-based routing, and type-safe RPC integration.
+React 19 SPA frontend with file-based routing and type-safe RPC integration.
 
 ## Stack
 
@@ -11,7 +11,6 @@ React 19 frontend with SSR/SSG support, file-based routing, and type-safe RPC in
 ## Features
 
 - **File-based routing** via the `app/` directory convention
-- **SSR and SSG support** with a framework-agnostic SSR middleware
 - **Form system** with built-in validation
 - **Auto-generated RPC clients** via a custom Vite plugin
 - **Socket.IO typed client** for real-time communication
@@ -21,7 +20,6 @@ React 19 frontend with SSR/SSG support, file-based routing, and type-safe RPC in
 | Export | Description |
 |---|---|
 | `createViteServer()` | Creates a Vite dev server for local development |
-| `createSSRMiddleware()` | Returns SSR middleware using generic HTTP interfaces (`SSRRequest`, `SSRResponse`) -- compatible with Express, Koa, or any Node.js HTTP framework |
 | `paths` | Runtime path resolution for production asset lookup |
 
 ## Published Distribution
@@ -29,7 +27,6 @@ React 19 frontend with SSR/SSG support, file-based routing, and type-safe RPC in
 | Directory | Contents |
 |---|---|
 | `www/` | Client bundle |
-| `ssr/` | SSR bundle |
 | `server/` | Compiled server facades |
 | `paths.js` | Runtime path resolution |
 
