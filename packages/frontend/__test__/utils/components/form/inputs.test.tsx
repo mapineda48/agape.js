@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { Form } from "#web/utils/components/form";
 import * as Input from "#web/utils/components/form/Input";
 import { useAppSelector } from "#web/utils/components/form/store";
-import Decimal from "#shared/data/Decimal";
-import DateTime from "#shared/data/DateTime";
+import Decimal from "@mapineda48/agape-rpc/data/Decimal";
+import DateTime from "@mapineda48/agape-rpc/data/DateTime";
 
 beforeAll(() => {
   if (!globalThis.structuredClone) {

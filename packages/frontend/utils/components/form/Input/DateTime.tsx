@@ -1,7 +1,7 @@
 import { useMemo, forwardRef, type JSX } from "react";
 import useInput from "./useInput";
 import stringToPath from "#web/utils/stringToPath";
-import DateTime from "#shared/data/DateTime";
+import DateTime from "@mapineda48/agape-rpc/data/DateTime";
 import { format } from "date-fns";
 import { useFieldContextOptional } from "../Field/context";
 

@@ -53,7 +53,6 @@ app.use(morgan(IsDevelopment ? "dev" : "common"));
 // Production-specific settings
 if (IsProduction) {
   // Allow Express to trust headers from Nginx reverse proxy
-  // Required for req.ip, req.protocol, req.secure to work correctly
   app.set("trust proxy", 1);
 
   // Remove X-Powered-By header (security: don't expose server info)
@@ -61,19 +60,51 @@ if (IsProduction) {
 }
 
 /**
- * Dynamic imports for middleware after the database is initialized
- * Importing middleware before the database is initialized will throw an error
+ * Initialize RPC system via @mapineda48/agape-rpc facade
  */
+import { initRpc, type AuthPayload } from "@mapineda48/agape-rpc/server/index";
+import { runContext, type IContext } from "#lib/context";
+import { validateEndpointPermission } from "#lib/rpc/rbac/authorization";
 
-// RPC middleware
-await import("#lib/rpc/middleware").then(({ default: rpcMiddleware }) => {
-  app.use(rpcMiddleware);
+const servicesDir = path.resolve(
+  path.dirname(new URL(import.meta.url).pathname),
+  "../services",
+);
+
+const rpc = await initRpc(servicesDir, {
+  runContext: runContext as <T>(ctx: unknown, callback: () => T | Promise<T>) => T | Promise<T>,
+  createContext: (authPayload?: AuthPayload) => {
+    const context: IContext = authPayload
+      ? {
+          id: authPayload.id,
+          tenant: authPayload.tenant,
+          permissions: authPayload.permissions,
+          session: new Map(),
+          source: "http",
+        }
+      : {
+          id: 0,
+          tenant: "",
+          permissions: [],
+          session: new Map(),
+          source: "http",
+        };
+    return context;
+  },
+  permissionValidator: validateEndpointPermission,
+  logger: {
+    error: (...args: unknown[]) => logger.scope("RPC").error(args.map(String).join(" ")),
+    warn: (...args: unknown[]) => logger.scope("RPC").warn(args.map(String).join(" ")),
+  },
 });
+
+app.use(rpc.middleware);
 
 // Initialize Socket.IO server with Redis adapter for horizontal scaling
 const socketOptions = {
   redisUrl: CACHE_URL,
   jwtSecret: AGAPE_SECRET,
+  discovery: rpc.discovery,
 };
 
 await import("#lib/socket").then(({ default: createSocketServer }) => {
@@ -133,8 +164,6 @@ if (IsDevelopment) {
   app.use(compression());
 
   // Serve static frontend assets with aggressive caching
-  // Vite includes content hash in filenames, safe to cache for 1 year
-  // HTML files are excluded from immutable caching (they change between deployments)
   app.use(
     express.static(frontendRoot, {
       setHeaders(res, filePath) {

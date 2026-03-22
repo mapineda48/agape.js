@@ -12,6 +12,7 @@
     "access": "restricted"
   },
   "exports": {
+    ".": "./index.js",
     "./*.js": "./*.js",
     "./*": "./*.js"
   },
@@ -20,11 +21,6 @@
     "tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "date-fns": "^4.1.0",
-    "decimal.js": "^10.6.0",
-    "msgpackr": "^1.11.8",
-    "source-map": "^0.7.6",
-    "stacktrace-parser": "^0.1.11",
-    "zod": "^4.3.6"
+    "@mapineda48/agape-rpc": "workspace:*"
   }
 }

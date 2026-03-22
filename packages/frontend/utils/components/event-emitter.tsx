@@ -1,4 +1,4 @@
-import { encode, decode } from "#shared/msgpackr";
+import { encode, decode } from "@mapineda48/agape-rpc/msgpackr";
 import mitt from "mitt";
 import {
   createContext,

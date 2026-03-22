@@ -1,8 +1,5 @@
 /**
  * RPC Module Types
- *
- * Type definitions for the RPC module, providing better type safety
- * and documentation.
  */
 
 import type { Request } from "express";
@@ -37,7 +34,6 @@ export type RpcRequest = Request;
 
 /**
  * Extended Error interface for RPC errors with optional code and name properties.
- * Used for type-safe error checking in the RPC middleware.
  */
 export interface RpcError extends Error {
     /** Error code (e.g., "FORBIDDEN_ERROR") */
@@ -101,7 +97,6 @@ export type PgErrorCode = (typeof PG_ERROR_CODES)[keyof typeof PG_ERROR_CODES];
 
 /**
  * Interface representing a PostgreSQL DatabaseError structure.
- * These properties are available on errors thrown by the `pg` library.
  */
 export interface DatabaseError extends Error {
     code?: string;

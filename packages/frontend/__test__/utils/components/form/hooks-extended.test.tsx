@@ -5,7 +5,7 @@ import Form from "#web/utils/components/form";
 import { Submit } from "#web/utils/components/form/Submit";
 import EventEmitter from "#web/utils/components/event-emitter";
 import Decimal from "decimal.js";
-import DateTime from "#shared/data/DateTime";
+import DateTime from "@mapineda48/agape-rpc/data/DateTime";
 
 /**
  * Extended hooks tests for:

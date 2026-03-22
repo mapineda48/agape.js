@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { createClient, RESP_TYPES, type RedisClientType } from "redis";
-import { encode, decode } from "@mapineda48/agape/msgpackr";
+import { encode, decode } from "@mapineda48/agape-rpc/msgpackr";
 import logger from "../log/logger";
 
 type CacheKeyBuilder<A extends unknown[]> = (args: A) => string;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { withValidation } from "#lib/rpc/validation";
+import { withValidation } from "@mapineda48/agape-rpc/server/validation";
 /**
  * Public endpoint - no authentication required.
  * @public

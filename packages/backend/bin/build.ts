@@ -224,8 +224,9 @@ async function generateProductionPackageJson(): Promise<void> {
 
   try {
     // Remove workspace reference, add published shared package as real dependency
+    const workspaceDeps = ["@mapineda48/agape", "@mapineda48/agape-rpc"];
     const backendDeps = Object.fromEntries(
-      Object.entries(dependencies).filter(([key]) => key !== "@mapineda48/agape"),
+      Object.entries(dependencies).filter(([key]) => !workspaceDeps.includes(key)),
     );
 
     const productionPackage = {
@@ -235,6 +236,7 @@ async function generateProductionPackageJson(): Promise<void> {
       dependencies: {
         ...backendDeps,
         "@mapineda48/agape": sharedVersion,
+        "@mapineda48/agape-rpc": sharedVersion,
       },
       scripts: {
         start: "node bin/index.js",

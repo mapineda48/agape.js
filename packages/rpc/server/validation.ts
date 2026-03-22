@@ -4,8 +4,6 @@
  * Provides optional Zod-based input validation for RPC service functions.
  * Services can use `withValidation` to attach a schema to a function.
  * The middleware will automatically validate arguments before calling the handler.
- *
- * This is fully backwards compatible — functions without schemas work as before.
  */
 
 import type { z } from "zod";
@@ -29,20 +27,6 @@ export interface ValidatedFunction {
 
 /**
  * Wraps a service function with an attached Zod schema for argument validation.
- *
- * The schema should validate a tuple (array) matching the function's parameters.
- *
- * @example
- * ```ts
- * import { z } from "zod";
- * import { withValidation } from "#lib/rpc/validation";
- *
- * const schema = z.tuple([z.string(), z.number().optional()]);
- *
- * export const greet = withValidation(schema, (name: string, age?: number) => {
- *   return `Hello ${name}${age ? `, age ${age}` : ""}`;
- * });
- * ```
  *
  * @param schema - Zod schema that validates the arguments tuple
  * @param fn - The service function to wrap

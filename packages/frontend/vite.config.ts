@@ -2,7 +2,8 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import virtualModulePlugin from "../backend/lib/vite/vite-plugin";
+import { createVitePlugin } from "@mapineda48/agape-rpc/vite/plugin";
+import { servicesDir } from "@mapineda48/agape";
 
 const cwd = process.cwd();
 
@@ -14,7 +15,7 @@ export default defineConfig({
         plugins: [["babel-plugin-react-compiler"]],
       },
     }),
-    virtualModulePlugin,
+    createVitePlugin(servicesDir),
   ],
 
   resolve: {

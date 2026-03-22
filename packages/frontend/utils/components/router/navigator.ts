@@ -1,5 +1,5 @@
 import { Action, createBrowserHistory, type History } from "history";
-import { encode, decode } from "#shared/msgpackr";
+import { encode, decode } from "@mapineda48/agape-rpc/msgpackr";
 import type { INavigateTo } from "./types";
 
 export class Navigator {

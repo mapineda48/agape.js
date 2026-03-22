@@ -12,7 +12,7 @@ import { sql } from "drizzle-orm";
 import { schema } from "../schema";
 import user from "../user";
 import { dateTime } from "../../lib/db/custom-types";
-import DateTime from "@mapineda48/agape/data/DateTime";
+import DateTime from "@mapineda48/agape-rpc/data/DateTime";
 import { securityUserRole } from "./role";
 
 /**

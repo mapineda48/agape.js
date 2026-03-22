@@ -1,9 +1,9 @@
-import { decode, encode } from "#shared/msgpackr";
+import { decode, encode } from "../msgpackr.ts";
 import {
   CONTENT_TYPES,
   MSGPACK_FILE_FIELD,
   MSGPACK_FILE_NAME,
-} from "#shared/rpc";
+} from "../rpc.ts";
 
 // Determines the base URL depending on the environment (production or development)
 const baseURL =

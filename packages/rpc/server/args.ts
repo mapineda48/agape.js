@@ -5,9 +5,9 @@ import {
   type Part,
   type File as FormidableFile,
 } from "formidable";
-import { decode } from "@mapineda48/agape/msgpackr";
-import type { RpcRequest } from "./types";
-import { CONTENT_TYPES } from "@mapineda48/agape/rpc";
+import { decode } from "../msgpackr.ts";
+import type { RpcRequest } from "./types.ts";
+import { CONTENT_TYPES } from "../rpc.ts";
 
 /** Directory for temporary file uploads */
 const UPLOAD_DIR = os.tmpdir();
@@ -73,15 +73,6 @@ export async function decodeArgs(req: RpcRequest): Promise<unknown[]> {
 
 /**
  * Sets a value at a nested path within an object/array structure.
- *
- * @example
- * const obj = { users: [{ name: "John" }] };
- * setValueAtPath(obj, ["users", 0, "avatar"], file);
- * // Result: { users: [{ name: "John", avatar: file }] }
- *
- * @param root - The root object or array
- * @param path - Array of keys representing the path to the target location
- * @param value - The value to set
  */
 function setValueAtPath(
   root: unknown,

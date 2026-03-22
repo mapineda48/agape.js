@@ -5,10 +5,10 @@
  * Broadcasts messages to all connected clients without persistence.
  */
 
-import { registerNamespace } from "#lib/socket/namespace";
+import { registerNamespace } from "@mapineda48/agape-rpc/server/socket/namespace";
 import { CacheManager } from "#lib/infrastructure/CacheManager";
 import logger from "#lib/log/logger";
-import type { ConnectedSocket } from "@mapineda48/agape/socket";
+import type { ConnectedSocket } from "@mapineda48/agape-rpc/socket";
 import type { ChatEvents } from "@mapineda48/agape/services/chat";
 
 export type { ChatMessage, ChatEvents } from "@mapineda48/agape/services/chat";

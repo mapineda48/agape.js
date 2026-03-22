@@ -11,7 +11,7 @@ import * as Input from "#web/utils/components/form/Input";
 import Checkbox from "#web/utils/components/form/CheckBox";
 import { Submit } from "#web/utils/components/form/Submit";
 import EventEmitter from "#web/utils/components/event-emitter";
-import Decimal from "#shared/data/Decimal";
+import Decimal from "@mapineda48/agape-rpc/data/Decimal";
 
 describe("R1. Form.Root - Inicialización", () => {
   /**

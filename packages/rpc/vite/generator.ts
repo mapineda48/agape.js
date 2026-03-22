@@ -3,19 +3,18 @@
  *
  * Generates JavaScript code for virtual modules that provide type-safe
  * RPC client functions for each service endpoint.
- *
- * This script is executed by the Vite plugin to create virtual modules
- * that can be imported as `@agape/...` in the frontend.
  */
 
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { cwd, findServices, toPublicUrl } from "../rpc/path";
-import { VIRTUAL_MODULE_ID, VIRTUAL_MODULE_PREFIX } from "./constants";
-import { NamespaceManager } from "../socket/namespace";
-import Schema from "../db/schema";
+import { createServiceDiscovery } from "../server/discovery.ts";
+import { VIRTUAL_MODULE_ID, VIRTUAL_MODULE_PREFIX } from "./constants.ts";
 
-Schema.setSchemaName(import.meta.filename);
+/**
+ * Well-known symbol shared with @mapineda48/agape/services/contract.ts
+ * Used to detect socket namespace contracts without a direct dependency.
+ */
+const SOCKET_NAMESPACE = Symbol.for("agape-rpc:socket-namespace");
 
 // ============================================================================
 // Types
@@ -32,20 +31,25 @@ type ModuleExports = Record<string, unknown>;
 // ============================================================================
 
 /**
- * Import statement for the RPC client factory.
+ * Import statements for the RPC client and socket factories.
+ * These import from the @mapineda48/agape-rpc package.
  */
-const RPC_IMPORT = 'import makeRcp from "#web/utils/rpc";';
-const SOCKET_IMPORT = 'import makeSocket from "#web/utils/socket";';
+const RPC_IMPORT = 'import makeRcp from "@mapineda48/agape-rpc/client/rpc";';
+const SOCKET_IMPORT = 'import makeSocket from "@mapineda48/agape-rpc/client/socket";';
+
+/**
+ * Checks if an export is a socket namespace contract (marked with the well-known symbol).
+ */
+function isSocketContract(value: unknown): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    SOCKET_NAMESPACE in value
+  );
+}
 
 /**
  * Generates the JavaScript code for a virtual module.
- *
- * Each exported function from the service module becomes an RPC client
- * function in the virtual module.
- *
- * @param moduleUrl - The public URL path of the module
- * @param exports - The module's exports
- * @returns Array of JavaScript lines
  */
 function generateModuleCode(
   moduleUrl: string,
@@ -70,7 +74,7 @@ function generateModuleCode(
       continue;
     }
 
-    if (exportValue instanceof NamespaceManager) {
+    if (isSocketContract(exportValue)) {
       if (!lines.includes(SOCKET_IMPORT)) {
         lines.unshift(SOCKET_IMPORT);
       }
@@ -92,9 +96,6 @@ function generateModuleCode(
 
 /**
  * Gets the full endpoint URL for an export.
- *
- * Default exports map to the module root.
- * Named exports append the export name.
  */
 function getEndpointUrl(moduleUrl: string, exportName: string): string {
   return exportName === "default"
@@ -104,9 +105,6 @@ function getEndpointUrl(moduleUrl: string, exportName: string): string {
 
 /**
  * Converts a public URL to a virtual module ID.
- *
- * Virtual module IDs are prefixed with the null character (\0) to
- * indicate to Vite that they are virtual.
  */
 function toVirtualModuleId(moduleUrl: string): string {
   return VIRTUAL_MODULE_PREFIX + path.posix.join(VIRTUAL_MODULE_ID, moduleUrl);
@@ -118,14 +116,17 @@ function toVirtualModuleId(moduleUrl: string): string {
 
 /**
  * Discovers all service modules and generates their virtual module code.
+ *
+ * @param servicesDir - Absolute path to the services directory
  */
-async function generateVirtualModules(): Promise<VirtualModuleMap> {
+export async function generateVirtualModules(servicesDir: string): Promise<VirtualModuleMap> {
   const virtualModules: VirtualModuleMap = {};
+  const discovery = createServiceDiscovery(servicesDir);
 
-  for await (const relativePath of findServices()) {
-    const absolutePath = path.join(cwd, relativePath);
+  for await (const relativePath of discovery.findServices()) {
+    const absolutePath = path.join(servicesDir, relativePath);
     const moduleUrl = pathToFileURL(absolutePath).href;
-    const publicUrl = toPublicUrl(relativePath);
+    const publicUrl = discovery.toPublicUrl(relativePath);
 
     const module = (await import(moduleUrl)) as ModuleExports;
     const code = generateModuleCode(publicUrl, module);
@@ -140,29 +141,8 @@ async function generateVirtualModules(): Promise<VirtualModuleMap> {
 /**
  * Adds static virtual modules that don't come from service files.
  */
-function addStaticModules(modules: VirtualModuleMap): void {
-  // Security access module - use same convention as dynamic modules
+export function addStaticModules(modules: VirtualModuleMap): void {
   const securityModuleId =
     VIRTUAL_MODULE_PREFIX + VIRTUAL_MODULE_ID + "/security/session";
   modules[securityModuleId] = "export * from '#web/utils/session'";
 }
-
-// ============================================================================
-// Main Execution
-// ============================================================================
-
-/**
- * Build and output the virtual module map.
- *
- * The output is JSON that will be consumed by the Vite plugin.
- */
-async function main(): Promise<void> {
-  const virtualModules = await generateVirtualModules();
-  addStaticModules(virtualModules);
-
-  // Output as JSON for the Vite plugin to consume
-  console.log(JSON.stringify(virtualModules));
-}
-
-// Execute when run as a script
-await main();

@@ -1,0 +1,46 @@
+{
+  "name": "@mapineda48/agape-rpc",
+  "version": "0.1.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mapineda48/agape.js.git",
+    "directory": "packages/rpc"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "exports": {
+    "./*.js": "./*.js",
+    "./*": "./*.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "decimal.js": "^10.6.0",
+    "msgpackr": "^1.11.8"
+  },
+  "peerDependencies": {
+    "express": "^5.0.0",
+    "formidable": "^3.5.0",
+    "socket.io": "^4.8.0",
+    "socket.io-client": "^4.8.0",
+    "vite": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": { "optional": true },
+    "formidable": { "optional": true },
+    "socket.io": { "optional": true },
+    "socket.io-client": { "optional": true },
+    "vite": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/formidable": "^3.4.6",
+    "zod": "^4.3.6"
+  }
+}

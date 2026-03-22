@@ -1,7 +1,7 @@
 import { useMemo, forwardRef, type JSX } from "react";
 import useInput from "./useInput";
 import stringToPath from "#web/utils/stringToPath";
-import Decimal from "#shared/data/Decimal";
+import Decimal from "@mapineda48/agape-rpc/data/Decimal";
 import { useFieldContextOptional } from "../Field/context";
 
 /**

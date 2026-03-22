@@ -5,7 +5,7 @@ import "./page.css";
 import { sayHello } from "#services/public";
 import socket from "#services/chat";
 import { useRouter } from "#web/utils/components/router/hook";
-import Decimal from "#shared/data/Decimal";
+import Decimal from "@mapineda48/agape-rpc/data/Decimal";
 
 function App() {
   const [count, setCount] = useState(0);

@@ -1,4 +1,4 @@
-import rpc from "./rpc";
+import rpc from "@mapineda48/agape-rpc/client/rpc";
 import { type IUserSession, type LoginRequest } from "#shared/security/types";
 import { routes } from "#shared/security/route";
 

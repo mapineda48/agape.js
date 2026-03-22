@@ -2,30 +2,16 @@
  * Socket.IO Client Factory
  *
  * Creates type-safe Socket.IO clients for real-time communication.
- * This module is used by virtual modules generated from socket.ts files.
- *
- * Features:
- * - Automatic msgpack decoding for efficient binary data transfer
- * - Type-safe event handling through ConnectedSocket interface
- * - Proper handler cleanup with WeakMap-based tracking
- * - Environment-aware URL configuration (dev vs production)
- *
- * @module @/utils/socket
  */
 
 import { io } from "socket.io-client";
-import { decode } from "#shared/msgpackr";
-import type { ConnectedSocket, EventMap } from "#shared/socket";
+import { decode } from "../msgpackr.ts";
+import type { ConnectedSocket, EventMap } from "../socket.ts";
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-/**
- * Base URL for Socket.IO connections.
- * - Development: Connects to Express server on port 3000
- * - Production: Uses the current page origin
- */
 const BASE_URL =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3000"
@@ -35,10 +21,6 @@ const BASE_URL =
 // Types
 // ============================================================================
 
-/**
- * Factory interface returned by createSocketClient.
- * Calling connect() establishes the WebSocket connection.
- */
 export interface SocketClientFactory<Events extends EventMap = EventMap> {
   connect: () => Omit<ConnectedSocket<Events>, "connect">;
 }
@@ -47,23 +29,12 @@ export interface SocketClientFactory<Events extends EventMap = EventMap> {
 // Internal Utilities
 // ============================================================================
 
-/**
- * Wraps an event handler to automatically decode msgpack data.
- *
- * Socket.IO may receive data as:
- * - Uint8Array/ArrayBuffer: Binary msgpack data from the server
- * - Other types: Already decoded JSON data
- *
- * @param handler - The original handler function
- * @returns Wrapped handler that decodes binary data
- */
 function wrapEventHandler(
   handler: (data: unknown) => void,
 ): (data: unknown) => void {
   return (data: unknown) => {
     if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
       const decoded = decode(data as Uint8Array);
-      // msgpackr wraps emitted args in an array
       handler(Array.isArray(decoded) ? decoded[0] : decoded);
     } else {
       handler(data);
@@ -75,81 +46,42 @@ function wrapEventHandler(
 // Client Factory
 // ============================================================================
 
-/**
- * Creates a Socket.IO client factory for a specific namespace.
- *
- * This function is called by virtual modules to create type-safe
- * socket clients. Each call to `connect()` creates a new connection.
- *
- * @param namespace - The socket namespace path (e.g., "/notifications")
- * @returns Factory object with connect() method
- *
- * @example
- * // This is typically used through virtual modules:
- * import socket from "@agape/public/socket";
- *
- * const connection = socket.connect();
- *
- * connection.on("event", (data) => {
- *     console.log(data);
- * });
- *
- * // Cleanup when done
- * connection.disconnect();
- */
 export default function createSocketClient<Events extends EventMap = EventMap>(
   namespace: string,
 ): SocketClientFactory<Events> {
   return {
     connect: (): Omit<ConnectedSocket<Events>, "connect"> => {
-      // Build the full URL for the namespace
       const url = namespace === "/" ? BASE_URL : `${BASE_URL}${namespace}`;
 
       console.log(url);
 
-      // Create Socket.IO connection
       const socket = io(url, {
         transports: ["websocket"],
         withCredentials: process.env.NODE_ENV === "development",
       });
 
-      // Track wrapped handlers for proper cleanup
-      // WeakMap allows garbage collection when handlers are no longer referenced
       const handlerMap = new WeakMap<
         (data: unknown) => void,
         (data: unknown) => void
       >();
 
-      // Build the connected socket interface
       const connectedSocket: Omit<ConnectedSocket<Events>, "connect"> = {
-        /**
-         * Disconnects from the server and cleans up resources.
-         */
         disconnect: () => {
           socket.disconnect();
         },
 
-        /**
-         * Subscribes to an event with automatic msgpack decoding.
-         * Returns an unsubscribe function for easy cleanup.
-         */
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         on: (event: string, handler: (data: any) => void) => {
           const wrappedHandler = wrapEventHandler(handler);
           handlerMap.set(handler, wrappedHandler);
           socket.on(event, wrappedHandler);
 
-          // Return cleanup function
           return () => {
             socket.off(event, handlerMap.get(handler));
             handlerMap.delete(handler);
           };
         },
 
-        /**
-         * Unsubscribes from an event.
-         * Uses the handler map to find the correct wrapped handler.
-         */
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         off: (event: string, handler?: (data: any) => void) => {
           if (handler) {
@@ -163,9 +95,6 @@ export default function createSocketClient<Events extends EventMap = EventMap>(
           }
         },
 
-        /**
-         * Emits an event to the server.
-         */
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         emit: (event: string, ...args: any[]) => {
           console.log(event, ...args);

@@ -9,18 +9,19 @@
  * - @public namespaces: No authentication required
  * - @permission <name> namespaces: Require specific permission to connect
  * - No tag namespaces: Require any authenticated user
- *
- * The RBAC system uses JSDoc tags on namespace exports, similar to RPC endpoints.
  */
 
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 import type { Server as HttpServer } from "node:http";
 import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { cwd, findServices, toPublicUrl, getEndpointPath } from "../rpc/path";
 import { Server } from "socket.io";
-import { NamespaceManager } from "./namespace";
+import {
+  configureSocketContext,
+} from "@mapineda48/agape-rpc/server/socket/namespace";
+import {
+  discoverSocketNamespaces,
+} from "@mapineda48/agape-rpc/server/socket/discover";
+import type { ServiceDiscovery } from "@mapineda48/agape-rpc/server/discovery.js";
 import logger from "../log/logger";
 import Jwt from "../security/Jwt";
 import getCookie from "../security/getCookie";
@@ -29,7 +30,11 @@ import {
   initSocketPermissions,
   type SocketUserPayload,
 } from "./rbac";
-import { attachUserToSocket } from "./context";
+import {
+  attachUserToSocket,
+  getContextFromSocket,
+} from "./context";
+import { runContext } from "#lib/context";
 
 // ============================================================================
 // Types
@@ -41,6 +46,8 @@ interface SocketServerOptions {
   redisUrl?: string;
   /** JWT secret for authenticating non-public namespaces */
   jwtSecret?: string;
+  /** Service discovery from the RPC engine */
+  discovery: ServiceDiscovery;
   /** Additional Socket.IO server options */
   [key: string]: unknown;
 }
@@ -54,10 +61,6 @@ let ioInstance: Server | null = null;
 
 /**
  * Gets the Socket.IO server instance.
- * Must be called after createSocketServer has completed.
- *
- * @returns The Socket.IO server instance
- * @throws Error if called before server is initialized
  */
 export function getSocketServer(): Server {
   if (!ioInstance) {
@@ -70,16 +73,12 @@ export function getSocketServer(): Server {
 
 /**
  * Creates and configures the Socket.IO server.
- *
- * @param httpServer - The HTTP server to attach Socket.IO to
- * @param options - Socket server options including optional redisUrl and jwtSecret
- * @returns The configured Socket.IO server instance
  */
 export default async function createSocketServer(
   httpServer: HttpServer,
-  options: SocketServerOptions = {},
+  options: SocketServerOptions,
 ): Promise<Server> {
-  const { redisUrl, jwtSecret, ...socketOptions } = options;
+  const { redisUrl, jwtSecret, discovery, ...socketOptions } = options;
 
   const io = new Server(httpServer, {
     transports: ["websocket"],
@@ -100,6 +99,13 @@ export default async function createSocketServer(
   // Store global reference
   ioInstance = io;
 
+  // Configure socket context for the NamespaceManager
+  // Cast runContext to match the generic unknown type expected by the RPC package
+  configureSocketContext(
+    runContext as <T>(ctx: unknown, cb: () => T | Promise<T>) => T | Promise<T>,
+    getContextFromSocket,
+  );
+
   // Create JWT instance if secret provided (for authenticated namespaces)
   const jwt = jwtSecret ? new Jwt(jwtSecret) : null;
 
@@ -107,107 +113,87 @@ export default async function createSocketServer(
   await initSocketPermissions();
 
   // Register all socket namespaces
-  await registerSocketNamespaces(io, jwt);
+  await registerSocketNamespaces(io, jwt, discovery);
 
   return io;
 }
 
 /**
  * Registers all socket namespaces from socket module files.
- *
- * Authentication and authorization middleware is applied based on JSDoc tags:
- * - @public: No authentication required
- * - @permission <name>: Specific permission required
- * - No tag: Any authenticated user can connect
- *
- * @param io - Socket.IO server instance
- * @param jwt - JWT instance for authentication (null = all public)
  */
 async function registerSocketNamespaces(
   io: Server,
   jwt: Jwt | null,
+  discovery: ServiceDiscovery,
 ): Promise<void> {
   logger.scope("Socket").info("Registering socket namespaces");
 
-  for await (const relativePath of findServices()) {
-    const absolutePath = path.join(cwd, relativePath);
-    const moduleUrl = pathToFileURL(absolutePath).href;
-    const publicUrl = toPublicUrl(relativePath);
+  const namespaces = await discoverSocketNamespaces(discovery);
 
-    const module = await import(moduleUrl);
+  for (const { endpoint, manager } of namespaces) {
+    // Check namespace permissions
+    const { isPublic, requiredPermission } =
+      await checkNamespaceAccess(endpoint, null);
 
-    for (const [exportName, exportValue] of Object.entries(module)) {
-      if (exportValue instanceof NamespaceManager) {
-        const endpoint = getEndpointPath(publicUrl, exportName);
+    const accessType = isPublic
+      ? "public"
+      : requiredPermission
+        ? `permission: ${requiredPermission}`
+        : "authenticated";
 
-        // Check namespace permissions
-        const { isPublic, requiredPermission } =
-          await checkNamespaceAccess(endpoint, null);
+    logger
+      .scope("Socket")
+      .info(`Registering socket namespace: ${endpoint} (${accessType})`);
 
-        const accessType = isPublic
-          ? "public"
-          : requiredPermission
-            ? `permission: ${requiredPermission}`
-            : "authenticated";
+    const nsp = io.of(endpoint);
 
+    // Apply authentication/authorization middleware
+    nsp.use(async (socket, next) => {
+      try {
+        let user: SocketUserPayload | null = null;
+
+        // Try to authenticate if JWT is available
+        if (jwt) {
+          const cookieHeader = socket.handshake.headers.cookie;
+          const token = getCookie(cookieHeader);
+
+          if (token) {
+            try {
+              user = await jwt.verifyToken<SocketUserPayload>(token);
+            } catch {
+              // Token invalid - user remains null
+            }
+          }
+        }
+
+        // Check access permissions
+        const accessResult = await checkNamespaceAccess(endpoint, user);
+
+        if (!accessResult.allowed) {
+          if (accessResult.requiresAuth && !user) {
+            return next(new Error("Authentication required"));
+          }
+          if (accessResult.requiredPermission) {
+            return next(
+              new Error(
+                `Permission denied. Required: ${accessResult.requiredPermission}`,
+              ),
+            );
+          }
+          return next(new Error("Access denied"));
+        }
+
+        // Attach user context to socket
+        attachUserToSocket(socket, user);
+        next();
+      } catch (error) {
         logger
           .scope("Socket")
-          .info(`Registering socket namespace: ${endpoint} (${accessType})`);
-
-        const nsp = io.of(endpoint);
-
-        // Apply authentication/authorization middleware
-        nsp.use(async (socket, next) => {
-          try {
-            let user: SocketUserPayload | null = null;
-
-            // Try to authenticate if JWT is available
-            if (jwt) {
-              const cookieHeader = socket.handshake.headers.cookie;
-              const token = getCookie(cookieHeader);
-
-              if (token) {
-                try {
-                  user = await jwt.verifyToken<SocketUserPayload>(token);
-                } catch {
-                  // Token invalid - user remains null
-                  // For public namespaces this is fine
-                  // For auth-required namespaces, will fail below
-                }
-              }
-            }
-
-            // Check access permissions
-            const accessResult = await checkNamespaceAccess(endpoint, user);
-
-            if (!accessResult.allowed) {
-              if (accessResult.requiresAuth && !user) {
-                return next(new Error("Authentication required"));
-              }
-              if (accessResult.requiredPermission) {
-                return next(
-                  new Error(
-                    `Permission denied. Required: ${accessResult.requiredPermission}`,
-                  ),
-                );
-              }
-              return next(new Error("Access denied"));
-            }
-
-            // Attach user context to socket
-            attachUserToSocket(socket, user);
-            next();
-          } catch (error) {
-            logger
-              .scope("Socket")
-              .warn(`Auth failed for ${endpoint}: ${error}`);
-            next(new Error("Authentication failed"));
-          }
-        });
-
-        exportValue.connect(nsp);
-        break;
+          .warn(`Auth failed for ${endpoint}: ${error}`);
+        next(new Error("Authentication failed"));
       }
-    }
+    });
+
+    manager.connect(nsp);
   }
 }

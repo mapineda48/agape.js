@@ -10,7 +10,7 @@ import {
 import { relations, sql } from "drizzle-orm";
 import { schema } from "../schema";
 import { dateTime } from "../../lib/db/custom-types";
-import DateTime from "@mapineda48/agape/data/DateTime";
+import DateTime from "@mapineda48/agape-rpc/data/DateTime";
 import { securityUser } from "./user";
 
 /**

@@ -1,12 +1,11 @@
 /**
  * Service Contract: Global Chat
  *
- * Type-only contract for the public chat socket namespace.
- * Used by the frontend for type-safe socket communication.
- * The actual implementation lives in services/chat.ts (backend only).
+ * Contract for the public chat socket namespace.
+ * The actual implementation lives in backend/services/chat.ts.
  */
 
-import type { ConnectedSocket } from "#shared/socket";
+import { socketContract } from "./contract";
 
 /** Message structure */
 export interface ChatMessage {
@@ -36,5 +35,5 @@ export type ChatEvents = {
   "users:count": { count: number };
 };
 
-declare const socket: ConnectedSocket<ChatEvents>;
+const socket = socketContract<ChatEvents>();
 export default socket;

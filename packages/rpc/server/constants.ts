@@ -1,8 +1,5 @@
 /**
  * RPC Module Constants
- *
- * Centralized constants used across the RPC module for consistency
- * and easier maintenance.
  */
 
 /**

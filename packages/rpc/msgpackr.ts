@@ -1,8 +1,8 @@
 import { pack, unpack, addExtension } from 'msgpackr';
-import { extensionCodecDecimal } from './data/Decimal';
-import { extensionCodecDateTime } from './data/DateTime';
-import { extensionCodecFileBrowser } from './data/File';
-import { extensionCodecError } from './data/Error';
+import { extensionCodecDecimal } from './data/Decimal.ts';
+import { extensionCodecDateTime } from './data/DateTime.ts';
+import { extensionCodecFileBrowser } from './data/File.ts';
+import { extensionCodecError } from './data/Error.ts';
 
 // 1) Registramos *globalmente* todas las extensiones
 addExtension(extensionCodecDecimal);

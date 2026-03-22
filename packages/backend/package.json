@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@mapineda48/agape": "workspace:*",
+    "@mapineda48/agape-rpc": "workspace:*",
     "@azure/storage-blob": "^12.30.0",
     "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^6.0.0",

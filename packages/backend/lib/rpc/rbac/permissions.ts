@@ -9,7 +9,13 @@
  */
 
 import path from "node:path";
-import { cwd, findServices } from "../path";
+import { fileURLToPath } from "node:url";
+import { createServiceDiscovery } from "@mapineda48/agape-rpc/server/discovery";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const cwd = path.resolve(__dirname, "../../../services");
+const { findServices } = createServiceDiscovery(cwd);
 
 // ============================================================================
 // Types (re-exported from unified RBAC)

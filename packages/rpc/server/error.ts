@@ -5,11 +5,30 @@
  * into user-friendly error messages for RPC responses.
  */
 
-import { PG_ERROR_CODES, type DatabaseError } from "./types";
-import logger from "#lib/log/logger";
+import { PG_ERROR_CODES, type DatabaseError } from "./types.ts";
 
-/** Logger scoped for RPC error handling */
-const log = logger.scope("RPC");
+// ============================================================================
+// Logger Interface
+// ============================================================================
+
+export interface RpcLogger {
+  error(...args: unknown[]): void;
+  warn(...args: unknown[]): void;
+}
+
+const defaultLogger: RpcLogger = {
+  error: console.error,
+  warn: console.warn,
+};
+
+let activeLogger: RpcLogger = defaultLogger;
+
+/**
+ * Sets the logger used by the error module.
+ */
+export function setErrorLogger(logger: RpcLogger): void {
+  activeLogger = logger;
+}
 
 // ============================================================================
 // Database Error Detection
@@ -30,7 +49,6 @@ function isDatabaseError(error: unknown): error is DatabaseError {
 
 /**
  * Checks if an object has the structure of a PostgreSQL database error.
- * Used for checking `cause` properties which may not be Error instances.
  */
 function hasDatabaseErrorShape(obj: unknown): obj is DatabaseError {
   if (obj === null || typeof obj !== "object") return false;
@@ -44,13 +62,6 @@ function hasDatabaseErrorShape(obj: unknown): obj is DatabaseError {
 
 /**
  * Extracts the PostgreSQL database error from an error chain.
- *
- * Drizzle ORM wraps the original pg error in the `cause` property.
- * This function searches recursively through the error chain.
- *
- * @param error - The error to extract the database error from
- * @param maxDepth - Maximum depth to search (prevents infinite loops)
- * @returns The PostgreSQL database error if found, null otherwise
  */
 function extractDatabaseError(
   error: unknown,
@@ -58,21 +69,17 @@ function extractDatabaseError(
 ): DatabaseError | null {
   if (maxDepth <= 0) return null;
 
-  // Check if the error itself is a database error
   if (isDatabaseError(error)) {
     return error;
   }
 
-  // Check if it's an Error with a cause property
   if (error instanceof Error) {
     const cause = (error as Error & { cause?: unknown }).cause;
 
-    // The cause might be a plain object with database error properties
     if (hasDatabaseErrorShape(cause)) {
       return createDatabaseErrorFromShape(cause);
     }
 
-    // Recursively check the cause
     if (cause !== undefined) {
       return extractDatabaseError(cause, maxDepth - 1);
     }
@@ -115,25 +122,17 @@ const CONSTRAINT_SUFFIXES = [
 
 /**
  * Extracts a human-readable field name from database error metadata.
- *
- * Attempts to extract from (in order of priority):
- * 1. Direct column property
- * 2. Constraint name (parsing common patterns)
- * 3. Detail message (Key/column patterns)
  */
 function extractFieldName(error: DatabaseError): string | null {
-  // Priority 1: Direct column property
   if (error.column) {
     return formatFieldName(error.column);
   }
 
-  // Priority 2: Extract from constraint name
   const constraintField = extractFromConstraintName(error.constraint);
   if (constraintField) {
     return constraintField;
   }
 
-  // Priority 3: Extract from detail message
   const detailField = extractFromDetailMessage(error.detail);
   if (detailField) {
     return detailField;
@@ -142,18 +141,11 @@ function extractFieldName(error: DatabaseError): string | null {
   return null;
 }
 
-/**
- * Extracts field name from constraint names like:
- * - table_column_key (unique constraint)
- * - table_column_fkey (foreign key)
- * - table_column_check (check constraint)
- */
 function extractFromConstraintName(constraint: string | undefined): string | null {
   if (!constraint) return null;
 
   const parts = constraint.split("_");
 
-  // Remove common suffixes
   while (
     parts.length > 1 &&
     CONSTRAINT_SUFFIXES.includes(parts[parts.length - 1].toLowerCase())
@@ -161,7 +153,6 @@ function extractFromConstraintName(constraint: string | undefined): string | nul
     parts.pop();
   }
 
-  // Remove table name prefix if present (usually the first part)
   if (parts.length > 1) {
     parts.shift();
   }
@@ -169,21 +160,14 @@ function extractFromConstraintName(constraint: string | undefined): string | nul
   return parts.length > 0 ? formatFieldName(parts.join("_")) : null;
 }
 
-/**
- * Extracts field name from PostgreSQL detail messages like:
- * - "Key (column_name)=(...) already exists."
- * - 'column "column_name" of relation ...'
- */
 function extractFromDetailMessage(detail: string | undefined): string | null {
   if (!detail) return null;
 
-  // Pattern: Key (column_name)=(...)
   const keyMatch = detail.match(/Key \(([^)]+)\)/i);
   if (keyMatch) {
     return formatFieldName(keyMatch[1]);
   }
 
-  // Pattern: column "column_name" of relation ...
   const columnMatch = detail.match(/column "([^"]+)"/i);
   if (columnMatch) {
     return formatFieldName(columnMatch[1]);
@@ -192,26 +176,18 @@ function extractFromDetailMessage(detail: string | undefined): string | null {
   return null;
 }
 
-/**
- * Formats a snake_case or camelCase field name into human-readable format.
- *
- * Examples:
- * - "document_number" → "Document Number"
- * - "createdAt" → "Created At"
- */
 function formatFieldName(name: string): string {
   return name
-    .replace(/_/g, " ") // snake_case to spaces
-    .replace(/([a-z])([A-Z])/g, "$1 $2") // camelCase to spaces
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
     .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize words
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 // ============================================================================
 // Error Normalization
 // ============================================================================
 
-/** Error messages for database errors */
 const ERROR_MESSAGES = {
   uniqueViolation: {
     withField: (field: string) =>
@@ -261,9 +237,6 @@ const ERROR_MESSAGES = {
   unknownError: "Ups... Something went wrong!",
 } as const;
 
-/**
- * Normalizes a PostgreSQL database error into a user-friendly error message.
- */
 function normalizeDatabaseError(error: DatabaseError): Error {
   const fieldName = extractFieldName(error);
 
@@ -340,7 +313,7 @@ function normalizeDatabaseError(error: DatabaseError): Error {
       return new Error(ERROR_MESSAGES.schemaError);
 
     default:
-      log.warn(`Unhandled database error code: ${error.code} - ${error.message}`);
+      activeLogger.warn(`Unhandled database error code: ${error.code} - ${error.message}`);
       return new Error(ERROR_MESSAGES.genericDbError);
   }
 }
@@ -351,35 +324,22 @@ function normalizeDatabaseError(error: DatabaseError): Error {
 
 /**
  * Parses and normalizes errors before sending them to the client.
- *
- * Handles:
- * - PostgreSQL database errors (direct from pg driver)
- * - Drizzle ORM errors (which wrap pg errors in the `cause` property)
- * - Application errors with specific messages
- * - Unknown errors
- *
- * @param error - The error caught from the RPC handler
- * @returns A normalized Error instance with a user-friendly message
  */
 export default function parseError(error: unknown): Error {
-  // Log error with structured logger for better debugging
   if (error instanceof Error) {
-    log.error("RPC handler error:", error.message, error.stack);
+    activeLogger.error("RPC handler error:", error.message, error.stack);
   } else {
-    log.error("RPC handler error (unknown type):", error);
+    activeLogger.error("RPC handler error (unknown type):", error);
   }
 
-  // Try to extract a PostgreSQL database error from the error chain
   const dbError = extractDatabaseError(error);
   if (dbError) {
     return normalizeDatabaseError(dbError);
   }
 
-  // Pass through application errors that already have meaningful messages
   if (error instanceof Error) {
     return error;
   }
 
-  // Fallback for unknown error types
   return new Error(ERROR_MESSAGES.unknownError);
 }

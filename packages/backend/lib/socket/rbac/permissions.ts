@@ -15,9 +15,15 @@
  */
 
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type ts from "typescript";
-import { cwd, findServices, toPublicUrl, getEndpointPath } from "../../rpc/path";
-import { NamespaceManager } from "../namespace";
+import { createServiceDiscovery } from "@mapineda48/agape-rpc/server/discovery";
+import { NamespaceManager } from "@mapineda48/agape-rpc/server/socket/namespace";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const cwd = path.resolve(__dirname, "../../../services");
+const { findServices, toPublicUrl, getEndpointPath } = createServiceDiscovery(cwd);
 
 // ============================================================================
 // Types (re-exported from unified RBAC)
