@@ -112,14 +112,10 @@ await import("#lib/socket").then(({ default: createSocketServer }) => {
   logger.scope("Socket").info("Socket.IO server initialized");
 });
 
-// SSR middleware (works in both dev and prod)
-const { createSSRMiddleware } = await import("#lib/ssr/middleware");
-
 if (IsDevelopment) {
-  // Development: import frontend facades (Vite dev server, package root)
-  const { createViteServer, frontendPkgRoot } = await import(
-    "@mapineda48/agape-web/server"
-  );
+  // Development: import frontend facades (Vite dev server, SSR middleware)
+  const { createViteServer, createSSRMiddleware, frontendPkgRoot } =
+    await import("@mapineda48/agape-web/server");
 
   const viteDevServer = await createViteServer();
 
@@ -152,20 +148,18 @@ if (IsDevelopment) {
     }
   });
 } else {
-  // Production: frontend build output is at web/ inside dist
-  const webRoot = path.resolve(
-    path.dirname(new URL(import.meta.url).pathname),
-    "../web",
+  // Production: resolve web assets and SSR middleware from @mapineda48/agape-web
+  const { wwwRoot, indexHtml, distRoot } = await import(
+    "@mapineda48/agape-web/paths"
   );
-  const frontendRoot = path.resolve(webRoot, "www");
-  const indexHtml = path.resolve(webRoot, "index.html");
+  const { createSSRMiddleware } = await import("@mapineda48/agape-web/server");
 
   // Enable GZIP compression for responses
   app.use(compression());
 
   // Serve static frontend assets with aggressive caching
   app.use(
-    express.static(frontendRoot, {
+    express.static(wwwRoot, {
       setHeaders(res, filePath) {
         if (filePath.endsWith(".html")) {
           res.setHeader("Cache-Control", "public, max-age=0");
@@ -177,7 +171,7 @@ if (IsDevelopment) {
   );
 
   // SSR middleware for server-rendered pages
-  app.use(createSSRMiddleware({}));
+  app.use(createSSRMiddleware({ frontendRoot: distRoot }));
 
   // Fallback to SPA entrypoint (for client-side routing)
   app.get(/.*/, (_req, res) => {

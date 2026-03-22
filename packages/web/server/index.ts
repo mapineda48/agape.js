@@ -1,8 +1,7 @@
 /**
- * Server-side facades for the frontend package.
+ * Server-side facades for the web package.
  *
- * Backend imports from here to access frontend resources
- * without directly depending on Vite or knowing frontend internals.
+ * Exports Vite dev server factory, SSR middleware, and package paths.
  */
 
 import path from "node:path";
@@ -10,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Root directory of the frontend package */
+/** Root directory of the web package */
 export const frontendPkgRoot = path.resolve(__dirname, "..");
 
 /**
@@ -25,6 +24,15 @@ export async function createViteServer() {
     root: frontendPkgRoot,
     configFile: path.resolve(frontendPkgRoot, "vite.config.ts"),
     server: { middlewareMode: true },
-    appType: "custom", // We handle HTML serving ourselves for SSR
+    appType: "custom",
   });
 }
+
+export { createSSRMiddleware } from "./ssr.js";
+export type {
+  SSRHandler,
+  SSRMiddlewareOptions,
+  SSRRequest,
+  SSRResponse,
+  ViteDevServer,
+} from "./ssr.js";

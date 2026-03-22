@@ -1,14 +1,12 @@
 /**
- * SSR Middleware for Express
+ * Framework-agnostic SSR middleware.
  *
- * Handles server-side rendering for pages that opt-in to SSR/SSG.
- * Works in both development (via Vite ssrLoadModule) and production
- * (via pre-built SSR bundle).
+ * Works with any HTTP framework (Express, Koa, Hono, etc.) by using
+ * generic request/response interfaces instead of framework-specific types.
  */
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Request, Response, NextFunction } from "express";
 import {
   SSR_OUTLET,
   SSR_DATA_PLACEHOLDER,
@@ -16,20 +14,32 @@ import {
 } from "@mapineda48/agape-core/ssr";
 
 // ============================================================================
-// Types
+// Generic HTTP Types (framework-agnostic)
 // ============================================================================
 
-/** Minimal Vite dev server interface to avoid importing vite directly */
-interface ViteDevServer {
+export interface SSRRequest {
+  method?: string;
+  url: string;
+  headers: Record<string, string | string[] | undefined>;
+}
+
+export interface SSRResponse {
+  setHeader(name: string, value: string): void;
+  statusCode: number;
+  end(data?: string): void;
+}
+
+/** Minimal Vite dev server interface */
+export interface ViteDevServer {
   transformIndexHtml(url: string, html: string): Promise<string>;
   ssrLoadModule(url: string): Promise<unknown>;
   ssrFixStacktrace(error: Error): void;
 }
 
-interface SSRMiddlewareOptions {
+export interface SSRMiddlewareOptions {
   /** Vite dev server instance (development only) */
   vite?: ViteDevServer;
-  /** Root path for frontend resources (frontend package root in dev, web/ dir in prod) */
+  /** Root path for frontend resources */
   frontendRoot?: string;
 }
 
@@ -39,7 +49,11 @@ interface EntryServerModule {
     req?: unknown,
   ) => Promise<{
     html: string;
-    ssrData: { pathname: string; params: Record<string, string>; props: Record<string, unknown> };
+    ssrData: {
+      pathname: string;
+      params: Record<string, string>;
+      props: Record<string, unknown>;
+    };
   } | null>;
 }
 
@@ -47,11 +61,17 @@ interface EntryServerModule {
 // Middleware Factory
 // ============================================================================
 
+export type SSRHandler = (
+  req: SSRRequest,
+  res: SSRResponse,
+  next: (err?: unknown) => void,
+) => Promise<void>;
+
 /**
- * Creates an Express middleware that handles SSR for opt-in pages.
- * Falls through to the next middleware for SPA pages.
+ * Creates a framework-agnostic SSR middleware.
+ * Falls through (calls next) for non-SSR pages.
  */
-export function createSSRMiddleware(options: SSRMiddlewareOptions) {
+export function createSSRMiddleware(options: SSRMiddlewareOptions): SSRHandler {
   const { vite, frontendRoot } = options;
   const isDev = !!vite;
 
@@ -59,16 +79,17 @@ export function createSSRMiddleware(options: SSRMiddlewareOptions) {
   let prodTemplate: string | null = null;
   let prodRender: EntryServerModule["render"] | null = null;
 
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req, res, next) => {
     // Only handle GET requests for HTML pages
     if (req.method !== "GET") return next();
 
     // Skip API/RPC endpoints and static assets
-    const url = req.originalUrl;
+    const url = req.url;
     if (
       url.startsWith("/api/") ||
-      url.includes(".") || // static files have extensions
-      req.headers.accept?.includes("application/msgpack")
+      url.includes(".") ||
+      (typeof req.headers.accept === "string" &&
+        req.headers.accept.includes("application/msgpack"))
     ) {
       return next();
     }
@@ -78,23 +99,20 @@ export function createSSRMiddleware(options: SSRMiddlewareOptions) {
       let render: EntryServerModule["render"];
 
       if (isDev) {
-        // Development: read template from frontend package and transform with Vite
         const rawTemplate = fs.readFileSync(
           path.resolve(frontendRoot!, "index.html"),
           "utf-8",
         );
         template = await vite!.transformIndexHtml(url, rawTemplate);
 
-        // Load server entry through Vite (full HMR support)
         const entryModule = (await vite!.ssrLoadModule(
           "/entry-server.tsx",
         )) as EntryServerModule;
         render = entryModule.render;
       } else {
-        // Production: use pre-built assets (web/ is relative to CWD in dist)
         if (!prodTemplate) {
           prodTemplate = fs.readFileSync(
-            path.resolve("web/index.html"),
+            path.resolve(frontendRoot!, "index.html"),
             "utf-8",
           );
         }
@@ -102,44 +120,38 @@ export function createSSRMiddleware(options: SSRMiddlewareOptions) {
 
         if (!prodRender) {
           const entryModule = (await import(
-            path.resolve("web/ssr/entry-server.js")
+            path.resolve(frontendRoot!, "ssr/entry-server.js")
           )) as EntryServerModule;
           prodRender = entryModule.render;
         }
         render = prodRender;
       }
 
-      // Try to render the page as SSR
       const result = await render(url, req);
 
-      // If the page is not SSR, fall through to SPA handler
+      // Not an SSR page — fall through to SPA handler
       if (!result) return next();
 
-      // Build the SSR data script tag
+      // Build SSR data script tag
       const ssrDataScript = `<script id="${SSR_DATA_ID}" type="application/json">${
         JSON.stringify(result.ssrData).replace(/</g, "\\u003c")
       }</script>`;
 
       // Inject SSR content into template
       let html = template;
-
-      // Replace SSR outlet with rendered HTML
       html = html.replace(SSR_OUTLET, result.html);
-
-      // Replace SSR data placeholder with script tag
       html = html.replace(SSR_DATA_PLACEHOLDER, ssrDataScript);
 
-      // Send SSR response (no cache for SSR pages)
+      // Send response
       res.setHeader("Content-Type", "text/html");
       res.setHeader("Cache-Control", "public, max-age=0");
-      res.status(200).end(html);
+      res.statusCode = 200;
+      res.end(html);
     } catch (error) {
-      // In development, let Vite fix the stack trace
       if (isDev && vite) {
         vite.ssrFixStacktrace(error as Error);
       }
       console.error("[SSR] Render error:", error);
-      // Fall through to SPA on error
       next();
     }
   };

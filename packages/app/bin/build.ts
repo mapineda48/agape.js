@@ -2,15 +2,10 @@
  * Post-build script for production deployment preparation.
  *
  * This script runs after TypeScript compilation to:
- * 1. Copy frontend build output into backend dist
- * 2. Reorganize distribution files
- * 3. Copy static assets (SQL migrations)
- * 4. Move source maps
- * 5. Generate production package.json
- * 6. Generate permissions map
- * 7. Pre-render SSG pages
- *
- * Frontend-specific build tasks are delegated to @mapineda48/agape-web/server/build.
+ * 1. Add shebang to CLI entry point
+ * 2. Copy static assets (SQL migrations)
+ * 3. Generate production package.json
+ * 4. Generate permissions map
  *
  * @module bin/build
  */
@@ -20,27 +15,20 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import pkg from "../package.json" with { type: "json" };
-import sharedPkg from "../../core/package.json" with { type: "json" };
+import corePkg from "../../core/package.json" with { type: "json" };
+import webPkg from "../../web/package.json" with { type: "json" };
 import {
   buildPermissionMap,
   generateJavaScriptModule,
 } from "../lib/rpc/rbac/extract-permissions.js";
-
-// Frontend build tasks
-import {
-  copyFrontendBuild,
-  reorganizeDistFiles,
-  moveSourceMaps,
-  preRenderSSGPages,
-} from "@mapineda48/agape-web/server/build";
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BACKEND_ROOT = path.resolve(__dirname, "..");
-const DIST = path.resolve(BACKEND_ROOT, "dist");
+const APP_ROOT = path.resolve(__dirname, "..");
+const DIST = path.resolve(APP_ROOT, "dist");
 
 // ============================================================================
 // Build Tasks
@@ -53,21 +41,16 @@ const DIST = path.resolve(BACKEND_ROOT, "dist");
 async function addShebang(): Promise<void> {
   console.log(chalk.blue("🔧 Adding shebang to CLI entry point..."));
 
-  try {
-    const entryPath = path.join(DIST, "bin/index.js");
-    const content = await fs.readFile(entryPath, "utf8");
+  const entryPath = path.join(DIST, "bin/index.js");
+  const content = await fs.readFile(entryPath, "utf8");
 
-    if (!content.startsWith("#!")) {
-      await fs.writeFile(entryPath, `#!/usr/bin/env node\n${content}`, "utf8");
-      await fs.chmod(entryPath, 0o755);
-    }
-
-    console.log(chalk.gray("  ✓ bin/index.js is now executable"));
-    console.log(chalk.green("✓ Shebang added\n"));
-  } catch (error) {
-    console.error(chalk.red("✗ Failed to add shebang:"), error);
-    throw error;
+  if (!content.startsWith("#!")) {
+    await fs.writeFile(entryPath, `#!/usr/bin/env node\n${content}`, "utf8");
+    await fs.chmod(entryPath, 0o755);
   }
+
+  console.log(chalk.gray("  ✓ bin/index.js is now executable"));
+  console.log(chalk.green("✓ Shebang added\n"));
 }
 
 /**
@@ -76,17 +59,12 @@ async function addShebang(): Promise<void> {
 async function copyStaticAssets(): Promise<void> {
   console.log(chalk.blue("📦 Copying static assets..."));
 
-  try {
-    const sourcePath = path.join(BACKEND_ROOT, "lib/db/migrations/scripts");
-    const destPath = path.join(DIST, "lib/db/migrations/scripts");
+  const sourcePath = path.join(APP_ROOT, "lib/db/migrations/scripts");
+  const destPath = path.join(DIST, "lib/db/migrations/scripts");
 
-    await fs.copy(sourcePath, destPath);
-    console.log(chalk.gray("  ✓ Copied SQL migration scripts"));
-    console.log(chalk.green("✓ Static assets copied\n"));
-  } catch (error) {
-    console.error(chalk.red("✗ Failed to copy static assets:"), error);
-    throw error;
-  }
+  await fs.copy(sourcePath, destPath);
+  console.log(chalk.gray("  ✓ Copied SQL migration scripts"));
+  console.log(chalk.green("✓ Static assets copied\n"));
 }
 
 /**
@@ -95,45 +73,45 @@ async function copyStaticAssets(): Promise<void> {
 async function generateProductionPackageJson(): Promise<void> {
   console.log(chalk.blue("📝 Generating production package.json..."));
 
-  try {
-    const { name, version, type, dependencies, imports } = pkg;
+  const { name, version, type, dependencies, imports } = pkg;
 
-    // Remove workspace references, add published shared package as real dependency
-    const workspaceDeps = ["@mapineda48/agape-core", "@mapineda48/agape-rpc"];
-    const backendDeps = Object.fromEntries(
-      Object.entries(dependencies).filter(
-        ([key]) => !workspaceDeps.includes(key),
-      ),
-    );
+  // Remove workspace references, add published versions
+  const workspaceDeps = [
+    "@mapineda48/agape-core",
+    "@mapineda48/agape-rpc",
+    "@mapineda48/agape-web",
+  ];
+  const appDeps = Object.fromEntries(
+    Object.entries(dependencies).filter(
+      ([key]) => !workspaceDeps.includes(key),
+    ),
+  );
 
-    const productionPackage = {
-      name,
-      version,
-      type,
-      bin: {
-        "agape-app": "bin/index.js",
-      },
-      dependencies: {
-        ...backendDeps,
-        "@mapineda48/agape-core": sharedPkg.version,
-        "@mapineda48/agape-rpc": sharedPkg.version,
-      },
-      scripts: {
-        start: "agape-app",
-      },
-      imports,
-    };
+  const productionPackage = {
+    name,
+    version,
+    type,
+    bin: {
+      "agape-app": "bin/index.js",
+    },
+    dependencies: {
+      ...appDeps,
+      "@mapineda48/agape-core": corePkg.version,
+      "@mapineda48/agape-rpc": corePkg.version,
+      "@mapineda48/agape-web": webPkg.version,
+    },
+    scripts: {
+      start: "agape-app",
+    },
+    imports,
+  };
 
-    await fs.outputJSON(path.join(DIST, "package.json"), productionPackage, {
-      spaces: 2,
-    });
+  await fs.outputJSON(path.join(DIST, "package.json"), productionPackage, {
+    spaces: 2,
+  });
 
-    console.log(chalk.gray("  ✓ Created dist/package.json"));
-    console.log(chalk.green("✓ Production package.json generated\n"));
-  } catch (error) {
-    console.error(chalk.red("✗ Failed to generate package.json:"), error);
-    throw error;
-  }
+  console.log(chalk.gray("  ✓ Created dist/package.json"));
+  console.log(chalk.green("✓ Production package.json generated\n"));
 }
 
 /**
@@ -142,19 +120,14 @@ async function generateProductionPackageJson(): Promise<void> {
 async function generatePermissions(): Promise<void> {
   console.log(chalk.blue("🔐 Generating production permissions map..."));
 
-  try {
-    const permissions = await buildPermissionMap();
-    const jsCode = generateJavaScriptModule(permissions);
+  const permissions = await buildPermissionMap();
+  const jsCode = generateJavaScriptModule(permissions);
 
-    const outputPath = path.join(DIST, "lib/rpc/permissions.generated.js");
-    await fs.writeFile(outputPath, jsCode, "utf8");
+  const outputPath = path.join(DIST, "lib/rpc/permissions.generated.js");
+  await fs.writeFile(outputPath, jsCode, "utf8");
 
-    console.log(chalk.gray(`  ✓ Wrote permissions to ${outputPath}`));
-    console.log(chalk.green("✓ Permissions map generated\n"));
-  } catch (error) {
-    console.error(chalk.red("✗ Failed to generate permissions:"), error);
-    throw error;
-  }
+  console.log(chalk.gray(`  ✓ Wrote permissions to ${outputPath}`));
+  console.log(chalk.green("✓ Permissions map generated\n"));
 }
 
 // ============================================================================
@@ -168,15 +141,11 @@ async function main(): Promise<void> {
 
   try {
     await addShebang();
-    await copyFrontendBuild(DIST);
-    await reorganizeDistFiles(DIST);
     await copyStaticAssets();
-    await moveSourceMaps(DIST);
     await generateProductionPackageJson();
     await generatePermissions();
-    await preRenderSSGPages(DIST);
 
-    // Remove build script from dist (dev-only, not needed in published package)
+    // Remove build script from dist (dev-only)
     await fs.remove(path.join(DIST, "bin/build.js"));
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);

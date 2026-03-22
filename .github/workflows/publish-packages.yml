@@ -51,6 +51,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Publish web
+        run: pnpm --filter './packages/web' publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish app
         run: pnpm --filter './packages/app' publish --no-git-checks
         env:

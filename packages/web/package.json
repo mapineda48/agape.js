@@ -1,15 +1,33 @@
 {
   "name": "@mapineda48/agape-web",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mapineda48/agape.js.git",
+    "directory": "packages/web"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
+    "exports": {
+      "./server": "./dist/server/index.js",
+      "./paths": "./dist/paths.js"
+    }
+  },
   "exports": {
     "./server": "./server/index.ts",
-    "./server/build": "./server/build.ts"
+    "./paths": {
+      "types": "./dist/paths.d.ts",
+      "default": "./dist/paths.js"
+    }
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr entry-server.tsx --outDir dist/ssr --config vite.config.ssr.ts",
+    "build": "vite build && vite build --ssr entry-server.tsx --outDir dist/ssr --config vite.config.ssr.ts && tsc -p server/tsconfig.json && tsx server/postbuild.ts",
     "tsc": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run"
