@@ -15,7 +15,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "#web": path.resolve(__dirname),
-      "#shared": path.resolve(__dirname, "../core"),
       "#services": path.resolve(__dirname, "./__test__/mocks/services"),
     },
   },

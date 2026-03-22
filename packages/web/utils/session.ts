@@ -1,6 +1,6 @@
 import rpc from "@mapineda48/agape-rpc/client/rpc";
-import { type IUserSession, type LoginRequest } from "#shared/security/types";
-import { routes } from "#shared/security/route";
+import { type IUserSession, type LoginRequest } from "@mapineda48/agape-core/security/types";
+import { routes } from "@mapineda48/agape-core/security/route";
 
 export type { IUserSession, LoginRequest };
 

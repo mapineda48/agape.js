@@ -23,7 +23,7 @@ import { session } from "#services/security/session";
 import {
   buildMenuPermissions,
   buildRoutePermissions,
-} from "#shared/rbac/catalog";
+} from "@mapineda48/agape-core/rbac/catalog";
 
 // ============================================================================
 // Route to Permission Mapping
