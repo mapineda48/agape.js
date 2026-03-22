@@ -33,16 +33,16 @@ pnpm lint:fix                         # Auto-fix issues
 
 # Type checking
 pnpm tsc                              # Type-check all packages
-pnpm -C packages/backend tsc          # Backend only
-pnpm -C packages/frontend tsc         # Frontend only
+pnpm -C packages/app tsc             # Backend only
+pnpm -C packages/web tsc             # Frontend only
 
 # Testing
 pnpm test                             # Run all tests
-pnpm -C packages/backend test:run     # Backend tests
-pnpm -C packages/frontend test:run    # Frontend tests
+pnpm -C packages/app test:run        # Backend tests
+pnpm -C packages/web test:run        # Frontend tests
 
 # Build
-pnpm build                            # Build all (frontend then backend)
+pnpm build                            # Build all (core -> rpc -> web -> app)
 ```
 
 ## Project Structure (pnpm workspaces)
@@ -50,21 +50,23 @@ pnpm build                            # Build all (frontend then backend)
 ```
 agape.js/
 ├── packages/
-│   ├── shared/        # Shared frontend/backend code (@agape/shared)
-│   │   ├── data/      # DateTime, Decimal, File types
-│   │   ├── services/  # Service contracts (type-only .d.ts for frontend)
-│   │   └── rbac/      # RBAC catalog
-│   ├── backend/       # Express server (@agape/backend)
-│   │   ├── bin/       # Server bootstrap & build scripts
-│   │   ├── lib/       # Core library (middleware, utilities)
-│   │   ├── models/    # Drizzle ORM schemas (CTI pattern)
-│   │   └── services/  # RPC endpoints (auto-discovered)
-│   └── frontend/      # React app (@agape/frontend)
-│       ├── app/       # File-based routing pages
-│       ├── utils/     # Components (form, router, etc.)
-│       └── __test__/  # Frontend tests
-├── .agent/            # AI agent documentation and rules
-├── package.json       # Workspace root
+│   ├── core/         # Shared frontend/backend code (@mapineda48/agape-core)
+│   │   ├── data/     # DateTime, Decimal, File types
+│   │   ├── services/ # Service contracts (type-only .d.ts for frontend)
+│   │   └── rbac/     # RBAC catalog
+│   ├── rpc/          # RPC system (@mapineda48/agape-rpc)
+│   │   └── ...       # Middleware, virtual modules, code generation
+│   ├── app/          # Express server (@mapineda48/agape-app)
+│   │   ├── bin/      # Server bootstrap & build scripts
+│   │   ├── lib/      # Core library (middleware, utilities)
+│   │   ├── models/   # Drizzle ORM schemas (CTI pattern)
+│   │   └── services/ # RPC endpoints (auto-discovered)
+│   └── web/          # React app (@mapineda48/agape-web)
+│       ├── app/      # File-based routing pages
+│       ├── utils/    # Components (form, router, etc.)
+│       └── __test__/ # Frontend tests
+├── .agent/           # AI agent documentation and rules
+├── package.json      # Workspace root
 └── pnpm-workspace.yaml
 ```
 
@@ -82,12 +84,11 @@ import logger from "#lib/log/logger";               // Path aliases
 
 | Alias | Target | Usage |
 |-------|--------|-------|
-| `#lib/*` | `packages/backend/lib/*` | Backend library code |
-| `#models/*` | `packages/backend/models/*` | Database models |
-| `#svc/*` | `packages/backend/services/*` | Service modules |
-| `#shared/*` | `packages/shared/*` | Shared code (both frontend & backend) |
-| `#services/*` | `packages/shared/services/*` (type-check) / Vite virtual (runtime) | Service contracts |
-| `#web/*` | `packages/frontend/*` | Frontend utilities |
+| `#lib/*` | `packages/app/lib/*` | Backend library code |
+| `#models/*` | `packages/app/models/*` | Database models |
+| `#svc/*` | `packages/app/services/*` | Service modules |
+| `#services/*` | `packages/core/services/*` (type-check) / Vite virtual (runtime) | Service contracts |
+| `#web/*` | `packages/web/*` | Frontend utilities |
 
 ### TypeScript
 
@@ -121,10 +122,10 @@ Agape.js uses a **Zero-Boilerplate RPC architecture**. You do not define REST ro
 
 ### Backend Service Definition
 
-Create files in `services/`. Functions are automatically exposed as endpoints:
+Create files in `packages/app/services/`. Functions are automatically exposed as endpoints:
 
 ```typescript
-// services/products.ts
+// packages/app/services/products.ts
 import { db } from "#lib/db";
 import { products } from "#models/products";
 import { eq } from "drizzle-orm";
@@ -146,8 +147,8 @@ export function getCatalog() {
  * Requires authentication (no tag = authenticated users only).
  */
 export async function getById(id: number) {
-  return db.query.products.findFirst({ 
-    where: eq(products.id, id) 
+  return db.query.products.findFirst({
+    where: eq(products.id, id)
   });
 }
 
@@ -165,9 +166,9 @@ export async function create(data: { name: string; price: number }) {
 
 | File | Export | Endpoint HTTP |
 |------|--------|---------------|
-| `services/users.ts` | `default` | `POST /users` |
-| `services/users.ts` | `getById` | `POST /users/getById` |
-| `services/admin/roles.ts` | `create` | `POST /admin/roles/create` |
+| `packages/app/services/users.ts` | `default` | `POST /users` |
+| `packages/app/services/users.ts` | `getById` | `POST /users/getById` |
+| `packages/app/services/admin/roles.ts` | `create` | `POST /admin/roles/create` |
 
 ### Access Control (JSDoc Tags)
 
@@ -217,12 +218,12 @@ const product = await getById(123);
 
 | Type | Import | Usage | Reason |
 |------|--------|-------|--------|
-| `DateTime` | `#shared/data/DateTime` | All dates/times | Auto-serialized by RPC, extends `date-fns` |
-| `Decimal` | `#shared/data/Decimal` | All monetary values | Auto-serialized by RPC, wraps `decimal.js` |
+| `DateTime` | `@mapineda48/agape-core/data/DateTime` | All dates/times | Auto-serialized by RPC, extends `date-fns` |
+| `Decimal` | `@mapineda48/agape-core/data/Decimal` | All monetary values | Auto-serialized by RPC, wraps `decimal.js` |
 
 ```typescript
-import DateTime from "#shared/data/DateTime";
-import Decimal from "#shared/data/Decimal";
+import DateTime from "@mapineda48/agape-core/data/DateTime";
+import Decimal from "@mapineda48/agape-core/data/Decimal";
 
 // CORRECT
 const now = new DateTime();
@@ -241,16 +242,16 @@ const total = price * quantity;     // Precision loss risk
 Use pre-defined error classes from `#lib/error`:
 
 ```typescript
-import { 
-  NotFoundError, 
-  ValidationError, 
+import {
+  NotFoundError,
+  ValidationError,
   ForbiddenError,
-  BusinessRuleError 
+  BusinessRuleError
 } from "#lib/error";
 
 export async function cancelOrder(orderId: number) {
-  const order = await db.query.orders.findFirst({ 
-    where: eq(orders.id, orderId) 
+  const order = await db.query.orders.findFirst({
+    where: eq(orders.id, orderId)
   });
 
   if (!order) {
@@ -334,8 +335,8 @@ export const person = schema.table("person", {
 
 ### Domain Organization
 
-- **Core (`models/*.ts`)**: Essential entities (user, person, company)
-- **Domains (`models/<domain>/*.ts`)**: Business-specific (logistics, invoicing)
+- **Core (`packages/app/models/*.ts`)**: Essential entities (user, person, company)
+- **Domains (`packages/app/models/<domain>/*.ts`)**: Business-specific (logistics, invoicing)
 
 ### Standard Model Template
 
@@ -344,12 +345,12 @@ import { schema } from "./schema";
 import { serial, varchar, boolean } from "drizzle-orm/pg-core";
 import { relations, sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { dateTime } from "../lib/db/custom-types";
-import DateTime from "../shared/data/DateTime";
+import DateTime from "@mapineda48/agape-core/data/DateTime";
 
 export const myEntity = schema.table("my_entity", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
-  
+
   // Audit fields (MANDATORY)
   isActive: boolean("is_active").notNull().default(true),
   createdAt: dateTime("created_at").notNull().default(sql`now()`),
@@ -366,13 +367,13 @@ export default myEntity;
 
 ## WebSocket (Real-Time)
 
-### Service Contract (shared/services/)
+### Service Contract (packages/core/services/)
 
-Event types and interfaces are defined in `shared/services/` as `.d.ts` files. Both frontend and backend import types from here:
+Event types and interfaces are defined in `packages/core/services/` as `.d.ts` files. Both frontend and backend import types from here:
 
 ```typescript
-// shared/services/chat.d.ts (type-only contract)
-import type { ConnectedSocket } from "#shared/socket";
+// packages/core/services/chat.d.ts (type-only contract)
+import type { ConnectedSocket } from "@mapineda48/agape-core/socket";
 
 export type ChatEvents = {
   "message:send": { text: string; sender: string };
@@ -386,9 +387,9 @@ export default socket;
 ### Server-Side
 
 ```typescript
-// services/chat.ts (backend implementation)
+// packages/app/services/chat.ts (backend implementation)
 import { registerNamespace } from "#lib/socket/namespace";
-import type { ChatEvents } from "#shared/services/chat";
+import type { ChatEvents } from "@mapineda48/agape-core/services/chat";
 
 /**
  * Public chat namespace
@@ -425,15 +426,15 @@ connection.disconnect();
 
 | File | Purpose | URL |
 |------|---------|-----|
-| `web/app/page.tsx` | Homepage | `/` |
-| `web/app/users/page.tsx` | Users page | `/users` |
-| `web/app/users/[id]/page.tsx` | Dynamic page | `/users/:id` |
-| `web/app/cms/_layout.tsx` | Layout wrapper | Wraps `/cms/*` |
+| `packages/web/app/page.tsx` | Homepage | `/` |
+| `packages/web/app/users/page.tsx` | Users page | `/users` |
+| `packages/web/app/users/[id]/page.tsx` | Dynamic page | `/users/:id` |
+| `packages/web/app/cms/_layout.tsx` | Layout wrapper | Wraps `/cms/*` |
 
 ### Page with Data Loading
 
 ```tsx
-// web/app/products/[id]/page.tsx
+// packages/web/app/products/[id]/page.tsx
 
 // Runs BEFORE render
 export async function onInit({ params, query }) {
@@ -454,13 +455,13 @@ import { useRouter } from "#web/utils/components/router";
 
 function MyComponent() {
   const { navigate, params, pathname } = useRouter();
-  
+
   // Absolute navigation
   navigate("/login");
-  
+
   // Layout-relative (preferred inside modules)
   navigate("products");        // -> /current-layout/products
-  
+
   // Relative navigation
   navigate("../");             // Go up one level
 }
@@ -491,13 +492,13 @@ function MyForm() {
           <Form.Text />
           <Form.Error />
         </Form.Field>
-        
+
         <Form.Field name="email">
           <Form.Label>Email</Form.Label>
           <Form.Text type="email" />
           <Form.Error />
         </Form.Field>
-        
+
         <Form.Submit onSubmit={handleSubmit}>Save</Form.Submit>
       </Form.Root>
     </EventEmitter>
@@ -525,16 +526,16 @@ function MyForm() {
 
 | Component | Path | Purpose |
 |-----------|------|---------|
-| RPC Middleware | `lib/rpc/middleware.ts` | Entry point for RPC |
-| Authorization | `lib/rpc/rbac/authorization.ts` | Validates permissions |
-| Context | `lib/context.ts` | AsyncLocalStorage wrapper |
-| Errors | `lib/error.ts` | Pre-defined error classes |
-| Virtual Modules | `lib/vite/virtual-module.ts` | Generates frontend proxies |
-| Socket Manager | `lib/socket/namespace.ts` | Socket.IO namespaces |
-| MessagePack | `shared/msgpackr.ts` | Serialization config |
-| Client RPC | `web/utils/rpc.ts` | Frontend RPC client |
-| Form System | `web/utils/components/form/` | Form components |
-| Router | `web/utils/components/router/` | File-based router |
+| RPC Middleware | `packages/app/lib/rpc/middleware.ts` | Entry point for RPC |
+| Authorization | `packages/app/lib/rpc/rbac/authorization.ts` | Validates permissions |
+| Context | `packages/app/lib/context.ts` | AsyncLocalStorage wrapper |
+| Errors | `packages/app/lib/error.ts` | Pre-defined error classes |
+| Virtual Modules | `packages/rpc/` | Generates frontend proxies |
+| Socket Manager | `packages/app/lib/socket/namespace.ts` | Socket.IO namespaces |
+| MessagePack | `packages/core/msgpackr.ts` | Serialization config |
+| Client RPC | `packages/web/utils/rpc.ts` | Frontend RPC client |
+| Form System | `packages/web/utils/components/form/` | Form components |
+| Router | `packages/web/utils/components/router/` | File-based router |
 
 ---
 
