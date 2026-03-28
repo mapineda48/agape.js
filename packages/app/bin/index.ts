@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import http from "node:http";
 import express from "express";
 import { createRpc } from "@mapineda48/agape-core/server";
