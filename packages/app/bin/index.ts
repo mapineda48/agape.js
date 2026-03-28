@@ -26,7 +26,7 @@ if (IsDevelopment) {
 
   app.use(express.static(distDir));
 
-  app.get("*", (_req, res) => {
+  app.get("/{*path}", (_req, res) => {
     res.sendFile(indexHtml);
   });
 }
