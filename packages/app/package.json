@@ -1,0 +1,37 @@
+{
+  "name": "@mapineda48/agape-app",
+  "version": "0.1.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mapineda48/agape.js.git",
+    "directory": "packages/app"
+  },
+  "bin": {
+    "agape-app": "./dist/bin/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "scripts": {
+    "dev": "tsx watch --ignore '../web/node_modules' bin/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@mapineda48/agape-core": "workspace:*",
+    "@mapineda48/agape-rpc": "workspace:*",
+    "@mapineda48/agape-web": "workspace:*",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.12.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.3"
+  }
+}
